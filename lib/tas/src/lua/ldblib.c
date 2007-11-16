@@ -36,7 +36,7 @@ static int getinfo (lua_State *L) {
   lua_Debug ar;
   const char *options = luaL_optstring(L, 2, "flnSu");
   if (lua_isnumber(L, 1)) {
-    if (!lua_getstack(L, (int)(lua_tonumber(L, 1)), &ar)) {
+    if (!lua_getstack(L, lua_tonumber(L, 1), &ar)) {
       lua_pushnil(L);  /* level out of range */
       return 1;
     }
@@ -203,7 +203,7 @@ static int gethook (lua_State *L) {
     lua_rawget(L, LUA_REGISTRYINDEX);   /* get hook */
   }
   lua_pushstring(L, unmakemask(mask, buff));
-  lua_pushnumber(L, (lua_Number)lua_gethookcount(L));
+  lua_pushnumber(L, lua_gethookcount(L));
   return 3;
 }
 

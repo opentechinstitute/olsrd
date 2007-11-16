@@ -257,7 +257,7 @@ LUALIB_API void luaL_openlib (lua_State *L, const char *libname,
 */
 
 static int checkint (lua_State *L, int topop) {
-  int n = (int)lua_tonumber(L, -1);
+  int n = lua_tonumber(L, -1);
   if (n == 0 && !lua_isnumber(L, -1)) n = -1;
   lua_pop(L, topop);
   return n;
@@ -425,7 +425,7 @@ LUALIB_API int luaL_ref (lua_State *L, int t) {
     return LUA_REFNIL;  /* `nil' has a unique fixed reference */
   }
   lua_rawgeti(L, t, FREELIST_REF);  /* get first free element */
-  ref = (int)lua_tonumber(L, -1);  /* ref = t[FREELIST_REF] */
+  ref = lua_tonumber(L, -1);  /* ref = t[FREELIST_REF] */
   lua_pop(L, 1);  /* remove it from stack */
   if (ref != 0) {  /* any free element? */
     lua_rawgeti(L, t, ref);  /* remove it from list */
