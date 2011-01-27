@@ -243,6 +243,13 @@ mdns:
 mdns_install:
 		$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) install 
 
+pud:
+		$(MAKECMD) -C lib/pud clean
+		$(MAKECMD) -C lib/pud 
+
+pud_install:
+		$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) install 
+
 txtinfo:
 		$(MAKECMD) -C lib/txtinfo clean
 		$(MAKECMD) -C lib/txtinfo 
