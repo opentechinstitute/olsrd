@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+set -u
+
+outfile="${1}"
+version="${2}"
+
+sha="$(git describe)"
+
+
+
+cat > "${outfile}" << EOF
+#ifndef _PUD_VERSION_H_
+#define _PUD_VERSION_H_
+
+#define PLUGIN_VER "${version}"
+#define GIT_SHA    "${sha}"
+
+#endif /* _PUD_VERSION_H_ */
+EOF

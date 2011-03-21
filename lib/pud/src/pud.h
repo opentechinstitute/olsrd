@@ -1,0 +1,62 @@
+#ifndef _PUD_PUD_H
+#define _PUD_PUD_H
+
+/* Plugin includes */
+
+/* OLSR includes */
+#include "olsr_protocol.h"
+#include "interfaces.h"
+#include "olsr_types.h"
+
+/* System includes */
+#include <stdbool.h>
+
+/*
+ * Global
+ */
+
+/** Compiler hint to expect x */
+#ifndef likely
+# if defined(__GNUC__)
+#  define likely(x)       				__builtin_expect((x),1)
+# else
+#  define likely(x)						(x)
+# endif
+#endif
+
+/** Compiler hint to not expect x */
+#ifndef unlikely
+# if defined(__GNUC__)
+#  define unlikely(x)     				__builtin_expect((x),0)
+# else
+#  define unlikely(x)					(x)
+# endif
+#endif
+
+/** The OLSRD message type FIXME get an assigned one */
+#define PUD_OLSR_MSG_TYPE 				171
+
+/** The long plugin name */
+#define PUD_PLUGIN_NAME_LONG			"OLSRD Position Update Distribution (PUD) plugin"
+
+/** The short plugin name / abbreviation */
+#define PUD_PLUGIN_ABBR					"PUD"
+
+/** The interface version supported by the plugin */
+#define PUD_PLUGIN_INTERFACE_VERSION	5
+
+/*
+ *  Interface
+ */
+
+bool initPud(void);
+
+void closePud(void);
+
+void pudError(bool useErrno, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
+
+bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
+		struct interface *in_if __attribute__ ((unused)),
+		union olsr_ip_addr *ipaddr __attribute__ ((unused)));
+
+#endif /* _PUD_PUD_H */
