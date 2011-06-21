@@ -56,7 +56,7 @@ unsigned char * getHardwareAddress(const char * ifName, int family,
 	int cpySize;
 
 	assert(ifName != NULL);
-	assert(strlen(ifName) < IFHWADDRLEN);
+	assert(strlen(ifName) <= IFNAMSIZ);
 	assert((family == AF_INET) || (family == AF_INET6));
 	assert(ifr != NULL);
 
