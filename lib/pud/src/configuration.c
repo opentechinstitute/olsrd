@@ -62,6 +62,40 @@ bool readULL(const char * valueName, const char * value,
 	return true;
 }
 
+/**
+ Read a double number from a value string
+
+ @param valueName
+ the name of the value
+ @param value
+ the string to convert to a number
+ @param valueNumber
+ a pointer to the location where to store the number upon successful conversion
+
+ @return
+ - true on success
+ - false otherwise
+ */
+bool readDouble(const char * valueName, const char * value,
+		double * valueNumber) {
+	char * endPtr = NULL;
+	double valueNew;
+
+	errno = 0;
+	valueNew = strtod(value, &endPtr);
+
+	if (!((endPtr != value) && (*value != '\0') && (*endPtr == '\0'))) {
+		/* invalid conversion */
+		pudError(true, "Configured %s (%s) could not be converted to a number",
+				valueName, value);
+		return false;
+	}
+
+	*valueNumber = valueNew;
+
+	return true;
+}
+
 /*
  * nodeIdType
  */
@@ -1132,6 +1166,51 @@ int setMovingDistanceThreshold(const char *value, void *data __attribute__ ((unu
 	}
 
 	movingDistanceThreshold = movingDistanceThresholdNew;
+
+	return false;
+}
+
+/*
+ * dopMultiplier
+ */
+
+/* The DOP multiplier plugin parameter */
+double dopMultiplier = PUD_DOP_MULTIPLIER_DEFAULT;
+
+/**
+ @return
+ The DOP multiplier plugin parameter
+ */
+double getDopMultiplier(void) {
+	return dopMultiplier;
+}
+
+/**
+ Set DOP multiplier plugin parameter
+
+ @param value
+ The DOP multiplier plugin parameter
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setDopMultiplier(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_DOP_MULTIPLIER_NAME;
+	double dopMultiplierNew;
+
+	assert (value != NULL);
+
+	if (!readDouble(valueName, value, &dopMultiplierNew)) {
+		return true;
+	}
+
+	dopMultiplier = dopMultiplierNew;
 
 	return false;
 }

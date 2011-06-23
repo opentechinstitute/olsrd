@@ -600,6 +600,19 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.0.0"
     #
     #PlParam     "movingDistanceThreshold"      "50"
 
+    # dopMultiplier One of the situations that is seen as movement is when the
+    #               current position with its uncertainty circle no longer
+    #               overlaps the last transmitted position with its uncertainty
+    #               circle. This parameter is used to adjust the sizes of these
+    #               uncertainty circles: setting it to a value less than 1.0
+    #               will make both uncertainty circles smaller by this factor,
+    #               resulting in earlier movement detection. Setting it to a
+    #               value larger than 1.0 will detect movement later.
+    #
+    # Default: 1.0
+    #
+    #PlParam     "dopMultiplier"                "1.0"
+
     # defaultHdop is the default value that is taken for HDOP (in meters) in
     #             determining whether we are moving when there is a position
     #             available but no HDOP.

@@ -18,6 +18,9 @@
 bool readULL(const char * valueName, const char * value,
 		unsigned long long * valueNumber);
 
+bool readDouble(const char * valueName, const char * value,
+		double * valueNumber);
+
 /*
  * Global Parameters
  */
@@ -221,6 +224,16 @@ int setMovingSpeedThreshold(const char *value, void *data,
 
 unsigned long long getMovingDistanceThreshold(void);
 int setMovingDistanceThreshold(const char *value, void *data,
+		set_plugin_parameter_addon addon);
+
+/** The name of the DOP multiplier plugin parameter */
+#define PUD_DOP_MULTIPLIER_NAME		"dopMultiplier"
+
+/** The default value of the DOP multiplier plugin parameter */
+#define PUD_DOP_MULTIPLIER_DEFAULT	1.0
+
+double getDopMultiplier(void);
+int setDopMultiplier(const char *value, void *data,
 		set_plugin_parameter_addon addon);
 
 /** The name of the default HDOP plugin parameter */

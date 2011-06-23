@@ -32,6 +32,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 	{	.name = PUD_UPDATE_INTERVAL_MOVING_NAME, .set_plugin_parameter = &setUpdateIntervalMoving, .data = NULL},
 	{	.name = PUD_MOVING_SPEED_THRESHOLD_NAME, .set_plugin_parameter = &setMovingSpeedThreshold, .data = NULL},
 	{	.name = PUD_MOVING_DISTANCE_THRESHOLD_NAME, .set_plugin_parameter = &setMovingDistanceThreshold, .data = NULL},
+	{	.name = PUD_DOP_MULTIPLIER_NAME, .set_plugin_parameter = &setDopMultiplier, .data = NULL},
 	{	.name = PUD_DEFAULT_HDOP_NAME, .set_plugin_parameter = &setDefaultHdop, .data = NULL},
 	{	.name = PUD_DEFAULT_VDOP_NAME, .set_plugin_parameter = &setDefaultVdop, .data = NULL},
 	{	.name = PUD_AVERAGE_DEPTH_NAME, .set_plugin_parameter = &setAverageDepth, .data = NULL},
