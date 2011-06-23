@@ -378,7 +378,8 @@ void getNodeInfoFromOlsr(const union olsr_message *olsrMessage,
 
 		/* nodeIdType */
 		chars = snprintf(&nodeIdTypeString[0], PUD_TX_NODEIDTYPE_DIGITS + 1,
-				"%u", olsrGpsMessage->nodeInfo.nodeIdType);
+				"%u", ((olsr_cnf->ip_version == AF_INET) ? PUD_NODEIDTYPE_IPV4
+				: PUD_NODEIDTYPE_IPV6));
 		if (likely(chars < PUD_TX_NODEIDTYPE_DIGITS)) {
 			nodeIdTypeString[chars] = '\0';
 		} else {
