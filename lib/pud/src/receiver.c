@@ -297,7 +297,7 @@ static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
 				}
 
 				/* we are outside the HDOP when the HDOPs no longer overlap */
-				if (distance > (2.0 * (avgHdop + lastTxHdop))) {
+				if (distance > (getDopMultiplier() * (avgHdop + lastTxHdop))) {
 					return SET;
 				}
 
@@ -373,7 +373,7 @@ static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
 				}
 
 				/* we are outside the VDOP when the VDOPs no longer overlap */
-				if (distance > (2.0 * (avgVdop + lastTxVdop))) {
+				if (distance > (getDopMultiplier() * (avgVdop + lastTxVdop))) {
 					return SET;
 				}
 
