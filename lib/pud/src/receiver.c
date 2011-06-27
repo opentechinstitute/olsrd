@@ -416,9 +416,10 @@ static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
  - true otherwise
  */
 bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
-	bool retval = false;
 	static const char * rxBufferPrefix = "$GP";
-	size_t rxBufferPrefixLength = strlen(rxBufferPrefix);
+	static const size_t rxBufferPrefixLength = 3;
+
+	bool retval = false;
 	PositionUpdateEntry * incomingEntry;
 	MovementState currentState = state.state;
 	MovementState newState = MOVING;
