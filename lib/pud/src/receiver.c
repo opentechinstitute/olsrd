@@ -183,15 +183,20 @@ static void txToAllOlsrInterfaces(void) {
 }
 
 /**
- * Detemines whether we are moving by comparing fields from the average
- * position against those of the last transmitted position.
- *
- * MUST be called which the position average list locked.
- *
- * @param posAvgEntry
- * the average position
- * @param lastTxEntry
- * the last transmitted position
+ Detemines whether we are moving by comparing fields from the average
+ position against those of the last transmitted position.
+
+ MUST be called which the position average list locked.
+
+ @param posAvgEntry
+ the average position
+ @param lastTxEntry
+ the last transmitted position
+
+ @return
+ - SET when we are moving
+ - UNSET when we are not moving
+ - UNKNOWN when we don't know / can't determine
  */
 static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
 		PositionUpdateEntry * lastTxEntry) {
