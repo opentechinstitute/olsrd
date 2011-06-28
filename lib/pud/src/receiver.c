@@ -82,7 +82,6 @@ PositionAverageList positionAverageList;
 typedef struct {
 	pthread_mutex_t mutex; /**< access mutex */
 	bool updated; /**< true when the information was updated */
-	bool invalid; /**< true when invalid (bad fix or bad sig) */
 	PositionUpdateEntry txPosition; /**< The last transmitted position */
 } TransmitGpsInformation;
 
@@ -107,9 +106,13 @@ PositionUpdateEntry txPosition;
 static void txToAllOlsrInterfaces(void) {
 	unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR];
 	unsigned int aligned_size = 0;
+	bool invalid = false;
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-	if (!transmitGpsInformation.updated && !transmitGpsInformation.invalid) {
+
+	invalid = (transmitGpsInformation.txPosition.nmeaInfo.fix == NMEA_FIX_BAD);
+
+	if (!transmitGpsInformation.updated && !invalid) {
 		/* fix the timestamp when the transmitGpsInformation was not updated
 		 * while it is valid */
 		struct timeb tp;
@@ -565,23 +568,13 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 */
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-	transmitGpsInformation.invalid
-			= (posAvgEntry->nmeaInfo.fix == NMEA_FIX_BAD);
 
-	/* Only when not invalid we update the transmitGpsInformation */
-	if (!transmitGpsInformation.invalid) {
-		if ((movingNow == SET) || (state.state == MOVING)) {
-			/* Copy posAvgEntry into txPosition and transmitGpsInformation
-			 * when we consider ourselves as moving (independent of the state)
-			 * or when we are in the MOVING state */
-			memcpy(&txPosition.nmeaInfo,
-					&posAvgEntry->nmeaInfo,	sizeof(nmeaINFO));
-			memcpy(&transmitGpsInformation.txPosition.nmeaInfo, &posAvgEntry->nmeaInfo,
-					sizeof(nmeaINFO));
-			transmitGpsInformation.updated = true;
-		} else /* (movingNow != SET) && (state.state == STATIONARY) */{
-			/* no nothing */
-		}
+	if ((state.state == MOVING) || (currentState != newState)) {
+		memcpy(&txPosition.nmeaInfo, &posAvgEntry->nmeaInfo,
+				sizeof(nmeaINFO));
+		memcpy(&transmitGpsInformation.txPosition.nmeaInfo, &posAvgEntry->nmeaInfo,
+				sizeof(nmeaINFO));
+		transmitGpsInformation.updated = true;
 	}
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
@@ -700,7 +693,6 @@ bool startReceiver(void) {
 
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.updated = false;
-	transmitGpsInformation.invalid = true;
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 
@@ -741,7 +733,6 @@ void stopReceiver(void) {
 
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.updated = false;
-	transmitGpsInformation.invalid = true;
 
 	nmea_parser_destroy(&nmeaParser);
 
