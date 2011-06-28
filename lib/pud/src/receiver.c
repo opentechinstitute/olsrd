@@ -84,7 +84,7 @@ typedef struct {
 	pthread_mutex_t mutex; /**< access mutex */
 	bool updated; /**< true when the information was updated */
 	bool invalid; /**< true when invalid (bad fix or bad sig) */
-	nmeaINFO nmeaInfo; /**< the NMEA GPS information */
+	PositionUpdateEntry txPosition; /**< The last transmitted position */
 } TransmitGpsInformation;
 
 /** The latest position information that is transmitted */
@@ -119,15 +119,15 @@ static void txToAllOlsrInterfaces(void) {
 		(void) ftime(&tp);
 		gmtime_r(&tp.time, &nowStruct);
 
-		transmitGpsInformation.nmeaInfo.utc.year = nowStruct.tm_year;
-		transmitGpsInformation.nmeaInfo.utc.mon = nowStruct.tm_mon;
-		transmitGpsInformation.nmeaInfo.utc.day = nowStruct.tm_mday;
-		transmitGpsInformation.nmeaInfo.utc.hour = nowStruct.tm_hour;
-		transmitGpsInformation.nmeaInfo.utc.min = nowStruct.tm_min;
-		transmitGpsInformation.nmeaInfo.utc.sec = nowStruct.tm_sec;
-		transmitGpsInformation.nmeaInfo.utc.hsec = (tp.millitm / 10);
+		transmitGpsInformation.txPosition.nmeaInfo.utc.year = nowStruct.tm_year;
+		transmitGpsInformation.txPosition.nmeaInfo.utc.mon = nowStruct.tm_mon;
+		transmitGpsInformation.txPosition.nmeaInfo.utc.day = nowStruct.tm_mday;
+		transmitGpsInformation.txPosition.nmeaInfo.utc.hour = nowStruct.tm_hour;
+		transmitGpsInformation.txPosition.nmeaInfo.utc.min = nowStruct.tm_min;
+		transmitGpsInformation.txPosition.nmeaInfo.utc.sec = nowStruct.tm_sec;
+		transmitGpsInformation.txPosition.nmeaInfo.utc.hsec = (tp.millitm / 10);
 	}
-	aligned_size = gpsToOlsr(&transmitGpsInformation.nmeaInfo,
+	aligned_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo,
 			(union olsr_message *) &txBuffer[0], sizeof(txBuffer),
 			((state.state == MOVING) ? getUpdateIntervalMoving()
 					: getUpdateIntervalStationary()));
@@ -578,7 +578,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 			 * MOVING state */
 			memcpy(&txPosition.nmeaInfo,
 					&posAvgEntry->nmeaInfo,	sizeof(nmeaINFO));
-			memcpy(&transmitGpsInformation.nmeaInfo, &posAvgEntry->nmeaInfo,
+			memcpy(&transmitGpsInformation.txPosition.nmeaInfo, &posAvgEntry->nmeaInfo,
 					sizeof(nmeaINFO));
 			transmitGpsInformation.updated = true;
 		} else /* (movingNow != SET) && (state.state == STATIONARY) */{
@@ -588,7 +588,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 #if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&transmitGpsInformation.nmeaInfo,
+	dump_nmeaInfo(&transmitGpsInformation.txPosition.nmeaInfo,
 			"receiverUpdateGpsInformation: transmitGpsInformation");
 #endif /* PUD_DUMP_AVERAGING */
 
@@ -700,16 +700,16 @@ bool startReceiver(void) {
 		return false;
 	}
 
-	nmea_zero_INFO(&transmitGpsInformation.nmeaInfo);
+	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
+	transmitGpsInformation.updated = false;
+	transmitGpsInformation.invalid = true;
+
+	nmea_zero_INFO(&txPosition.nmeaInfo);
 
 	state.state = INIT;
 	state.hysteresisCounter = 0;
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
-
-	txPosition.nmeaInfo.smask = GPNON;
-	txPosition.nmeaInfo.fix = NMEA_FIX_BAD;
-	txPosition.nmeaInfo.sig = NMEA_SIG_BAD;
 
 	if (pud_receiver_timer_cookie == NULL) {
 		pud_receiver_timer_cookie = olsr_alloc_cookie(
@@ -734,16 +734,14 @@ void stopReceiver(void) {
 		pud_receiver_timer_cookie = NULL;
 	}
 
-	txPosition.nmeaInfo.sig = NMEA_SIG_BAD;
-	txPosition.nmeaInfo.fix = NMEA_FIX_BAD;
-	txPosition.nmeaInfo.smask = GPNON;
-
 	destroyPositionAverageList(&positionAverageList);
 
 	state.hysteresisCounter = 0;
 	state.state = INIT;
 
-	nmea_zero_INFO(&transmitGpsInformation.nmeaInfo);
+	nmea_zero_INFO(&txPosition.nmeaInfo);
+
+	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.updated = false;
 	transmitGpsInformation.invalid = true;
 
