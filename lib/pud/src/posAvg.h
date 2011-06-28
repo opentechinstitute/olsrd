@@ -70,15 +70,13 @@ typedef struct {
 
 		PositionUpdateEntry positionAverageCumulative; /**< the average position with cumulative values */
 		PositionUpdateEntry positionAverage; /**< the average position */
-
-		PositionUpdateEntry txPosition; /**< the last transmitted position */
 } PositionAverageList;
 
 /**
  Enumeration describing the type of an entry position in the average list
  */
 typedef enum {
-	OLDEST, NEWEST, INCOMING, AVERAGECUMULATIVE, AVERAGE, LASTTX
+	OLDEST, NEWEST, INCOMING, AVERAGECUMULATIVE, AVERAGE
 } AverageEntryPositionType;
 
 bool initPositionAverageList(PositionAverageList * positionAverageList,

@@ -94,10 +94,6 @@ bool initPositionAverageList(PositionAverageList * positionAverageList,
 	positionAverageList->entries = p;
 	positionAverageList->newestEntryIndex = 0;
 
-	positionAverageList->txPosition.nmeaInfo.smask = GPNON;
-	positionAverageList->txPosition.nmeaInfo.fix = NMEA_FIX_BAD;
-	positionAverageList->txPosition.nmeaInfo.sig = NMEA_SIG_BAD;
-
 	flushPositionAverageList(positionAverageList);
 
 	return true;
@@ -166,10 +162,6 @@ PositionUpdateEntry * getPositionAverageEntry(
 
 		case AVERAGE:
 			r = &positionAvgList->positionAverage;
-			break;
-
-		case LASTTX:
-			r = &positionAvgList->txPosition;
 			break;
 
 		default:

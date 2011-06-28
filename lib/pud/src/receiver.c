@@ -90,6 +90,12 @@ typedef struct {
 /** The latest position information that is transmitted */
 TransmitGpsInformation transmitGpsInformation;
 
+/** The last transmitted position.
+ * The same as transmitGpsInformation.txPosition.
+ * We keep this because then we can access the information without locking
+ * mutexes. */
+PositionUpdateEntry txPosition;
+
 /** The size of the buffer in which the OLSR message is assembled */
 #define TX_BUFFER_SIZE_FOR_OLSR 512
 
@@ -424,7 +430,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	MovementState currentState = state.state;
 	MovementState newState = MOVING;
 	PositionUpdateEntry * posAvgEntry;
-	PositionUpdateEntry * lastTxEntry;
 	TristateBoolean movingNow;
 
 	/* do not process when the message does not start with $GP */
@@ -476,9 +481,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	addNewPositionToAverage(&positionAverageList, incomingEntry);
 
 	posAvgEntry = getPositionAverageEntry(&positionAverageList, AVERAGE);
-	lastTxEntry = getPositionAverageEntry(&positionAverageList, LASTTX);
 
-	movingNow = detemineMoving(posAvgEntry, lastTxEntry);
+	movingNow = detemineMoving(posAvgEntry, &txPosition);
 
 #if defined(PUD_DUMP_AVERAGING)
 	olsr_printf(0, "receiverUpdateGpsInformation: currentState = %s\n",
@@ -572,8 +576,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 			 * transmitGpsInformation when we consider ourselves as moving
 			 * (independent of the state) or when we are in the INIT or
 			 * MOVING state */
-			memcpy(&positionAverageList.txPosition.nmeaInfo,
-					&posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
+			memcpy(&txPosition.nmeaInfo,
+					&posAvgEntry->nmeaInfo,	sizeof(nmeaINFO));
 			memcpy(&transmitGpsInformation.nmeaInfo, &posAvgEntry->nmeaInfo,
 					sizeof(nmeaINFO));
 			transmitGpsInformation.updated = true;
@@ -703,6 +707,10 @@ bool startReceiver(void) {
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
+	txPosition.nmeaInfo.smask = GPNON;
+	txPosition.nmeaInfo.fix = NMEA_FIX_BAD;
+	txPosition.nmeaInfo.sig = NMEA_SIG_BAD;
+
 	if (pud_receiver_timer_cookie == NULL) {
 		pud_receiver_timer_cookie = olsr_alloc_cookie(
 				PUD_PLUGIN_ABBR ": receiver", OLSR_COOKIE_TYPE_TIMER);
@@ -725,6 +733,10 @@ void stopReceiver(void) {
 		olsr_free_cookie(pud_receiver_timer_cookie);
 		pud_receiver_timer_cookie = NULL;
 	}
+
+	txPosition.nmeaInfo.sig = NMEA_SIG_BAD;
+	txPosition.nmeaInfo.fix = NMEA_FIX_BAD;
+	txPosition.nmeaInfo.smask = GPNON;
 
 	destroyPositionAverageList(&positionAverageList);
 
