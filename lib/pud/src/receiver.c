@@ -102,20 +102,31 @@ PositionUpdateEntry txPosition;
  * Functions
  */
 
+/**
+ Determine whether s position is valid.
+
+ @param position
+ a pointer to a position
+
+ @return
+ - true when valid
+ - false otherwise
+ */
+static bool positionValid(PositionUpdateEntry * position){
+	return (nmeaInfoHasField(position->nmeaInfo.smask, FIX)
+			&& (position->nmeaInfo.fix != NMEA_FIX_BAD));
+}
+
 /** Send the transmit buffer out over all OLSR interfaces, called as a timer
  * callback and also immediately on an external state change */
 static void txToAllOlsrInterfaces(void) {
 	unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR];
 	unsigned int aligned_size = 0;
-	bool invalid = false;
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 
-	invalid = (transmitGpsInformation.txPosition.nmeaInfo.fix == NMEA_FIX_BAD);
-
-	if (!transmitGpsInformation.updated && !invalid) {
-		/* fix the timestamp when the transmitGpsInformation was not updated
-		 * while it is valid */
+	if (!transmitGpsInformation.updated
+			&& positionValid(&transmitGpsInformation.txPosition)) {
 		struct timeb tp;
 		struct tm nowStruct;
 
@@ -197,7 +208,7 @@ static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
 	 */
 
 	/*
-	 * Fix
+	 * Valid
 	 *
 	 * avg  last  movingNow
 	 *  0     0   UNKNOWN
@@ -206,21 +217,19 @@ static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
 	 *  1     1   determine via other parameters
 	 */
 
-	/* when avg has no valid fix then can't determine whether we're moving */
-	if (!(nmeaInfoHasField(posAvgEntry->nmeaInfo.smask, FIX)
-			&& (posAvgEntry->nmeaInfo.fix != NMEA_FIX_BAD))) {
+	/* when avg is not valid then can't determine whether we're moving */
+	if (!positionValid(posAvgEntry)) {
 		return UNKNOWN;
 	}
 
-	/* avg has a valid fix here */
+	/* avg is valid here */
 
-	/* when lastTx has no valid fix, then we are moving */
-	if (!(nmeaInfoHasField(lastTxEntry->nmeaInfo.smask, FIX)
-			&& (lastTxEntry->nmeaInfo.fix != NMEA_FIX_BAD))) {
+	/* when lastTx is not valid, then we are moving */
+	if (!positionValid(lastTxEntry)) {
 		return SET;
 	}
 
-	/* both avg and lastTx have a valid fix here */
+	/* both avg and lastTx are valid here */
 
 	/*
 	 * Speed
@@ -592,18 +601,18 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 * Update transmitGpsInformation
 	 */
 
-	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-
 	updateTransmitGpsInformation = externalStateChange
-			|| (state.externalState == MOVING);
+			|| (state.externalState == MOVING)
+			|| (positionValid(posAvgEntry) && !positionValid(&txPosition));
 
 	if (updateTransmitGpsInformation) {
 		memcpy(&txPosition.nmeaInfo, &posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
+		(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 		memcpy(&transmitGpsInformation.txPosition.nmeaInfo,
 				&posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
 		transmitGpsInformation.updated = true;
+		(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 	}
-	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 #if defined(PUD_DUMP_AVERAGING)
 	dump_nmeaInfo(&transmitGpsInformation.txPosition.nmeaInfo,
