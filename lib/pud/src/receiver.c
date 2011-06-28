@@ -60,12 +60,13 @@ typedef enum {
 
 /** Type describing state */
 typedef struct {
-	MovementState state; /**< the movement state */
-	unsigned long long hysteresisCounter; /**< the hysteresis counter for moving --> stationary */
+	MovementState internalState; /**< the internal movement state */
+	MovementState externalState; /**< the externally visible movement state */
+	unsigned long long hysteresisCounter; /**< the hysteresis counter external state changes */
 } StateType;
 
 /** The state */
-StateType state = { .state = MOVING, .hysteresisCounter = 0 };
+StateType state = { .internalState = MOVING, .externalState = MOVING, .hysteresisCounter = 0 };
 
 /*
  * Averaging
@@ -102,7 +103,7 @@ PositionUpdateEntry txPosition;
  */
 
 /** Send the transmit buffer out over all OLSR interfaces, called as a timer
- * callback and also immediately on a state change */
+ * callback and also immediately on an external state change */
 static void txToAllOlsrInterfaces(void) {
 	unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR];
 	unsigned int aligned_size = 0;
@@ -131,7 +132,7 @@ static void txToAllOlsrInterfaces(void) {
 	}
 	aligned_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo,
 			(union olsr_message *) &txBuffer[0], sizeof(txBuffer),
-			((state.state == MOVING) ? getUpdateIntervalMoving()
+			((state.externalState == MOVING) ? getUpdateIntervalMoving()
 					: getUpdateIntervalStationary()));
 	transmitGpsInformation.updated = false;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
@@ -429,10 +430,12 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	bool retval = false;
 	PositionUpdateEntry * incomingEntry;
-	MovementState currentState = state.state;
 	MovementState newState = MOVING;
 	PositionUpdateEntry * posAvgEntry;
 	TristateBoolean movingNow;
+	bool internalStateChange = false;
+	bool externalStateChange = false;
+	bool updateTransmitGpsInformation = false;
 
 	/* do not process when the message does not start with $GP */
 	if ((rxCount < rxBufferPrefixLength) || (strncmp((char *) rxBuffer,
@@ -474,88 +477,110 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 			"receiverUpdateGpsInformation: incoming entry after sanitise");
 #endif /* PUD_DUMP_AVERAGING */
 
-	/* flush on MOVING */
-	if (currentState == MOVING) {
+	/*
+	 * Averageing
+	 */
+
+	if (state.internalState == MOVING) {
+		/* flush average: keep only the incoming entry */
 		flushPositionAverageList(&positionAverageList);
 	}
-
-	/* add to average */
 	addNewPositionToAverage(&positionAverageList, incomingEntry);
-
 	posAvgEntry = getPositionAverageEntry(&positionAverageList, AVERAGE);
+
+	/*
+	 * Movement detection
+	 */
 
 	movingNow = detemineMoving(posAvgEntry, &txPosition);
 
 #if defined(PUD_DUMP_AVERAGING)
-	olsr_printf(0, "receiverUpdateGpsInformation: currentState = %s\n",
-			MovementStateToString(currentState));
-	olsr_printf(0, "receiverUpdateGpsInformation: movingNow    = %s\n",
+	olsr_printf(0, "receiverUpdateGpsInformation: internalState = %s\n",
+			MovementStateToString(state.internalState));
+	olsr_printf(0, "receiverUpdateGpsInformation: movingNow     = %s\n",
 			TristateBooleanToString(movingNow));
 #endif /* PUD_DUMP_AVERAGING */
 
-	/* determine the new state */
-	switch (currentState) {
-		case STATIONARY:
-			if (movingNow == SET) {
+	/*
+	 * Internal State
+	 */
+
+	if (movingNow == SET) {
+		newState = MOVING;
+	} else if (movingNow == UNSET) {
+		newState = STATIONARY;
+	}
+	internalStateChange = (state.internalState != newState);
+	state.internalState = newState;
+
+	/*
+	 * External State (+ hysteresis)
+	 */
+
+	if (internalStateChange) {
+		/* restart hysteresis for external state change when we have an internal
+		 * state change */
+		state.hysteresisCounter = 0;
+	}
+
+	/* when internal state and external state are not the same we need to
+	 * perform hysteresis before we can propagate the internal state to the
+	 * external state */
+	newState = state.externalState;
+	if (state.internalState != state.externalState) {
+		switch (state.internalState) {
+			case STATIONARY:
+				/* external state is MOVING */
+
+				/* delay going to stationary a bit */
+				state.hysteresisCounter++;
+
+				if (state.hysteresisCounter
+						>= getHysteresisCountToStationary()) {
+					/* outside the hysteresis range, go to stationary */
+					newState = STATIONARY;
+				}
+				break;
+
+			case MOVING:
+				/* external state is STATIONARY */
+
 				/* delay going to moving a bit */
 				state.hysteresisCounter++;
 
 				if (state.hysteresisCounter >= getHysteresisCountToMoving()) {
 					/* outside the hysteresis range, go to moving */
 					newState = MOVING;
-				} else {
-					/* within the hysteresis range, stay in stationary */
-					newState = STATIONARY;
 				}
-			} else { /* unset and unknown */
-				newState = STATIONARY;
-			}
-			break;
+				break;
 
-		case MOVING:
-			if (movingNow == UNSET) {
-				/* delay going to stationary a bit */
-				state.hysteresisCounter++;
-
-				if (state.hysteresisCounter >= getHysteresisCountToStationary()) {
-					/* outside the hysteresis range, go to stationary */
-					newState = STATIONARY;
-				} else {
-					/* within the hysteresis range, stay in moving */
-					newState = MOVING;
-				}
-			} else { /* set and unknown */
+			default:
+				/* when unknown do just as if we transition into moving */
 				newState = MOVING;
-			}
-			break;
-
-		default:
-			/* when unknown do just as if we transition into moving */
-			newState = MOVING;
-			break;
+				break;
+		}
 	}
+	externalStateChange = (state.externalState != newState);
+	state.externalState = newState;
 
 #if defined(PUD_DUMP_AVERAGING)
 	olsr_printf(0, "receiverUpdateGpsInformation: newState = %s\n",
 			MovementStateToString(newState));
 #endif /* PUD_DUMP_AVERAGING */
 
-	/* perform state change actions */
-	if (currentState != newState) {
-		/* reset the hysteresis counter upon state change */
-		state.hysteresisCounter = 0;
-
-		/* set the new state */
-		state.state = newState;
-
-		/* restart the timer for the new state */
+	/* perform externalState change actions */
+	if (externalStateChange) {
+		/* restart the timer for the new externalState */
 		if (!restartTimer(
-				(newState == STATIONARY) ? getUpdateIntervalStationary()
-						: getUpdateIntervalMoving())) {
+				(state.externalState == STATIONARY) ? getUpdateIntervalStationary()
+				: getUpdateIntervalMoving())) {
 			pudError(0, "Could not restart receiver timer, no position"
-				" updates will be sent to the OLSR network");
+					" updates will be sent to the OLSR network");
 			goto end;
 		}
+
+		/* do an immediate transmit */
+		txToAllOlsrInterfaces();
 	}
 
 #if defined(PUD_DUMP_AVERAGING)
@@ -569,11 +594,13 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 
-	if ((state.state == MOVING) || (currentState != newState)) {
-		memcpy(&txPosition.nmeaInfo, &posAvgEntry->nmeaInfo,
-				sizeof(nmeaINFO));
-		memcpy(&transmitGpsInformation.txPosition.nmeaInfo, &posAvgEntry->nmeaInfo,
-				sizeof(nmeaINFO));
+	updateTransmitGpsInformation = externalStateChange
+			|| (state.externalState == MOVING);
+
+	if (updateTransmitGpsInformation) {
+		memcpy(&txPosition.nmeaInfo, &posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
+		memcpy(&transmitGpsInformation.txPosition.nmeaInfo,
+				&posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
 		transmitGpsInformation.updated = true;
 	}
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
@@ -582,11 +609,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	dump_nmeaInfo(&transmitGpsInformation.txPosition.nmeaInfo,
 			"receiverUpdateGpsInformation: transmitGpsInformation");
 #endif /* PUD_DUMP_AVERAGING */
-
-	/* on a state change do an immediate transmit */
-	if (currentState != newState) {
-		txToAllOlsrInterfaces();
-	}
 
 	retval = true;
 
@@ -696,7 +718,8 @@ bool startReceiver(void) {
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 
-	state.state = MOVING;
+	state.internalState = MOVING;
+	state.externalState = MOVING;
 	state.hysteresisCounter = 0;
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
@@ -727,12 +750,13 @@ void stopReceiver(void) {
 	destroyPositionAverageList(&positionAverageList);
 
 	state.hysteresisCounter = 0;
-	state.state = MOVING;
+	state.externalState = MOVING;
+	state.internalState = MOVING;
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 
-	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.updated = false;
+	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 
 	nmea_parser_destroy(&nmeaParser);
 
