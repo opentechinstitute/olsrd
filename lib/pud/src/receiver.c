@@ -52,12 +52,11 @@ typedef enum {
 
 /** Type describing movement state */
 typedef enum {
-	INIT, STATIONARY, MOVING
+	STATIONARY, MOVING
 } MovementState;
 
 #define MovementStateToString(s)	((s == MOVING) ? "moving" : \
-									 (s == STATIONARY) ? "stationary" : \
-									 "init")
+									 "stationary")
 
 /** Type describing state */
 typedef struct {
@@ -66,7 +65,7 @@ typedef struct {
 } StateType;
 
 /** The state */
-StateType state = { .state = INIT, .hysteresisCounter = 0 };
+StateType state = { .state = MOVING, .hysteresisCounter = 0 };
 
 /*
  * Averaging
@@ -472,8 +471,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 			"receiverUpdateGpsInformation: incoming entry after sanitise");
 #endif /* PUD_DUMP_AVERAGING */
 
-	/* flush on INIT and MOVING */
-	if (currentState != STATIONARY) {
+	/* flush on MOVING */
+	if (currentState == MOVING) {
 		flushPositionAverageList(&positionAverageList);
 	}
 
@@ -571,11 +570,10 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	/* Only when not invalid we update the transmitGpsInformation */
 	if (!transmitGpsInformation.invalid) {
-		if ((movingNow == SET) || (state.state != STATIONARY)) {
-			/* Copy posAvgEntry into average list txPosition and
-			 * transmitGpsInformation when we consider ourselves as moving
-			 * (independent of the state) or when we are in the INIT or
-			 * MOVING state */
+		if ((movingNow == SET) || (state.state == MOVING)) {
+			/* Copy posAvgEntry into txPosition and transmitGpsInformation
+			 * when we consider ourselves as moving (independent of the state)
+			 * or when we are in the MOVING state */
 			memcpy(&txPosition.nmeaInfo,
 					&posAvgEntry->nmeaInfo,	sizeof(nmeaINFO));
 			memcpy(&transmitGpsInformation.txPosition.nmeaInfo, &posAvgEntry->nmeaInfo,
@@ -706,7 +704,7 @@ bool startReceiver(void) {
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 
-	state.state = INIT;
+	state.state = MOVING;
 	state.hysteresisCounter = 0;
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
@@ -737,7 +735,7 @@ void stopReceiver(void) {
 	destroyPositionAverageList(&positionAverageList);
 
 	state.hysteresisCounter = 0;
-	state.state = INIT;
+	state.state = MOVING;
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 
