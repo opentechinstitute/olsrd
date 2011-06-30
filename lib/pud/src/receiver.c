@@ -685,7 +685,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	updateTransmitGpsInformation = externalStateChange
 			|| (state.externalState == MOVING)
-			|| (positionValid(posAvgEntry) && !positionValid(&txPosition));
+			|| (positionValid(posAvgEntry) && !positionValid(&txPosition))
+			|| (movementResult.inside == SET);
 
 	if (updateTransmitGpsInformation) {
 		memcpy(&txPosition.nmeaInfo, &posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
