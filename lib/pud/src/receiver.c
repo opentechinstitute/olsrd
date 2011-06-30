@@ -42,7 +42,7 @@ nmeaPARSER nmeaParser;
  */
 
 /** Type describing a tri-state boolean */
-typedef enum {
+typedef enum _TristateBoolean {
 	UNKNOWN, UNSET, SET
 } TristateBoolean;
 
@@ -51,7 +51,7 @@ typedef enum {
 									 "unknown")
 
 /** Type describing movement state */
-typedef enum {
+typedef enum _MovementState {
 	STATIONARY, MOVING
 } MovementState;
 
@@ -59,7 +59,7 @@ typedef enum {
 									 "stationary")
 
 /** Type describing state */
-typedef struct {
+typedef struct _StateType {
 	MovementState internalState; /**< the internal movement state */
 	MovementState externalState; /**< the externally visible movement state */
 	unsigned long long hysteresisCounter; /**< the hysteresis counter external state changes */
@@ -80,7 +80,7 @@ PositionAverageList positionAverageList;
  */
 
 /** Structure of the latest GPS information that is transmitted */
-typedef struct {
+typedef struct _TransmitGpsInformation {
 	pthread_mutex_t mutex; /**< access mutex */
 	bool updated; /**< true when the information was updated */
 	PositionUpdateEntry txPosition; /**< The last transmitted position */
