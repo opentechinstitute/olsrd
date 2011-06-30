@@ -68,6 +68,24 @@ typedef struct _StateType {
 /** The state */
 StateType state = { .internalState = MOVING, .externalState = MOVING, .hysteresisCounter = 0 };
 
+/** Type describing movement calculations */
+typedef struct _MovementType {
+	TristateBoolean moving; /**< SET: we are moving */
+
+	TristateBoolean overThresholds; /**< SET: at least 1 threshold state is set */
+	TristateBoolean speedOverThreshold; /**< SET: speed is over threshold */
+	TristateBoolean hDistanceOverThreshold; /**< SET: horizontal distance is outside threshold */
+	TristateBoolean vDistanceOverThreshold; /**< SET: vertical distance is outside threshold */
+
+	TristateBoolean outside; /**< SET: at least 1 outside state is SET */
+	TristateBoolean outsideHdop; /**< SET: avg is outside lastTx HDOP */
+	TristateBoolean outsideVdop; /**< SET: avg is outside lastTx VDOP */
+
+	TristateBoolean inside; /**< SET: all inside states are SET */
+	TristateBoolean insideHdop; /**< SET: avg is inside lastTx HDOP */
+	TristateBoolean insideVdop; /**< SET: avg is inside lastTx VDOP */
+} MovementType;
+
 /*
  * Averaging
  */
@@ -183,111 +201,192 @@ static void txToAllOlsrInterfaces(void) {
 }
 
 /**
- Detemines whether we are moving by comparing fields from the average
+ Detemine whether we are moving by comparing fields from the average
  position against those of the last transmitted position.
 
  MUST be called which the position average list locked.
 
- @param posAvgEntry
+ @param avg
  the average position
- @param lastTxEntry
+ @param lastTx
  the last transmitted position
-
- @return
- - SET when we are moving
- - UNSET when we are not moving
- - UNKNOWN when we don't know / can't determine
+ @param result
+ the results of all movement criteria
  */
-static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
-		PositionUpdateEntry * lastTxEntry) {
-	TristateBoolean speedMoving = UNKNOWN;
-	TristateBoolean outsideHdopOrDistance = UNKNOWN;
-	TristateBoolean elvMoving = UNKNOWN;
+static void detemineMoving(PositionUpdateEntry * avg,
+		PositionUpdateEntry * lastTx, MovementType * result) {
+	/* avg field presence booleans */
+	bool avgHasSpeed;
+	bool avgHasPos;
+	bool avgHasHdop;
+	bool avgHasElv;
+	bool avgHasVdop;
+
+	/* lastTx field presence booleans */bool lastTxHasPos;
+	bool lastTxHasHdop;
+	bool lastTxHasElv;
+	bool lastTxHasVdop;
+
+	/* these have defaults */
+	double dopMultiplier;
+	double avgHdop;
+	double lastTxHdop;
+	double avgVdop;
+	double lastTxVdop;
+
+	/* calculated values and their validity booleans */
+	double hDistance;
+	double vDistance;
+	double hdopDistanceForOutside;
+	double hdopDistanceForInside;
+	double vdopDistanceForOutside;
+	double vdopDistanceForInside;
+	bool hDistanceValid;
+	bool hdopDistanceValid;
+	bool vDistanceValid;
+	bool vdopDistanceValid;
+
+	/* clear outputs */
+	result->moving = UNKNOWN;
+
+	result->overThresholds = UNKNOWN;
+	result->speedOverThreshold = UNKNOWN;
+	result->hDistanceOverThreshold = UNKNOWN;
+	result->vDistanceOverThreshold = UNKNOWN;
+
+	result->outside = UNKNOWN;
+	result->outsideHdop = UNKNOWN;
+	result->outsideVdop = UNKNOWN;
+
+	result->inside = UNKNOWN;
+	result->insideHdop = UNKNOWN;
+	result->insideVdop = UNKNOWN;
 
 	/*
-	 * Moving Criteria Evaluation Start
-	 * We compare the average position against the last transmitted position.
-	 *
-	 * Note: when the current state is not STATIONARY then the average position
-	 * is the same as the incoming position.
-	 */
-
-	/*
-	 * Valid
+	 * Validity
 	 *
 	 * avg  last  movingNow
-	 *  0     0   UNKNOWN
-	 *  0     1   UNKNOWN
-	 *  1     0   MOVING
+	 *  0     0   UNKNOWN : can't determine whether we're moving
+	 *  0     1   UNKNOWN : can't determine whether we're moving
+	 *  1     0   MOVING  : always seen as movement
 	 *  1     1   determine via other parameters
 	 */
 
-	/* when avg is not valid then can't determine whether we're moving */
-	if (!positionValid(posAvgEntry)) {
-		return UNKNOWN;
+	if (!positionValid(avg)) {
+		/* everything is unknown */
+		return;
 	}
 
 	/* avg is valid here */
 
-	/* when lastTx is not valid, then we are moving */
-	if (!positionValid(lastTxEntry)) {
-		return SET;
+	if (!positionValid(lastTx)) {
+		result->moving = SET;
+		/* the rest is unknown */
+		return;
 	}
 
 	/* both avg and lastTx are valid here */
 
+	/* avg field presence booleans */
+	avgHasSpeed = nmeaInfoHasField(avg->nmeaInfo.smask, SPEED);
+	avgHasPos = nmeaInfoHasField(avg->nmeaInfo.smask, LAT)
+			&& nmeaInfoHasField(avg->nmeaInfo.smask, LON);
+	avgHasHdop = nmeaInfoHasField(avg->nmeaInfo.smask, HDOP);
+	avgHasElv = nmeaInfoHasField(avg->nmeaInfo.smask, ELV);
+	avgHasVdop = nmeaInfoHasField(avg->nmeaInfo.smask, VDOP);
+
+	/* lastTx field presence booleans */
+	lastTxHasPos = nmeaInfoHasField(lastTx->nmeaInfo.smask, LAT)
+			&& nmeaInfoHasField(lastTx->nmeaInfo.smask, LON);
+	lastTxHasHdop = nmeaInfoHasField(lastTx->nmeaInfo.smask, HDOP);
+	lastTxHasElv = nmeaInfoHasField(lastTx->nmeaInfo.smask, ELV);
+	lastTxHasVdop = nmeaInfoHasField(lastTx->nmeaInfo.smask, VDOP);
+
+	/* fill in some values _or_ defaults */
+	dopMultiplier = getDopMultiplier();
+	avgHdop = avgHasHdop ? avg->nmeaInfo.HDOP : getDefaultHdop();
+	lastTxHdop = lastTxHasHdop ? lastTx->nmeaInfo.HDOP : getDefaultHdop();
+	avgVdop = avgHasVdop ? avg->nmeaInfo.VDOP : getDefaultVdop();
+	lastTxVdop = lastTxHasVdop ? lastTx->nmeaInfo.VDOP : getDefaultVdop();
+
 	/*
-	 * Speed
+	 * Calculations
 	 */
 
-	if (nmeaInfoHasField(posAvgEntry->nmeaInfo.smask, SPEED)) {
-		if (posAvgEntry->nmeaInfo.speed >= getMovingSpeedThreshold()) {
-			return SET;
-		}
+	/* hDistance */
+	if (avgHasPos && lastTxHasPos) {
+		nmeaPOS avgPos;
+		nmeaPOS lastTxPos;
 
-		/* speed is below threshold */
-		speedMoving = UNSET;
+		avgPos.lat = nmea_degree2radian(avg->nmeaInfo.lat);
+		avgPos.lon = nmea_degree2radian(avg->nmeaInfo.lon);
+
+		lastTxPos.lat = nmea_degree2radian(lastTx->nmeaInfo.lat);
+		lastTxPos.lon = nmea_degree2radian(lastTx->nmeaInfo.lon);
+
+		hDistance = nmea_distance_ellipsoid(&avgPos, &lastTxPos, NULL, NULL);
+		hDistanceValid = true;
+	} else {
+		hDistanceValid = false;
+	}
+
+	/* hdopDistance */
+	if (avgHasHdop || lastTxHasHdop) {
+		hdopDistanceForOutside = dopMultiplier * (lastTxHdop + avgHdop);
+		hdopDistanceForInside = dopMultiplier * (lastTxHdop - avgHdop);
+		hdopDistanceValid = true;
+	} else {
+		hdopDistanceValid = false;
+	}
+
+	/* vDistance */
+	if (avgHasElv && lastTxHasElv) {
+		vDistance = fabs(lastTx->nmeaInfo.elv - avg->nmeaInfo.elv);
+		vDistanceValid = true;
+	} else {
+		vDistanceValid = false;
+	}
+
+	/* vdopDistance */
+	if (avgHasVdop || lastTxHasVdop) {
+		vdopDistanceForOutside = dopMultiplier * (lastTxVdop + avgVdop);
+		vdopDistanceForInside = dopMultiplier * (lastTxVdop - avgVdop);
+		vdopDistanceValid = true;
+	} else {
+		vdopDistanceValid = false;
+	}
+
+	/*
+	 * Moving Criteria Evaluation Start
+	 * We compare the average position against the last transmitted position.
+	 */
+
+	/* Speed */
+	if (avgHasSpeed) {
+		if (avg->nmeaInfo.speed >= getMovingSpeedThreshold()) {
+			result->speedOverThreshold = SET;
+		} else {
+			result->speedOverThreshold = UNSET;
+		}
 	}
 
 	/*
 	 * Position
 	 *
-	 * avg  last  movingNow
+	 * avg  last  hDistanceMoving
 	 *  0     0   determine via other parameters
 	 *  0     1   determine via other parameters
 	 *  1     0   MOVING
 	 *  1     1   determine via distance threshold and HDOP
 	 */
-	if ((nmeaInfoHasField(posAvgEntry->nmeaInfo.smask, LAT))
-			&& (nmeaInfoHasField(posAvgEntry->nmeaInfo.smask, LON))) {
-		nmeaPOS avgPos;
-		nmeaPOS lastTxPos;
-		double distance;
-
-		/* when avg has valid position while lastTx does not, then we are
-		 * moving */
-		if (!((nmeaInfoHasField(lastTxEntry->nmeaInfo.smask, LAT))
-				&& (nmeaInfoHasField(lastTxEntry->nmeaInfo.smask, LON)))) {
-			return SET;
+	if (avgHasPos && !lastTxHasPos) {
+		result->hDistanceOverThreshold = SET;
+	} else if (hDistanceValid) {
+		if (hDistance >= getMovingDistanceThreshold()) {
+			result->hDistanceOverThreshold = SET;
+		} else {
+			result->hDistanceOverThreshold = UNSET;
 		}
-
-		/* both avg and lastTx have a valid position here */
-
-		avgPos.lat = nmea_degree2radian(posAvgEntry->nmeaInfo.lat);
-		avgPos.lon = nmea_degree2radian(posAvgEntry->nmeaInfo.lon);
-
-		lastTxPos.lat = nmea_degree2radian(lastTxEntry->nmeaInfo.lat);
-		lastTxPos.lon = nmea_degree2radian(lastTxEntry->nmeaInfo.lon);
-
-		distance = nmea_distance_ellipsoid(&avgPos, &lastTxPos, 0, 0);
-
-		/* determine whether we are moving according to the distance threshold */
-		if (distance >= getMovingDistanceThreshold()) {
-			return SET;
-		}
-
-		/* distance is below threshold */
-		outsideHdopOrDistance = UNSET;
 
 		/*
 		 * Position with HDOP
@@ -298,34 +397,19 @@ static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
 		 *  1     0   determine via position with HDOP (lastTx has default HDOP)
 		 *  1     1   determine via position with HDOP
 		 */
-		{
-			bool avgHasHdop = nmeaInfoHasField(posAvgEntry->nmeaInfo.smask,
-					HDOP);
-			bool lastTxHasHdop = nmeaInfoHasField(lastTxEntry->nmeaInfo.smask,
-					HDOP);
+		if (hdopDistanceValid) {
+			/* we are outside the HDOP when the HDOPs no longer overlap */
+			if (hDistance > hdopDistanceForOutside) {
+				result->outsideHdop = SET;
+			} else {
+				result->outsideHdop = UNSET;
+			}
 
-			if (avgHasHdop || lastTxHasHdop) {
-				double avgHdop;
-				double lastTxHdop;
-
-				if (avgHasHdop) {
-					avgHdop = posAvgEntry->nmeaInfo.HDOP;
-				} else {
-					avgHdop = getDefaultHdop();
-				}
-				if (lastTxHasHdop) {
-					lastTxHdop = lastTxEntry->nmeaInfo.HDOP;
-				} else {
-					lastTxHdop = getDefaultHdop();
-				}
-
-				/* we are outside the HDOP when the HDOPs no longer overlap */
-				if (distance > (getDopMultiplier() * (avgHdop + lastTxHdop))) {
-					return SET;
-				}
-
-				/* the HDOPs overlap */
-				outsideHdopOrDistance = UNSET;
+			/* we are inside the HDOP when the HDOPs fully overlap */
+			if (hDistance <= hdopDistanceForInside) {
+				result->insideHdop = SET;
+			} else {
+				result->insideHdop = UNSET;
 			}
 		}
 	}
@@ -339,31 +423,14 @@ static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
 	 *  1     0   MOVING
 	 *  1     1   determine via distance threshold and VDOP
 	 */
-	if (nmeaInfoHasField(posAvgEntry->nmeaInfo.smask, ELV)) {
-		double avgElv;
-		double lastTxElv;
-		double distance;
-
-		/* when avg has valid elevation while lastTx does not, then we are
-		 * moving */
-		if (!nmeaInfoHasField(lastTxEntry->nmeaInfo.smask, ELV)) {
-			return SET;
+	if (avgHasElv && !lastTxHasElv) {
+		result->vDistanceOverThreshold = SET;
+	} else if (vDistanceValid) {
+		if (vDistance >= getMovingDistanceThreshold()) {
+			result->vDistanceOverThreshold = SET;
+		} else {
+			result->vDistanceOverThreshold = UNSET;
 		}
-
-		/* both avg and lastTx have a valid elevation here */
-
-		avgElv = posAvgEntry->nmeaInfo.elv;
-		lastTxElv = lastTxEntry->nmeaInfo.elv;
-
-		distance = fabs(lastTxElv - avgElv);
-
-		/* determine whether we are moving according to the distance threshold */
-		if (distance >= getMovingDistanceThreshold()) {
-			return SET;
-		}
-
-		/* distance is below threshold */
-		elvMoving = UNSET;
 
 		/*
 		 * Elevation with VDOP
@@ -374,54 +441,62 @@ static TristateBoolean detemineMoving(PositionUpdateEntry * posAvgEntry,
 		 *  1     0   determine via elevation with VDOP (lastTx has default VDOP)
 		 *  1     1   determine via elevation with VDOP
 		 */
-		{
-			bool avgHasVdop = nmeaInfoHasField(posAvgEntry->nmeaInfo.smask,
-					VDOP);
-			bool lastTxHasVdop = nmeaInfoHasField(lastTxEntry->nmeaInfo.smask,
-					VDOP);
+		if (vdopDistanceValid) {
+			/* we are outside the VDOP when the VDOPs no longer overlap */
+			if (vDistance > vdopDistanceForOutside) {
+				result->outsideVdop = SET;
+			} else {
+				result->outsideVdop = UNSET;
+			}
 
-			if (avgHasVdop || lastTxHasVdop) {
-				double avgVdop;
-				double lastTxVdop;
-
-				if (avgHasVdop) {
-					avgVdop = posAvgEntry->nmeaInfo.VDOP;
-				} else {
-					avgVdop = getDefaultVdop();
-				}
-				if (lastTxHasVdop) {
-					lastTxVdop = lastTxEntry->nmeaInfo.VDOP;
-				} else {
-					lastTxVdop = getDefaultVdop();
-				}
-
-				/* we are outside the VDOP when the VDOPs no longer overlap */
-				if (distance > (getDopMultiplier() * (avgVdop + lastTxVdop))) {
-					return SET;
-				}
-
-				/* the VDOPs don't overlap */
-				elvMoving = UNSET;
+			/* we are inside the VDOP when the VDOPs fully overlap */
+			if (vDistance <= vdopDistanceForInside) {
+				result->insideVdop = SET;
+			} else {
+				result->insideVdop = UNSET;
 			}
 		}
-	}
-
-	assert (speedMoving != SET);
-	assert (outsideHdopOrDistance != SET);
-	assert (elvMoving != SET);
-
-	/* accumulate moving criteria */
-
-	if ((speedMoving == UNSET) || (outsideHdopOrDistance == UNSET)
-			|| (elvMoving == UNSET)) {
-		return UNSET;
 	}
 
 	/*
 	 * Moving Criteria Evaluation End
 	 */
 
-	return UNKNOWN;
+	/* accumulate inside criteria */
+	if ((result->insideHdop == SET) && (result->insideVdop == SET)) {
+		result->inside = SET;
+	} else if ((result->insideHdop == UNSET) || (result->insideVdop == UNSET)) {
+		result->inside = UNSET;
+	}
+
+	/* accumulate outside criteria */
+	if ((result->outsideHdop == SET) || (result->outsideVdop == SET)) {
+		result->outside = SET;
+	} else if ((result->outsideHdop == UNSET)
+			|| (result->outsideVdop == UNSET)) {
+		result->outside = UNSET;
+	}
+
+	/* accumulate threshold criteria */
+	if ((result->speedOverThreshold == SET)
+			|| (result->hDistanceOverThreshold == SET)
+			|| (result->vDistanceOverThreshold == SET)) {
+		result->overThresholds = SET;
+	} else if ((result->speedOverThreshold == UNSET)
+			|| (result->hDistanceOverThreshold == UNSET)
+			|| (result->vDistanceOverThreshold == UNSET)) {
+		result->overThresholds = UNSET;
+	}
+
+	/* accumulate moving criteria */
+	if ((result->overThresholds == SET) || (result->outside == SET)) {
+		result->moving = SET;
+	} else if ((result->overThresholds == UNSET)
+			&& (result->outside == UNSET)) {
+		result->moving = UNSET;
+	}
+
+	return;
 }
 
 /**
@@ -446,6 +521,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	PositionUpdateEntry * incomingEntry;
 	MovementState newState = MOVING;
 	PositionUpdateEntry * posAvgEntry;
+	MovementType movementResult;
 	TristateBoolean movingNow;
 	bool internalStateChange = false;
 	bool externalStateChange = false;
@@ -506,7 +582,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 * Movement detection
 	 */
 
-	movingNow = detemineMoving(posAvgEntry, &txPosition);
+	detemineMoving(posAvgEntry, &txPosition, &movementResult);
+	movingNow = movementResult.moving;
 
 #if defined(PUD_DUMP_AVERAGING)
 	olsr_printf(0, "receiverUpdateGpsInformation: internalState = %s\n",
