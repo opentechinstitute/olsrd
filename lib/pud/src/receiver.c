@@ -669,9 +669,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 					" updates will be sent to the OLSR network");
 			goto end;
 		}
-
-		/* do an immediate transmit */
-		txToAllOlsrInterfaces();
 	}
 
 #if defined(PUD_DUMP_AVERAGING)
@@ -684,11 +681,10 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 */
 
 	updateTransmitGpsInformation = externalStateChange
-			|| (state.externalState == MOVING)
 			|| (positionValid(posAvgEntry) && !positionValid(&txPosition))
 			|| (movementResult.inside == SET);
 
-	if (updateTransmitGpsInformation) {
+	if ((state.externalState == MOVING) || updateTransmitGpsInformation) {
 		memcpy(&txPosition.nmeaInfo, &posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
 		(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 		memcpy(&transmitGpsInformation.txPosition.nmeaInfo,
@@ -701,6 +697,11 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	dump_nmeaInfo(&transmitGpsInformation.txPosition.nmeaInfo,
 			"receiverUpdateGpsInformation: transmitGpsInformation");
 #endif /* PUD_DUMP_AVERAGING */
+
+	if (updateTransmitGpsInformation) {
+		/* do an immediate transmit */
+		txToAllOlsrInterfaces();
+	}
 
 	retval = true;
 
