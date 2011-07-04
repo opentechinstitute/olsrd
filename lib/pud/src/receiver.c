@@ -657,21 +657,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 #if defined(PUD_DUMP_AVERAGING)
 	olsr_printf(0, "receiverUpdateGpsInformation: newState = %s\n",
 			MovementStateToString(newState));
-#endif /* PUD_DUMP_AVERAGING */
-
-	/* perform externalState change actions */
-	if (externalStateChange) {
-		/* restart the timer for the new externalState */
-		if (!restartTimer(
-				(state.externalState == STATIONARY) ? getUpdateIntervalStationary()
-				: getUpdateIntervalMoving())) {
-			pudError(0, "Could not restart receiver timer, no position"
-					" updates will be sent to the OLSR network");
-			goto end;
-		}
-	}
-
-#if defined(PUD_DUMP_AVERAGING)
 	dump_nmeaInfo(&posAvgEntry->nmeaInfo,
 			"receiverUpdateGpsInformation: posAvgEntry");
 #endif /* PUD_DUMP_AVERAGING */
@@ -699,6 +684,14 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 #endif /* PUD_DUMP_AVERAGING */
 
 	if (updateTransmitGpsInformation) {
+		if (!restartTimer(
+				(state.externalState == STATIONARY) ? getUpdateIntervalStationary()
+				: getUpdateIntervalMoving())) {
+			pudError(0, "Could not restart receiver timer, no position"
+					" updates will be sent to the OLSR network");
+			goto end;
+		}
+
 		/* do an immediate transmit */
 		txToAllOlsrInterfaces();
 	}
