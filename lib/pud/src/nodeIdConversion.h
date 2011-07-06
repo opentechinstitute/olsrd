@@ -19,9 +19,6 @@ bool validateNodeId(NodeIdType nodeIdTypeNumber);
 size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 		unsigned int olsrMessageSize);
 
-void nodeIdPreTransmitHook(union olsr_message *olsrMessage,
-		struct interface *ifn);
-
 void getNodeInfoFromOlsr(const union olsr_message *olsrMessage,
 		PudOlsrWireFormat *olsrGpsMessage, char *nodeIdBuffer,
 		unsigned int nodeIdBufferSize, const char **nodeId,

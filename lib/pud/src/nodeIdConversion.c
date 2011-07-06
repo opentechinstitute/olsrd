@@ -200,42 +200,6 @@ size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 }
 
 /**
- This function is called every time before a message is sent on a specific
- interface. It can manipulate the outgoing message.
- Note that a change to the outgoing messages is carried over to the message
- that goes out on the next interface when the message is _not_ reset
- before it is sent out on the next interface.
-
- @param olsrMessage
- A pointer to the outgoing message
- @param ifn
- A pointer to the OLSR interface structure
- */
-void nodeIdPreTransmitHook(union olsr_message *olsrMessage,
-		struct interface *ifn) {
-	/* set the MAC address in the message when needed */
-	if (unlikely(getNodeIdTypeNumber() == PUD_NODEIDTYPE_MAC)) {
-		PudOlsrWireFormat * olsrGpsMessage;
-		TOLSRNetworkInterface * olsrIf = getOlsrNetworkInterface(ifn);
-
-		if (olsr_cnf->ip_version == AF_INET) {
-			olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
-		} else {
-			olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
-		}
-
-		if (likely(olsrIf != NULL)) {
-			memcpy(&olsrGpsMessage->nodeInfo.nodeId, &olsrIf->hwAddress[0],
-					sizeof(PUD_HWADDR_SIZE));
-		} else {
-			pudError(false, "Could not find OLSR interface %s, cleared its"
-				" MAC address in the OLSR message\n", ifn->int_name);
-			memset(&olsrGpsMessage->nodeInfo.nodeId, 0, sizeof(PUD_HWADDR_SIZE));
-		}
-	}
-}
-
-/**
  Get a nodeId number (in string representation), using a certain number of
  bytes, from the message of an OLSR message.
 
