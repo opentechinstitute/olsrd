@@ -11,7 +11,7 @@
 #include <stdbool.h>
 
 /** Stores an nmeaINFO entry, used in the averaging */
-typedef struct {
+typedef struct _PositionUpdateEntry {
 		nmeaINFO nmeaInfo; /**< the position information */
 } PositionUpdateEntry;
 
@@ -21,7 +21,7 @@ typedef struct {
  determine which information would be valid for the average position.
  Also counts the fix values.
  */
-typedef struct {
+typedef struct _PositionUpdateCounters {
 		/* smask */
 		unsigned long long gpgga; /**< the number of GPGGA based entries */
 		unsigned long long gpgsa; /**< the number of GPGSA based entries */
@@ -58,7 +58,7 @@ typedef struct {
  for which an average is calculated. The reason is to minimise the number of
  calculations to be performed.
  */
-typedef struct {
+typedef struct _PositionAverageList {
 		pthread_mutex_t mutex; /**< access mutex */
 
 		unsigned long long entriesMaxCount; /**< the maximum number of entries in the list */
@@ -75,7 +75,7 @@ typedef struct {
 /**
  Enumeration describing the type of an entry position in the average list
  */
-typedef enum {
+typedef enum _AverageEntryPositionType {
 	OLDEST, NEWEST, INCOMING, AVERAGECUMULATIVE, AVERAGE
 } AverageEntryPositionType;
 

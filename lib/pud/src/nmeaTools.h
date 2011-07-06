@@ -12,7 +12,7 @@
 /**
  Enumeration for the fields names of a nmeaINFO structure
  */
-typedef enum {
+typedef enum _NmeaInfoFieldName {
 	SMASK, UTC, SIG, FIX, PDOP, HDOP, VDOP, LAT, LON, ELV, SPEED, DIRECTION,
 	DECLINATION, SATINFO
 } NmeaInfoFieldName;

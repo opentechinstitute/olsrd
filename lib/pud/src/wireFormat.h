@@ -165,7 +165,7 @@ typedef enum _NodeIdType {
  */
 
 /** Sub-format GPS information, 120 bits = 15 bytes */
-typedef struct {
+typedef struct _GpsInfo {
 		uint32_t time :PUD_TIME_BITS; /**< the number of seconds since midnight, ALWAYS present */
 		uint32_t lat :PUD_LATITUDE_BITS; /**< latitude */
 		uint32_t lon :PUD_LONGITUDE_BITS; /**< longitude */
@@ -176,13 +176,13 @@ typedef struct {
 }__attribute__((__packed__)) GpsInfo;
 
 /** Sub-format Node information, 8 + variable bits = 1 + variable bytes */
-typedef struct {
+typedef struct _NodeInfo {
 		uint8_t nodeIdType; /**< the nodeIdType */
 		unsigned char nodeId; /**< placeholder for variable length nodeId string */
 }__attribute__((__packed__)) NodeInfo;
 
 /** Complete format, 8+8+8+120+(8+variable) bits =  18+(1+variable) bytes*/
-typedef struct {
+typedef struct _PudOlsrWireFormat {
 		uint8_t version; /**< the version of the sentence */
 		uint8_t validityTime; /**< the validity time of the sentence */
 		uint8_t smask; /**< mask signaling the contents of the sentence */

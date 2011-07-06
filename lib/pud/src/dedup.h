@@ -13,7 +13,7 @@
 #include <netinet/in.h>
 
 /* A de-duplication entry holding the information to compare, 18 bytes */
-typedef struct {
+typedef struct _DeDupEntry {
 		uint16_t seqno;
 		union olsr_ip_addr originator;
 } DeDupEntry;
@@ -24,7 +24,7 @@ typedef struct {
 
  The list is a circular list.
  */
-typedef struct {
+typedef struct _DeDupList {
 		unsigned long long entriesMaxCount; /**< the maximum number of entries in the list */
 		DeDupEntry * entries; /**< the list entries */
 
