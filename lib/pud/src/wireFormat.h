@@ -1,12 +1,9 @@
 #ifndef _PUD_WIREFORMAT_H_
 #define _PUD_WIREFORMAT_H_
 
-/* Plugin includes */
-
-/* OLSR includes */
-
 /* System includes */
 #include <stdint.h>
+#include <time.h>
 
 /*
  * Version
@@ -192,5 +189,33 @@ typedef struct _PudOlsrWireFormat {
 
 /** The size of the wire format, minus the size of the node information */
 #define PUD_OLSRWIREFORMATSIZE (sizeof(PudOlsrWireFormat) - sizeof(NodeInfo))
+
+/* ************************************************************************
+ * FUNCTIONS
+ * ************************************************************************ */
+
+unsigned char getValidityTimeForOlsr(unsigned long long validityTime);
+unsigned long getValidityTimeFromOlsr(unsigned char internal);
+
+unsigned long getTimeForOlsr(int hour, int min, int sec);
+void getTimeFromOlsr(uint32_t olsrTime, struct tm *nowStruct);
+
+unsigned long getLatitudeForOlsr(double infoLat);
+double getLatitudeFromOlsr(uint32_t olsrLat);
+
+unsigned long getLongitudeForOlsr(double infoLon);
+double getLongitudeFromOlsr(uint32_t olsrLon);
+
+long getAltitudeForOlsr(double infoElv);
+long getAltitudeFromOlsr(uint32_t olsrAlt);
+
+long getSpeedForOlsr(double infoSpeed);
+unsigned long getSpeedFromOlsr(uint32_t olsrSpeed);
+
+long getTrackForOlsr(double infoTrack);
+unsigned long getTrackFromOlsr(uint32_t olsrTrack);
+
+long getHdopForOlsr(double infoHdop);
+double getHdopFromOlsr(uint32_t olsrHdop);
 
 #endif /* _PUD_WIREFORMAT_H_ */

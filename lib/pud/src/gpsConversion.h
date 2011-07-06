@@ -7,7 +7,6 @@
 #include "olsr_protocol.h"
 
 /* System includes */
-#include <stdbool.h>
 #include <nmea/info.h>
 
 /*
@@ -20,8 +19,6 @@
 /*
  * Functions
  */
-
-void setupCachedValidityTimeMsn(void);
 
 unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		unsigned int olsrMessageSize, unsigned long long validityTime);

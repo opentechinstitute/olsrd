@@ -275,8 +275,6 @@ bool initPud(void) {
 		goto error;
 	}
 
-	setupCachedValidityTimeMsn();
-
 	initDeDupList(&deDupList, getDeDupDepth());
 
 	/* set global transmit socket config */
