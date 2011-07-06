@@ -15,9 +15,6 @@
 /** The version of the wire format */
 #define PUD_WIRE_FORMAT_VERSION		0
 
-/** The version of the transmit sentence */
-#define PUD_TX_SENTENCE_VERSION		0
-
 /*
  * Flags
  * We use the smask of nmeaINFO and the flags below on top of that
