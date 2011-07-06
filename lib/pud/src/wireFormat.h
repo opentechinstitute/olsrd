@@ -120,6 +120,36 @@
  * Node ID Type
  */
 
+/** nodeIdType legal values */
+typedef enum _NodeIdType {
+	/** MAC address, 48 bits, 6 bytes */
+	PUD_NODEIDTYPE_MAC = 0,
+
+	/** MSISDN number, 15 digits, 50 bits, 7 bytes */
+	PUD_NODEIDTYPE_MSISDN = 1,
+
+	/** TETRA number, 17 digits, 57 bits, 8 bytes */
+	PUD_NODEIDTYPE_TETRA = 2,
+
+	/** DNS name, variable length */
+	PUD_NODEIDTYPE_DNS = 3,
+
+	/** IPv4 address, 32 bits, 4 bytes */
+	PUD_NODEIDTYPE_IPV4 = 4,
+
+	/** IPv6 address, 128 bits, 16 bytes */
+	PUD_NODEIDTYPE_IPV6 = 6,
+
+	/** Brandweer number, 7 digits, 24 bits, 3 bytes */
+	PUD_NODEIDTYPE_192 = 192,
+
+	/** Ambulance number, 6 digits, 20 bits, 3 bytes */
+	PUD_NODEIDTYPE_193 = 193,
+
+	/** Number in the range [1, 8191], 4 digits, 13 bits, 2 bytes */
+	PUD_NODEIDTYPE_194 = 194
+} NodeIdType;
+
 /** The maximum size of the string representation of the nodeIdType */
 #define PUD_TX_NODEIDTYPE_DIGITS	3
 
