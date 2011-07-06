@@ -24,10 +24,10 @@
  in order to improve performance. It is currently used for nodeIdTypes
  PUD_NODEIDTYPE_MSISDN, PUD_NODEIDTYPE_TETRA, PUD_NODEIDTYPE_192,
  PUD_NODEIDTYPE_193 (so basically for numbers that will not change) */
-unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
+static unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
 
 /** The number of bytes stored in cachedNodeIdBuffer */
-unsigned char cachedNodeIdBufferLength = 0;
+static unsigned char cachedNodeIdBufferLength = 0;
 
 /**
  Check a nodeId number for validity and if valid set it up in the

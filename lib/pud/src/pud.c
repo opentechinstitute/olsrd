@@ -34,10 +34,10 @@
 #define BUFFER_SIZE_FROM_OLSR 	512
 
 /** The transmit socket address */
-union olsr_sockaddr * txAddress;
+static union olsr_sockaddr * txAddress;
 
 /** The de-duplication list */
-DeDupList deDupList;
+static DeDupList deDupList;
 
 /**
  Report a plugin error.

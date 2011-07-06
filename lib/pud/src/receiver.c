@@ -36,7 +36,7 @@ static int restartTimer(unsigned long long interval);
  */
 
 /** The NMEA string parser */
-nmeaPARSER nmeaParser;
+static nmeaPARSER nmeaParser;
 
 /*
  * State
@@ -70,7 +70,7 @@ typedef struct _StateType {
 } StateType;
 
 /** The state */
-StateType state = { .internalState = MOVING, .externalState = MOVING, .hysteresisCounter = 0 };
+static StateType state = { .internalState = MOVING, .externalState = MOVING, .hysteresisCounter = 0 };
 
 /** Type describing movement calculations */
 typedef struct _MovementType {
@@ -95,7 +95,7 @@ typedef struct _MovementType {
  */
 
 /** The average position with its administration */
-PositionAverageList positionAverageList;
+static PositionAverageList positionAverageList;
 
 /*
  * TX to OLSR
@@ -109,13 +109,13 @@ typedef struct _TransmitGpsInformation {
 } TransmitGpsInformation;
 
 /** The latest position information that is transmitted */
-TransmitGpsInformation transmitGpsInformation;
+static TransmitGpsInformation transmitGpsInformation;
 
 /** The last transmitted position.
  * The same as transmitGpsInformation.txPosition.
  * We keep this because then we can access the information without locking
  * mutexes. */
-PositionUpdateEntry txPosition;
+static PositionUpdateEntry txPosition;
 
 /** The size of the buffer in which the OLSR message is assembled */
 #define TX_BUFFER_SIZE_FOR_OLSR 512
@@ -734,10 +734,10 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
  */
 
 /** The timer cookie, used to trace back the originator in debug */
-struct olsr_cookie_info *pud_receiver_timer_cookie = NULL;
+static struct olsr_cookie_info *pud_receiver_timer_cookie = NULL;
 
 /** The timer */
-struct timer_entry * pud_receiver_timer = NULL;
+static struct timer_entry * pud_receiver_timer = NULL;
 
 /**
  The timer callback

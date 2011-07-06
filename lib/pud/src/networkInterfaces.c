@@ -26,10 +26,10 @@
  */
 
 /** The list of network interface objects, receiving GPS NMEA sentences */
-TRxTxNetworkInterface *rxNetworkInterfacesListHead = NULL;
+static TRxTxNetworkInterface *rxNetworkInterfacesListHead = NULL;
 
 /** Pointer to the last network interface object, receiving GPS NMEA sentences */
-TRxTxNetworkInterface *lastRxNetworkInterface = NULL;
+static TRxTxNetworkInterface *lastRxNetworkInterface = NULL;
 
 /**
  @return
@@ -246,10 +246,10 @@ static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
  */
 
 /** The list of network interface objects, sending our NMEA sentences */
-TRxTxNetworkInterface *txNetworkInterfacesListHead = NULL;
+static TRxTxNetworkInterface *txNetworkInterfacesListHead = NULL;
 
 /** Pointer to the last network interface object, sending our NMEA sentences */
-TRxTxNetworkInterface *lastTxNetworkInterface = NULL;
+static TRxTxNetworkInterface *lastTxNetworkInterface = NULL;
 
 /**
  @return
@@ -432,10 +432,10 @@ static bool createTxInterface(const char * ifName, union olsr_sockaddr ipAddr) {
  */
 
 /** The list of OLSR network interface objects */
-TOLSRNetworkInterface *olsrNetworkInterfacesListHead = NULL;
+static TOLSRNetworkInterface *olsrNetworkInterfacesListHead = NULL;
 
 /** Pointer to the last OLSR network interface object */
-TOLSRNetworkInterface *lastOlsrNetworkInterface = NULL;
+static TOLSRNetworkInterface *lastOlsrNetworkInterface = NULL;
 
 /**
  Get the OLSR interface structure for a certain OLSR interface. Note that

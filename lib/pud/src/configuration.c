@@ -101,7 +101,7 @@ bool readDouble(const char * valueName, const char * value,
  */
 
 /** The nodeIdType */
-NodeIdType nodeIdType = PUD_NODE_ID_TYPE_DEFAULT;
+static NodeIdType nodeIdType = PUD_NODE_ID_TYPE_DEFAULT;
 
 /**
  @return
@@ -173,13 +173,13 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 #define PUD_NODEIDMAXLENGTH 255
 
 /** The nodeId buffer */
-unsigned char nodeId[PUD_NODEIDMAXLENGTH + 1];
+static unsigned char nodeId[PUD_NODEIDMAXLENGTH + 1];
 
 /** The length of the string in the nodeId buffer */
-size_t nodeIdLength = 0;
+static size_t nodeIdLength = 0;
 
 /** True when the nodeId is set */
-bool nodeIdSet = false;
+static bool nodeIdSet = false;
 
 /**
  @return
@@ -254,10 +254,10 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
 #define PUD_RX_NON_OLSR_IF_MAX 32
 
 /** Array with RX non-OLSR interface names */
-unsigned char rxNonOlsrInterfaceNames[PUD_RX_NON_OLSR_IF_MAX][IFNAMSIZ + 1];
+static unsigned char rxNonOlsrInterfaceNames[PUD_RX_NON_OLSR_IF_MAX][IFNAMSIZ + 1];
 
 /** The number of RX non-OLSR interface names in the array */
-unsigned int rxNonOlsrInterfaceCount = 0;
+static unsigned int rxNonOlsrInterfaceCount = 0;
 
 /**
  Determine whether a give interface name is configured as a receive non-OLSR
@@ -337,10 +337,10 @@ int addRxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 #define PUD_RX_ALLOWED_SOURCE_IP_MAX 32
 
 /** Array with RX allowed source IP addresses */
-struct sockaddr rxAllowedSourceIpAddresses[PUD_RX_ALLOWED_SOURCE_IP_MAX];
+static struct sockaddr rxAllowedSourceIpAddresses[PUD_RX_ALLOWED_SOURCE_IP_MAX];
 
 /** The number of RX allowed source IP addresses in the array */
-unsigned int rxAllowedSourceIpAddressesCount = 0;
+static unsigned int rxAllowedSourceIpAddressesCount = 0;
 
 /**
  Determine whether a give IP address is configured as an allowed source IP
@@ -440,10 +440,10 @@ int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((un
  */
 
 /** The rx multicast address */
-union olsr_sockaddr rxMcAddr;
+static union olsr_sockaddr rxMcAddr;
 
 /** True when the rx multicast address is set */
-bool rxMcAddrSet = false;
+static bool rxMcAddrSet = false;
 
 /**
  @return
@@ -590,10 +590,10 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 #define PUD_TX_NON_OLSR_IF_MAX 32
 
 /** Array with tx non-olsr interface names */
-unsigned char txNonOlsrInterfaceNames[PUD_TX_NON_OLSR_IF_MAX][IFNAMSIZ + 1];
+static unsigned char txNonOlsrInterfaceNames[PUD_TX_NON_OLSR_IF_MAX][IFNAMSIZ + 1];
 
 /** The number of tx interface names in the array */
-unsigned int txNonOlsrInterfaceCount = 0;
+static unsigned int txNonOlsrInterfaceCount = 0;
 
 /**
  Determine whether a give interface name is configured as a transmit non-OLSR
@@ -670,10 +670,10 @@ int addTxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
  */
 
 /** The tx multicast address */
-union olsr_sockaddr txMcAddr;
+static union olsr_sockaddr txMcAddr;
 
 /** True when the tx multicast address is set */
-bool txMcAddrSet = false;
+static bool txMcAddrSet = false;
 
 /**
  @return
@@ -817,7 +817,7 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
  */
 
 /** The tx TTL */
-unsigned char txTtl = PUD_TX_TTL_DEFAULT;
+static unsigned char txTtl = PUD_TX_TTL_DEFAULT;
 
 /**
  @return
@@ -870,10 +870,10 @@ int setTxTtl(const char *value, void *data __attribute__ ((unused)), set_plugin_
 #define PUD_TXNMEAMESSAGEPREFIXLENGTH 4
 
 /** The tx NMEA message prefix buffer */
-unsigned char txNmeaMessagePrefix[PUD_TXNMEAMESSAGEPREFIXLENGTH + 1];
+static unsigned char txNmeaMessagePrefix[PUD_TXNMEAMESSAGEPREFIXLENGTH + 1];
 
 /** True when the tx NMEA message prefix is set */
-bool txNmeaMessagePrefixSet = false;
+static bool txNmeaMessagePrefixSet = false;
 
 /**
  @return
@@ -935,7 +935,7 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
  */
 
 /** The OLSR TTL */
-unsigned char olsrTtl = PUD_OLSR_TTL_DEFAULT;
+static unsigned char olsrTtl = PUD_OLSR_TTL_DEFAULT;
 
 /**
  @return
@@ -985,7 +985,7 @@ int setOlsrTtl(const char *value, void *data __attribute__ ((unused)), set_plugi
  */
 
 /** The stationary interval update plugin parameter (in seconds) */
-unsigned long long updateIntervalStationary = PUD_UPDATE_INTERVAL_STATIONARY_DEFAULT;
+static unsigned long long updateIntervalStationary = PUD_UPDATE_INTERVAL_STATIONARY_DEFAULT;
 
 /**
  @return
@@ -1035,7 +1035,7 @@ int setUpdateIntervalStationary(const char *value, void *data __attribute__ ((un
  */
 
 /** The moving interval update plugin parameter (in seconds) */
-unsigned long long updateIntervalMoving = PUD_UPDATE_INTERVAL_MOVING_DEFAULT;
+static unsigned long long updateIntervalMoving = PUD_UPDATE_INTERVAL_MOVING_DEFAULT;
 
 /**
  @return
@@ -1085,7 +1085,7 @@ int setUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused
  */
 
 /** The moving speed threshold plugin parameter (in kph) */
-unsigned long long movingSpeedThreshold = PUD_MOVING_SPEED_THRESHOLD_DEFAULT;
+static unsigned long long movingSpeedThreshold = PUD_MOVING_SPEED_THRESHOLD_DEFAULT;
 
 /**
  @return
@@ -1130,7 +1130,7 @@ int setMovingSpeedThreshold(const char *value, void *data __attribute__ ((unused
  */
 
 /** The moving distance threshold plugin parameter (in meters) */
-unsigned long long movingDistanceThreshold = PUD_MOVING_DISTANCE_THRESHOLD_DEFAULT;
+static unsigned long long movingDistanceThreshold = PUD_MOVING_DISTANCE_THRESHOLD_DEFAULT;
 
 /**
  @return
@@ -1175,7 +1175,7 @@ int setMovingDistanceThreshold(const char *value, void *data __attribute__ ((unu
  */
 
 /* The DOP multiplier plugin parameter */
-double dopMultiplier = PUD_DOP_MULTIPLIER_DEFAULT;
+static double dopMultiplier = PUD_DOP_MULTIPLIER_DEFAULT;
 
 /**
  @return
@@ -1220,7 +1220,7 @@ int setDopMultiplier(const char *value, void *data __attribute__ ((unused)),
  */
 
 /** The default HDOP plugin parameter (in meters) */
-unsigned long long defaultHdop = PUD_DEFAULT_HDOP_DEFAULT;
+static unsigned long long defaultHdop = PUD_DEFAULT_HDOP_DEFAULT;
 
 /**
  @return
@@ -1265,7 +1265,7 @@ int setDefaultHdop(const char *value, void *data __attribute__ ((unused)),
  */
 
 /** The default VDOP plugin parameter (in meters) */
-unsigned long long defaultVdop = PUD_DEFAULT_VDOP_DEFAULT;
+static unsigned long long defaultVdop = PUD_DEFAULT_VDOP_DEFAULT;
 
 /**
  @return
@@ -1310,7 +1310,7 @@ int setDefaultVdop(const char *value, void *data __attribute__ ((unused)),
  */
 
 /** The depth of the average list */
-unsigned long long averageDepth = PUD_AVERAGE_DEPTH_DEFAULT;
+static unsigned long long averageDepth = PUD_AVERAGE_DEPTH_DEFAULT;
 
 /**
  @return
@@ -1360,7 +1360,7 @@ int setAverageDepth(const char *value, void *data __attribute__ ((unused)),
  */
 
 /** The hysteresis count for changing state from moving to stationary */
-unsigned long long hysteresisCountToStationary = PUD_HYSTERESIS_COUNT_2STAT_DEFAULT;
+static unsigned long long hysteresisCountToStationary = PUD_HYSTERESIS_COUNT_2STAT_DEFAULT;
 
 /**
  @return
@@ -1405,7 +1405,7 @@ int setHysteresisCountToStationary(const char *value, void *data __attribute__ (
  */
 
 /** The hysteresis count for changing state from stationary to moving */
-unsigned long long hysteresisCountToMoving = PUD_HYSTERESIS_COUNT_2MOV_DEFAULT;
+static unsigned long long hysteresisCountToMoving = PUD_HYSTERESIS_COUNT_2MOV_DEFAULT;
 
 /**
  @return
@@ -1450,7 +1450,7 @@ int setHysteresisCountToMoving(const char *value, void *data __attribute__ ((unu
  */
 
 /* when true then duplicate message detection is performed */
-bool useDeDup = PUD_USE_DEDUP_DEFAULT;
+static bool useDeDup = PUD_USE_DEDUP_DEFAULT;
 
 /**
  @return
@@ -1501,7 +1501,7 @@ int setUseDeDup(const char *value, void *data __attribute__ ((unused)),
  */
 
 /** The hysteresis count for changing state from stationary to moving */
-unsigned long long deDupDepth = PUD_DEDUP_DEPTH_DEFAULT;
+static unsigned long long deDupDepth = PUD_DEDUP_DEPTH_DEFAULT;
 
 /**
  @return
@@ -1546,7 +1546,7 @@ int setDeDupDepth(const char *value, void *data __attribute__ ((unused)),
  */
 
 /* when true then loopback is performed */
-bool useLoopback = PUD_USE_LOOPBACK_DEFAULT;
+static bool useLoopback = PUD_USE_LOOPBACK_DEFAULT;
 
 /**
  @return
