@@ -44,7 +44,9 @@ nmeaPARSER nmeaParser;
 
 /** Type describing a tri-state boolean */
 typedef enum _TristateBoolean {
-	UNKNOWN, UNSET, SET
+	UNKNOWN = 0,
+	UNSET = 1,
+	SET = 2
 } TristateBoolean;
 
 #define TristateBooleanToString(s)	((s == SET) ? "set" : \
@@ -53,7 +55,8 @@ typedef enum _TristateBoolean {
 
 /** Type describing movement state */
 typedef enum _MovementState {
-	STATIONARY, MOVING
+	STATIONARY = 0,
+	MOVING = 1
 } MovementState;
 
 #define MovementStateToString(s)	((s == MOVING) ? "moving" : \
@@ -284,20 +287,7 @@ static void detemineMoving(PositionUpdateEntry * avg,
 	bool vdopDistanceValid;
 
 	/* clear outputs */
-	result->moving = UNKNOWN;
-
-	result->overThresholds = UNKNOWN;
-	result->speedOverThreshold = UNKNOWN;
-	result->hDistanceOverThreshold = UNKNOWN;
-	result->vDistanceOverThreshold = UNKNOWN;
-
-	result->outside = UNKNOWN;
-	result->outsideHdop = UNKNOWN;
-	result->outsideVdop = UNKNOWN;
-
-	result->inside = UNKNOWN;
-	result->insideHdop = UNKNOWN;
-	result->insideVdop = UNKNOWN;
+	memset(result, UNKNOWN, sizeof(MovementType));
 
 	/*
 	 * Validity
