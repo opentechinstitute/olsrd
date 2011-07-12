@@ -40,7 +40,7 @@
  - true on success
  - false otherwise
  */
-bool readULL(const char * valueName, const char * value,
+static bool readULL(const char * valueName, const char * value,
 		unsigned long long * valueNumber) {
 	char * endPtr = NULL;
 	unsigned long long valueNew;
@@ -74,7 +74,7 @@ bool readULL(const char * valueName, const char * value,
  - true on success
  - false otherwise
  */
-bool readDouble(const char * valueName, const char * value,
+static bool readDouble(const char * valueName, const char * value,
 		double * valueNumber) {
 	char * endPtr = NULL;
 	double valueNew;
@@ -179,12 +179,36 @@ static size_t nodeIdLength = 0;
 /** True when the nodeId is set */
 static bool nodeIdSet = false;
 
+/** The nodeId as a nuber */
+static unsigned long long nodeIdNumber = 0;
+
+/** True when the nodeIdNumber is set */
+static bool nodeIdNumberSet = false;
+
 /**
  @return
  The node ID
  */
 unsigned char * getNodeId(void) {
 	return getNodeIdWithLength(NULL);
+}
+
+/**
+ @param nodeId
+ A pointer to the node ID number
+ @return
+ - true on success
+ - false otherwise
+ */
+bool getNodeIdAsNumber(unsigned long long * value) {
+	if (!nodeIdNumberSet) {
+		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0], &nodeIdNumber)) {
+			return false;
+		}
+		nodeIdNumberSet = true;
+	}
+	*value = nodeIdNumber;
+	return true;
 }
 
 /**

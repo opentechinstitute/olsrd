@@ -12,16 +12,6 @@
 #include <sys/socket.h>
 
 /*
- * Utility Functions
- */
-
-bool readULL(const char * valueName, const char * value,
-		unsigned long long * valueNumber);
-
-bool readDouble(const char * valueName, const char * value,
-		double * valueNumber);
-
-/*
  * Global Parameters
  */
 
@@ -42,6 +32,7 @@ int setNodeIdType(const char *value, void *data,
 #define PUD_NODE_ID_NAME						"nodeId"
 
 unsigned char * getNodeId(void);
+bool getNodeIdAsNumber(unsigned long long * value);
 unsigned char * getNodeIdWithLength(size_t *length);
 int setNodeId(const char *value, void *data, set_plugin_parameter_addon addon);
 

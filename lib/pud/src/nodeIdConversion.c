@@ -49,7 +49,7 @@ static bool setupNodeIdNumberForOlsr(unsigned long long min,
 
 	assert (bytes <= PUD_CACHED_NODEID_BUFFER_SIZE);
 
-	if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(), &val)) {
+	if (!getNodeIdAsNumber(&val)) {
 		return false;
 	}
 
