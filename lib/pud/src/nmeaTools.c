@@ -8,7 +8,6 @@
 /* System includes */
 #include <nmea/sentence.h>
 #include <nmea/gmath.h>
-#include <stddef.h>
 #include <string.h>
 #include <assert.h>
 #include <stddef.h>

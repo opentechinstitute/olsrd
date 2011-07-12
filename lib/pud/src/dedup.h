@@ -10,7 +10,6 @@
 /* System includes */
 #include <stdint.h>
 #include <stdbool.h>
-#include <netinet/in.h>
 
 /* A de-duplication entry holding the information to compare, 18 bytes */
 typedef struct _DeDupEntry {

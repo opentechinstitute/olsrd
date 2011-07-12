@@ -4,6 +4,7 @@
 #include "wireFormat.h"
 #include "pud.h"
 #include "nodeIdConversion.h"
+#include "configuration.h"
 #include "nmeaTools.h"
 
 /* OLSR includes */
@@ -13,6 +14,7 @@
 #include <nmea/gmath.h>
 #include <nmea/tok.h>
 #include <netinet/in.h>
+#include <stdio.h>
 
 /* ************************************************************************
  * OLSR --> External

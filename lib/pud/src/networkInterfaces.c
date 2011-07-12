@@ -6,17 +6,15 @@
 #include "netTools.h"
 
 /* OLSRD includes */
-#include "cfgparser/olsrd_conf.h"
+#include "olsr_cfg.h"
 #include "olsr.h"
 
 /* System includes */
 #include <assert.h>
-#include <stddef.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <errno.h>
 #include <unistd.h>
-#include <netinet/in.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <ifaddrs.h>

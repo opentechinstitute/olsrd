@@ -6,8 +6,8 @@
 /* OLSRD includes */
 
 /* System includes */
+#include <stddef.h>
 #include <stdbool.h>
-#include <sys/types.h>
 
 bool startReceiver(void);
 void stopReceiver(void);

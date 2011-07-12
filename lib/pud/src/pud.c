@@ -9,23 +9,12 @@
 #include "dedup.h"
 
 /* OLSRD includes */
-#include "olsr.h"
-#include "cfgparser/olsrd_conf.h"
 #include "ipcalc.h"
-#include "nmea/parser.h"
 #include "parser.h"
+#include "olsr.h"
 
 /* System includes */
-#include <nmea/parser.h>
-#include <stddef.h>
-#include <string.h>
-#include <errno.h>
-#include <stdarg.h>
 #include <assert.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 /** The size of the buffer in which the received NMEA string is stored */
 #define BUFFER_SIZE_FOR_OLSR	2048

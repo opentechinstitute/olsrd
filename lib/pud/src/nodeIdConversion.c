@@ -10,7 +10,6 @@
 
 /* System includes */
 #include <assert.h>
-#include <string.h>
 #include <arpa/inet.h>
 
 /* ************************************************************************

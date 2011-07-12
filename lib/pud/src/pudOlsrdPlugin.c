@@ -5,8 +5,8 @@
 #include "version.h"
 
 /* OLSRD includes */
-#include "olsr.h"
 #include "defs.h"
+#include "olsr.h"
 
 /* System includes */
 #include <stdbool.h>

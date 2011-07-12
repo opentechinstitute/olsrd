@@ -8,7 +8,6 @@
 #include "olsrd_plugin.h"
 
 /* System includes */
-#include <stddef.h>
 #include <stdbool.h>
 #include <sys/socket.h>
 

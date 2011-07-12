@@ -9,8 +9,7 @@
 
 /* OLSR includes */
 #include "olsr_types.h"
-#include "olsr_protocol.h"
-#include "cfgparser/olsrd_conf.h"
+#include "olsr_cfg.h"
 
 /* System includes */
 #include <assert.h>
@@ -22,7 +21,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <stdint.h>
 
 /*
  * Utility functions

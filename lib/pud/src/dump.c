@@ -64,7 +64,6 @@ void dump_packet(unsigned char* packet, unsigned int length) {
 /* System includes */
 #include <nmea/info.h>
 #include <nmea/sentence.h>
-#include <nmea/gmath.h>
 
 void dump_nmeaInfo(nmeaINFO * nmeaInfo, const char * prefix) {
 	olsr_printf(0,

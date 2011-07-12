@@ -4,7 +4,6 @@
 #include "pud.h"
 #include "gpsConversion.h"
 #include "configuration.h"
-#include "nodeIdConversion.h"
 #include "dump.h"
 #include "nmeaTools.h"
 #include "posAvg.h"
@@ -14,17 +13,15 @@
 #include "olsr_protocol.h"
 #include "interfaces.h"
 #include "net_olsr.h"
-#include "olsr_cookie.h"
-#include "scheduler.h"
 #include "olsr.h"
 
 /* System includes */
 #include <nmea/parser.h>
+#include <pthread.h>
+#include <nmea/info.h>
+#include <string.h>
 #include <nmea/gmath.h>
 #include <nmea/sentence.h>
-#include <assert.h>
-#include <stddef.h>
-#include <time.h>
 #include <sys/timeb.h>
 #include <math.h>
 

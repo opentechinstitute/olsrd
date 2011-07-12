@@ -1,32 +1,13 @@
 #include "wireFormat.h"
 
+/* Plugin includes */
+#include "pud.h"
+
 /* System includes */
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
 #include <assert.h>
-
-/* ************************************************************************
- * DEFINES
- * ************************************************************************ */
-
-/** Compiler hint to expect x */
-#ifndef likely
-# if defined(__GNUC__)
-#  define likely(x)       				__builtin_expect((x),1)
-# else
-#  define likely(x)						(x)
-# endif
-#endif
-
-/** Compiler hint to not expect x */
-#ifndef unlikely
-# if defined(__GNUC__)
-#  define unlikely(x)     				__builtin_expect((x),0)
-# else
-#  define unlikely(x)					(x)
-# endif
-#endif
 
 /*
  * GPS Information Conversion Functions For OLSR GPS Wire Format

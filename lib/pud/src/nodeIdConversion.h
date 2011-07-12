@@ -2,17 +2,14 @@
 #define _PUD_NODEIDCONVERSION_H_
 
 /* Plugin includes */
-#include "configuration.h"
 #include "wireFormat.h"
 
 /* OLSR includes */
 #include "olsr_protocol.h"
-#include "interfaces.h"
 
 /* System includes */
 #include <stdbool.h>
 #include <stddef.h>
-#include <unistd.h>
 
 bool validateNodeId(NodeIdType nodeIdTypeNumber);
 

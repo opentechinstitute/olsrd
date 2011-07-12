@@ -3,14 +3,12 @@
 /* Plugin includes */
 #include "nmeaTools.h"
 #include "dump.h"
-#include "configuration.h"
 
 /* OLSR includes */
 #include "olsr.h"
 
 /* System includes */
 #include <assert.h>
-#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #include <nmea/sentence.h>
