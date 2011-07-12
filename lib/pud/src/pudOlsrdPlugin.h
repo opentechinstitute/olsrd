@@ -10,6 +10,9 @@
 /* System includes */
 #include <stddef.h>
 
+/** The interface version supported by the plugin */
+#define PUD_PLUGIN_INTERFACE_VERSION	5
+
 /**
  The plugin parameter configuration, containing the parameter names, pointers
  to their setters, and an optional data pointer that is given to the setter

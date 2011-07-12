@@ -42,9 +42,6 @@
 /** The short plugin name / abbreviation */
 #define PUD_PLUGIN_ABBR					"PUD"
 
-/** The interface version supported by the plugin */
-#define PUD_PLUGIN_INTERFACE_VERSION	5
-
 /*
  *  Interface
  */
