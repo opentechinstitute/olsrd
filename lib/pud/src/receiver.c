@@ -26,7 +26,7 @@
 #include <math.h>
 
 /* Forward declaration */
-static int restartTimer(unsigned long long interval);
+static int restartOlsrTxTimer(unsigned long long interval);
 
 /*
  * NMEA parser
@@ -708,7 +708,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 #endif /* PUD_DUMP_AVERAGING */
 
 	if (updateTransmitGpsInformation) {
-		if (!restartTimer(
+		if (!restartOlsrTxTimer(
 				(state.externalState == STATIONARY) ? getUpdateIntervalStationary()
 				: getUpdateIntervalMoving())) {
 			pudError(0, "Could not restart receiver timer, no position"
@@ -727,14 +727,14 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 }
 
 /*
- * Timer
+ * OLSR Tx Timer
  */
 
 /** The timer cookie, used to trace back the originator in debug */
-static struct olsr_cookie_info *pud_receiver_timer_cookie = NULL;
+static struct olsr_cookie_info *pud_olsr_tx_timer_cookie = NULL;
 
 /** The timer */
-static struct timer_entry * pud_receiver_timer = NULL;
+static struct timer_entry * pud_olsr_tx_timer = NULL;
 
 /**
  The timer callback
@@ -742,7 +742,7 @@ static struct timer_entry * pud_receiver_timer = NULL;
  @param context
  unused
  */
-static void pud_receiver_timer_callback(void *context __attribute__ ((unused))) {
+static void pud_olsr_tx_timer_callback(void *context __attribute__ ((unused))) {
 	txToAllOlsrInterfaces();
 }
 
@@ -756,12 +756,12 @@ static void pud_receiver_timer_callback(void *context __attribute__ ((unused))) 
  - false on failure
  - true otherwise
  */
-static int startTimer(unsigned long long interval) {
-	if (pud_receiver_timer == NULL) {
-		pud_receiver_timer = olsr_start_timer(interval * MSEC_PER_SEC, 0,
-				OLSR_TIMER_PERIODIC, &pud_receiver_timer_callback, NULL,
-				pud_receiver_timer_cookie);
-		if (pud_receiver_timer == NULL) {
+static int startOlsrTxTimer(unsigned long long interval) {
+	if (pud_olsr_tx_timer == NULL) {
+		pud_olsr_tx_timer = olsr_start_timer(interval * MSEC_PER_SEC, 0,
+				OLSR_TIMER_PERIODIC, &pud_olsr_tx_timer_callback, NULL,
+				pud_olsr_tx_timer_cookie);
+		if (pud_olsr_tx_timer == NULL) {
 			stopReceiver();
 			return false;
 		}
@@ -773,10 +773,10 @@ static int startTimer(unsigned long long interval) {
 /**
  Stop the receiver timer
  */
-static void stopTimer(void) {
-	if (pud_receiver_timer != NULL) {
-		olsr_stop_timer(pud_receiver_timer);
-		pud_receiver_timer = NULL;
+static void stopOlsrTxTimer(void) {
+	if (pud_olsr_tx_timer != NULL) {
+		olsr_stop_timer(pud_olsr_tx_timer);
+		pud_olsr_tx_timer = NULL;
 	}
 }
 
@@ -790,9 +790,9 @@ static void stopTimer(void) {
  - false on failure
  - true otherwise
  */
-static int restartTimer(unsigned long long interval) {
-	stopTimer();
-	return startTimer(interval);
+static int restartOlsrTxTimer(unsigned long long interval) {
+	stopOlsrTxTimer();
+	return startOlsrTxTimer(interval);
 }
 
 /*
@@ -834,10 +834,10 @@ bool startReceiver(void) {
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
-	if (pud_receiver_timer_cookie == NULL) {
-		pud_receiver_timer_cookie = olsr_alloc_cookie(
+	if (pud_olsr_tx_timer_cookie == NULL) {
+		pud_olsr_tx_timer_cookie = olsr_alloc_cookie(
 				PUD_PLUGIN_ABBR ": receiver", OLSR_COOKIE_TYPE_TIMER);
-		if (pud_receiver_timer_cookie == NULL) {
+		if (pud_olsr_tx_timer_cookie == NULL) {
 			stopReceiver();
 			return false;
 		}
@@ -850,11 +850,11 @@ bool startReceiver(void) {
  Stop the receiver
  */
 void stopReceiver(void) {
-	stopTimer();
+	stopOlsrTxTimer();
 
-	if (pud_receiver_timer_cookie != NULL) {
-		olsr_free_cookie(pud_receiver_timer_cookie);
-		pud_receiver_timer_cookie = NULL;
+	if (pud_olsr_tx_timer_cookie != NULL) {
+		olsr_free_cookie(pud_olsr_tx_timer_cookie);
+		pud_olsr_tx_timer_cookie = NULL;
 	}
 
 	destroyPositionAverageList(&positionAverageList);
