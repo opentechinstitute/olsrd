@@ -169,6 +169,26 @@ unsigned long long getUpdateIntervalMoving(void);
 int setUpdateIntervalMoving(const char *value, void *data,
 		set_plugin_parameter_addon addon);
 
+/** The name of the uplink stationary update interval plugin parameter */
+#define PUD_UPLINK_UPDATE_INTERVAL_STATIONARY_NAME	"uplinkUpdateIntervalStationary"
+
+/** The default value of the uplink stationary update interval plugin parameter */
+#define PUD_UPLINK_UPDATE_INTERVAL_STATIONARY_DEFAULT	180
+
+unsigned long long getUplinkUpdateIntervalStationary(void);
+int setUplinkUpdateIntervalStationary(const char *value, void *data,
+		set_plugin_parameter_addon addon);
+
+/** The name of the uplink moving update interval plugin parameter */
+#define PUD_UPLINK_UPDATE_INTERVAL_MOVING_NAME		"uplinkUpdateIntervalMoving"
+
+/** The default value of the uplink moving update interval plugin parameter */
+#define PUD_UPLINK_UPDATE_INTERVAL_MOVING_DEFAULT		15
+
+unsigned long long getUplinkUpdateIntervalMoving(void);
+int setUplinkUpdateIntervalMoving(const char *value, void *data,
+		set_plugin_parameter_addon addon);
+
 /** The name of the moving speed threshold plugin parameter */
 #define PUD_MOVING_SPEED_THRESHOLD_NAME			"movingSpeedThreshold"
 

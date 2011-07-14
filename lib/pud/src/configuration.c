@@ -1249,6 +1249,106 @@ int setUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused
 }
 
 /*
+ * uplinkUpdateIntervalStationary
+ */
+
+/** The uplink stationary interval update plugin parameter (in seconds) */
+static unsigned long long uplinkUpdateIntervalStationary = PUD_UPLINK_UPDATE_INTERVAL_STATIONARY_DEFAULT;
+
+/**
+ @return
+ The uplink stationary interval update plugin parameter (in seconds)
+ */
+unsigned long long getUplinkUpdateIntervalStationary(void) {
+	return uplinkUpdateIntervalStationary;
+}
+
+/**
+ Set uplink stationary interval update plugin parameter
+
+ @param value
+ The uplink stationary interval update plugin parameter (in seconds)
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setUplinkUpdateIntervalStationary(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_UPLINK_UPDATE_INTERVAL_STATIONARY_NAME;
+	unsigned long long uplinkUpdateIntervalStationaryNew;
+
+	assert (value != NULL);
+
+	if (!readULL(valueName, value, &uplinkUpdateIntervalStationaryNew)) {
+		return true;
+	}
+
+	if (uplinkUpdateIntervalStationaryNew < 1) {
+		pudError(false, "Configured %s must be at least 1", valueName);
+		return true;
+	}
+
+	uplinkUpdateIntervalStationary = uplinkUpdateIntervalStationaryNew;
+
+	return false;
+}
+
+/*
+ * uplinkUpdateIntervalMoving
+ */
+
+/** The uplink moving interval update plugin parameter (in seconds) */
+static unsigned long long uplinkUpdateIntervalMoving = PUD_UPLINK_UPDATE_INTERVAL_MOVING_DEFAULT;
+
+/**
+ @return
+ The uplink moving interval update plugin parameter (in seconds)
+ */
+unsigned long long getUplinkUpdateIntervalMoving(void) {
+	return uplinkUpdateIntervalMoving;
+}
+
+/**
+ Set uplink moving interval update plugin parameter
+
+ @param value
+ The uplink moving interval update plugin parameter (in seconds)
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setUplinkUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_UPLINK_UPDATE_INTERVAL_MOVING_NAME;
+	unsigned long long uplinkUpdateIntervalMovingNew;
+
+	assert (value != NULL);
+
+	if (!readULL(valueName, value, &uplinkUpdateIntervalMovingNew)) {
+		return true;
+	}
+
+	if (uplinkUpdateIntervalMovingNew < 1) {
+		pudError(false, "Configured %s must be at least 1", valueName);
+		return true;
+	}
+
+	uplinkUpdateIntervalMoving = uplinkUpdateIntervalMovingNew;
+
+	return false;
+}
+
+/*
  * movingSpeedThreshold
  */
 
@@ -1810,6 +1910,12 @@ unsigned int checkConfig(void) {
 
 	if (updateIntervalMoving > updateIntervalStationary) {
 		pudError(false,"The update interval for moving situations must not be"
+		" larger than that for stationary situations");
+		retval = false;
+	}
+
+	if (uplinkUpdateIntervalMoving > uplinkUpdateIntervalStationary) {
+		pudError(false,"The uplink update interval for moving situations must not be"
 		" larger than that for stationary situations");
 		retval = false;
 	}

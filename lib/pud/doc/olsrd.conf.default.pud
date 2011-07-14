@@ -589,6 +589,22 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.0.0"
     #
     #PlParam     "updateIntervalMoving"         "5"
 
+    # uplinkUpdateIntervalStationary is the interval (in seconds) between
+    #                                position updates sent over the uplink when
+    #                                the node is stationary
+    #
+    # Default: 180
+    #
+    #PlParam     "uplinkUpdateIntervalStationary"  "180"
+
+    # uplinkUpdateIntervalMoving is the interval (in seconds) between position
+    #                            updates sent over the OLSR network when the
+    #                            node is moving
+    #
+    # Default: 15
+    #
+    #PlParam     "uplinkUpdateIntervalMoving"      "15"
+
     # movingSpeedThreshold is the speed from which we consider the node is
     #                      moving
     #

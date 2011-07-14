@@ -33,6 +33,8 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 	{	.name = PUD_OLSR_TTL_NAME, .set_plugin_parameter = &setOlsrTtl, .data = NULL},
 	{	.name = PUD_UPDATE_INTERVAL_STATIONARY_NAME, .set_plugin_parameter = &setUpdateIntervalStationary, .data = NULL},
 	{	.name = PUD_UPDATE_INTERVAL_MOVING_NAME, .set_plugin_parameter = &setUpdateIntervalMoving, .data = NULL},
+	{	.name = PUD_UPLINK_UPDATE_INTERVAL_STATIONARY_NAME, .set_plugin_parameter = &setUplinkUpdateIntervalStationary, .data = NULL},
+	{	.name = PUD_UPLINK_UPDATE_INTERVAL_MOVING_NAME, .set_plugin_parameter = &setUplinkUpdateIntervalMoving, .data = NULL},
 	{	.name = PUD_MOVING_SPEED_THRESHOLD_NAME, .set_plugin_parameter = &setMovingSpeedThreshold, .data = NULL},
 	{	.name = PUD_MOVING_DISTANCE_THRESHOLD_NAME, .set_plugin_parameter = &setMovingDistanceThreshold, .data = NULL},
 	{	.name = PUD_DOP_MULTIPLIER_NAME, .set_plugin_parameter = &setDopMultiplier, .data = NULL},
