@@ -5,17 +5,16 @@
 #include "gpsConversion.h"
 #include "configuration.h"
 #include "dump.h"
+#include "timers.h"
 #include "nmeaTools.h"
 #include "posAvg.h"
 #include "networkInterfaces.h"
 
 /* OLSRD includes */
-#include "olsr_protocol.h"
-#include "interfaces.h"
 #include "net_olsr.h"
-#include "olsr.h"
 
 /* System includes */
+#include <stddef.h>
 #include <nmea/parser.h>
 #include <pthread.h>
 #include <nmea/info.h>
@@ -24,9 +23,6 @@
 #include <nmea/sentence.h>
 #include <sys/timeb.h>
 #include <math.h>
-
-/* Forward declaration */
-static int restartOlsrTxTimer(unsigned long long interval);
 
 /*
  * NMEA parser
@@ -235,6 +231,20 @@ static void txToAllOlsrInterfaces(void) {
 					(union olsr_message *) &txBuffer[0], NULL, NULL);
 		}
 	}
+}
+
+/*
+ * Timer Callbacks
+ */
+
+/**
+ The OLSR tx timer callback
+
+ @param context
+ unused
+ */
+static void pud_olsr_tx_timer_callback(void *context __attribute__ ((unused))) {
+	txToAllOlsrInterfaces();
 }
 
 /**
@@ -525,7 +535,7 @@ static void detemineMoving(PositionUpdateEntry * avg,
 
 /**
  Update the latest GPS information. This function is called when a packet is
- receiver from a rxNonOlsr interface, containing one or more NMEA strings with
+ received from a rxNonOlsr interface, containing one or more NMEA strings with
  GPS information.
 
  @param rxBuffer
@@ -711,10 +721,9 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	if (updateTransmitGpsInformation) {
 		if (!restartOlsrTxTimer(
 				(state.externalState == STATIONARY) ? getUpdateIntervalStationary()
-				: getUpdateIntervalMoving())) {
-			pudError(0, "Could not restart receiver timer, no position"
-					" updates will be sent to the OLSR network");
-			goto end;
+				: getUpdateIntervalMoving(), &pud_olsr_tx_timer_callback)) {
+			pudError(0, "Could not restart OLSR tx timer, no periodic"
+					" position updates will be sent to the OLSR network");
 		}
 
 		/* do an immediate transmit */
@@ -725,75 +734,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	end: (void) pthread_mutex_unlock(&positionAverageList.mutex);
 	return retval;
-}
-
-/*
- * OLSR Tx Timer
- */
-
-/** The timer cookie, used to trace back the originator in debug */
-static struct olsr_cookie_info *pud_olsr_tx_timer_cookie = NULL;
-
-/** The timer */
-static struct timer_entry * pud_olsr_tx_timer = NULL;
-
-/**
- The timer callback
-
- @param context
- unused
- */
-static void pud_olsr_tx_timer_callback(void *context __attribute__ ((unused))) {
-	txToAllOlsrInterfaces();
-}
-
-/**
- Start the receiver timer. Does nothing when the timer is already running.
-
- @param interval
- The interval in seconds
-
- @return
- - false on failure
- - true otherwise
- */
-static int startOlsrTxTimer(unsigned long long interval) {
-	if (pud_olsr_tx_timer == NULL) {
-		pud_olsr_tx_timer = olsr_start_timer(interval * MSEC_PER_SEC, 0,
-				OLSR_TIMER_PERIODIC, &pud_olsr_tx_timer_callback, NULL,
-				pud_olsr_tx_timer_cookie);
-		if (pud_olsr_tx_timer == NULL) {
-			stopReceiver();
-			return false;
-		}
-	}
-
-	return true;
-}
-
-/**
- Stop the receiver timer
- */
-static void stopOlsrTxTimer(void) {
-	if (pud_olsr_tx_timer != NULL) {
-		olsr_stop_timer(pud_olsr_tx_timer);
-		pud_olsr_tx_timer = NULL;
-	}
-}
-
-/**
- Restart the receiver timer
-
- @param interval
- The interval in seconds
-
- @return
- - false on failure
- - true otherwise
- */
-static int restartOlsrTxTimer(unsigned long long interval) {
-	stopOlsrTxTimer();
-	return startOlsrTxTimer(interval);
 }
 
 /*
@@ -835,13 +775,9 @@ bool startReceiver(void) {
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
-	if (pud_olsr_tx_timer_cookie == NULL) {
-		pud_olsr_tx_timer_cookie = olsr_alloc_cookie(
-				PUD_PLUGIN_ABBR ": receiver", OLSR_COOKIE_TYPE_TIMER);
-		if (pud_olsr_tx_timer_cookie == NULL) {
-			stopReceiver();
-			return false;
-		}
+	if (!initOlsrTxTimer()) {
+		stopReceiver();
+		return false;
 	}
 
 	return true;
@@ -851,12 +787,7 @@ bool startReceiver(void) {
  Stop the receiver
  */
 void stopReceiver(void) {
-	stopOlsrTxTimer();
-
-	if (pud_olsr_tx_timer_cookie != NULL) {
-		olsr_free_cookie(pud_olsr_tx_timer_cookie);
-		pud_olsr_tx_timer_cookie = NULL;
-	}
+	destroyOlsrTxTimer();
 
 	destroyPositionAverageList(&positionAverageList);
 

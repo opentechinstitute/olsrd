@@ -1,0 +1,102 @@
+#include "timers.h"
+
+/* Plugin includes */
+#include "pud.h"
+
+/* OLSRD includes */
+#include "olsr_cookie.h"
+
+/* System includes */
+#include <stddef.h>
+#include <stdbool.h>
+
+/*
+ * OLSR Tx Timer
+ */
+
+/** The timer cookie, used to trace back the originator in debug */
+static struct olsr_cookie_info *pud_olsr_tx_timer_cookie = NULL;
+
+/** The timer */
+static struct timer_entry * pud_olsr_tx_timer = NULL;
+
+/**
+ Start the OLSR tx timer. Does nothing when the timer is already running.
+
+ @param interval
+ The interval in seconds
+ @param cb_func
+ The callback function to call when the timer expires
+
+ @return
+ - false on failure
+ - true otherwise
+ */
+static int startOlsrTxTimer(unsigned long long interval, timer_cb_func cb_func) {
+	if (pud_olsr_tx_timer == NULL) {
+		pud_olsr_tx_timer = olsr_start_timer(interval * MSEC_PER_SEC, 0,
+				OLSR_TIMER_PERIODIC, cb_func, NULL,
+				pud_olsr_tx_timer_cookie);
+		if (pud_olsr_tx_timer == NULL) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
+ Stop the OLSR tx timer
+ */
+static void stopOlsrTxTimer(void) {
+	if (pud_olsr_tx_timer != NULL) {
+		olsr_stop_timer(pud_olsr_tx_timer);
+		pud_olsr_tx_timer = NULL;
+	}
+}
+
+/**
+ Restart the OLSR tx timer
+
+ @param interval
+ The interval in seconds
+ @param cb_func
+ The callback function to call when the timer expires
+
+ @return
+ - false on failure
+ - true otherwise
+ */
+int restartOlsrTxTimer(unsigned long long interval, timer_cb_func cb_func) {
+	stopOlsrTxTimer();
+	return startOlsrTxTimer(interval, cb_func);
+}
+
+/**
+ Initialise the OLSR tx timer.
+
+ @return
+ - false on failure
+ - true otherwise
+ */
+int initOlsrTxTimer(void) {
+	if (pud_olsr_tx_timer_cookie == NULL) {
+		pud_olsr_tx_timer_cookie = olsr_alloc_cookie(
+				PUD_PLUGIN_ABBR ": OLSR tx timer", OLSR_COOKIE_TYPE_TIMER);
+		if (pud_olsr_tx_timer_cookie == NULL) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ Destroy the OLSR tx timer.
+ */
+void destroyOlsrTxTimer(void) {
+	stopOlsrTxTimer();
+	if (pud_olsr_tx_timer_cookie != NULL) {
+		olsr_free_cookie(pud_olsr_tx_timer_cookie);
+		pud_olsr_tx_timer_cookie = NULL;
+	}
+}
