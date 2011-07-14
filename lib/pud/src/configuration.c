@@ -194,7 +194,7 @@ unsigned char * getNodeId(void) {
 }
 
 /**
- @param nodeId
+ @param value
  A pointer to the node ID number
  @return
  - true on success
