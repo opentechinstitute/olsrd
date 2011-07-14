@@ -782,6 +782,11 @@ bool startReceiver(void) {
 		return false;
 	}
 
+	if (!initUplinkTxTimer()) {
+		stopReceiver();
+		return false;
+	}
+
 	return true;
 }
 
@@ -789,6 +794,7 @@ bool startReceiver(void) {
  Stop the receiver
  */
 void stopReceiver(void) {
+	destroyUplinkTxTimer();
 	destroyOlsrTxTimer();
 
 	destroyPositionAverageList(&positionAverageList);

@@ -12,4 +12,8 @@ int initOlsrTxTimer(void);
 void destroyOlsrTxTimer(void);
 int restartOlsrTxTimer(unsigned long long interval, timer_cb_func cb_func);
 
+int initUplinkTxTimer(void);
+void destroyUplinkTxTimer(void);
+int restartUplinkTxTimer(unsigned long long interval, timer_cb_func cb_func);
+
 #endif /* _PUD_TIMERS_H_ */
