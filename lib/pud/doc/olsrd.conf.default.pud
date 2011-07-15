@@ -558,6 +558,26 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.0.0"
 
 
     #
+    # Uplink Parameters
+    #
+
+    # uplinkAddr is the IP address to which the plugin will transmit GPS
+    #            position updates. When not set, no uplink messages will be
+    #            sent.
+    #
+    # Default: none
+    #
+    PlParam     "uplinkAddr"                   "127.0.0.2"
+
+    # uplinkPort is the UDP port to which the plugin will transmit GPS position
+    #            updates.
+    #
+    # Default: 2241
+    #
+    #PlParam     "uplinkPort"                   "2241"
+
+
+    #
     # OLSR Parameters
     #
 

@@ -133,6 +133,34 @@ int setTxNmeaMessagePrefix(const char *value, void *data,
 		set_plugin_parameter_addon addon);
 
 /*
+ * Uplink Parameters
+ */
+
+/** The name of the uplink address plugin parameter */
+#define PUD_UPLINK_ADDR_NAME					"uplinkAddr"
+
+/** The default value of the uplink address plugin parameter fro IPv4*/
+#define PUD_UPLINK_ADDR_4_DEFAULT				"0.0.0.0"
+
+/** The default value of the uplink address plugin parameter for IPv6 */
+#define PUD_UPLINK_ADDR_6_DEFAULT				"0:0:0:0:0:0:0:0"
+
+bool isUplinkAddrSet(void);
+union olsr_sockaddr * getUplinkAddr(void);
+int
+setUplinkAddr(const char *value, void *data, set_plugin_parameter_addon addon);
+
+/** The name of the uplink port plugin parameter */
+#define PUD_UPLINK_PORT_NAME          			"uplinkPort"
+
+/** The default value of the uplink port plugin parameter */
+#define PUD_UPLINK_PORT_DEFAULT          		2241
+
+unsigned short getUplinkPort(void);
+int
+setUplinkPort(const char *value, void *data, set_plugin_parameter_addon addon);
+
+/*
  * OLSR Parameters
  */
 

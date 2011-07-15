@@ -976,6 +976,151 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 }
 
 /*
+ * uplinkAddr
+ */
+
+/** The uplink address */
+static union olsr_sockaddr uplinkAddr;
+
+/** True when the uplink address is set */
+static bool uplinkAddrSet = false;
+
+/** True when the uplink address is set */
+static bool uplinkPortSet = false;
+
+/**
+ @return
+ - true when the uplink address is set
+ - false otherwise
+ */
+bool isUplinkAddrSet(void) {
+	return uplinkAddrSet;
+}
+
+/**
+ @return
+ The uplink address (in network byte order). Sets both the address
+ and the port to their default values when the address was not yet set.
+ */
+union olsr_sockaddr * getUplinkAddr(void) {
+	if (!uplinkAddrSet) {
+		setUplinkAddr(NULL, NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
+	}
+	return &uplinkAddr;
+}
+
+/**
+ Set the uplink address. Sets the address to its default value when
+ the value is NULL. Also sets the port to its default value when the address
+ was not yet set.
+
+ @param value
+ The uplink address (in string representation)
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_UPLINK_ADDR_NAME;
+	void * ipAddress;
+	in_port_t * port;
+	const char * valueInternal = value;
+	int conversion;
+	bool defaultValue = false;
+
+	getOlsrSockAddrAndPort(olsr_cnf->ip_version, &uplinkAddr, &ipAddress, &port);
+	if (olsr_cnf->ip_version == AF_INET) {
+		uplinkAddr.in4.sin_family = olsr_cnf->ip_version;
+		if (valueInternal == NULL) {
+			valueInternal = PUD_UPLINK_ADDR_4_DEFAULT;
+			defaultValue = true;
+		}
+	} else {
+		uplinkAddr.in6.sin6_family = olsr_cnf->ip_version;
+		if (valueInternal == NULL) {
+			valueInternal = PUD_UPLINK_ADDR_6_DEFAULT;
+			defaultValue = true;
+		}
+	}
+
+	if (!uplinkPortSet) {
+		*port = htons(PUD_UPLINK_PORT_DEFAULT);
+		uplinkPortSet = true;
+	}
+
+	conversion = inet_pton(olsr_cnf->ip_version, valueInternal, ipAddress);
+	if (conversion != 1) {
+		pudError((conversion == -1) ? true : false,
+				"Configured %s (%s) is not an IP address", valueName,
+				valueInternal);
+		return true;
+	}
+
+	if (!defaultValue) {
+		uplinkAddrSet = true;
+	}
+
+	return false;
+}
+
+/*
+ * uplinkPort
+ */
+
+/**
+ @return
+ The uplink port (in network byte order)
+ */
+unsigned short getUplinkPort(void) {
+	union olsr_sockaddr * addr = getUplinkAddr();
+	return *getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
+}
+
+/**
+ Set the uplink port
+
+ @param value
+ The uplink port (a number in string representation)
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_UPLINK_PORT_NAME;
+	unsigned long long uplinkPortNew;
+	in_port_t * port;
+	union olsr_sockaddr * addr = getUplinkAddr();
+
+	assert (value != NULL);
+
+	if (!readULL(valueName, value, &uplinkPortNew)) {
+		return true;
+	}
+
+	if ((uplinkPortNew < 1) || (uplinkPortNew > 65535)) {
+		pudError(false, "Configured %s (%llu) is outside of"
+			" valid range 1-65535", valueName, uplinkPortNew);
+		return true;
+	}
+
+	port = getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
+	*port = htons((uint16_t) uplinkPortNew);
+	uplinkPortSet = true;
+
+	return false;
+}
+
+/*
  * txTtl
  */
 

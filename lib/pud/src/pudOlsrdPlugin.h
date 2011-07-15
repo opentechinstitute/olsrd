@@ -30,6 +30,8 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 	{	.name = PUD_TX_MC_PORT_NAME, .set_plugin_parameter = &setTxMcPort, .data = NULL},
 	{	.name = PUD_TX_TTL_NAME, .set_plugin_parameter = &setTxTtl, .data = NULL},
 	{	.name = PUD_TX_NMEAMESSAGEPREFIX_NAME, .set_plugin_parameter = &setTxNmeaMessagePrefix, .data = NULL},
+	{	.name = PUD_UPLINK_ADDR_NAME, .set_plugin_parameter = &setUplinkAddr, .data = NULL},
+	{	.name = PUD_UPLINK_PORT_NAME, .set_plugin_parameter = &setUplinkPort, .data = NULL},
 	{	.name = PUD_OLSR_TTL_NAME, .set_plugin_parameter = &setOlsrTtl, .data = NULL},
 	{	.name = PUD_UPDATE_INTERVAL_STATIONARY_NAME, .set_plugin_parameter = &setUpdateIntervalStationary, .data = NULL},
 	{	.name = PUD_UPDATE_INTERVAL_MOVING_NAME, .set_plugin_parameter = &setUpdateIntervalMoving, .data = NULL},
