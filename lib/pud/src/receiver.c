@@ -699,13 +699,14 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 		memcpy(&transmitGpsInformation.txPosition.nmeaInfo,
 				&posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
 		transmitGpsInformation.updated = true;
-		(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
-	}
 
 #if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&transmitGpsInformation.txPosition.nmeaInfo,
+		dump_nmeaInfo(&transmitGpsInformation.txPosition.nmeaInfo,
 			"receiverUpdateGpsInformation: transmitGpsInformation");
 #endif /* PUD_DUMP_AVERAGING */
+
+		(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
+	}
 
 	if (updateTransmitGpsInformation) {
 		if (!restartOlsrTxTimer(
