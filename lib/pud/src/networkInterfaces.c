@@ -429,6 +429,54 @@ static bool createTxInterface(const char * ifName, union olsr_sockaddr ipAddr) {
 }
 
 /*
+ * Uplink interface
+ */
+
+/** The socket fd, uplinking our NMEA sentences */
+static int uplinkSocketFd = -1;
+
+/**
+ @return
+ The socket fd, uplinking our NMEA sentences. -1 when not valid.
+ */
+int getUplinkSocketFd(void) {
+	return uplinkSocketFd;
+}
+
+/**
+ Create an uplink socket
+
+ @return
+ - the socket descriptor (>= 0)
+ - -1 if an error occurred
+ */
+static int createUplinkSocket(void) {
+	int uplinkSocket = -1;
+
+	/*  Create a datagram socket on which to transmit */
+	errno = 0;
+	uplinkSocket = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
+	if (uplinkSocket < 0) {
+		pudError(true, "Could not create the uplink socket");
+		goto bail;
+	}
+
+	/* Set the no delay option on the socket */
+	errno = 0;
+	if (fcntl(uplinkSocket, F_SETFL, O_NDELAY) < 0) {
+		pudError(true, "Could not set the no delay option on the uplink socket");
+		goto bail;
+	}
+
+	return uplinkSocket;
+
+	bail: if (uplinkSocket >= 0) {
+		close(uplinkSocket);
+	}
+	return -1;
+}
+
+/*
  * OLSR interfaces
  */
 
@@ -592,6 +640,15 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction) {
 		}
 	}
 
+	if (isUplinkAddrSet()) {
+		uplinkSocketFd = createUplinkSocket();
+		if (uplinkSocketFd == -1) {
+			goto end;
+		}
+	} else {
+		uplinkSocketFd = -1;
+	}
+
 	retval = true;
 
 	end: freeifaddrs(ifAddrs);
@@ -655,5 +712,10 @@ void closeNetworkInterfaces(void) {
 	if (olsrNetworkInterfacesListHead != NULL) {
 		cleanupOlsrInterfaces(olsrNetworkInterfacesListHead);
 		olsrNetworkInterfacesListHead = NULL;
+	}
+
+	if (uplinkSocketFd != -1 ) {
+		close(uplinkSocketFd);
+		uplinkSocketFd = -1;
 	}
 }

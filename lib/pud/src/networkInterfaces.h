@@ -50,6 +50,7 @@ void closeNetworkInterfaces(void);
 
 TRxTxNetworkInterface * getRxNetworkInterfaces(void);
 TRxTxNetworkInterface * getTxNetworkInterfaces(void);
+int getUplinkSocketFd(void);
 TOLSRNetworkInterface * getOlsrNetworkInterface(struct interface * olsrIntf);
 
 #endif /* _PUD_NETWORKINTERFACES_H */
