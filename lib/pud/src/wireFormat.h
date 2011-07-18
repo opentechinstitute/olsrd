@@ -9,6 +9,9 @@
 #include <time.h>
 #include <net/if.h>
 
+/** The size of the buffer in which the OLSR message is assembled */
+#define TX_BUFFER_SIZE_FOR_OLSR 512
+
 /*
  * Version
  */
@@ -217,6 +220,23 @@ typedef struct _PudOlsrWireFormat {
 
 /** The size of the wire format, minus the size of the node information */
 #define PUD_OLSRWIREFORMATSIZE (sizeof(PudOlsrWireFormat) - sizeof(NodeInfo))
+
+/*
+ * Uplink
+ */
+
+/** the type of the uplink position update message */
+typedef enum _UplinkMessageType {
+	POSITION = 0
+} UplinkMessageType;
+
+/** TLV structure for uplink messages */
+typedef struct _UplinkWireFormat {
+		uint8_t type; /**< stores a UplinkMessageType */
+		uint16_t length; /**< the length of the payload in txBuffer */
+		uint8_t pad; /**< padding to align to 4 bytes */
+		unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR]; /**< payload */
+}__attribute__((__packed__)) UplinkWireFormat;
 
 /* ************************************************************************
  * FUNCTIONS

@@ -103,7 +103,8 @@ static PositionAverageList positionAverageList;
  */
 
 typedef enum _TimedTxInterface {
-	OLSR = 1
+	OLSR = 1,
+	UPLINK = 2
 } TimedTxInterface;
 
 /** Structure of the latest GPS information that is transmitted */
@@ -121,9 +122,6 @@ static TransmitGpsInformation transmitGpsInformation;
  * We keep this because then we can access the information without locking
  * mutexes. */
 static PositionUpdateEntry txPosition;
-
-/** The size of the buffer in which the OLSR message is assembled */
-#define TX_BUFFER_SIZE_FOR_OLSR 512
 
 /*
  * Functions
@@ -182,19 +180,20 @@ static bool positionValid(PositionUpdateEntry * position){
  a bitmap defining which interfaces to send over
  */
 static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
-	unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR];
+	UplinkWireFormat uplinkWireFormat;
+	union olsr_message * olsrMessage = (union olsr_message *)&uplinkWireFormat.txBuffer[0];
 	unsigned int aligned_size = 0;
 
+	/* convert nmeaINFO to wireformat olsr message */
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-
 	if (!transmitGpsInformation.updated
 			&& positionValid(&transmitGpsInformation.txPosition)) {
 		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
 	}
 	aligned_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo,
-			(union olsr_message *) &txBuffer[0], sizeof(txBuffer),
+			olsrMessage, sizeof(uplinkWireFormat.txBuffer),
 			((state.externalState == MOVING) ? getUpdateIntervalMoving()
-					: getUpdateIntervalStationary()));
+						: getUpdateIntervalStationary()));
 	transmitGpsInformation.updated = false;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
@@ -204,32 +203,61 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 			int r;
 			struct interface *ifn;
 			for (ifn = ifnet; ifn; ifn = ifn->int_next) {
-				nodeIdPreTransmitHook((union olsr_message *) txBuffer, ifn);
-				r = net_outbuffer_push(ifn, &txBuffer[0], aligned_size);
+				nodeIdPreTransmitHook(olsrMessage, ifn);
+				r = net_outbuffer_push(ifn, olsrMessage, aligned_size);
 				if (r != (int) aligned_size) {
 					pudError(
 							false,
 							"Could not send to OLSR interface %s: %s"
-								" (aligned_size=%u, r=%d)",
+									" (aligned_size=%u, r=%d)",
 							ifn->int_name,
 							((r == -1) ? "no buffer was found"
-									: (r == 0) ? "there was not enough room in the buffer"
-											: "unknown reason"), aligned_size, r);
+							: (r == 0) ? "there was not enough room in the buffer"
+							: "unknown reason"), aligned_size, r);
 				}
 #ifdef PUD_DUMP_GPS_PACKETS_TX_OLSR
 				else {
 					olsr_printf(0, "%s: packet sent to OLSR interface %s (%d bytes)\n",
 							PUD_PLUGIN_ABBR, ifn->int_name, aligned_size);
-					dump_packet(&txBuffer[0], aligned_size);
+					dump_packet((unsigned char *)olsrMessage, aligned_size);
 				}
 #endif
 			}
 		}
 
+		/* push out over uplink when an uplink is configured */
+		if (((interfaces & UPLINK) != 0) && isUplinkAddrSet()) {
+			int fd = getUplinkSocketFd();
+			if (fd != -1) {
+				union olsr_sockaddr * address = getUplinkAddr();
+				PudOlsrWireFormat * olsrGpsMessage =
+						getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
+
+				/* set TLV fields */
+				uplinkWireFormat.type = POSITION;
+				uplinkWireFormat.length = htons(aligned_size);
+				uplinkWireFormat.pad = 0;
+
+				/* fixup validity time */
+				olsrGpsMessage->validityTime = getValidityTimeForOlsr(
+						((state.externalState == MOVING) ?
+								getUplinkUpdateIntervalMoving() :
+								getUplinkUpdateIntervalStationary()));
+
+				errno = 0;
+				if (sendto(fd, &uplinkWireFormat, (sizeof(uplinkWireFormat) -
+						sizeof(uplinkWireFormat.txBuffer)) + aligned_size, 0,
+						(struct sockaddr *) &address->in,
+						sizeof(address->in)) < 0) {
+					pudError(true, "Could not send to uplink"
+							" (aligned_size=%u)", aligned_size);
+				}
+			}
+		}
+
 		/* loopback to tx interface when so configured */
 		if (getUseLoopback()) {
-			(void) packetReceivedFromOlsr(
-					(union olsr_message *) &txBuffer[0], NULL, NULL);
+			(void) packetReceivedFromOlsr(olsrMessage, NULL, NULL);
 		}
 	}
 }
@@ -246,6 +274,16 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
  */
 static void pud_olsr_tx_timer_callback(void *context __attribute__ ((unused))) {
 	txToAllOlsrInterfaces(OLSR);
+}
+
+/**
+ The uplink timer callback
+
+ @param context
+ unused
+ */
+static void pud_uplink_timer_callback(void *context __attribute__ ((unused))) {
+	txToAllOlsrInterfaces(UPLINK);
 }
 
 /**
@@ -726,6 +764,17 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 				: getUpdateIntervalMoving(), &pud_olsr_tx_timer_callback)) {
 			pudError(0, "Could not restart OLSR tx timer, no periodic"
 					" position updates will be sent to the OLSR network");
+		}
+
+		if (isUplinkAddrSet()) {
+			interfaces |= UPLINK;
+			if (!restartUplinkTxTimer(
+					(state.externalState == STATIONARY) ? getUplinkUpdateIntervalStationary()
+					: getUplinkUpdateIntervalMoving(), &pud_uplink_timer_callback)
+					) {
+				pudError(0, "Could not restart uplink timer, no periodic"
+						" position updates will be uplinked");
+			}
 		}
 
 		/* do an immediate transmit */
