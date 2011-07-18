@@ -94,6 +94,10 @@ static PositionAverageList positionAverageList;
  * TX to OLSR
  */
 
+typedef enum _TimedTxInterface {
+	OLSR = 1
+} TimedTxInterface;
+
 /** Structure of the latest GPS information that is transmitted */
 typedef struct _TransmitGpsInformation {
 	pthread_mutex_t mutex; /**< access mutex */
@@ -168,9 +172,13 @@ static bool positionValid(PositionUpdateEntry * position){
 			&& (position->nmeaInfo.fix != NMEA_FIX_BAD));
 }
 
-/** Send the transmit buffer out over all OLSR interfaces, called as a timer
- * callback and also immediately on an external state change */
-static void txToAllOlsrInterfaces(void) {
+/** Send the transmit buffer out over all designated interfaces, called as a
+ * timer callback and also immediately on an external state change.
+
+ @param interfaces
+ a bitmap defining which interfaces to send over
+ */
+static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR];
 	unsigned int aligned_size = 0;
 
@@ -189,28 +197,30 @@ static void txToAllOlsrInterfaces(void) {
 
 	/* push out to all OLSR interfaces */
 	if (aligned_size > 0) {
-		int r;
-		struct interface *ifn;
-		for (ifn = ifnet; ifn; ifn = ifn->int_next) {
-			nodeIdPreTransmitHook((union olsr_message *) txBuffer, ifn);
-			r = net_outbuffer_push(ifn, &txBuffer[0], aligned_size);
-			if (r != (int) aligned_size) {
-				pudError(
-						false,
-						"Could not send to OLSR interface %s: %s"
-							" (aligned_size=%u, r=%d)",
-						ifn->int_name,
-						((r == -1) ? "no buffer was found"
-								: (r == 0) ? "there was not enough room in the buffer"
-										: "unknown reason"), aligned_size, r);
-			}
+		if ((interfaces & OLSR) != 0) {
+			int r;
+			struct interface *ifn;
+			for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+				nodeIdPreTransmitHook((union olsr_message *) txBuffer, ifn);
+				r = net_outbuffer_push(ifn, &txBuffer[0], aligned_size);
+				if (r != (int) aligned_size) {
+					pudError(
+							false,
+							"Could not send to OLSR interface %s: %s"
+								" (aligned_size=%u, r=%d)",
+							ifn->int_name,
+							((r == -1) ? "no buffer was found"
+									: (r == 0) ? "there was not enough room in the buffer"
+											: "unknown reason"), aligned_size, r);
+				}
 #ifdef PUD_DUMP_GPS_PACKETS_TX_OLSR
-			else {
-				olsr_printf(0, "%s: packet sent to OLSR interface %s (%d bytes)\n",
-					PUD_PLUGIN_ABBR, ifn->int_name, aligned_size);
-				dump_packet(&txBuffer[0], aligned_size);
-			}
+				else {
+					olsr_printf(0, "%s: packet sent to OLSR interface %s (%d bytes)\n",
+							PUD_PLUGIN_ABBR, ifn->int_name, aligned_size);
+					dump_packet(&txBuffer[0], aligned_size);
+				}
 #endif
+			}
 		}
 
 		/* loopback to tx interface when so configured */
@@ -232,7 +242,7 @@ static void txToAllOlsrInterfaces(void) {
  unused
  */
 static void pud_olsr_tx_timer_callback(void *context __attribute__ ((unused))) {
-	txToAllOlsrInterfaces();
+	txToAllOlsrInterfaces(OLSR);
 }
 
 /**
@@ -707,6 +717,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	}
 
 	if (updateTransmitGpsInformation) {
+		TimedTxInterface interfaces = OLSR; /* always send over olsr */
 		if (!restartOlsrTxTimer(
 				(state.externalState == STATIONARY) ? getUpdateIntervalStationary()
 				: getUpdateIntervalMoving(), &pud_olsr_tx_timer_callback)) {
@@ -715,7 +726,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 		}
 
 		/* do an immediate transmit */
-		txToAllOlsrInterfaces();
+		txToAllOlsrInterfaces(interfaces);
 	}
 
 	retval = true;
