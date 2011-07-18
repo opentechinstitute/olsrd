@@ -209,13 +209,6 @@ static void txToAllOlsrInterfaces(void) {
 		struct interface *ifn;
 		for (ifn = ifnet; ifn; ifn = ifn->int_next) {
 			nodeIdPreTransmitHook((union olsr_message *) txBuffer, ifn);
-
-#ifdef PUD_DUMP_GPS_PACKETS_TX_OLSR
-			olsr_printf(0, "%s: packet sent to OLSR interface %s (%d bytes)\n",
-					PUD_PLUGIN_ABBR, ifn->int_name, aligned_size);
-			dump_packet(&txBuffer[0], aligned_size);
-#endif
-
 			r = net_outbuffer_push(ifn, &txBuffer[0], aligned_size);
 			if (r != (int) aligned_size) {
 				pudError(
@@ -227,6 +220,13 @@ static void txToAllOlsrInterfaces(void) {
 								: (r == 0) ? "there was not enough room in the buffer"
 										: "unknown reason"), aligned_size, r);
 			}
+#ifdef PUD_DUMP_GPS_PACKETS_TX_OLSR
+			else {
+				olsr_printf(0, "%s: packet sent to OLSR interface %s (%d bytes)\n",
+					PUD_PLUGIN_ABBR, ifn->int_name, aligned_size);
+				dump_packet(&txBuffer[0], aligned_size);
+			}
+#endif
 		}
 
 		/* loopback to tx interface when so configured */
