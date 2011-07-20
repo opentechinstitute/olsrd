@@ -21,7 +21,6 @@
 #include <string.h>
 #include <nmea/gmath.h>
 #include <nmea/sentence.h>
-#include <sys/timeb.h>
 #include <math.h>
 #include <net/if.h>
 
@@ -179,19 +178,7 @@ static void txToAllOlsrInterfaces(void) {
 
 	if (!transmitGpsInformation.updated
 			&& positionValid(&transmitGpsInformation.txPosition)) {
-		struct timeb tp;
-		struct tm nowStruct;
-
-		(void) ftime(&tp);
-		gmtime_r(&tp.time, &nowStruct);
-
-		transmitGpsInformation.txPosition.nmeaInfo.utc.year = nowStruct.tm_year;
-		transmitGpsInformation.txPosition.nmeaInfo.utc.mon = nowStruct.tm_mon;
-		transmitGpsInformation.txPosition.nmeaInfo.utc.day = nowStruct.tm_mday;
-		transmitGpsInformation.txPosition.nmeaInfo.utc.hour = nowStruct.tm_hour;
-		transmitGpsInformation.txPosition.nmeaInfo.utc.min = nowStruct.tm_min;
-		transmitGpsInformation.txPosition.nmeaInfo.utc.sec = nowStruct.tm_sec;
-		transmitGpsInformation.txPosition.nmeaInfo.utc.hsec = (tp.millitm / 10);
+		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
 	}
 	aligned_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo,
 			(union olsr_message *) &txBuffer[0], sizeof(txBuffer),
