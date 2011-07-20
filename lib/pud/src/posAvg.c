@@ -1,7 +1,6 @@
 #include "posAvg.h"
 
 /* Plugin includes */
-#include "nmeaTools.h"
 #include "dump.h"
 
 /* OLSR includes */
@@ -12,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <nmea/sentence.h>
+#include <nmea/info.h>
 
 /* Defines */
 
@@ -214,7 +214,7 @@ static void updateCounters(PositionAverageList * positionAverageList,
 	}
 
 	/* sig */
-	if (nmeaInfoHasField(entry->nmeaInfo.smask, SIG)) {
+	if (nmea_INFO_has_field(entry->nmeaInfo.smask, SIG)) {
 		if (entry->nmeaInfo.sig == NMEA_SIG_HIGH) {
 			assert(add ? (counters->sigHigh < maxCount):(counters->sigHigh > 0));
 			counters->sigHigh += amount;
@@ -231,7 +231,7 @@ static void updateCounters(PositionAverageList * positionAverageList,
 	}
 
 	/* fix */
-	if (nmeaInfoHasField(entry->nmeaInfo.smask, FIX)) {
+	if (nmea_INFO_has_field(entry->nmeaInfo.smask, FIX)) {
 		if (entry->nmeaInfo.fix == NMEA_FIX_3D) {
 			assert(add ? (counters->fix3d < maxCount):(counters->fix3d > 0));
 			counters->fix3d += amount;
@@ -287,7 +287,7 @@ static void determineCumulativeSmaskSigFix(
 
 	/* sig */
 	cumulative->nmeaInfo.sig = NMEA_SIG_BAD;
-	if (nmeaInfoHasField(cumulative->nmeaInfo.smask, SIG)) {
+	if (nmea_INFO_has_field(cumulative->nmeaInfo.smask, SIG)) {
 		if (counters->sigBad == 0) {
 			if (counters->sigHigh >= count) {
 				cumulative->nmeaInfo.sig = NMEA_SIG_HIGH;
@@ -301,7 +301,7 @@ static void determineCumulativeSmaskSigFix(
 
 	/* fix */
 	cumulative->nmeaInfo.fix = NMEA_FIX_BAD;
-	if (nmeaInfoHasField(cumulative->nmeaInfo.smask, FIX)) {
+	if (nmea_INFO_has_field(cumulative->nmeaInfo.smask, FIX)) {
 		if (counters->fixBad == 0) {
 			if (counters->fix3d >= count) {
 				cumulative->nmeaInfo.fix = NMEA_FIX_3D;

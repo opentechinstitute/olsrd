@@ -3,7 +3,6 @@
 /* Plugin includes */
 #include "pud.h"
 #include "netTools.h"
-#include "nmeaTools.h"
 #include "nodeIdConversion.h"
 #include "networkInterfaces.h"
 
@@ -21,6 +20,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <nmea/util.h>
 
 /*
  * Utility functions
@@ -927,6 +927,8 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_NMEAMESSAGEPREFIX_NAME;
 	size_t valueLength;
+	bool invalidChars;
+	char report[256];
 
 	assert (value != NULL);
 
@@ -937,7 +939,10 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 		return true;
 	}
 
-	if (hasInvalidNmeaChars(value, valueName)) {
+	invalidChars = nmea_string_has_invalid_chars(value, valueName, &report[0],
+			sizeof(report));
+	if (invalidChars) {
+		pudError(false, &report[0]);
 		return true;
 	}
 

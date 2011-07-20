@@ -2,7 +2,6 @@
 
 /* Plugin includes */
 #include "pud.h"
-#include "nmeaTools.h"
 #include "configuration.h"
 #include "networkInterfaces.h"
 
@@ -11,6 +10,7 @@
 /* System includes */
 #include <assert.h>
 #include <arpa/inet.h>
+#include <nmea/util.h>
 #include <net/if.h>
 
 /* ************************************************************************
@@ -96,7 +96,17 @@ bool validateNodeId(NodeIdType nodeIdTypeNumber) {
 			return setupNodeIdNumberForOlsr(0LL, 99999999999999999LL, 8);
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
-			return !hasInvalidNmeaChars((char *) getNodeId(), PUD_NODE_ID_NAME);
+		{
+			bool invalidChars;
+			char report[256];
+
+			invalidChars = nmea_string_has_invalid_chars((char *) getNodeId(),
+					PUD_NODE_ID_NAME, &report[0], sizeof(report));
+			if (invalidChars) {
+				pudError(false, &report[0]);
+			}
+			return !invalidChars;
+		}
 
 		case PUD_NODEIDTYPE_192:
 			return setupNodeIdNumberForOlsr(0LL, 9999999LL, 3);

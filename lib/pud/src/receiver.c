@@ -6,7 +6,6 @@
 #include "configuration.h"
 #include "dump.h"
 #include "timers.h"
-#include "nmeaTools.h"
 #include "posAvg.h"
 #include "networkInterfaces.h"
 
@@ -16,6 +15,7 @@
 /* System includes */
 #include <stddef.h>
 #include <nmea/parser.h>
+#include <nmea/info.h>
 #include <pthread.h>
 #include <nmea/info.h>
 #include <string.h>
@@ -165,7 +165,7 @@ static void nodeIdPreTransmitHook(union olsr_message *olsrMessage,
  - false otherwise
  */
 static bool positionValid(PositionUpdateEntry * position){
-	return (nmeaInfoHasField(position->nmeaInfo.smask, FIX)
+	return (nmea_INFO_has_field(position->nmeaInfo.smask, FIX)
 			&& (position->nmeaInfo.fix != NMEA_FIX_BAD));
 }
 
@@ -323,19 +323,19 @@ static void detemineMoving(PositionUpdateEntry * avg,
 	/* both avg and lastTx are valid here */
 
 	/* avg field presence booleans */
-	avgHasSpeed = nmeaInfoHasField(avg->nmeaInfo.smask, SPEED);
-	avgHasPos = nmeaInfoHasField(avg->nmeaInfo.smask, LAT)
-			&& nmeaInfoHasField(avg->nmeaInfo.smask, LON);
-	avgHasHdop = nmeaInfoHasField(avg->nmeaInfo.smask, HDOP);
-	avgHasElv = nmeaInfoHasField(avg->nmeaInfo.smask, ELV);
-	avgHasVdop = nmeaInfoHasField(avg->nmeaInfo.smask, VDOP);
+	avgHasSpeed = nmea_INFO_has_field(avg->nmeaInfo.smask, SPEED);
+	avgHasPos = nmea_INFO_has_field(avg->nmeaInfo.smask, LAT)
+			&& nmea_INFO_has_field(avg->nmeaInfo.smask, LON);
+	avgHasHdop = nmea_INFO_has_field(avg->nmeaInfo.smask, HDOP);
+	avgHasElv = nmea_INFO_has_field(avg->nmeaInfo.smask, ELV);
+	avgHasVdop = nmea_INFO_has_field(avg->nmeaInfo.smask, VDOP);
 
 	/* lastTx field presence booleans */
-	lastTxHasPos = nmeaInfoHasField(lastTx->nmeaInfo.smask, LAT)
-			&& nmeaInfoHasField(lastTx->nmeaInfo.smask, LON);
-	lastTxHasHdop = nmeaInfoHasField(lastTx->nmeaInfo.smask, HDOP);
-	lastTxHasElv = nmeaInfoHasField(lastTx->nmeaInfo.smask, ELV);
-	lastTxHasVdop = nmeaInfoHasField(lastTx->nmeaInfo.smask, VDOP);
+	lastTxHasPos = nmea_INFO_has_field(lastTx->nmeaInfo.smask, LAT)
+			&& nmea_INFO_has_field(lastTx->nmeaInfo.smask, LON);
+	lastTxHasHdop = nmea_INFO_has_field(lastTx->nmeaInfo.smask, HDOP);
+	lastTxHasElv = nmea_INFO_has_field(lastTx->nmeaInfo.smask, ELV);
+	lastTxHasVdop = nmea_INFO_has_field(lastTx->nmeaInfo.smask, VDOP);
 
 	/* fill in some values _or_ defaults */
 	dopMultiplier = getDopMultiplier();
@@ -587,19 +587,19 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 		goto end;
 	}
 
-	/* we always work with latitude, longitude in degrees and DOPs in meters */
-	nmeaInfoUnitConversion(&incomingEntry->nmeaInfo);
-
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&incomingEntry->nmeaInfo,
-			"receiverUpdateGpsInformation: incoming entry after unit conversion");
-#endif /* PUD_DUMP_AVERAGING */
-
-	sanitiseNmeaInfo(&incomingEntry->nmeaInfo);
+	nmea_INFO_sanitise(&incomingEntry->nmeaInfo);
 
 #if defined(PUD_DUMP_AVERAGING)
 	dump_nmeaInfo(&incomingEntry->nmeaInfo,
 			"receiverUpdateGpsInformation: incoming entry after sanitise");
+#endif /* PUD_DUMP_AVERAGING */
+
+	/* we always work with latitude, longitude in degrees and DOPs in meters */
+	nmea_INFO_unit_conversion(&incomingEntry->nmeaInfo);
+
+#if defined(PUD_DUMP_AVERAGING)
+	dump_nmeaInfo(&incomingEntry->nmeaInfo,
+			"receiverUpdateGpsInformation: incoming entry after unit conversion");
 #endif /* PUD_DUMP_AVERAGING */
 
 	/*

@@ -5,7 +5,6 @@
 #include "pud.h"
 #include "nodeIdConversion.h"
 #include "configuration.h"
-#include "nmeaTools.h"
 
 /* OLSR includes */
 #include "olsr.h"
@@ -13,6 +12,7 @@
 /* System includes */
 #include <nmea/gmath.h>
 #include <nmea/tok.h>
+#include <nmea/info.h>
 #include <netinet/in.h>
 #include <stdio.h>
 
@@ -74,7 +74,7 @@ unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
 	/* time is ALWAYS present so we can just use it */
 	getTimeFromOlsr(gpsMessage->time, &timeStruct);
 
-	if (likely(nmeaInfoHasField(olsrGpsMessage->smask, LAT))) {
+	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, LAT))) {
 		int chars;
 		double latitude = getLatitudeFromOlsr(gpsMessage->lat);
 
@@ -98,7 +98,7 @@ unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
 		latitudeString[0] = '\0';
 	}
 
-	if (likely(nmeaInfoHasField(olsrGpsMessage->smask, LON))) {
+	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, LON))) {
 		int chars;
 		double longitude = getLongitudeFromOlsr(gpsMessage->lon);
 
@@ -122,7 +122,7 @@ unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
 		longitudeString[0] = '\0';
 	}
 
-	if (likely(nmeaInfoHasField(olsrGpsMessage->smask, ELV))) {
+	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, ELV))) {
 		int chars = snprintf(&altitudeString[0], PUD_TX_ALTITUDE_DIGITS, "%ld",
 				getAltitudeFromOlsr(gpsMessage->alt));
 		if (likely(chars < PUD_TX_ALTITUDE_DIGITS)) {
@@ -134,7 +134,7 @@ unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
 		altitudeString[0] = '\0';
 	}
 
-	if (likely(nmeaInfoHasField(olsrGpsMessage->smask, SPEED))) {
+	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, SPEED))) {
 		int chars = snprintf(&speedString[0], PUD_TX_SPEED_DIGITS, "%lu",
 				getSpeedFromOlsr(gpsMessage->speed));
 		if (likely(chars < PUD_TX_SPEED_DIGITS)) {
@@ -146,7 +146,7 @@ unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
 		speedString[0] = '\0';
 	}
 
-	if (likely(nmeaInfoHasField(olsrGpsMessage->smask, DIRECTION))) {
+	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, DIRECTION))) {
 		int chars = snprintf(&trackString[0], PUD_TX_TRACK_DIGITS, "%lu",
 				getTrackFromOlsr(gpsMessage->track));
 		if (likely(chars < PUD_TX_TRACK_DIGITS)) {
@@ -158,7 +158,7 @@ unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
 		trackString[0] = '\0';
 	}
 
-	if (likely(nmeaInfoHasField(olsrGpsMessage->smask, HDOP))) {
+	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, HDOP))) {
 		int chars = snprintf(&hdopString[0], PUD_TX_HDOP_DIGITS,
 				"%." PUD_TX_HDOP_DECIMALS "f", nmea_meters2dop(getHdopFromOlsr(
 						gpsMessage->hdop)));
@@ -255,37 +255,37 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 	olsrGpsMessage->gpsInfo.time = getTimeForOlsr(nmeaInfo->utc.hour,
 			nmeaInfo->utc.min, nmeaInfo->utc.sec);
 
-	if (likely(nmeaInfoHasField(nmeaInfo->smask, LAT))) {
+	if (likely(nmea_INFO_has_field(nmeaInfo->smask, LAT))) {
 		olsrGpsMessage->gpsInfo.lat = getLatitudeForOlsr(nmeaInfo->lat);
 	} else {
 		olsrGpsMessage->gpsInfo.lat = (1 << (PUD_LATITUDE_BITS - 1));
 	}
 
-	if (likely(nmeaInfoHasField(nmeaInfo->smask, LON))) {
+	if (likely(nmea_INFO_has_field(nmeaInfo->smask, LON))) {
 		olsrGpsMessage->gpsInfo.lon = getLongitudeForOlsr(nmeaInfo->lon);
 	} else {
 		olsrGpsMessage->gpsInfo.lon = (1 << (PUD_LONGITUDE_BITS - 1));
 	}
 
-	if (likely(nmeaInfoHasField(nmeaInfo->smask, ELV))) {
+	if (likely(nmea_INFO_has_field(nmeaInfo->smask, ELV))) {
 		olsrGpsMessage->gpsInfo.alt = getAltitudeForOlsr(nmeaInfo->elv);
 	} else {
 		olsrGpsMessage->gpsInfo.alt = -PUD_ALTITUDE_MIN;
 	}
 
-	if (likely(nmeaInfoHasField(nmeaInfo->smask, SPEED))) {
+	if (likely(nmea_INFO_has_field(nmeaInfo->smask, SPEED))) {
 		olsrGpsMessage->gpsInfo.speed = getSpeedForOlsr(nmeaInfo->speed);
 	} else {
 		olsrGpsMessage->gpsInfo.speed = 0;
 	}
 
-	if (likely(nmeaInfoHasField(nmeaInfo->smask, DIRECTION))) {
+	if (likely(nmea_INFO_has_field(nmeaInfo->smask, DIRECTION))) {
 		olsrGpsMessage->gpsInfo.track = getTrackForOlsr(nmeaInfo->direction);
 	} else {
 		olsrGpsMessage->gpsInfo.track = 0;
 	}
 
-	if (likely(nmeaInfoHasField(nmeaInfo->smask, HDOP))) {
+	if (likely(nmea_INFO_has_field(nmeaInfo->smask, HDOP))) {
 		olsrGpsMessage->gpsInfo.hdop = getHdopForOlsr(nmeaInfo->HDOP);
 	} else {
 		olsrGpsMessage->gpsInfo.hdop = PUD_HDOP_MAX;
