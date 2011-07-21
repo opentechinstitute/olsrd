@@ -17,115 +17,6 @@
  * Node Information
  * ************************************************************************ */
 
-/** The size of the cached nodeId buffer */
-#define PUD_CACHED_NODEID_BUFFER_SIZE 16
-
-/** The cached nodeId buffer: contains a pre-processed version of the nodeId
- in order to improve performance. It is currently used for nodeIdTypes
- PUD_NODEIDTYPE_MSISDN, PUD_NODEIDTYPE_TETRA, PUD_NODEIDTYPE_192,
- PUD_NODEIDTYPE_193 (so basically for numbers that will not change) */
-static unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
-
-/** The number of bytes stored in cachedNodeIdBuffer */
-static unsigned char cachedNodeIdBufferLength = 0;
-
-/**
- Check a nodeId number for validity and if valid set it up in the
- cachedNodeIdBuffer. The valid range for the number is [min, max].
-
- @param min
- The lower bound for a valid number
- @param max
- The upper bound for a valid number
- @param bytes
- The number of bytes used by the number in the wire format
-
- @return
- - true when the number is valid
- - false otherwise
- */
-static bool setupNodeIdNumberForOlsr(unsigned long long min,
-		unsigned long long max, unsigned int bytes) {
-	unsigned long long val;
-
-	assert (bytes <= PUD_CACHED_NODEID_BUFFER_SIZE);
-
-	if (!getNodeIdAsNumber(&val)) {
-		return false;
-	}
-
-	if ((val >= min) && (val <= max)) {
-		int i = bytes - 1;
-		while (i >= 0) {
-			cachedNodeIdBuffer[i] = val & 0xff;
-			val >>= 8;
-			i--;
-		}
-
-		assert(val == 0);
-
-		cachedNodeIdBufferLength = bytes;
-		return true;
-	}
-
-	pudError(false, "%s value %llu is out of range [%llu,%llu]",
-			PUD_NODE_ID_NAME, val, min, max);
-	return false;
-}
-
-/**
- Validate whether the configured nodeId is valid w.r.t. the configured
- nodeIdType
-
- @return
- - true when ok
- - false on failure
- */
-bool validateNodeId(NodeIdType nodeIdTypeNumber) {
-	switch (nodeIdTypeNumber) {
-		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
-		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
-		case PUD_NODEIDTYPE_MAC: /* hardware address */
-			/* explicit return: configured nodeId is not relevant */
-			return true;
-
-		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-			return setupNodeIdNumberForOlsr(0LL, 999999999999999LL, 7);
-
-		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-			return setupNodeIdNumberForOlsr(0LL, 99999999999999999LL, 8);
-
-		case PUD_NODEIDTYPE_DNS: /* DNS name */
-		{
-			bool invalidChars;
-			char report[256];
-
-			invalidChars = nmea_string_has_invalid_chars((char *) getNodeId(),
-					PUD_NODE_ID_NAME, &report[0], sizeof(report));
-			if (invalidChars) {
-				pudError(false, &report[0]);
-			}
-			return !invalidChars;
-		}
-
-		case PUD_NODEIDTYPE_192:
-			return setupNodeIdNumberForOlsr(0LL, 9999999LL, 3);
-
-		case PUD_NODEIDTYPE_193:
-			return setupNodeIdNumberForOlsr(0LL, 999999LL, 3);
-
-		case PUD_NODEIDTYPE_194:
-			return setupNodeIdNumberForOlsr(1LL, 8191LL, 2);
-
-		default: /* unsupported */
-			/* explicit return: configured nodeId is not relevant, will
-			 * fallback to IP addresses */
-			return true;
-	}
-
-	return false;
-}
-
 /**
  Convert the node information to the node information for an OLSR message and
  put it in the PUD message in the OLSR message. Also updates the PUD message
@@ -143,7 +34,8 @@ bool validateNodeId(NodeIdType nodeIdTypeNumber) {
 size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 		unsigned int olsrMessageSize) {
 	NodeIdType nodeIdTypeNumber = getNodeIdTypeNumber();
-	size_t length = 0;
+	unsigned char * buffer;
+	unsigned int length = 0;
 
 	olsrGpsMessage->nodeInfo.nodeIdType = nodeIdTypeNumber;
 	switch (nodeIdTypeNumber) {
@@ -158,9 +50,8 @@ size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 		case PUD_NODEIDTYPE_192:
 		case PUD_NODEIDTYPE_193:
 		case PUD_NODEIDTYPE_194:
-			length = cachedNodeIdBufferLength;
-			memcpy(&olsrGpsMessage->nodeInfo.nodeId, &cachedNodeIdBuffer[0],
-					length);
+			getNodeIdNumberForOlsrCache(&buffer, &length);
+			memcpy(&olsrGpsMessage->nodeInfo.nodeId, buffer, length);
 			break;
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */

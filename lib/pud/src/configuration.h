@@ -36,6 +36,8 @@ bool getNodeIdAsNumber(unsigned long long * value);
 unsigned char * getNodeIdWithLength(size_t *length);
 int setNodeId(const char *value, void *data, set_plugin_parameter_addon addon);
 
+void getNodeIdNumberForOlsrCache(unsigned char ** buffer, unsigned int * length);
+
 /*
  * RX Parameters
  */

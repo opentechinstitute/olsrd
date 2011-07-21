@@ -11,8 +11,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool validateNodeId(NodeIdType nodeIdTypeNumber);
-
 size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 		unsigned int olsrMessageSize);
 
