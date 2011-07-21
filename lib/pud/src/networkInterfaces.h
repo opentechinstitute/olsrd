@@ -12,9 +12,6 @@
 #include <stdbool.h>
 #include <net/if.h>
 
-/** The size of the hardware address */
-#define PUD_HWADDR_SIZE IFHWADDRLEN
-
 /** A list of TRxTxNetworkInterface objects, used for non-OLSR interfaces */
 typedef struct _TRxTxNetworkInterface {
 		/** The socket file descriptor for the non-OLSR interface*/
@@ -27,7 +24,7 @@ typedef struct _TRxTxNetworkInterface {
 		union olsr_sockaddr ipAddress;
 
 		/** The hardware address of the interface */
-		unsigned char hwAddress[PUD_HWADDR_SIZE];
+		unsigned char hwAddress[IFHWADDRLEN];
 
 		/** The next TRxTxNetworkInterface in the list */
 		struct _TRxTxNetworkInterface * next;
@@ -39,7 +36,7 @@ typedef struct _TOLSRNetworkInterface {
 		struct interface * olsrIntf;
 
 		/** The hardware address of the interface */
-		unsigned char hwAddress[PUD_HWADDR_SIZE];
+		unsigned char hwAddress[IFHWADDRLEN];
 
 		/** The next TOLSRNetworkInterface in the list */
 		struct _TOLSRNetworkInterface * next;

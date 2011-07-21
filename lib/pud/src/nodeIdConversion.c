@@ -11,6 +11,7 @@
 /* System includes */
 #include <assert.h>
 #include <arpa/inet.h>
+#include <net/if.h>
 
 /* ************************************************************************
  * Node Information
@@ -139,7 +140,7 @@ size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 		case PUD_NODEIDTYPE_MAC: /* hardware address */
 			/* handled when the message is actually sent into OLSR, in the
 			 * pre-transmit hook */
-			length = PUD_HWADDR_SIZE;
+			length = IFHWADDRLEN;
 			break;
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
@@ -269,7 +270,7 @@ void getNodeInfoFromOlsr(const union olsr_message *olsrMessage,
 			{
 				unsigned char * hwAddr = &olsrGpsMessage->nodeInfo.nodeId;
 
-				assert (PUD_HWADDR_SIZE == 6);
+				assert (IFHWADDRLEN == 6);
 
 				chars = snprintf(nodeIdBuffer, nodeIdBufferSize,
 						"%02x:%02x:%02x:%02x:%02x:%02x", hwAddr[0], hwAddr[1],
