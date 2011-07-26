@@ -188,7 +188,9 @@ PositionUpdateEntry * getPositionAverageEntry(
 static void updateCounters(PositionAverageList * positionAverageList,
 		PositionUpdateEntry * entry, bool add) {
 	PositionUpdateCounters * counters = &positionAverageList->counters;
+#ifndef NDEBUG
 	unsigned long long maxCount = positionAverageList->entriesMaxCount;
+#endif
 	int amount = (add ? 1 : -1);
 
 	/* smask */
