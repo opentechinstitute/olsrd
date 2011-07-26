@@ -36,11 +36,14 @@ version: Makefile scripts/makeVersionH
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 	$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
-.PHONY:	install clean dist distclean doc doc-clean
+.PHONY:	install uninstall clean dist distclean doc doc-clean
 
 install:	$(PLUGIN_FULLNAME)
 	$(STRIP) $(PLUGIN_FULLNAME)
 	$(INSTALL_LIB)
+
+uninstall:
+	$(UNINSTALL_LIB)
 
 clean: doc-clean
 	rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME) "./src/version.h"
