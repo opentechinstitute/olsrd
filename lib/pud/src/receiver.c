@@ -237,6 +237,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 				/* set TLV fields */
 				uplinkWireFormat.type = POSITION;
 				uplinkWireFormat.length = htons(aligned_size);
+				uplinkWireFormat.ipv6 = (olsr_cnf->ip_version == AF_INET) ? 0 : 1;
 				uplinkWireFormat.pad = 0;
 
 				/* fixup validity time */

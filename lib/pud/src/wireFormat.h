@@ -236,7 +236,8 @@ typedef enum _UplinkMessageType {
 typedef struct _UplinkWireFormat {
 		uint8_t type; /**< stores a UplinkMessageType */
 		uint16_t length; /**< the length of the payload in txBuffer */
-		uint8_t pad; /**< padding to align to 4 bytes */
+		uint8_t ipv6:1; /**< clear when IPv4, set when IPv6 */
+		uint8_t pad:7; /**< padding to align to 4 bytes */
 		union _msg {
 			union olsr_message olsrMessage; /**< the olsr message */
 			unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR]; /**< payload */
