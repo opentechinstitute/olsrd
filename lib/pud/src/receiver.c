@@ -28,6 +28,7 @@
 
 /* Debug includes */
 #if defined(PUD_DUMP_GPS_PACKETS_TX_OLSR) || \
+	defined(PUD_DUMP_GPS_PACKETS_TX_UPLINK) || \
 	defined(PUD_DUMP_AVERAGING)
 #include "olsr.h"
 #endif
@@ -252,6 +253,15 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 					pudError(true, "Could not send to uplink"
 							" (aligned_size=%u)", aligned_size);
 				}
+#ifdef PUD_DUMP_GPS_PACKETS_TX_UPLINK
+				else {
+					olsr_printf(0, "%s: packet sent to uplink (%d bytes)\n",
+							PUD_PLUGIN_ABBR, aligned_size);
+					dump_packet((unsigned char *)&uplinkWireFormat,
+							(sizeof(uplinkWireFormat) -
+							 sizeof(uplinkWireFormat.txBuffer)) + aligned_size);
+				}
+#endif
 			}
 		}
 

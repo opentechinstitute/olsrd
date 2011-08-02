@@ -4,6 +4,7 @@
 #if defined(PUD_DUMP_GPS_PACKETS_RX_NON_OLSR) || \
 	defined(PUD_DUMP_GPS_PACKETS_RX_OLSR) || \
 	defined(PUD_DUMP_GPS_PACKETS_TX_OLSR) || \
+	defined(PUD_DUMP_GPS_PACKETS_TX_UPLINK) || \
 	defined(PUD_DUMP_GPS_PACKETS_TX_NON_OLSR) || \
 	defined(PUD_DUMP_GPS_PACKETS)
 
