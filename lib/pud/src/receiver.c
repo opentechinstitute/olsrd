@@ -24,6 +24,12 @@
 #include <math.h>
 #include <net/if.h>
 
+/* Debug includes */
+#if defined(PUD_DUMP_GPS_PACKETS_TX_OLSR) || \
+	defined(PUD_DUMP_AVERAGING)
+#include "olsr.h"
+#endif
+
 /*
  * NMEA parser
  */
