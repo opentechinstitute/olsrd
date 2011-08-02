@@ -182,7 +182,7 @@ static bool positionValid(PositionUpdateEntry * position){
  */
 static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	UplinkWireFormat uplinkWireFormat;
-	union olsr_message * olsrMessage = (union olsr_message *)&uplinkWireFormat.txBuffer[0];
+	union olsr_message * olsrMessage = (union olsr_message *)&uplinkWireFormat.msg.olsrMessage;
 	unsigned int aligned_size = 0;
 
 	/* convert nmeaINFO to wireformat olsr message */
@@ -192,7 +192,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
 	}
 	aligned_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo,
-			olsrMessage, sizeof(uplinkWireFormat.txBuffer),
+			olsrMessage, sizeof(uplinkWireFormat.msg),
 			((state.externalState == MOVING) ? getUpdateIntervalMoving()
 						: getUpdateIntervalStationary()));
 	transmitGpsInformation.updated = false;
@@ -247,7 +247,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 
 				errno = 0;
 				if (sendto(fd, &uplinkWireFormat, (sizeof(uplinkWireFormat) -
-						sizeof(uplinkWireFormat.txBuffer)) + aligned_size, 0,
+						sizeof(uplinkWireFormat.msg)) + aligned_size, 0,
 						(struct sockaddr *) &address->in,
 						sizeof(address->in)) < 0) {
 					pudError(true, "Could not send to uplink"
@@ -259,7 +259,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 							PUD_PLUGIN_ABBR, aligned_size);
 					dump_packet((unsigned char *)&uplinkWireFormat,
 							(sizeof(uplinkWireFormat) -
-							 sizeof(uplinkWireFormat.txBuffer)) + aligned_size);
+							 sizeof(uplinkWireFormat.msg)) + aligned_size);
 				}
 #endif
 			}

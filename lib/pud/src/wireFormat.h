@@ -9,6 +9,8 @@
 #include <time.h>
 #include <net/if.h>
 
+#include "olsr_protocol.h"
+
 /** The size of the buffer in which the OLSR message is assembled */
 #define TX_BUFFER_SIZE_FOR_OLSR 512
 
@@ -235,7 +237,10 @@ typedef struct _UplinkWireFormat {
 		uint8_t type; /**< stores a UplinkMessageType */
 		uint16_t length; /**< the length of the payload in txBuffer */
 		uint8_t pad; /**< padding to align to 4 bytes */
-		unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR]; /**< payload */
+		union _msg {
+			union olsr_message olsrMessage; /**< the olsr message */
+			unsigned char txBuffer[TX_BUFFER_SIZE_FOR_OLSR]; /**< payload */
+		} msg;
 }__attribute__((__packed__)) UplinkWireFormat;
 
 /* ************************************************************************
