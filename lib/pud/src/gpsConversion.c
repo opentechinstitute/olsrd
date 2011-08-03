@@ -25,8 +25,6 @@
 
  @param olsrMessage
  A pointer to the OLSR message
- @param olsrMessagePayload
- A pointer to the GPS message in the OLSR message
  @param txGpsBuffer
  A pointer to the buffer in which the transmit string can be written
  @param txGpsBufferSize
@@ -36,13 +34,8 @@
  - the length of the transmit string placed in the txGpsBuffer
  - 0 (zero) in case of an error
  */
-unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
-		unsigned char *olsrMessagePayload, unsigned char * txGpsBuffer,
-		unsigned int txGpsBufferSize) {
-	PudOlsrWireFormat *olsrGpsMessage =
-			(PudOlsrWireFormat *) olsrMessagePayload;
-	const GpsInfo* gpsMessage = &olsrGpsMessage->gpsInfo;
-
+unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
+		unsigned char * txGpsBuffer, unsigned int txGpsBufferSize) {
 	unsigned long validityTime;
 
 	struct tm timeStruct;
@@ -61,6 +54,16 @@ unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
 
 	unsigned int transmitStringLength;
 
+	PudOlsrWireFormat *olsrGpsMessage;
+	GpsInfo* gpsMessage;
+
+	/* determine the originator of the message */
+	if (olsr_cnf->ip_version == AF_INET) {
+		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
+	} else {
+		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
+	}
+
 	if (unlikely(olsrGpsMessage->version != PUD_WIRE_FORMAT_VERSION)) {
 		/* currently we can only handle our own version */
 		pudError(false, "Can not handle version %u OLSR PUD messages"
@@ -70,6 +73,8 @@ unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
 	}
 
 	validityTime = getValidityTimeFromOlsr(olsrGpsMessage->validityTime);
+
+	gpsMessage = &olsrGpsMessage->gpsInfo;
 
 	/* time is ALWAYS present so we can just use it */
 	getTimeFromOlsr(gpsMessage->time, &timeStruct);

@@ -26,8 +26,7 @@
 unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		unsigned int olsrMessageSize, unsigned long long validityTime);
 
-unsigned int gpsFromOlsr(const union olsr_message *olsrMessage,
-		unsigned char *olsrMessagePayload, unsigned char * txGpsBuffer,
-		unsigned int txGpsBufferSize);
+unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
+		unsigned char * txGpsBuffer, unsigned int txGpsBufferSize);
 
 #endif /* _PUD_GPSCONVERSION_H_ */
