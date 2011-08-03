@@ -16,6 +16,9 @@
 /** The version of the transmit sentence */
 #define PUD_TX_SENTENCE_VERSION		0
 
+/** The OLSRD message type FIXME get an assigned one */
+#define PUD_OLSR_MSG_TYPE 			171
+
 /*
  * Functions
  */

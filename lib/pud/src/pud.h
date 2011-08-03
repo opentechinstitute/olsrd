@@ -33,9 +33,6 @@
 # endif
 #endif
 
-/** The OLSRD message type FIXME get an assigned one */
-#define PUD_OLSR_MSG_TYPE 				171
-
 /** The long plugin name */
 #define PUD_PLUGIN_NAME_LONG			"OLSRD Position Update Distribution (PUD) plugin"
 
