@@ -145,8 +145,6 @@ static char *getNodeIdNumberFromOlsr(PudOlsrWireFormat * olsrGpsMessage,
  @param olsrMessage
  A pointer to the OLSR message. Used to be able to retrieve the IP address of
  the sender.
- @param olsrGpsMessage
- A pointer to the GPS message in the OLSR message
  @param nodeIdBuffer
  A pointer to the buffer in which the nodeId string representation can be
  written. Not written to when nodeIdBuffer or nodeId is NULL or when
@@ -163,11 +161,19 @@ static char *getNodeIdNumberFromOlsr(PudOlsrWireFormat * olsrGpsMessage,
  written (the buffer needs to be at least PUD_TX_NODEIDTYPE_DIGITS + 1 bytes).
  When NULL then the nodeIdType string is not written.
  */
-void getNodeInfoFromOlsr(const union olsr_message *olsrMessage,
-		PudOlsrWireFormat *olsrGpsMessage, char *nodeIdBuffer,
+void getNodeInfoFromOlsr(union olsr_message *olsrMessage, char *nodeIdBuffer,
 		unsigned int nodeIdBufferSize, const char **nodeId,
 		char *nodeIdTypeString) {
 	int chars;
+
+	PudOlsrWireFormat *olsrGpsMessage;
+
+	/* determine the originator of the message */
+	if (olsr_cnf->ip_version == AF_INET) {
+		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
+	} else {
+		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
+	}
 
 	if (olsrGpsMessage->smask & PUD_FLAGS_ID) {
 		if (likely(nodeIdBuffer && (nodeIdBufferSize != 0) && nodeId)) {

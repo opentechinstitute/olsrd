@@ -14,8 +14,8 @@
 size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 		unsigned int olsrMessageSize);
 
-void getNodeInfoFromOlsr(const union olsr_message *olsrMessage,
-		PudOlsrWireFormat *olsrGpsMessage, char *nodeIdBuffer,
+void getNodeInfoFromOlsr(union olsr_message *olsrMessage,
+		char *nodeIdBuffer,
 		unsigned int nodeIdBufferSize, const char **nodeId,
 		char *nodeIdTypeString);
 

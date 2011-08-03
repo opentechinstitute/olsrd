@@ -176,8 +176,8 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		hdopString[0] = '\0';
 	}
 
-	getNodeInfoFromOlsr(olsrMessage, olsrGpsMessage, &nodeIdString[0],
-			PUD_TX_NODEID_BUFFERSIZE, &nodeId, &nodeIdTypeString[0]);
+	getNodeInfoFromOlsr(olsrMessage, &nodeIdString[0], PUD_TX_NODEID_BUFFERSIZE,
+			&nodeId, &nodeIdTypeString[0]);
 
 	transmitStringLength = nmea_printf((char *) txGpsBuffer, txGpsBufferSize
 			- 1, "$P%s," /* prefix (always) */
