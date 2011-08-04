@@ -217,6 +217,82 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
  * ************************************************************************ */
 
 /**
+ Convert the node information to the node information for an OLSR message and
+ put it in the PUD message in the OLSR message. Also updates the PUD message
+ smask.
+
+ @param olsrGpsMessage
+ A pointer to the PUD message in the OLSR message
+ @param olsrMessageSize
+ The maximum number of bytes available for the olsrMessage
+ @param nodeIdType
+ The nodeIdType
+
+ @return
+ The number of bytes written in the PUD message in the OLSR message (for ALL
+ the node information)
+ */
+static size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
+		unsigned int olsrMessageSize, NodeIdType nodeIdType) {
+	unsigned char * buffer;
+	unsigned int length = 0;
+
+	olsrGpsMessage->nodeInfo.nodeIdType = nodeIdType;
+	switch (nodeIdType) {
+		case PUD_NODEIDTYPE_MAC: /* hardware address */
+			/* handled when the message is actually sent into OLSR, in the
+			 * pre-transmit hook */
+			length = PUD_NODEIDTYPE_MAC_BYTES;
+			break;
+
+		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
+		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
+		case PUD_NODEIDTYPE_192:
+		case PUD_NODEIDTYPE_193:
+		case PUD_NODEIDTYPE_194:
+			getNodeIdNumberForOlsrCache(&buffer, &length);
+			memcpy(&olsrGpsMessage->nodeInfo.nodeId, buffer, length);
+			break;
+
+		case PUD_NODEIDTYPE_DNS: /* DNS name */
+		{
+			size_t nodeIdLength;
+			unsigned char * nodeId = getNodeIdWithLength(&nodeIdLength);
+			long charsAvailable = olsrMessageSize - (PUD_OLSRWIREFORMATSIZE
+					+ sizeof(NodeInfo)
+					- sizeof(olsrGpsMessage->nodeInfo.nodeId)) - 1;
+
+			length = nodeIdLength + 1;
+			if (unlikely((long) length > charsAvailable)) {
+				length = charsAvailable;
+			}
+
+			memcpy(&olsrGpsMessage->nodeInfo.nodeId, nodeId, length);
+			(&olsrGpsMessage->nodeInfo.nodeId)[length] = '\0';
+		}
+			break;
+
+		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
+		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
+			/* explicit return: no nodeId information in message */
+			return 0;
+
+		default: /* unsupported */
+			/* fallback to IP address */
+			olsrGpsMessage->nodeInfo.nodeIdType = (olsr_cnf->ip_version
+					== AF_INET) ? PUD_NODEIDTYPE_IPV4 : PUD_NODEIDTYPE_IPV6;
+
+			/* explicit return: no nodeId information in message */
+			return 0;
+	}
+
+	olsrGpsMessage->smask |= PUD_FLAGS_ID;
+	return ((sizeof(NodeInfo)
+			- (sizeof(olsrGpsMessage->nodeInfo.nodeId) /* nodeId placeholder */))
+			+ length);
+}
+
+/**
  Convert a nmeaINFO structure into an OLSR message.
 
  @param nmeaInfo

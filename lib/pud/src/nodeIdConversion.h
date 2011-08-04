@@ -10,9 +10,6 @@
 /* System includes */
 #include <stddef.h>
 
-size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
-		unsigned int olsrMessageSize, NodeIdType nodeIdType);
-
 void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
 		char * nodeIdTypeBuffer, int nodeIdTypeBufferSize);
 
