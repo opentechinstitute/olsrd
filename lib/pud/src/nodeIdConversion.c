@@ -2,7 +2,6 @@
 
 /* Plugin includes */
 #include "configuration.h"
-#include "networkInterfaces.h"
 #include "compiler.h"
 
 /* OLSR includes */
@@ -63,19 +62,20 @@ void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
  A pointer to the PUD message in the OLSR message
  @param olsrMessageSize
  The maximum number of bytes available for the olsrMessage
+ @param nodeIdType
+ The nodeIdType
 
  @return
  The number of bytes written in the PUD message in the OLSR message (for ALL
  the node information)
  */
 size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
-		unsigned int olsrMessageSize) {
-	NodeIdType nodeIdTypeNumber = getNodeIdTypeNumber();
+		unsigned int olsrMessageSize, NodeIdType nodeIdType) {
 	unsigned char * buffer;
 	unsigned int length = 0;
 
-	olsrGpsMessage->nodeInfo.nodeIdType = nodeIdTypeNumber;
-	switch (nodeIdTypeNumber) {
+	olsrGpsMessage->nodeInfo.nodeIdType = nodeIdType;
+	switch (nodeIdType) {
 		case PUD_NODEIDTYPE_MAC: /* hardware address */
 			/* handled when the message is actually sent into OLSR, in the
 			 * pre-transmit hook */

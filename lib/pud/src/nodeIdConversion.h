@@ -8,11 +8,10 @@
 #include "olsr_protocol.h"
 
 /* System includes */
-#include <stdbool.h>
 #include <stddef.h>
 
 size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
-		unsigned int olsrMessageSize);
+		unsigned int olsrMessageSize, NodeIdType nodeIdType);
 
 void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
 		char * nodeIdTypeBuffer, int nodeIdTypeBufferSize);

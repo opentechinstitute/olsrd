@@ -288,7 +288,8 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		olsrGpsMessage->gpsInfo.hdop = PUD_HDOP_MAX;
 	}
 
-	nodeLength = setupNodeInfoForOlsr(olsrGpsMessage, olsrMessageSize);
+	nodeLength = setupNodeInfoForOlsr(olsrGpsMessage, olsrMessageSize,
+			getNodeIdTypeNumber());
 
 	/*
 	 * Messages in OLSR are 4-byte aligned: align
