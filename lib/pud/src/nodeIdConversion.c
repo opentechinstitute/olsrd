@@ -208,7 +208,11 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 		switch (olsrGpsMessage->nodeInfo.nodeIdType) {
 			case PUD_NODEIDTYPE_MAC: /* hardware address */
 			{
-				int chars = snprintf(nodeIdBuffer, nodeIdBufferSize,
+				int chars;
+
+				assert (bufferSize == 6);
+
+				chars = snprintf(nodeIdBuffer, nodeIdBufferSize,
 						"%02x:%02x:%02x:%02x:%02x:%02x", buffer[0], buffer[1],
 						buffer[2], buffer[3], buffer[4], buffer[5]);
 				if (likely(chars < (int) nodeIdBufferSize)) {

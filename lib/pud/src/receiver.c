@@ -24,6 +24,7 @@
 #include <nmea/sentence.h>
 #include <math.h>
 #include <net/if.h>
+#include <assert.h>
 
 /* Debug includes */
 #if defined(PUD_DUMP_GPS_PACKETS_TX_OLSR) || \
