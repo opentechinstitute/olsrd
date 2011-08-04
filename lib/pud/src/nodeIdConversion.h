@@ -14,9 +14,10 @@
 size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 		unsigned int olsrMessageSize);
 
-void getNodeInfoFromOlsr(union olsr_message *olsrMessage,
-		char *nodeIdBuffer,
-		unsigned int nodeIdBufferSize, const char **nodeId,
-		char *nodeIdTypeString);
+void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
+		char * nodeIdTypeBuffer, int nodeIdTypeBufferSize);
+
+void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
+		const char **nodeId, char *nodeIdBuffer, unsigned int nodeIdBufferSize);
 
 #endif /* _PUD_NODEIDCONVERSION_H_ */

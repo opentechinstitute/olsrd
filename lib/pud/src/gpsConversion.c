@@ -176,8 +176,10 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		hdopString[0] = '\0';
 	}
 
-	getNodeInfoFromOlsr(olsrMessage, &nodeIdString[0], PUD_TX_NODEID_BUFFERSIZE,
-			&nodeId, &nodeIdTypeString[0]);
+	getNodeTypeStringFromOlsr(olsr_cnf->ip_version, olsrMessage,
+			&nodeIdTypeString[0], sizeof(nodeIdTypeString));
+	getNodeIdStringFromOlsr(olsr_cnf->ip_version, olsrMessage, &nodeId,
+			&nodeIdString[0], sizeof(nodeIdString));
 
 	transmitStringLength = nmea_printf((char *) txGpsBuffer, txGpsBufferSize
 			- 1, "$P%s," /* prefix (always) */
