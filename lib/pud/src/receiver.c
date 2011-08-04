@@ -8,6 +8,7 @@
 #include "timers.h"
 #include "posAvg.h"
 #include "networkInterfaces.h"
+#include "compiler.h"
 
 /* OLSRD includes */
 #include "net_olsr.h"

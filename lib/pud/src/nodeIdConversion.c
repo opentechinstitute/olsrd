@@ -4,6 +4,7 @@
 #include "pud.h"
 #include "configuration.h"
 #include "networkInterfaces.h"
+#include "compiler.h"
 
 /* OLSR includes */
 

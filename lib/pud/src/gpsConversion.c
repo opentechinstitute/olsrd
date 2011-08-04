@@ -5,6 +5,7 @@
 #include "pud.h"
 #include "nodeIdConversion.h"
 #include "configuration.h"
+#include "compiler.h"
 
 /* OLSR includes */
 #include "olsr.h"

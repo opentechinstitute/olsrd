@@ -7,6 +7,7 @@
 #include "gpsConversion.h"
 #include "receiver.h"
 #include "dedup.h"
+#include "compiler.h"
 
 /* OLSRD includes */
 #include "ipcalc.h"
