@@ -163,7 +163,7 @@ static char *getNodeIdNumberFromOlsr(PudOlsrWireFormat * olsrGpsMessage,
  */
 void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 		const char **nodeId, char *nodeIdBuffer, unsigned int nodeIdBufferSize) {
-	PudOlsrWireFormat *olsrGpsMessage;
+	PudOlsrWireFormat * olsrGpsMessage;
 	int chars;
 
 	if (unlikely(!nodeIdBuffer || (nodeIdBufferSize == 0) || !nodeId)) {
@@ -172,12 +172,7 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 
 	assert (nodeIdBufferSize >= (PUD_TX_NODEID_BUFFERSIZE + 1));
 
-	/* determine the originator of the message */
-	if (ipVersion == AF_INET) {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
-	} else {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
-	}
+	olsrGpsMessage = getOlsrMessagePayload(ipVersion, olsrMessage);
 
 	if (olsrGpsMessage->smask & PUD_FLAGS_ID) {
 		switch (olsrGpsMessage->nodeInfo.nodeIdType) {

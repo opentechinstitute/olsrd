@@ -207,6 +207,9 @@ union olsr_ip_addr * getOlsrMessageOriginator(int ipVersion,
 unsigned short getOlsrMessageSize(int ipVersion,
 		union olsr_message * olsrMessage);
 
+PudOlsrWireFormat * getOlsrMessagePayload(int ipVersion,
+		union olsr_message * olsrMessage);
+
 /*
  * PudOlsrWireFormat
  */

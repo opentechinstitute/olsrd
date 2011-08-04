@@ -55,15 +55,9 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 
 	unsigned int transmitStringLength;
 
-	PudOlsrWireFormat *olsrGpsMessage;
 	GpsInfo* gpsMessage;
-
-	/* determine the originator of the message */
-	if (olsr_cnf->ip_version == AF_INET) {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
-	} else {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
-	}
+	PudOlsrWireFormat * olsrGpsMessage =
+			getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
 
 	if (unlikely(olsrGpsMessage->version != PUD_WIRE_FORMAT_VERSION)) {
 		/* currently we can only handle our own version */
@@ -240,16 +234,11 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
  */
 unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		unsigned int olsrMessageSize, unsigned long long validityTime) {
-	PudOlsrWireFormat * olsrGpsMessage;
 	unsigned int aligned_size;
 	unsigned int aligned_size_remainder;
 	size_t nodeLength;
-
-	if (olsr_cnf->ip_version == AF_INET) {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
-	} else {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
-	}
+	PudOlsrWireFormat * olsrGpsMessage =
+			getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
 
 	/*
 	 * Compose message contents

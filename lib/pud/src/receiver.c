@@ -144,14 +144,9 @@ static void nodeIdPreTransmitHook(union olsr_message *olsrMessage,
 		struct interface *ifn) {
 	/* set the MAC address in the message when needed */
 	if (unlikely(getNodeIdTypeNumber() == PUD_NODEIDTYPE_MAC)) {
-		PudOlsrWireFormat * olsrGpsMessage;
 		TOLSRNetworkInterface * olsrIf = getOlsrNetworkInterface(ifn);
-
-		if (olsr_cnf->ip_version == AF_INET) {
-			olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
-		} else {
-			olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
-		}
+		PudOlsrWireFormat * olsrGpsMessage =
+				getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
 
 		if (likely(olsrIf != NULL)) {
 			memcpy(&olsrGpsMessage->nodeInfo.nodeId, &olsrIf->hwAddress[0],

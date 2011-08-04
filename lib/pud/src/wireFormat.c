@@ -56,6 +56,25 @@ inline unsigned short getOlsrMessageSize(int ipVersion,
 	return ntohs(olsrMessage->v6.olsr_msgsize);
 }
 
+/**
+ Determine the address of the position update message in an OLSR message
+
+ @param ipVersion
+ The IP version
+ @param olsrMessage
+ A pointer to the OLSR message
+ @return
+ A pointer to the position update message
+ */
+inline PudOlsrWireFormat * getOlsrMessagePayload(int ipVersion,
+		union olsr_message * olsrMessage) {
+	if (ipVersion == AF_INET) {
+		return (PudOlsrWireFormat *) &olsrMessage->v4.message;
+	}
+
+	return (PudOlsrWireFormat *) &olsrMessage->v6.message;
+}
+
 /* ************************************************************************
  * VALIDITY TIME
  * ************************************************************************ */
@@ -498,21 +517,12 @@ double getHdopFromOlsr(uint32_t olsrHdop) {
  The nodeIdType
  */
 NodeIdType getNodeIdType(int ipVersion, union olsr_message * olsrMessage) {
-	NodeIdType nodeIdType;
-	PudOlsrWireFormat *olsrGpsMessage;
-
-	/* determine the originator of the message */
-	if (ipVersion == AF_INET) {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
-	} else {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
-	}
+	PudOlsrWireFormat *olsrGpsMessage = getOlsrMessagePayload(ipVersion,
+			olsrMessage);
 
 	if (olsrGpsMessage->smask & PUD_FLAGS_ID) {
-		nodeIdType = olsrGpsMessage->nodeInfo.nodeIdType;
-	} else {
-		nodeIdType = ((ipVersion == AF_INET) ? PUD_NODEIDTYPE_IPV4 : PUD_NODEIDTYPE_IPV6);
+		return olsrGpsMessage->nodeInfo.nodeIdType;
 	}
 
-	return nodeIdType;
+	return ((ipVersion == AF_INET) ? PUD_NODEIDTYPE_IPV4 : PUD_NODEIDTYPE_IPV6);
 }
