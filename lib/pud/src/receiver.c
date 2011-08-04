@@ -201,8 +201,8 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	transmitGpsInformation.updated = false;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
-	/* push out to all OLSR interfaces */
 	if (aligned_size > 0) {
+		/* push out to all OLSR interfaces */
 		if ((interfaces & OLSR) != 0) {
 			int r;
 			struct interface *ifn;
