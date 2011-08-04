@@ -125,19 +125,9 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
 	unsigned char buffer[BUFFER_SIZE_FROM_OLSR];
 
 #ifdef PUD_DUMP_GPS_PACKETS_RX_OLSR
-	unsigned int olsrMessageSize;
+	unsigned short olsrMessageSize =
+			getOlsrMessageSize(olsr_cnf->ip_version, olsrMessage);
 #endif
-
-	/* determine the originator of the messsage */
-	if (olsr_cnf->ip_version == AF_INET) {
-#ifdef PUD_DUMP_GPS_PACKETS_RX_OLSR
-		olsrMessageSize = ntohs(olsrMessage->v4.olsr_msgsize);
-#endif
-	} else {
-#ifdef PUD_DUMP_GPS_PACKETS_RX_OLSR
-		olsrMessageSize = ntohs(olsrMessage->v6.olsr_msgsize);
-#endif
-	}
 
 	/* when we do not loopback then check if the message originated from this
 	 * node: back off */

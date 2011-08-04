@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <assert.h>
+#include <netinet/in.h>
 
 /*
  * GPS Information Conversion Functions For OLSR GPS Wire Format
@@ -34,6 +35,25 @@ inline union olsr_ip_addr * getOlsrMessageOriginator(int ipVersion,
 	}
 
 	return (union olsr_ip_addr *) &olsrMessage->v6.originator;
+}
+
+/**
+ Determine the size of an OLSR message
+
+ @param ipVersion
+ The IP version
+ @param olsrMessage
+ A pointer to the OLSR message
+ @return
+ The size of the OLSR message
+ */
+inline unsigned short getOlsrMessageSize(int ipVersion,
+		union olsr_message * olsrMessage) {
+	if (ipVersion == AF_INET) {
+		return ntohs(olsrMessage->v4.olsr_msgsize);
+	}
+
+	return ntohs(olsrMessage->v6.olsr_msgsize);
 }
 
 /* ************************************************************************
