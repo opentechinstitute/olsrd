@@ -26,6 +26,24 @@
  */
 
 /**
+ Determine the address of the port in an OLSR socket address
+
+ @param ipVersion
+ The IP version (AF_INET or AF_INET6)
+ @param addr
+ A pointer to OLSR socket address
+ @return
+ A pointer to the port
+ */
+static in_port_t * getOlsrSockaddrPort(int ipVersion, union olsr_sockaddr * addr) {
+	if (ipVersion == AF_INET) {
+		return &addr->in4.sin_port;
+	} else {
+		return &addr->in6.sin6_port;
+	}
+}
+
+/**
  Read an unsigned long long number from a value string
 
  @param valueName
@@ -677,16 +695,8 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  The receive multicast port (in network byte order)
  */
 unsigned short getRxMcPort(void) {
-	in_port_t * port;
 	union olsr_sockaddr * addr = getRxMcAddr();
-
-	if (olsr_cnf->ip_version == AF_INET) {
-		port = (void *) &addr->in4.sin_port;
-	} else {
-		port = (void *) &addr->in6.sin6_port;
-	}
-
-	return *port;
+	return *getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
 }
 
 /**
@@ -721,12 +731,7 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	if (olsr_cnf->ip_version == AF_INET) {
-		port = (void *) &addr->in4.sin_port;
-	} else {
-		port = (void *) &addr->in6.sin6_port;
-	}
-
+	port = getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
 	*port = htons((uint16_t) rxMcPortNew);
 
 	return false;
@@ -907,16 +912,8 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  The transmit multicast port (in network byte order)
  */
 unsigned short getTxMcPort(void) {
-	in_port_t * port;
 	union olsr_sockaddr * addr = getTxMcAddr();
-
-	if (olsr_cnf->ip_version == AF_INET) {
-		port = (void *) &addr->in4.sin_port;
-	} else {
-		port = (void *) &addr->in6.sin6_port;
-	}
-
-	return *port;
+	return *getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
 }
 
 /**
@@ -951,12 +948,7 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	if (olsr_cnf->ip_version == AF_INET) {
-		port = (void *) &addr->in4.sin_port;
-	} else {
-		port = (void *) &addr->in6.sin6_port;
-	}
-
+	port = getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
 	*port = htons((uint16_t) txMcPortNew);
 
 	return false;
