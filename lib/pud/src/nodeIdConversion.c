@@ -1,7 +1,6 @@
 #include "nodeIdConversion.h"
 
 /* Plugin includes */
-#include "pud.h"
 #include "configuration.h"
 #include "networkInterfaces.h"
 #include "compiler.h"
@@ -103,9 +102,6 @@ size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 			length = nodeIdLength + 1;
 			if (unlikely((long) length > charsAvailable)) {
 				length = charsAvailable;
-				pudError(false,
-						"nodeId too long, truncated after %ld characters",
-						charsAvailable);
 			}
 
 			memcpy(&olsrGpsMessage->nodeInfo.nodeId, nodeId, length);
@@ -119,10 +115,6 @@ size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 			return 0;
 
 		default: /* unsupported */
-			pudError(false, "Configuration of unsupported %s %u,"
-					" falling back to IP address", PUD_NODE_ID_TYPE_NAME,
-					nodeIdTypeNumber);
-
 			/* fallback to IP address */
 			olsrGpsMessage->nodeInfo.nodeIdType = (olsr_cnf->ip_version
 					== AF_INET) ? PUD_NODEIDTYPE_IPV4 : PUD_NODEIDTYPE_IPV6;
