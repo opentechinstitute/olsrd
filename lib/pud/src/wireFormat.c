@@ -14,6 +14,29 @@
  */
 
 /* ************************************************************************
+ * OLSR Header
+ * ************************************************************************ */
+
+/**
+ Determine the originator of an OLSR message
+
+ @param ipVersion
+ The IP version
+ @param olsrMessage
+ A pointer to the OLSR message
+ @return
+ A pointer to the originator address
+ */
+inline union olsr_ip_addr * getOlsrMessageOriginator(int ipVersion,
+		union olsr_message * olsrMessage) {
+	if (ipVersion == AF_INET) {
+		return (union olsr_ip_addr *) &olsrMessage->v4.originator;
+	}
+
+	return (union olsr_ip_addr *) &olsrMessage->v6.originator;
+}
+
+/* ************************************************************************
  * VALIDITY TIME
  * ************************************************************************ */
 

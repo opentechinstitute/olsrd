@@ -244,14 +244,7 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 
 	/* message has NO nodeId information */
 	noId: {
-		const void * addr;
-
-		if (ipVersion == AF_INET) {
-			addr = (const void *) &olsrMessage->v4.originator;
-		} else {
-			addr = (const void *) &olsrMessage->v6.originator;
-		}
-
+		void * addr = getOlsrMessageOriginator(ipVersion, olsrMessage);
 		*nodeId = inet_ntop(ipVersion, addr, nodeIdBuffer, nodeIdBufferSize);
 	}
 

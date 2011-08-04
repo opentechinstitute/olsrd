@@ -119,7 +119,8 @@ static void sendToAllTxInterfaces(unsigned char *buffer,
  */
 bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
 		struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *ipaddr __attribute__ ((unused))) {
-	const union olsr_ip_addr * originator;
+	const union olsr_ip_addr * originator = getOlsrMessageOriginator(
+			olsr_cnf->ip_version, olsrMessage);
 	unsigned int transmitStringLength;
 	unsigned char buffer[BUFFER_SIZE_FROM_OLSR];
 
@@ -129,12 +130,10 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
 
 	/* determine the originator of the messsage */
 	if (olsr_cnf->ip_version == AF_INET) {
-		originator = (const union olsr_ip_addr *) &olsrMessage->v4.originator;
 #ifdef PUD_DUMP_GPS_PACKETS_RX_OLSR
 		olsrMessageSize = ntohs(olsrMessage->v4.olsr_msgsize);
 #endif
 	} else {
-		originator = (const union olsr_ip_addr *) &olsrMessage->v6.originator;
 #ifdef PUD_DUMP_GPS_PACKETS_RX_OLSR
 		olsrMessageSize = ntohs(olsrMessage->v6.olsr_msgsize);
 #endif

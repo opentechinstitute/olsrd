@@ -198,6 +198,13 @@ typedef struct _PudOlsrWireFormat {
  * ************************************************************************ */
 
 /*
+ * OLSR header
+ */
+
+union olsr_ip_addr * getOlsrMessageOriginator(int ipVersion,
+		union olsr_message * olsrMessage);
+
+/*
  * PudOlsrWireFormat
  */
 
