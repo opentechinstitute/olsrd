@@ -18,6 +18,7 @@ void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
 		char * nodeIdTypeBuffer, int nodeIdTypeBufferSize);
 
 void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
-		const char **nodeId, char *nodeIdBuffer, unsigned int nodeIdBufferSize);
+		const char **nodeIdStr, char *nodeIdStrBuffer,
+		unsigned int nodeIdStrBufferSize);
 
 #endif /* _PUD_NODEIDCONVERSION_H_ */
