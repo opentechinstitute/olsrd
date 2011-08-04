@@ -7,6 +7,7 @@
 /* System includes */
 #include <stdint.h>
 #include <time.h>
+#include <net/if.h>
 
 /*
  * Version
@@ -150,6 +151,30 @@ typedef enum _NodeIdType {
 	PUD_NODEIDTYPE_194 = 194
 } NodeIdType;
 
+/** the number of nodeId bytes for PUD_NODEIDTYPE_MAC */
+#define PUD_NODEIDTYPE_MAC_BYTES		IFHWADDRLEN
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_MSISDN */
+#define PUD_NODEIDTYPE_MSISDN_BYTES		7
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_TETRA */
+#define PUD_NODEIDTYPE_TETRA_BYTES		8
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_192 */
+#define PUD_NODEIDTYPE_192_BYTES		3
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_193 */
+#define PUD_NODEIDTYPE_193_BYTES		3
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_194 */
+#define PUD_NODEIDTYPE_194_BYTES		2
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_IPV4 */
+#define PUD_NODEIDTYPE_IPV4_BYTES		sizeof(struct in_addr)
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_IPV6 */
+#define PUD_NODEIDTYPE_IPV6_BYTES		sizeof(struct in6_addr)
+
 /** The maximum size of the string representation of the nodeIdType */
 #define PUD_TX_NODEIDTYPE_DIGITS	3
 
@@ -247,5 +272,8 @@ double getHdopFromOlsr(uint32_t olsrHdop);
  */
 
 NodeIdType getNodeIdType(int ipVersion, union olsr_message * olsrMessage);
+
+void getNodeIdPointers(int ipVersion, union olsr_message * olsrMessage,
+		unsigned char ** buffer, unsigned int * bufferSize);
 
 #endif /* _PUD_WIREFORMAT_H_ */

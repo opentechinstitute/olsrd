@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <math.h>
 #include <assert.h>
-#include <netinet/in.h>
 
 /*
  * GPS Information Conversion Functions For OLSR GPS Wire Format
@@ -525,4 +524,76 @@ NodeIdType getNodeIdType(int ipVersion, union olsr_message * olsrMessage) {
 	}
 
 	return ((ipVersion == AF_INET) ? PUD_NODEIDTYPE_IPV4 : PUD_NODEIDTYPE_IPV6);
+}
+
+/**
+ Get the nodeId and its size, accounting for nodeId presence
+
+ @param ipVersion
+ The ip version, either AF_INET or AF_INET6
+ @param olsrMessage
+ A pointer to the OLSR message
+ @param buffer
+ A pointer to the location where a pointer to the nodeId (as contained in the
+ olsrMessage) can be stored
+ @param bufferSize
+ A pointer to the location where the number of bytes in the buffer can be
+ stored
+ */
+void getNodeIdPointers(int ipVersion, union olsr_message * olsrMessage,
+		unsigned char ** buffer, unsigned int * bufferSize) {
+	PudOlsrWireFormat * olsrGpsMessage = getOlsrMessagePayload(ipVersion, olsrMessage);
+
+	if (olsrGpsMessage->smask & PUD_FLAGS_ID) {
+		*buffer = &olsrGpsMessage->nodeInfo.nodeId;
+
+		switch (olsrGpsMessage->nodeInfo.nodeIdType) {
+			case PUD_NODEIDTYPE_MAC: /* hardware address */
+				*bufferSize = PUD_NODEIDTYPE_MAC_BYTES;
+				break;
+
+			case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
+				*bufferSize = PUD_NODEIDTYPE_MSISDN_BYTES;
+				break;
+
+			case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
+				*bufferSize = PUD_NODEIDTYPE_TETRA_BYTES;
+				break;
+
+			case PUD_NODEIDTYPE_DNS: /* DNS name */
+				*buffer = (unsigned char *) &olsrGpsMessage->nodeInfo.nodeId;
+				*bufferSize = strlen((char *)*buffer);
+				break;
+
+			case PUD_NODEIDTYPE_192:
+				*bufferSize = PUD_NODEIDTYPE_192_BYTES;
+				break;
+
+			case PUD_NODEIDTYPE_193:
+				*bufferSize = PUD_NODEIDTYPE_193_BYTES;
+				break;
+
+			case PUD_NODEIDTYPE_194:
+				*bufferSize = PUD_NODEIDTYPE_194_BYTES;
+				break;
+
+			case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
+			case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
+			default: /* unsupported */
+				olsrGpsMessage->smask &= ~PUD_FLAGS_ID;
+				goto noId;
+		}
+
+		return;
+	}
+
+	/* message has NO nodeId information */
+	noId: {
+		*buffer = (unsigned char *) getOlsrMessageOriginator(ipVersion,
+				olsrMessage);
+		*bufferSize = (ipVersion == AF_INET) ? PUD_NODEIDTYPE_IPV4_BYTES :
+				PUD_NODEIDTYPE_IPV6_BYTES;
+	}
+
+	return;
 }

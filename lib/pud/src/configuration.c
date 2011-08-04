@@ -400,10 +400,12 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			return true;
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-			return setupNodeIdNumberForOlsrCache(0LL, 999999999999999LL, 7);
+			return setupNodeIdNumberForOlsrCache(0LL, 999999999999999LL,
+					PUD_NODEIDTYPE_MSISDN_BYTES);
 
 		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-			return setupNodeIdNumberForOlsrCache(0LL, 99999999999999999LL, 8);
+			return setupNodeIdNumberForOlsrCache(0LL, 99999999999999999LL,
+					PUD_NODEIDTYPE_TETRA_BYTES);
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
 		{
@@ -419,13 +421,16 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 		}
 
 		case PUD_NODEIDTYPE_192:
-			return setupNodeIdNumberForOlsrCache(0LL, 9999999LL, 3);
+			return setupNodeIdNumberForOlsrCache(0LL, 9999999LL,
+					PUD_NODEIDTYPE_192_BYTES);
 
 		case PUD_NODEIDTYPE_193:
-			return setupNodeIdNumberForOlsrCache(0LL, 999999LL, 3);
+			return setupNodeIdNumberForOlsrCache(0LL, 999999LL,
+					PUD_NODEIDTYPE_193_BYTES);
 
 		case PUD_NODEIDTYPE_194:
-			return setupNodeIdNumberForOlsrCache(1LL, 8191LL, 2);
+			return setupNodeIdNumberForOlsrCache(1LL, 8191LL,
+					PUD_NODEIDTYPE_194_BYTES);
 
 		default: /* unsupported */
 			/* explicit return: configured nodeId is not relevant, will

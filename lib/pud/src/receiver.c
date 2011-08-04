@@ -150,11 +150,11 @@ static void nodeIdPreTransmitHook(union olsr_message *olsrMessage,
 
 		if (likely(olsrIf != NULL)) {
 			memcpy(&olsrGpsMessage->nodeInfo.nodeId, &olsrIf->hwAddress[0],
-					IFHWADDRLEN);
+					PUD_NODEIDTYPE_MAC_BYTES);
 		} else {
 			pudError(false, "Could not find OLSR interface %s, cleared its"
 				" MAC address in the OLSR message\n", ifn->int_name);
-			memset(&olsrGpsMessage->nodeInfo.nodeId, 0, IFHWADDRLEN);
+			memset(&olsrGpsMessage->nodeInfo.nodeId, 0, PUD_NODEIDTYPE_MAC_BYTES);
 		}
 	}
 }

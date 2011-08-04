@@ -19,6 +19,43 @@
  * ************************************************************************ */
 
 /**
+ Convert the nodeIdType of an OLSR message into a string.
+
+ @param ipVersion
+ The ip version, either AF_INET or AF_INET6
+ @param olsrMessage
+ A pointer to the OLSR message. Used to be able to retrieve the IP address of
+ the sender.
+ @param nodeIdTypeBuffer
+ A pointer to the buffer in which the nodeIdType string representation is
+ written (the buffer needs to be at least PUD_TX_NODEIDTYPE_DIGITS + 1 bytes).
+ When NULL then the nodeIdType string is not written.
+ @param nodeIdTypeBufferSize
+ The size of the nodeIdTypeBuffer
+ */
+void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
+		char * nodeIdTypeBuffer, int nodeIdTypeBufferSize) {
+	int chars;
+
+	if (unlikely(!nodeIdTypeBuffer || (nodeIdTypeBufferSize == 0))) {
+		return;
+	}
+
+	assert(nodeIdTypeBufferSize >= (PUD_TX_NODEIDTYPE_DIGITS + 1));
+
+	/* message has NO nodeId information */
+	chars = snprintf(&nodeIdTypeBuffer[0], nodeIdTypeBufferSize, "%u",
+			getNodeIdType(ipVersion, olsrMessage));
+	if (likely(chars < nodeIdTypeBufferSize)) {
+		nodeIdTypeBuffer[chars] = '\0';
+	} else {
+		nodeIdTypeBuffer[nodeIdTypeBufferSize] = '\0';
+	}
+
+	return;
+}
+
+/**
  Convert the node information to the node information for an OLSR message and
  put it in the PUD message in the OLSR message. Also updates the PUD message
  smask.
@@ -43,7 +80,7 @@ size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 		case PUD_NODEIDTYPE_MAC: /* hardware address */
 			/* handled when the message is actually sent into OLSR, in the
 			 * pre-transmit hook */
-			length = IFHWADDRLEN;
+			length = PUD_NODEIDTYPE_MAC_BYTES;
 			break;
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
@@ -104,28 +141,27 @@ size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
  Get a nodeId number (in string representation), using a certain number of
  bytes, from the message of an OLSR message.
 
- @param olsrGpsMessage
- A pointer to the OLSR message
- @param bytes
- The number of bytes used by the number
+ @param buffer
+ A pointer to the buffer that holds the nodeId
+ @param bufferSize
+ The number of bytes used by the number in the buffer
  @param nodeIdBuffer
  The buffer in which to place the nodeId number in string representation
  @param nodeIdBufferSize
- The size of the buffer
+ The size of the nodeIdbuffer
 
  @return
  A pointer to the nodeId string representation (&nodeIdBuffer[0])
  */
-static char *getNodeIdNumberFromOlsr(PudOlsrWireFormat * olsrGpsMessage,
-		unsigned int bytes, char *nodeIdBuffer, socklen_t nodeIdBufferSize) {
-	unsigned char * nodeId = &(olsrGpsMessage->nodeInfo.nodeId);
+static char *getNodeIdNumberFromOlsr(unsigned char * buffer,
+		unsigned int bufferSize, char *nodeIdBuffer, socklen_t nodeIdBufferSize) {
 	unsigned long long val = 0;
 	unsigned int i = 0;
 	int chars;
 
-	while (i < bytes) {
+	while (i < bufferSize) {
 		val <<= 8;
-		val += nodeId[i];
+		val += buffer[i];
 		i++;
 	}
 
@@ -163,7 +199,8 @@ static char *getNodeIdNumberFromOlsr(PudOlsrWireFormat * olsrGpsMessage,
 void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 		const char **nodeId, char *nodeIdBuffer, unsigned int nodeIdBufferSize) {
 	PudOlsrWireFormat * olsrGpsMessage;
-	int chars;
+	unsigned char * buffer;
+	unsigned int bufferSize;
 
 	if (unlikely(!nodeIdBuffer || (nodeIdBufferSize == 0) || !nodeId)) {
 		return;
@@ -173,17 +210,15 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 
 	olsrGpsMessage = getOlsrMessagePayload(ipVersion, olsrMessage);
 
+	getNodeIdPointers(ipVersion, olsrMessage, &buffer, &bufferSize);
+
 	if (olsrGpsMessage->smask & PUD_FLAGS_ID) {
 		switch (olsrGpsMessage->nodeInfo.nodeIdType) {
 			case PUD_NODEIDTYPE_MAC: /* hardware address */
 			{
-				unsigned char * hwAddr = &olsrGpsMessage->nodeInfo.nodeId;
-
-				assert (IFHWADDRLEN == 6);
-
-				chars = snprintf(nodeIdBuffer, nodeIdBufferSize,
-						"%02x:%02x:%02x:%02x:%02x:%02x", hwAddr[0], hwAddr[1],
-						hwAddr[2], hwAddr[3], hwAddr[4], hwAddr[5]);
+				int chars = snprintf(nodeIdBuffer, nodeIdBufferSize,
+						"%02x:%02x:%02x:%02x:%02x:%02x", buffer[0], buffer[1],
+						buffer[2], buffer[3], buffer[4], buffer[5]);
 				if (likely(chars < (int) nodeIdBufferSize)) {
 					nodeIdBuffer[chars] = '\0';
 				} else {
@@ -193,40 +228,22 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 			}
 				break;
 
-			case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-				*nodeId = getNodeIdNumberFromOlsr(olsrGpsMessage, 7,
-						nodeIdBuffer, nodeIdBufferSize);
-				break;
-
-			case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-				*nodeId = getNodeIdNumberFromOlsr(olsrGpsMessage, 8,
-						nodeIdBuffer, nodeIdBufferSize);
-				break;
-
 			case PUD_NODEIDTYPE_DNS: /* DNS name */
 				*nodeId = (char *) &olsrGpsMessage->nodeInfo.nodeId;
 				break;
 
+			case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
+			case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
 			case PUD_NODEIDTYPE_192:
 			case PUD_NODEIDTYPE_193:
-				*nodeId = getNodeIdNumberFromOlsr(olsrGpsMessage, 3,
-						nodeIdBuffer, nodeIdBufferSize);
-				break;
-
 			case PUD_NODEIDTYPE_194:
-				*nodeId = getNodeIdNumberFromOlsr(olsrGpsMessage, 2,
+				*nodeId = getNodeIdNumberFromOlsr(buffer, bufferSize,
 						nodeIdBuffer, nodeIdBufferSize);
 				break;
 
 			case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 			case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
-				goto noId;
-
 			default: /* unsupported */
-				pudError(false, "Reception of unsupported %s %u,"
-						" falling back to IP address", PUD_NODE_ID_TYPE_NAME,
-						olsrGpsMessage->nodeInfo.nodeIdType);
-				olsrGpsMessage->smask &= ~PUD_FLAGS_ID;
 				goto noId;
 		}
 
@@ -237,43 +254,6 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 	noId: {
 		void * addr = getOlsrMessageOriginator(ipVersion, olsrMessage);
 		*nodeId = inet_ntop(ipVersion, addr, nodeIdBuffer, nodeIdBufferSize);
-	}
-
-	return;
-}
-
-/**
- Convert the nodeIdType of an OLSR message into a string.
-
- @param ipVersion
- The ip version, either AF_INET or AF_INET6
- @param olsrMessage
- A pointer to the OLSR message. Used to be able to retrieve the IP address of
- the sender.
- @param nodeIdTypeBuffer
- A pointer to the buffer in which the nodeIdType string representation is
- written (the buffer needs to be at least PUD_TX_NODEIDTYPE_DIGITS + 1 bytes).
- When NULL then the nodeIdType string is not written.
- @param nodeIdTypeBufferSize
- The size of the nodeIdTypeBuffer
- */
-void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
-		char * nodeIdTypeBuffer, int nodeIdTypeBufferSize) {
-	int chars;
-
-	if (unlikely(!nodeIdTypeBuffer || (nodeIdTypeBufferSize == 0))) {
-		return;
-	}
-
-	assert(nodeIdTypeBufferSize >= (PUD_TX_NODEIDTYPE_DIGITS + 1));
-
-	/* message has NO nodeId information */
-	chars = snprintf(&nodeIdTypeBuffer[0], nodeIdTypeBufferSize, "%u",
-			getNodeIdType(ipVersion, olsrMessage));
-	if (likely(chars < nodeIdTypeBufferSize)) {
-		nodeIdTypeBuffer[chars] = '\0';
-	} else {
-		nodeIdTypeBuffer[nodeIdTypeBufferSize] = '\0';
 	}
 
 	return;
