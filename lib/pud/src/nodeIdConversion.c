@@ -82,10 +82,9 @@ size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
 			return 0;
 
 		default: /* unsupported */
-			pudError(false, "Configuration of unsupported %s %u, using %u",
-					PUD_NODE_ID_TYPE_NAME, nodeIdTypeNumber,
-					((olsr_cnf->ip_version == AF_INET) ? PUD_NODEIDTYPE_IPV4
-							: PUD_NODEIDTYPE_IPV6));
+			pudError(false, "Configuration of unsupported %s %u,"
+					" falling back to IP address", PUD_NODE_ID_TYPE_NAME,
+					nodeIdTypeNumber);
 
 			/* fallback to IP address */
 			olsrGpsMessage->nodeInfo.nodeIdType = (olsr_cnf->ip_version
@@ -224,12 +223,9 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 				goto noId;
 
 			default: /* unsupported */
-				pudError(false,
-						"Reception of unsupported %s %u, using %u",
-						PUD_NODE_ID_TYPE_NAME,
-						olsrGpsMessage->nodeInfo.nodeIdType,
-						((ipVersion == AF_INET) ? PUD_NODEIDTYPE_IPV4
-								: PUD_NODEIDTYPE_IPV6));
+				pudError(false, "Reception of unsupported %s %u,"
+						" falling back to IP address", PUD_NODE_ID_TYPE_NAME,
+						olsrGpsMessage->nodeInfo.nodeIdType);
 				olsrGpsMessage->smask &= ~PUD_FLAGS_ID;
 				goto noId;
 		}
