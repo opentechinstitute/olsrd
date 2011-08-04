@@ -197,8 +197,16 @@ typedef struct _PudOlsrWireFormat {
  * FUNCTIONS
  * ************************************************************************ */
 
+/*
+ * PudOlsrWireFormat
+ */
+
 unsigned char getValidityTimeForOlsr(unsigned long long validityTime);
 unsigned long getValidityTimeFromOlsr(unsigned char internal);
+
+/*
+ * GpsInfo
+ */
 
 unsigned long getTimeForOlsr(int hour, int min, int sec);
 void getTimeFromOlsr(uint32_t olsrTime, struct tm *nowStruct);
@@ -220,6 +228,10 @@ unsigned long getTrackFromOlsr(uint32_t olsrTrack);
 
 long getHdopForOlsr(double infoHdop);
 double getHdopFromOlsr(uint32_t olsrHdop);
+
+/*
+ * NodeInfo
+ */
 
 NodeIdType getNodeIdType(int ipVersion, union olsr_message * olsrMessage);
 
