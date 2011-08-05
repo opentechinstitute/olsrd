@@ -19,7 +19,7 @@ TMP_DOX_FILE = $(DOX_FILE).temp
 
 clean:
 	@echo "[$@] doc"
-	@rm -fr "$(HTML_DIR)" "$(LATEX_DIR)" "$(MAN_DIR)" "$(PDF_NAME)"
+	@rm -fr "$(TMP_DOX_FILE)" "$(HTML_DIR)" "$(LATEX_DIR)" "$(MAN_DIR)" "$(PDF_NAME)"
 
 all: clean $(DOX_FILE)
 	@echo "[$@] doc"
