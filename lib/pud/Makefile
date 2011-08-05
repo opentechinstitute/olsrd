@@ -17,8 +17,9 @@ include $(TOPDIR)/Makefile.inc
 CFLAGS += -Werror -D_GNU_SOURCE
 
 
+VERSION_FILE = ./src/version.h
+
 LIBS += -lnmea -lm
-PUD_DOC_DIR = ./doc
 
 
 ifneq ($(OS),linux)
@@ -28,33 +29,42 @@ default_target install clean:
 
 else
 
-default_target: version $(PLUGIN_FULLNAME)
+all: default_target
 
-version: Makefile scripts/makeVersionH
-	./scripts/makeVersionH "./src/version.h" "$(PLUGIN_VER)" 
+default_target: $(VERSION_FILE) $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
-	$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
+	@echo "[LD] $@"
+	@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
+
+$(VERSION_FILE): Makefile scripts/makeVersionH
+	@echo "[$@]"
+	@./scripts/makeVersionH "$@" "$(PLUGIN_VER)"
+
 
 .PHONY:	install uninstall clean dist distclean doc doc-clean
 
-install:	$(PLUGIN_FULLNAME)
-	$(STRIP) $(PLUGIN_FULLNAME)
+install: $(PLUGIN_FULLNAME)
+	$(STRIP) "$(PLUGIN_FULLNAME)"
+	ln -sf "$(PLUGIN_FULLNAME)" "$(LIBDIR)/$(PLUGIN_NAME)"
+	ln -sf "$(PLUGIN_FULLNAME)" "$(LIBDIR)/lib$(PLUGIN_NAME).so"
 	$(INSTALL_LIB)
 
 uninstall:
+	rm -f "$(LIBDIR)/lib$(PLUGIN_NAME).so" "$(LIBDIR)/$(PLUGIN_NAME)"
 	$(UNINSTALL_LIB)
 
 clean: doc-clean
-	rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME) "./src/version.h"
+	@echo "[$@]"
+	@rm -f $(OBJS) $(SRCS:%.c=%.d) "$(PLUGIN_FULLNAME)" "$(VERSION_FILE)"
 
 dist:				distclean
 distclean:			clean
 
 doc:
-	$(MAKE) -C doc all
+	@$(MAKE) -C doc all
 
 doc-clean:
-	$(MAKE) -C doc clean
+	@$(MAKE) -C doc clean
 
 endif
