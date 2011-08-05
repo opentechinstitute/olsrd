@@ -308,78 +308,6 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
 }
 
 /*
- * nodeId Cache
- */
-
-/** The size of the cached nodeId buffer */
-#define PUD_CACHED_NODEID_BUFFER_SIZE 16
-
-/** The cached nodeId buffer: contains a pre-processed version of the nodeId
- in order to improve performance. It is currently used for nodeIdTypes
- PUD_NODEIDTYPE_MSISDN, PUD_NODEIDTYPE_TETRA, PUD_NODEIDTYPE_192,
- PUD_NODEIDTYPE_193 (so basically for numbers that will not change) */
-static unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
-
-/** The number of bytes stored in cachedNodeIdBuffer */
-static unsigned int cachedNodeIdBufferLength = 0;
-
-/**
- @param buffer
- A pointer to the location in which to store a pointer to the nodeId cache
- buffer
- @param length
- A pointer to the location in which to store the number of bytes in the buffer
- */
-void getNodeIdNumberForOlsrCache(unsigned char ** buffer, unsigned int * length) {
-	*buffer = &cachedNodeIdBuffer[0];
-	*length = cachedNodeIdBufferLength;
-}
-
-/**
- Check a nodeId number for validity and if valid set it up in the
- cachedNodeIdBuffer. The valid range for the number is [min, max].
-
- @param min
- The lower bound for a valid number
- @param max
- The upper bound for a valid number
- @param bytes
- The number of bytes used by the number in the wire format
-
- @return
- - true when the number is valid
- - false otherwise
- */
-static bool setupNodeIdNumberForOlsrCache(unsigned long long min,
-		unsigned long long max, unsigned int bytes) {
-	unsigned long long val;
-
-	assert (bytes <= PUD_CACHED_NODEID_BUFFER_SIZE);
-
-	if (!getNodeIdAsNumber(&val)) {
-		return false;
-	}
-
-	if ((val >= min) && (val <= max)) {
-		int i = bytes - 1;
-		while (i >= 0) {
-			cachedNodeIdBuffer[i] = val & 0xff;
-			val >>= 8;
-			i--;
-		}
-
-		assert(val == 0);
-
-		cachedNodeIdBufferLength = bytes;
-		return true;
-	}
-
-	pudError(false, "%s value %llu is out of range [%llu,%llu]",
-			PUD_NODE_ID_NAME, val, min, max);
-	return false;
-}
-
-/*
  * nodeId Validation
  */
 
@@ -392,6 +320,11 @@ static bool setupNodeIdNumberForOlsrCache(unsigned long long min,
  - false on failure
  */
 static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber) {
+	unsigned long long val = 0LL;
+	unsigned long long min = 0LL;
+	unsigned long long max = 0LL;
+	unsigned int bytes = 0;
+
 	switch (nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
@@ -400,12 +333,16 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			return true;
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-			return setupNodeIdNumberForOlsrCache(0LL, 999999999999999LL,
-					PUD_NODEIDTYPE_MSISDN_BYTES);
+			min = 0LL;
+			max = 999999999999999LL;
+			bytes = PUD_NODEIDTYPE_MSISDN_BYTES;
+			break;
 
 		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-			return setupNodeIdNumberForOlsrCache(0LL, 99999999999999999LL,
-					PUD_NODEIDTYPE_TETRA_BYTES);
+			min = 0LL;
+			max = 99999999999999999LL;
+			bytes = PUD_NODEIDTYPE_TETRA_BYTES;
+			break;
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
 		{
@@ -421,16 +358,22 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 		}
 
 		case PUD_NODEIDTYPE_192:
-			return setupNodeIdNumberForOlsrCache(0LL, 9999999LL,
-					PUD_NODEIDTYPE_192_BYTES);
+			min = 0LL;
+			max = 9999999LL;
+			bytes = PUD_NODEIDTYPE_192_BYTES;
+			break;
 
 		case PUD_NODEIDTYPE_193:
-			return setupNodeIdNumberForOlsrCache(0LL, 999999LL,
-					PUD_NODEIDTYPE_193_BYTES);
+			min = 0LL;
+			max = 999999LL;
+			bytes = PUD_NODEIDTYPE_193_BYTES;
+			break;
 
 		case PUD_NODEIDTYPE_194:
-			return setupNodeIdNumberForOlsrCache(1LL, 8191LL,
-					PUD_NODEIDTYPE_194_BYTES);
+			min = 1LL;
+			max = 8191LL;
+			bytes = PUD_NODEIDTYPE_194_BYTES;
+			break;
 
 		default: /* unsupported */
 			/* explicit return: configured nodeId is not relevant, will
@@ -438,6 +381,17 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			return true;
 	}
 
+
+	if (!getNodeIdAsNumber(&val)) {
+		return false;
+	}
+
+	if (setupNodeIdNumberForOlsrCache(val, min, max, bytes) ) {
+		return true;
+	}
+
+	pudError(false, "%s value %llu is out of range [%llu,%llu]",
+			PUD_NODE_ID_NAME, val, min, max);
 	return false;
 }
 

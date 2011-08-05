@@ -1,9 +1,7 @@
 #include "gpsConversion.h"
 
 /* Plugin includes */
-#include "wireFormat.h"
 #include "pud.h"
-#include "nodeIdConversion.h"
 #include "configuration.h"
 #include "compiler.h"
 
@@ -16,6 +14,8 @@
 #include <nmea/info.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#include <OlsrdPudWireFormat/wireFormat.h>
+#include <OlsrdPudWireFormat/nodeIdConversion.h>
 
 /* ************************************************************************
  * OLSR --> External
@@ -48,6 +48,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 	char speedString[PUD_TX_SPEED_DIGITS + 1];
 	char trackString[PUD_TX_TRACK_DIGITS + 1];
 	char hdopString[PUD_TX_HDOP_DIGITS + 1];
+	uint8_t smask;
 
 	char nodeIdTypeString[PUD_TX_NODEIDTYPE_DIGITS + 1];
 	char nodeIdString[PUD_TX_NODEID_BUFFERSIZE + 1];
@@ -55,28 +56,27 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 
 	unsigned int transmitStringLength;
 
-	GpsInfo* gpsMessage;
-	PudOlsrWireFormat * olsrGpsMessage =
+	PudOlsrPositionUpdate * olsrGpsMessage =
 			getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
 
-	if (unlikely(olsrGpsMessage->version != PUD_WIRE_FORMAT_VERSION)) {
+	if (unlikely(getPositionUpdateVersion(olsrGpsMessage) != PUD_WIRE_FORMAT_VERSION)) {
 		/* currently we can only handle our own version */
 		pudError(false, "Can not handle version %u OLSR PUD messages"
-			" (only version %u): message ignored", olsrGpsMessage->version,
-				PUD_WIRE_FORMAT_VERSION);
+			" (only version %u): message ignored",
+			getPositionUpdateVersion(olsrGpsMessage), PUD_WIRE_FORMAT_VERSION);
 		return 0;
 	}
 
-	validityTime = getValidityTimeFromOlsr(olsrGpsMessage->validityTime);
+	validityTime = getValidityTime(&olsrGpsMessage->validityTime);
 
-	gpsMessage = &olsrGpsMessage->gpsInfo;
+	smask = getPositionUpdateSmask(olsrGpsMessage);
 
 	/* time is ALWAYS present so we can just use it */
-	getTimeFromOlsr(gpsMessage->time, &timeStruct);
+	getPositionUpdateTime(olsrGpsMessage, time(NULL), &timeStruct);
 
-	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, LAT))) {
+	if (likely(nmea_INFO_has_field(smask, LAT))) {
 		int chars;
-		double latitude = getLatitudeFromOlsr(gpsMessage->lat);
+		double latitude = getPositionUpdateLatitude(olsrGpsMessage);
 
 		if (latitude >= 0) {
 			latitudeHemisphere = "N";
@@ -98,9 +98,9 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		latitudeString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, LON))) {
+	if (likely(nmea_INFO_has_field(smask, LON))) {
 		int chars;
-		double longitude = getLongitudeFromOlsr(gpsMessage->lon);
+		double longitude = getPositionUpdateLongitude(olsrGpsMessage);
 
 		if (longitude >= 0) {
 			longitudeHemisphere = "E";
@@ -122,9 +122,9 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		longitudeString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, ELV))) {
+	if (likely(nmea_INFO_has_field(smask, ELV))) {
 		int chars = snprintf(&altitudeString[0], PUD_TX_ALTITUDE_DIGITS, "%ld",
-				getAltitudeFromOlsr(gpsMessage->alt));
+				getPositionUpdateAltitude(olsrGpsMessage));
 		if (likely(chars < PUD_TX_ALTITUDE_DIGITS)) {
 			altitudeString[chars] = '\0';
 		} else {
@@ -134,9 +134,9 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		altitudeString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, SPEED))) {
+	if (likely(nmea_INFO_has_field(smask, SPEED))) {
 		int chars = snprintf(&speedString[0], PUD_TX_SPEED_DIGITS, "%lu",
-				getSpeedFromOlsr(gpsMessage->speed));
+				getPositionUpdateSpeed(olsrGpsMessage));
 		if (likely(chars < PUD_TX_SPEED_DIGITS)) {
 			speedString[chars] = '\0';
 		} else {
@@ -146,9 +146,9 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		speedString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, DIRECTION))) {
+	if (likely(nmea_INFO_has_field(smask, DIRECTION))) {
 		int chars = snprintf(&trackString[0], PUD_TX_TRACK_DIGITS, "%lu",
-				getTrackFromOlsr(gpsMessage->track));
+				getPositionUpdateTrack(olsrGpsMessage));
 		if (likely(chars < PUD_TX_TRACK_DIGITS)) {
 			trackString[chars] = '\0';
 		} else {
@@ -158,10 +158,10 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		trackString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(olsrGpsMessage->smask, HDOP))) {
+	if (likely(nmea_INFO_has_field(smask, HDOP))) {
 		int chars = snprintf(&hdopString[0], PUD_TX_HDOP_DIGITS,
-				"%." PUD_TX_HDOP_DECIMALS "f", nmea_meters2dop(getHdopFromOlsr(
-						gpsMessage->hdop)));
+				"%." PUD_TX_HDOP_DECIMALS "f", nmea_meters2dop(getPositionUpdateHdop(
+						olsrGpsMessage)));
 		if (likely(chars < PUD_TX_HDOP_DIGITS)) {
 			hdopString[chars] = '\0';
 		} else {
@@ -171,7 +171,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		hdopString[0] = '\0';
 	}
 
-	getNodeTypeStringFromOlsr(olsr_cnf->ip_version, olsrMessage,
+	getNodeTypeStringFromOlsr(olsr_cnf->ip_version, olsrGpsMessage,
 			&nodeIdTypeString[0], sizeof(nodeIdTypeString));
 	getNodeIdStringFromOlsr(olsr_cnf->ip_version, olsrMessage, &nodeId,
 			&nodeIdString[0], sizeof(nodeIdString));
@@ -190,7 +190,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		"%s," /* track (optional) */
 		"%s" /* hdop (optional) */
 	, getTxNmeaMessagePrefix(), PUD_TX_SENTENCE_VERSION, &nodeIdTypeString[0],
-			nodeId, timeStruct.tm_mday, timeStruct.tm_mon, (timeStruct.tm_year
+			nodeId, timeStruct.tm_mday, timeStruct.tm_mon + 1, (timeStruct.tm_year
 					% 100), timeStruct.tm_hour, timeStruct.tm_min,
 			timeStruct.tm_sec, validityTime, &latitudeString[0],
 			latitudeHemisphere, &longitudeString[0], longitudeHemisphere,
@@ -217,82 +217,6 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
  * ************************************************************************ */
 
 /**
- Convert the node information to the node information for an OLSR message and
- put it in the PUD message in the OLSR message. Also updates the PUD message
- smask.
-
- @param olsrGpsMessage
- A pointer to the PUD message in the OLSR message
- @param olsrMessageSize
- The maximum number of bytes available for the olsrMessage
- @param nodeIdType
- The nodeIdType
-
- @return
- The number of bytes written in the PUD message in the OLSR message (for ALL
- the node information)
- */
-static size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
-		unsigned int olsrMessageSize, NodeIdType nodeIdType) {
-	unsigned char * buffer;
-	unsigned int length = 0;
-
-	olsrGpsMessage->nodeInfo.nodeIdType = nodeIdType;
-	switch (nodeIdType) {
-		case PUD_NODEIDTYPE_MAC: /* hardware address */
-			/* handled when the message is actually sent into OLSR, in the
-			 * pre-transmit hook */
-			length = PUD_NODEIDTYPE_MAC_BYTES;
-			break;
-
-		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-		case PUD_NODEIDTYPE_192:
-		case PUD_NODEIDTYPE_193:
-		case PUD_NODEIDTYPE_194:
-			getNodeIdNumberForOlsrCache(&buffer, &length);
-			memcpy(&olsrGpsMessage->nodeInfo.nodeId, buffer, length);
-			break;
-
-		case PUD_NODEIDTYPE_DNS: /* DNS name */
-		{
-			size_t nodeIdLength;
-			unsigned char * nodeId = getNodeIdWithLength(&nodeIdLength);
-			long charsAvailable = olsrMessageSize - (PUD_OLSRWIREFORMATSIZE
-					+ sizeof(NodeInfo)
-					- sizeof(olsrGpsMessage->nodeInfo.nodeId)) - 1;
-
-			length = nodeIdLength + 1;
-			if (unlikely((long) length > charsAvailable)) {
-				length = charsAvailable;
-			}
-
-			memcpy(&olsrGpsMessage->nodeInfo.nodeId, nodeId, length);
-			(&olsrGpsMessage->nodeInfo.nodeId)[length] = '\0';
-		}
-			break;
-
-		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
-		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
-			/* explicit return: no nodeId information in message */
-			return 0;
-
-		default: /* unsupported */
-			/* fallback to IP address */
-			olsrGpsMessage->nodeInfo.nodeIdType = (olsr_cnf->ip_version
-					== AF_INET) ? PUD_NODEIDTYPE_IPV4 : PUD_NODEIDTYPE_IPV6;
-
-			/* explicit return: no nodeId information in message */
-			return 0;
-	}
-
-	olsrGpsMessage->smask |= PUD_FLAGS_ID;
-	return ((sizeof(NodeInfo)
-			- (sizeof(olsrGpsMessage->nodeInfo.nodeId) /* nodeId placeholder */))
-			+ length);
-}
-
-/**
  Convert a nmeaINFO structure into an OLSR message.
 
  @param nmeaInfo
@@ -302,7 +226,7 @@ static size_t setupNodeInfoForOlsr(PudOlsrWireFormat * olsrGpsMessage,
  @param olsrMessageSize
  The maximum number of bytes available for the olsrMessage
  @param validityTime
- the validity time of the message
+ the validity time of the message in seconds
 
  @return
  - the aligned size of the converted information
@@ -312,60 +236,64 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		unsigned int olsrMessageSize, unsigned long long validityTime) {
 	unsigned int aligned_size;
 	unsigned int aligned_size_remainder;
+	unsigned char * nodeId;
+	size_t nodeIdLength;
 	size_t nodeLength;
-	PudOlsrWireFormat * olsrGpsMessage =
+
+	PudOlsrPositionUpdate * olsrGpsMessage =
 			getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
 
 	/*
 	 * Compose message contents
 	 */
 
-	olsrGpsMessage->version = PUD_WIRE_FORMAT_VERSION;
-	olsrGpsMessage->validityTime = getValidityTimeForOlsr(validityTime);
-	olsrGpsMessage->smask = nmeaInfo->smask;
+	setPositionUpdateVersion(olsrGpsMessage, PUD_WIRE_FORMAT_VERSION);
+	setValidityTime(&olsrGpsMessage->validityTime, validityTime);
+	setPositionUpdateSmask(olsrGpsMessage, nmeaInfo->smask);
 
-	/* utc is always present, we make sure of that, so just use it */
-	olsrGpsMessage->gpsInfo.time = getTimeForOlsr(nmeaInfo->utc.hour,
-			nmeaInfo->utc.min, nmeaInfo->utc.sec);
+	/* utc is always present, we make sure of that elsewhere, so just use it */
+	setPositionUpdateTime(olsrGpsMessage, nmeaInfo->utc.hour, nmeaInfo->utc.min,
+			nmeaInfo->utc.sec);
 
 	if (likely(nmea_INFO_has_field(nmeaInfo->smask, LAT))) {
-		olsrGpsMessage->gpsInfo.lat = getLatitudeForOlsr(nmeaInfo->lat);
+		setPositionUpdateLatitude(olsrGpsMessage, nmeaInfo->lat);
 	} else {
-		olsrGpsMessage->gpsInfo.lat = (1 << (PUD_LATITUDE_BITS - 1));
+		setPositionUpdateLatitude(olsrGpsMessage, 0.0);
 	}
 
 	if (likely(nmea_INFO_has_field(nmeaInfo->smask, LON))) {
-		olsrGpsMessage->gpsInfo.lon = getLongitudeForOlsr(nmeaInfo->lon);
+		setPositionUpdateLongitude(olsrGpsMessage, nmeaInfo->lon);
 	} else {
-		olsrGpsMessage->gpsInfo.lon = (1 << (PUD_LONGITUDE_BITS - 1));
+		setPositionUpdateLongitude(olsrGpsMessage, 0.0);
 	}
 
 	if (likely(nmea_INFO_has_field(nmeaInfo->smask, ELV))) {
-		olsrGpsMessage->gpsInfo.alt = getAltitudeForOlsr(nmeaInfo->elv);
+		setPositionUpdateAltitude(olsrGpsMessage, nmeaInfo->elv);
 	} else {
-		olsrGpsMessage->gpsInfo.alt = -PUD_ALTITUDE_MIN;
+		setPositionUpdateAltitude(olsrGpsMessage, 0.0);
 	}
 
 	if (likely(nmea_INFO_has_field(nmeaInfo->smask, SPEED))) {
-		olsrGpsMessage->gpsInfo.speed = getSpeedForOlsr(nmeaInfo->speed);
+		setPositionUpdateSpeed(olsrGpsMessage, nmeaInfo->speed);
 	} else {
-		olsrGpsMessage->gpsInfo.speed = 0;
+		setPositionUpdateSpeed(olsrGpsMessage, 0.0);
 	}
 
 	if (likely(nmea_INFO_has_field(nmeaInfo->smask, DIRECTION))) {
-		olsrGpsMessage->gpsInfo.track = getTrackForOlsr(nmeaInfo->direction);
+		setPositionUpdateTrack(olsrGpsMessage, nmeaInfo->direction);
 	} else {
-		olsrGpsMessage->gpsInfo.track = 0;
+		setPositionUpdateTrack(olsrGpsMessage, 0);
 	}
 
 	if (likely(nmea_INFO_has_field(nmeaInfo->smask, HDOP))) {
-		olsrGpsMessage->gpsInfo.hdop = getHdopForOlsr(nmeaInfo->HDOP);
+		setPositionUpdateHdop(olsrGpsMessage, nmeaInfo->HDOP);
 	} else {
-		olsrGpsMessage->gpsInfo.hdop = PUD_HDOP_MAX;
+		setPositionUpdateHdop(olsrGpsMessage, PUD_HDOP_MAX);
 	}
 
-	nodeLength = setupNodeInfoForOlsr(olsrGpsMessage, olsrMessageSize,
-			getNodeIdTypeNumber());
+	nodeId = getNodeIdWithLength(&nodeIdLength);
+	nodeLength = setPositionUpdateNodeInfo(olsr_cnf->ip_version, olsrGpsMessage,
+			olsrMessageSize, getNodeIdTypeNumber(), nodeId, nodeIdLength);
 
 	/*
 	 * Messages in OLSR are 4-byte aligned: align
