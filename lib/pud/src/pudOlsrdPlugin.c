@@ -25,7 +25,11 @@
 int olsrd_plugin_init(void) {
 	bool retval = initPud();
 	if (retval) {
-		olsr_printf(0, "%s\n", PUD_PLUGIN_NAME_LONG " (" GIT_SHA ")");
+		olsr_printf(0, "%s\n", PUD_PLUGIN_NAME_LONG
+#ifdef GIT_SHA
+				" (" GIT_SHA ")"
+#endif
+		);
 	}
 	return (retval ? 1 : 0);
 }

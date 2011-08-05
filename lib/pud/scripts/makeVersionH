@@ -6,8 +6,9 @@ set -u
 outfile="${1}"
 version="${2}"
 
-sha="$(git describe)"
-
+set +e
+sha="$(git describe 2> /dev/null)"
+set -e
 
 
 cat > "${outfile}" << EOF
@@ -15,7 +16,15 @@ cat > "${outfile}" << EOF
 #define _PUD_VERSION_H_
 
 #define PLUGIN_VER "${version}"
+EOF
+
+if [[ -n "${sha:-}" ]]; then
+  cat >> "${outfile}" << EOF
 #define GIT_SHA    "${sha}"
+EOF
+fi
+
+cat >> "${outfile}" << EOF
 
 #endif /* _PUD_VERSION_H_ */
 EOF
