@@ -437,19 +437,22 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.0.0"
 {
     # nodeIdType is used to indicate the type of the nodeId field and is a
     #            number in the range 0-255, with the following meaning:
-    #      0 : MAC address of sending interface
-    #          (nodeId is not relevant)
-    #      1 : an MSISDN number with 15 digits
-    #      2 : a Tetra number with 17 digits
-    #      3 : a DNS name
-    #      4 : IPv4 address (OLSR main address) of the sending node
-    #          (nodeId is not relevant)
-    #      6 : IPv6 address (OLSR main address) of the sending node
-    #          (nodeId is not relevant)
-    #      192: a 7 digit number conforming to 'Nationaal Nummerplan
-    #           Brandweer Nederland'
-    #      193: a 6 digit number conforming to 'Nationaal Nummerplan
-    #           Ambulancezorg Nederland'
+    #
+    #        0 : MAC address of sending interface
+    #            (nodeId is not relevant)
+    #        1 : an MSISDN number with 15 digits
+    #        2 : a Tetra number with 17 digits
+    #        3 : a DNS name
+    #        4 : IPv4 address (OLSR main address) of the sending node
+    #            (nodeId is not relevant)
+    #        6 : IPv6 address (OLSR main address) of the sending node
+    #            (nodeId is not relevant)
+    #      192 : a 7 digit number conforming to 'Nationaal Nummerplan
+    #            Brandweer Nederland'
+    #      193 : a 6 digit number conforming to 'Nationaal Nummerplan
+    #            Ambulancezorg Nederland'
+    #      194 : a 4 digit number in the range [1, 8191]
+    #
     #      other numbers are reserved 
     #
     # Note: setting 4 or 6 is the same for olsrd: both mean 'use the main
