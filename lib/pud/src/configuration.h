@@ -267,7 +267,7 @@ setUseDeDup(const char *value, void *data, set_plugin_parameter_addon addon);
 #define PUD_DEDUP_DEPTH_NAME					"deDupDepth"
 
 /** The default value of the deduplication depth plugin parameter */
-#define PUD_DEDUP_DEPTH_DEFAULT					56
+#define PUD_DEDUP_DEPTH_DEFAULT					256
 
 unsigned long long getDeDupDepth(void);
 int
