@@ -3,6 +3,7 @@
 	<name>olsrdPud</name>
 	<comment></comment>
 	<projects>
+		<project>olsrd</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -19,7 +20,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.autoBuildTarget</key>
-					<value>all</value>
+					<value>all java</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
@@ -51,7 +52,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.fullBuildTarget</key>
-					<value>all</value>
+					<value>all java</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.stopOnError</key>
