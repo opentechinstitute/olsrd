@@ -1,6 +1,9 @@
 #ifndef _PUD_WIREFORMAT_H_
 #define _PUD_WIREFORMAT_H_
 
+/* OLSRD includes */
+#include "olsr_protocol.h"
+
 /* System includes */
 #include <stdint.h>
 #include <time.h>
@@ -217,5 +220,7 @@ unsigned long getTrackFromOlsr(uint32_t olsrTrack);
 
 long getHdopForOlsr(double infoHdop);
 double getHdopFromOlsr(uint32_t olsrHdop);
+
+NodeIdType getNodeIdType(int ipVersion, union olsr_message * olsrMessage);
 
 #endif /* _PUD_WIREFORMAT_H_ */

@@ -274,8 +274,6 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
  */
 void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
 		char * nodeIdTypeBuffer, int nodeIdTypeBufferSize) {
-	PudOlsrWireFormat *olsrGpsMessage;
-	unsigned int type;
 	int chars;
 
 	if (unlikely(!nodeIdTypeBuffer || (nodeIdTypeBufferSize == 0))) {
@@ -284,22 +282,9 @@ void getNodeTypeStringFromOlsr(int ipVersion, union olsr_message * olsrMessage,
 
 	assert(nodeIdTypeBufferSize >= (PUD_TX_NODEIDTYPE_DIGITS + 1));
 
-	/* determine the originator of the message */
-	if (ipVersion == AF_INET) {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
-	} else {
-		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
-	}
-
-	if (olsrGpsMessage->smask & PUD_FLAGS_ID) {
-		type = olsrGpsMessage->nodeInfo.nodeIdType;
-	} else {
-		type = (ipVersion == AF_INET) ? PUD_NODEIDTYPE_IPV4 :
-				PUD_NODEIDTYPE_IPV6;
-	}
-
 	/* message has NO nodeId information */
-	chars = snprintf(&nodeIdTypeBuffer[0], nodeIdTypeBufferSize, "%u", type);
+	chars = snprintf(&nodeIdTypeBuffer[0], nodeIdTypeBufferSize, "%u",
+			getNodeIdType(ipVersion, olsrMessage));
 	if (likely(chars < nodeIdTypeBufferSize)) {
 		nodeIdTypeBuffer[chars] = '\0';
 	} else {

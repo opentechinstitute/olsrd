@@ -438,3 +438,38 @@ long getHdopForOlsr(double infoHdop) {
 double getHdopFromOlsr(uint32_t olsrHdop) {
 	return (olsrHdop * PUD_HDOP_RESOLUTION);
 }
+
+/* ************************************************************************
+ * NodeInfo
+ * ************************************************************************ */
+
+/**
+ Get the nodeIdType, accounting for nodeId presence
+
+ @param ipVersion
+ The ip version, either AF_INET or AF_INET6
+ @param olsrMessage
+ A pointer to the OLSR message
+
+ @return
+ The nodeIdType
+ */
+NodeIdType getNodeIdType(int ipVersion, union olsr_message * olsrMessage) {
+	NodeIdType nodeIdType;
+	PudOlsrWireFormat *olsrGpsMessage;
+
+	/* determine the originator of the message */
+	if (ipVersion == AF_INET) {
+		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v4.message;
+	} else {
+		olsrGpsMessage = (PudOlsrWireFormat *) &olsrMessage->v6.message;
+	}
+
+	if (olsrGpsMessage->smask & PUD_FLAGS_ID) {
+		nodeIdType = olsrGpsMessage->nodeInfo.nodeIdType;
+	} else {
+		nodeIdType = ((ipVersion == AF_INET) ? PUD_NODEIDTYPE_IPV4 : PUD_NODEIDTYPE_IPV6);
+	}
+
+	return nodeIdType;
+}
