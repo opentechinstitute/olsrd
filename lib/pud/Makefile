@@ -47,8 +47,6 @@ $(VERSION_FILE): Makefile scripts/makeVersionH
 install: $(PLUGIN_FULLNAME)
 	$(INSTALL_LIB)
 	$(STRIP) "$(LIBDIR)/$(PLUGIN_FULLNAME)"
-	ln -sf "$(PLUGIN_FULLNAME)" "$(LIBDIR)/$(PLUGIN_NAME)"
-	ln -sf "$(PLUGIN_FULLNAME)" "$(LIBDIR)/lib$(PLUGIN_NAME).so"
 
 uninstall:
 	rm -f "$(LIBDIR)/lib$(PLUGIN_NAME).so" "$(LIBDIR)/$(PLUGIN_NAME)"
