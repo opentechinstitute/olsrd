@@ -9,6 +9,7 @@
 #include "posAvg.h"
 #include "networkInterfaces.h"
 #include "compiler.h"
+#include "uplinkGateway.h"
 
 /* OLSRD includes */
 #include "net_olsr.h"
@@ -256,9 +257,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 		if (((interfaces & UPLINK) != 0) && isUplinkAddrSet()) {
 			int fd = getUplinkSocketFd();
 			if (fd != -1) {
-				/* FIXME until we have gateway selection we just send ourselves
-				 * as cluster leader */
-				union olsr_ip_addr * gwAddr = &olsr_cnf->main_addr;
+				union olsr_ip_addr * gwAddr = getBestUplinkGateway();
 
 				UplinkMessage * message2 =
 						(UplinkMessage *) &txBuffer[aligned_size

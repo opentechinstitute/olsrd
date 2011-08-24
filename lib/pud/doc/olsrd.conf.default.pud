@@ -141,7 +141,7 @@ LockFile "/tmp/olsrd.lock"
 # See README-Olsr-Extensions for a description of smartgateways.
 # (default is "yes")
 
-# SmartGateway yes
+SmartGateway yes
 
 # Allows the selection of a smartgateway with NAT (only for IPv4)
 # (default is "yes")
@@ -166,6 +166,7 @@ LockFile "/tmp/olsrd.lock"
 # (default is 128/1024)
 
 # SmartGatewaySpeed 128 1024
+SmartGatewaySpeed 1024 8192
 
 # Specifies the EXTERNAL ipv6 prefix of the uplink. A prefix
 # length of more than 64 is not allowed.
@@ -208,7 +209,7 @@ LockFile "/tmp/olsrd.lock"
 Hna4
 {
 # Internet gateway
-# 0.0.0.0   0.0.0.0
+0.0.0.0   0.0.0.0
 # specific small networks reachable through this node
 # 15.15.0.0 255.255.255.0
 }
@@ -280,7 +281,7 @@ Hna6
 #   ethernet links with ETX 0.1.
 # (defaults to "etx_ff")
 
-# LinkQualityAlgorithm    "etx_ff"
+LinkQualityAlgorithm    "etx_ffeth"
 
 # Link quality aging factor (only for lq level 2)
 # Tuning parameter for etx_float and etx_fpm, smaller values
