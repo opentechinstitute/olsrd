@@ -6,6 +6,8 @@ import java.net.InetAddress;
  * This class represents an uplink message, type cluster leader.
  */
 public class ClusterLeader extends UplinkMessage {
+	private static final long serialVersionUID = -1425806435563378359L;
+
 	/**
 	 * Default constructor
 	 */

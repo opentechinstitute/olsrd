@@ -1,12 +1,16 @@
 package org.olsr.plugin.pud;
 
+import java.io.Serializable;
+
 /**
  * This class represents an uplink message.
  * 
  * It stores the received uplink message in a byte array and provides access
  * methods for all uplink header fields.
  */
-public abstract class UplinkMessage {
+public abstract class UplinkMessage implements Serializable {
+	private static final long serialVersionUID = -1514460974030674657L;
+
 	static {
 		LibraryLoader.load();
 	}

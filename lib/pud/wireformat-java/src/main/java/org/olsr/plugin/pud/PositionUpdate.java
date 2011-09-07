@@ -7,6 +7,8 @@ import java.util.Date;
  * This class represents an uplink message, type position update.
  */
 public class PositionUpdate extends UplinkMessage {
+	private static final long serialVersionUID = -7253852907534653248L;
+
 	/**
 	 * Default constructor
 	 */
