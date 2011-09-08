@@ -179,7 +179,8 @@ void setValidityTime(uint8_t * validityTimeField,
  @param olsrGpsMessage
  A pointer to the position update message
  @param baseDate
- The base date from which to determine the time (number of seconds since Epoch)
+ The base date from which to determine the time (number of seconds since Epoch,
+ UTC)
  @param nowStruct
  A pointer to the time structure into which to put the converted time
  */
