@@ -112,10 +112,10 @@ JNIEXPORT jint JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpdate
 /*
  * Class:     org_olsr_plugin_pud_PositionUpdate
  * Method:    getPositionUpdateTime
- * Signature: (J)J
+ * Signature: (JJ)J
  */
 JNIEXPORT jlong JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpdateTime
-  (JNIEnv * env, jobject this, jlong baseDate) {
+  (JNIEnv * env, jobject this, jlong baseDate, jlong timezoneOffset) {
 	jobject dataObject;
 	jboolean isCopy;
 	UplinkMessage * uplinkMessage = getUplinkMessage(env, this, &dataObject,
@@ -133,7 +133,7 @@ JNIEXPORT jlong JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpdat
 	releaseUplinkMessage(env, uplinkMessage, dataObject, isCopy, JNI_ABORT);
 
 	updateTimeSeconds = mktime(&timeStruct);
-	return (updateTimeSeconds * 1000) + baseDateMilliSeconds;
+	return (updateTimeSeconds * 1000) + baseDateMilliSeconds - timezoneOffset;
 }
 
 /*

@@ -65,10 +65,14 @@ public class PositionUpdate extends UplinkMessage {
 	 * @param baseDate
 	 *            the base date relative to which the time of the position
 	 *            update message must be determined (milliseconds since Epoch)
+	 * @param timezoneOffset
+	 *            the offset (in milliseconds) of the local timezone to UTC. A
+	 *            positive value means 'west of UTC', a negative value means
+	 *            'east of UTC'. For CET, this value is -3600000.
 	 * @return the time of the position update message (milliseconds since
 	 *         Epoch, UTC)
 	 */
-	public native long getPositionUpdateTime(long baseDate);
+	public native long getPositionUpdateTime(long baseDate, long timezoneOffset);
 
 	/**
 	 * @return the latitude (in degrees) of the position update message
