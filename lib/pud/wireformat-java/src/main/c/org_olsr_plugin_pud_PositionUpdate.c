@@ -112,9 +112,9 @@ JNIEXPORT jint JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpdate
 /*
  * Class:     org_olsr_plugin_pud_PositionUpdate
  * Method:    getPositionUpdateTime
- * Signature: (J)Ljava/util/Date;
+ * Signature: (J)J
  */
-JNIEXPORT jobject JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpdateTime
+JNIEXPORT jlong JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpdateTime
   (JNIEnv * env, jobject this, jlong baseDate) {
 	jobject dataObject;
 	jboolean isCopy;
@@ -123,11 +123,9 @@ JNIEXPORT jobject JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpd
 
 	jlong baseDateSeconds = baseDate / 1000;
 	jlong baseDateMilliSeconds = baseDate % 1000;
+
 	struct tm timeStruct;
 	time_t updateTimeSeconds;
-	jlong updateTimeMilliSeconds;
-	jclass clazz;
-	jmethodID mid;
 
 	getPositionUpdateTime(getPositionUpdateMessage(uplinkMessage),
 			baseDateSeconds, &timeStruct);
@@ -135,12 +133,7 @@ JNIEXPORT jobject JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpd
 	releaseUplinkMessage(env, uplinkMessage, dataObject, isCopy, JNI_ABORT);
 
 	updateTimeSeconds = mktime(&timeStruct);
-	updateTimeMilliSeconds = (updateTimeSeconds * 1000) + baseDateMilliSeconds;
-
-	/* object = new Date(updateTimeMilliSeconds); */
-	clazz = (*env)->FindClass(env, "java/util/Date");
-	mid = (*env)->GetMethodID(env, clazz, "<init>", "(J)V");
-	return (*env)->NewObject(env, clazz, mid, updateTimeMilliSeconds);
+	return (updateTimeSeconds * 1000) + baseDateMilliSeconds;
 }
 
 /*

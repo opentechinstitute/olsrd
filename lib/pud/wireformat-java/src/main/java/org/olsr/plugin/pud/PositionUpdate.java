@@ -65,9 +65,10 @@ public class PositionUpdate extends UplinkMessage {
 	 * @param baseDate
 	 *            the base date relative to which the time of the position
 	 *            update message must be determined (milliseconds since Epoch)
-	 * @return the time of the position update message
+	 * @return the time of the position update message (milliseconds since
+	 *         Epoch, UTC)
 	 */
-	public native Date getPositionUpdateTime(long baseDate);
+	public native long getPositionUpdateTime(long baseDate);
 
 	/**
 	 * @return the latitude (in degrees) of the position update message
