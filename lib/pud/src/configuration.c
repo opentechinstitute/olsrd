@@ -1074,6 +1074,67 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 	return false;
 }
 
+
+/*
+ * downlinkPort
+ */
+
+/** the downlink port */
+unsigned short downlinkPort = 0;
+
+/** true when the downlinkPort is set */
+bool downlinkPortSet = false;
+
+/**
+ @return
+ The downlink port (in network byte order)
+ */
+unsigned short getDownlinkPort(void) {
+	if (!downlinkPortSet) {
+		downlinkPort = htons(PUD_DOWNLINK_PORT_DEFAULT);
+		downlinkPortSet = true;
+	}
+
+	return downlinkPort;
+}
+
+/**
+ Set the downlink port
+
+ @param value
+ The downlink port (a number in string representation)
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setDownlinkPort(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_DOWNLINK_PORT_NAME;
+	unsigned long long downlinkPortNew;
+
+	assert(value != NULL);
+
+	if (!readULL(valueName, value, &downlinkPortNew)) {
+		return true;
+	}
+
+	if ((downlinkPortNew < 1) || (downlinkPortNew > 65535)) {
+		pudError(false, "Configured %s (%llu) is outside of"
+				" valid range 1-65535", valueName, downlinkPortNew);
+		return true;
+	}
+
+	downlinkPort = htons(downlinkPortNew);
+	downlinkPortSet = true;
+
+	return false;
+}
+
 /*
  * txTtl
  */
@@ -2016,6 +2077,11 @@ unsigned int checkConfig(void) {
 	if (uplinkUpdateIntervalMoving > uplinkUpdateIntervalStationary) {
 		pudError(false,"The uplink update interval for moving situations must not be"
 		" larger than that for stationary situations");
+		retval = false;
+	}
+
+	if (getUplinkPort() == getDownlinkPort()) {
+		pudError(false, "The uplink port and the downlink port must not be the same");
 		retval = false;
 	}
 

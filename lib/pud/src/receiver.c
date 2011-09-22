@@ -297,14 +297,12 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 						clusterLeaderMessage);
 				clClusterLeader = getClusterLeaderClusterLeader(
 						olsr_cnf->ip_version, clusterLeaderMessage);
+				message2Size = sizeof(UplinkClusterLeader)
+						- sizeof(clusterLeaderMessage->leader);
 				if (olsr_cnf->ip_version == AF_INET) {
-					message2Size = sizeof(clusterLeaderMessage->version)
-							+ sizeof(clusterLeaderMessage->validityTime)
-							+ sizeof(clusterLeaderMessage->leader.v4);
+					message2Size += sizeof(clusterLeaderMessage->leader.v4);
 				} else {
-					message2Size = sizeof(clusterLeaderMessage->version)
-							+ sizeof(clusterLeaderMessage->validityTime)
-							+ sizeof(clusterLeaderMessage->leader.v6);
+					message2Size = sizeof(clusterLeaderMessage->leader.v6);
 				}
 
 				/* set header fields */
@@ -321,6 +319,8 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 						(state.externalState == MOVING) ?
 						getUplinkUpdateIntervalMoving() :
 						getUplinkUpdateIntervalStationary());
+				setClusterLeaderDownlinkPort(clusterLeaderMessage,
+						getDownlinkPort());
 
 				memcpy(clOriginator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 				memcpy(clClusterLeader, gwAddr, olsr_cnf->ipsize);

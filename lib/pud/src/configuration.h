@@ -159,6 +159,20 @@ int
 setUplinkPort(const char *value, void *data, set_plugin_parameter_addon addon);
 
 /*
+ * Downlink Parameters
+ */
+
+/** The name of the downlink port plugin parameter */
+#define PUD_DOWNLINK_PORT_NAME          		"downlinkPort"
+
+/** The default value of the downlink port plugin parameter */
+#define PUD_DOWNLINK_PORT_DEFAULT          		2242
+
+unsigned short getDownlinkPort(void);
+int
+setDownlinkPort(const char *value, void *data, set_plugin_parameter_addon addon);
+
+/*
  * OLSR Parameters
  */
 
