@@ -31,8 +31,9 @@ static void setupCachedValidityTimeMsn(void) {
 
 /** The cached nodeId buffer: contains a pre-processed version of the nodeId
  in order to improve performance. It is currently used for nodeIdTypes
- PUD_NODEIDTYPE_MSISDN, PUD_NODEIDTYPE_TETRA, PUD_NODEIDTYPE_192,
- PUD_NODEIDTYPE_193 (so basically for numbers that will not change) */
+ PUD_NODEIDTYPE_MSISDN, PUD_NODEIDTYPE_TETRA, PUD_NODEIDTYPE_MMSI,
+ PUD_NODEIDTYPE_192, PUD_NODEIDTYPE_193
+ (so basically for numbers that will not change) */
 static unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
 
 /** The number of bytes stored in cachedNodeIdBuffer */
@@ -284,6 +285,10 @@ void getPositionUpdateNodeId(int ipVersion, union olsr_message * olsrMessage,
 		 * subtract the string start address */
 		break;
 
+	case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
+		*nodeIdSize = PUD_NODEIDTYPE_MMSI_BYTES;
+		break;
+
 	case PUD_NODEIDTYPE_192:
 		*nodeIdSize = PUD_NODEIDTYPE_192_BYTES;
 		break;
@@ -349,6 +354,7 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 
 	case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
 	case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
+	case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
 	case PUD_NODEIDTYPE_192:
 	case PUD_NODEIDTYPE_193:
 	case PUD_NODEIDTYPE_194:

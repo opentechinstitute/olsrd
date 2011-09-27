@@ -448,6 +448,7 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.0.0"
     #            (nodeId is not relevant)
     #        6 : IPv6 address (OLSR main address) of the sending node
     #            (nodeId is not relevant)
+    #        7 : an AIS MMSI number with 9 digits
     #      192 : a 7 digit number conforming to 'Nationaal Nummerplan
     #            Brandweer Nederland'
     #      193 : a 6 digit number conforming to 'Nationaal Nummerplan

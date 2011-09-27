@@ -143,6 +143,9 @@ typedef enum _NodeIdType {
 	/** IPv6 address, 128 bits, 16 bytes */
 	PUD_NODEIDTYPE_IPV6 = 6,
 
+	/** AIS MMSI number, 9 digits, 30 bits, 4 bytes */
+	PUD_NODEIDTYPE_MMSI = 7,
+
 	/** Brandweer number, 7 digits, 24 bits, 3 bytes */
 	PUD_NODEIDTYPE_192 = 192,
 
@@ -161,6 +164,9 @@ typedef enum _NodeIdType {
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_TETRA */
 #define PUD_NODEIDTYPE_TETRA_BYTES		8
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_MMSI */
+#define PUD_NODEIDTYPE_MMSI_BYTES		4
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_192 */
 #define PUD_NODEIDTYPE_192_BYTES		3
