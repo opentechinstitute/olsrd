@@ -8,6 +8,7 @@
 /* OLSRD includes */
 #include "olsr_cfg.h"
 #include "olsr.h"
+#include "interfaces.h"
 
 /* System includes */
 #include <assert.h>
@@ -18,6 +19,21 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
+
+/*
+ * Main IP MAC address
+ */
+
+/** the MAC address of the main IP address */
+static unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES] = { 0 };
+
+/**
+ * @return
+ * the MAC address of the main IP address
+ */
+unsigned char * getMainIpMacAddress(void) {
+	return &mac[0];
+}
 
 /*
  * RX interfaces
@@ -187,17 +203,10 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
  */
 static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
 		socket_handler_func rxSocketHandlerFunction) {
-	unsigned char * hwAddr;
 	int socketFd = -1;
 	TRxTxNetworkInterface * networkInterface = NULL;
-	struct ifreq ifReqHwAddr;
 
 	if (ifName == NULL) {
-		goto bail;
-	}
-
-	hwAddr = getHardwareAddress(ifName, olsr_cnf->ip_version, &ifReqHwAddr);
-	if (hwAddr == NULL) {
 		goto bail;
 	}
 
@@ -211,8 +220,6 @@ static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
 	networkInterface->name[IFNAMSIZ] = '\0';
 	networkInterface->ipAddress = ipAddr;
 	networkInterface->handler = NULL;
-	memcpy(&networkInterface->hwAddress[0], hwAddr,
-			sizeof(networkInterface->hwAddress));
 	networkInterface->next = NULL;
 
 	/* networkInterface needs to be filled in when calling createRxSocket */
@@ -376,17 +383,10 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
  - false on failure
  */
 static bool createTxInterface(const char * ifName, union olsr_sockaddr ipAddr) {
-	unsigned char * hwAddr;
 	int socketFd = -1;
 	TRxTxNetworkInterface * networkInterface = NULL;
-	struct ifreq ifReqHwAddr;
 
 	if (ifName == NULL) {
-		goto bail;
-	}
-
-	hwAddr = getHardwareAddress(ifName, olsr_cnf->ip_version, &ifReqHwAddr);
-	if (hwAddr == NULL) {
 		goto bail;
 	}
 
@@ -400,8 +400,6 @@ static bool createTxInterface(const char * ifName, union olsr_sockaddr ipAddr) {
 	networkInterface->name[IFNAMSIZ] = '\0';
 	networkInterface->ipAddress = ipAddr;
 	networkInterface->handler = NULL;
-	memcpy(&networkInterface->hwAddress[0], hwAddr,
-			sizeof(networkInterface->hwAddress));
 	networkInterface->next = NULL;
 
 	/* networkInterface needs to be filled in when calling createTxSocket */
@@ -519,15 +517,7 @@ TOLSRNetworkInterface * getOlsrNetworkInterface(struct interface *olsrIntf) {
  - false on failure
  */
 static int createOlsrInterface(struct interface *olsrIntf) {
-	unsigned char * hwAddr;
-	struct ifreq ifReqHwAddr;
 	TOLSRNetworkInterface * networkInterface = NULL;
-
-	hwAddr = getHardwareAddress(olsrIntf->int_name, olsr_cnf->ip_version,
-			&ifReqHwAddr);
-	if (hwAddr == NULL) {
-		goto bail;
-	}
 
 	networkInterface = olsr_malloc(sizeof(TOLSRNetworkInterface),
 			"TOLSRNetworkInterface (PUD)");
@@ -536,8 +526,6 @@ static int createOlsrInterface(struct interface *olsrIntf) {
 	}
 
 	networkInterface->olsrIntf = olsrIntf;
-	memcpy(&networkInterface->hwAddress[0], hwAddr,
-			sizeof(networkInterface->hwAddress));
 	networkInterface->next = NULL;
 
 	/* Add new object to the end of the global list. */
@@ -576,6 +564,20 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction) {
 	int retval = false;
 	struct ifaddrs *ifAddrs = NULL;
 	struct ifaddrs *ifAddr = NULL;
+	struct ifreq ifr;
+	unsigned char * macInIfr;
+
+	struct interface *mainInterface = if_ifwithaddr(&olsr_cnf->main_addr);
+	if (!mainInterface) {
+		pudError(true, "Could not get the main interface");
+		return retval;
+	}
+	macInIfr = getHardwareAddress(mainInterface->int_name,olsr_cnf->ip_version,&ifr);
+	if (!macInIfr) {
+		pudError(true, "Could not get the MAC address of the main interface");
+		return retval;
+	}
+	memcpy(&mac[0], &macInIfr[0], PUD_NODEIDTYPE_MAC_BYTES);
 
 	errno = 0;
 	if (getifaddrs(&ifAddrs) != 0) {

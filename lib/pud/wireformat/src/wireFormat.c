@@ -343,9 +343,8 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 	setPositionUpdateNodeIdType(olsrGpsMessage, nodeIdType);
 	switch (nodeIdType) {
 	case PUD_NODEIDTYPE_MAC: /* hardware address */
-		/* handled when the message is actually sent into OLSR, in the
-		 * pre-transmit hook */
-		length = PUD_NODEIDTYPE_MAC_BYTES;
+		length = nodeIdLength;
+		setPositionUpdateNodeId(olsrGpsMessage, nodeId, nodeIdLength, false);
 		break;
 
 	case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */

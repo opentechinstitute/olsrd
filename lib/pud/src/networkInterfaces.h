@@ -26,9 +26,6 @@ typedef struct _TRxTxNetworkInterface {
 		/** the socket handler function */
 		socket_handler_func handler;
 
-		/** The hardware address of the interface */
-		unsigned char hwAddress[IFHWADDRLEN];
-
 		/** The next TRxTxNetworkInterface in the list */
 		struct _TRxTxNetworkInterface * next;
 } TRxTxNetworkInterface;
@@ -38,9 +35,6 @@ typedef struct _TOLSRNetworkInterface {
 		/** A pointer to the OLSR interface */
 		struct interface * olsrIntf;
 
-		/** The hardware address of the interface */
-		unsigned char hwAddress[IFHWADDRLEN];
-
 		/** The next TOLSRNetworkInterface in the list */
 		struct _TOLSRNetworkInterface * next;
 } TOLSRNetworkInterface;
@@ -48,6 +42,7 @@ typedef struct _TOLSRNetworkInterface {
 bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction);
 void closeNetworkInterfaces(void);
 
+unsigned char * getMainIpMacAddress(void);
 TRxTxNetworkInterface * getRxNetworkInterfaces(void);
 TRxTxNetworkInterface * getTxNetworkInterfaces(void);
 int getUplinkSocketFd(void);

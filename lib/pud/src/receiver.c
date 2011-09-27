@@ -137,40 +137,6 @@ static PositionUpdateEntry txPosition;
  */
 
 /**
- This function is called every time before a message is sent on a specific
- interface. It can manipulate the outgoing message.
- Note that a change to the outgoing messages is carried over to the message
- that goes out on the next interface when the message is _not_ reset
- before it is sent out on the next interface.
-
- @param olsrMessage
- A pointer to the outgoing message
- @param ifn
- A pointer to the OLSR interface structure
- */
-static void nodeIdPreTransmitHook(union olsr_message *olsrMessage,
-		struct interface *ifn) {
-	/* set the MAC address in the message when needed */
-	if (unlikely(getNodeIdTypeNumber() == PUD_NODEIDTYPE_MAC)) {
-		TOLSRNetworkInterface * olsrIf = getOlsrNetworkInterface(ifn);
-		PudOlsrPositionUpdate * olsrGpsMessage =
-				getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
-
-		if (likely(olsrIf != NULL)) {
-			setPositionUpdateNodeId(olsrGpsMessage, &olsrIf->hwAddress[0],
-					PUD_NODEIDTYPE_MAC_BYTES, false);
-		} else {
-			unsigned char buffer[PUD_NODEIDTYPE_MAC_BYTES] = { 0 };
-			setPositionUpdateNodeId(olsrGpsMessage, &buffer[0],
-					PUD_NODEIDTYPE_MAC_BYTES, false);
-
-			pudError(false, "Could not find OLSR interface %s, cleared its"
-				" MAC address in the OLSR message\n", ifn->int_name);
-		}
-	}
-}
-
-/**
  Determine whether s position is valid.
 
  @param position
@@ -226,7 +192,6 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 			int r;
 			struct interface *ifn;
 			for (ifn = ifnet; ifn; ifn = ifn->int_next) {
-				nodeIdPreTransmitHook(olsrMessage, ifn);
 				r = net_outbuffer_push(ifn, olsrMessage, aligned_size);
 				if (r != (int) aligned_size) {
 					pudError(

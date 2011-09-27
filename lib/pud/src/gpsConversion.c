@@ -4,6 +4,7 @@
 #include "pud.h"
 #include "configuration.h"
 #include "compiler.h"
+#include "networkInterfaces.h"
 
 /* OLSR includes */
 #include "olsr.h"
@@ -236,6 +237,7 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		unsigned int olsrMessageSize, unsigned long long validityTime) {
 	unsigned int aligned_size;
 	unsigned int aligned_size_remainder;
+	NodeIdType nodeIdType;
 	unsigned char * nodeId;
 	size_t nodeIdLength;
 	size_t nodeLength;
@@ -291,9 +293,17 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		setPositionUpdateHdop(olsrGpsMessage, PUD_HDOP_MAX);
 	}
 
-	nodeId = getNodeIdWithLength(&nodeIdLength);
-	nodeLength = setPositionUpdateNodeInfo(olsr_cnf->ip_version, olsrGpsMessage,
-			olsrMessageSize, getNodeIdTypeNumber(), nodeId, nodeIdLength);
+	nodeIdType = getNodeIdTypeNumber();
+	if (unlikely(nodeIdType == PUD_NODEIDTYPE_MAC)) {
+		nodeLength = setPositionUpdateNodeInfo(olsr_cnf->ip_version,
+				olsrGpsMessage, olsrMessageSize, nodeIdType,
+				getMainIpMacAddress(), PUD_NODEIDTYPE_MAC_BYTES);
+	} else {
+		nodeId = getNodeIdWithLength(&nodeIdLength);
+		nodeLength = setPositionUpdateNodeInfo(olsr_cnf->ip_version,
+				olsrGpsMessage, olsrMessageSize, nodeIdType, nodeId,
+				nodeIdLength);
+	}
 
 	/*
 	 * Messages in OLSR are 4-byte aligned: align
