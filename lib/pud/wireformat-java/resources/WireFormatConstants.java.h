@@ -49,6 +49,7 @@ public class WireFormatConstants {
 	public static final int NODEIDTYPE_MSISDN_BYTES = PUD_NODEIDTYPE_MSISDN_BYTES;
 	public static final int NODEIDTYPE_TETRA_BYTES = PUD_NODEIDTYPE_TETRA_BYTES;
 	public static final int NODEIDTYPE_MMSI_BYTES = PUD_NODEIDTYPE_MMSI_BYTES;
+	public static final int NODEIDTYPE_URN_BYTES = PUD_NODEIDTYPE_URN_BYTES;
 	public static final int NODEIDTYPE_192_BYTES = PUD_NODEIDTYPE_192_BYTES;
 	public static final int NODEIDTYPE_193_BYTES = PUD_NODEIDTYPE_193_BYTES;
 	public static final int NODEIDTYPE_194_BYTES = PUD_NODEIDTYPE_194_BYTES;

@@ -187,6 +187,7 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 		case PUD_NODEIDTYPE_IPV4:
 		case PUD_NODEIDTYPE_IPV6:
 		case PUD_NODEIDTYPE_MMSI:
+		case PUD_NODEIDTYPE_URN:
 		case PUD_NODEIDTYPE_192:
 		case PUD_NODEIDTYPE_193:
 		case PUD_NODEIDTYPE_194:
@@ -362,6 +363,12 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			min = 0LL;
 			max = 999999999LL;
 			bytes = PUD_NODEIDTYPE_MMSI_BYTES;
+			break;
+
+		case PUD_NODEIDTYPE_URN: /* a URN number */
+			min = 0LL;
+			max = 16777215LL;
+			bytes = PUD_NODEIDTYPE_URN_BYTES;
 			break;
 
 		case PUD_NODEIDTYPE_192:

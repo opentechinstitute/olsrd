@@ -149,6 +149,7 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 	case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
 	case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
 	case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
+	case PUD_NODEIDTYPE_URN: /* a URN number */
 	case PUD_NODEIDTYPE_192:
 	case PUD_NODEIDTYPE_193:
 	case PUD_NODEIDTYPE_194:

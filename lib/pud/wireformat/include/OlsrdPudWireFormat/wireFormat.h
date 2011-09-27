@@ -146,6 +146,9 @@ typedef enum _NodeIdType {
 	/** AIS MMSI number, 9 digits, 30 bits, 4 bytes */
 	PUD_NODEIDTYPE_MMSI = 7,
 
+	/** URN number, 24 bits, 3 bytes */
+	PUD_NODEIDTYPE_URN = 8,
+
 	/** Brandweer number, 7 digits, 24 bits, 3 bytes */
 	PUD_NODEIDTYPE_192 = 192,
 
@@ -167,6 +170,9 @@ typedef enum _NodeIdType {
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_MMSI */
 #define PUD_NODEIDTYPE_MMSI_BYTES		4
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_URN */
+#define PUD_NODEIDTYPE_URN_BYTES		3
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_192 */
 #define PUD_NODEIDTYPE_192_BYTES		3
