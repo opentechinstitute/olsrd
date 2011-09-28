@@ -210,6 +210,7 @@ static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
 	memcpy(networkInterface->name, ifName, sizeof(networkInterface->name));
 	networkInterface->name[IFNAMSIZ] = '\0';
 	networkInterface->ipAddress = ipAddr;
+	networkInterface->handler = NULL;
 	memcpy(&networkInterface->hwAddress[0], hwAddr,
 			sizeof(networkInterface->hwAddress));
 	networkInterface->next = NULL;
@@ -220,6 +221,7 @@ static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
 		goto bail;
 	}
 	networkInterface->socketFd = socketFd;
+	networkInterface->handler = rxSocketHandlerFunction;
 
 	/* Add new object to the end of the global list. */
 	if (rxNetworkInterfacesListHead == NULL) {
@@ -397,6 +399,7 @@ static bool createTxInterface(const char * ifName, union olsr_sockaddr ipAddr) {
 	memcpy(networkInterface->name, ifName, sizeof(networkInterface->name));
 	networkInterface->name[IFNAMSIZ] = '\0';
 	networkInterface->ipAddress = ipAddr;
+	networkInterface->handler = NULL;
 	memcpy(&networkInterface->hwAddress[0], hwAddr,
 			sizeof(networkInterface->hwAddress));
 	networkInterface->next = NULL;
@@ -622,6 +625,10 @@ static void closeInterfaces(TRxTxNetworkInterface * networkInterface) {
 	while (nextNetworkInterface != NULL) {
 		TRxTxNetworkInterface * iteratedNetworkInterface = nextNetworkInterface;
 		if (iteratedNetworkInterface->socketFd >= 0) {
+			if (iteratedNetworkInterface->handler) {
+				remove_olsr_socket(iteratedNetworkInterface->socketFd,
+						iteratedNetworkInterface->handler, NULL);
+			}
 			close(iteratedNetworkInterface->socketFd);
 			iteratedNetworkInterface->socketFd = -1;
 		}

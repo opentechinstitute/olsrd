@@ -23,6 +23,9 @@ typedef struct _TRxTxNetworkInterface {
 		/** The IP address of the interface */
 		union olsr_sockaddr ipAddress;
 
+		/** the socket handler function */
+		socket_handler_func handler;
+
 		/** The hardware address of the interface */
 		unsigned char hwAddress[IFHWADDRLEN];
 
