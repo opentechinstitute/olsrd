@@ -404,6 +404,26 @@ static inline void setUplinkMessagePadding(UplinkHeader * uplinkHeader,
  * OLSR header
  */
 
+
+/**
+ Determine the size of an OLSR message
+
+ @param ipVersion
+ The IP version
+ @param olsrMessage
+ A pointer to the OLSR message
+ @return
+ The size of the OLSR message
+ */
+static inline unsigned short getOlsrMessageSize(int ipVersion,
+		union olsr_message * olsrMessage) {
+	if (ipVersion == AF_INET) {
+		return ntohs(olsrMessage->v4.olsr_msgsize);
+	}
+
+	return ntohs(olsrMessage->v6.olsr_msgsize);
+}
+
 /**
  Get the originator of an OLSR message
 

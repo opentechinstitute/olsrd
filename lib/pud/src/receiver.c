@@ -302,9 +302,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 				else {
 					olsr_printf(0, "%s: packet sent to uplink (%d bytes)\n",
 							PUD_PLUGIN_ABBR, aligned_size);
-					dump_packet((unsigned char *)&txBuffer,
-							(sizeof(txBuffer) -
-							 sizeof(txBuffer.msg)) + aligned_size);
+					dump_packet((unsigned char *)&txBuffer, txBufferSpaceTaken);
 				}
 #endif
 			}
