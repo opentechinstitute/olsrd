@@ -162,6 +162,23 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
 }
 
 /**
+ Called by OLSR core when a packet for the plugin is received from the downlink.
+ It unpacks the messages and distributes them into OLSR and on the LAN.
+
+ @param skfd
+ the socket file descriptor on which the packet is received
+ @param data
+ a pointer to the network interface structure on which the packet was received
+ @param flags
+ unused
+ */
+static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused))) {
+	if (skfd >= 0) {
+		// empty now
+	}
+}
+
+/**
  Called by OLSR core when a packet for the plugin is received from the non-OLSR
  network. It converts the packet into the internal OLSR wire format for a
  position update and transmits it over all OLSR network interfaces.
@@ -264,7 +281,8 @@ bool initPud(void) {
 	 * Creates receive and transmit sockets and register the receive sockets
 	 * with the OLSR stack
 	 */
-	if (!createNetworkInterfaces(&packetReceivedForOlsr)) {
+	if (!createNetworkInterfaces(&packetReceivedForOlsr,
+			&packetReceivedFromDownlink)) {
 		pudError(false, "Could not create require network interfaces");
 		goto error;
 	}

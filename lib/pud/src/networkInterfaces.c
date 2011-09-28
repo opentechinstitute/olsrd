@@ -475,6 +475,71 @@ static int createUplinkSocket(void) {
 }
 
 /*
+ * Downlink interface
+ */
+
+/** The socket fd, receiving downlinked messages */
+static int downlinkSocketFd = -1;
+
+/** the downlink handler function */
+static socket_handler_func downlinkHandler = NULL;
+
+/**
+ Create an downlink socket
+
+ @return
+ - the socket descriptor (>= 0)
+ - -1 if an error occurred
+ */
+static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
+	int downlinkSocket = -1;
+	int reuse = 1;
+	struct sockaddr_in address;
+
+	/*  Create a datagram socket on which to receive */
+	errno = 0;
+	downlinkSocket = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
+	if (downlinkSocket < 0) {
+		pudError(true, "Could not create the downlink socket");
+		goto bail;
+	}
+
+	/* Enable SO_REUSEADDR to allow multiple applications to receive the same
+	 * messages */
+	errno = 0;
+	if (setsockopt(downlinkSocket, SOL_SOCKET, SO_REUSEADDR, &reuse,
+			sizeof(reuse)) < 0) {
+		pudError(true, "Could not set REUSE option on the downlink socket");
+		goto bail;
+	}
+
+	/* Bind to the proper port number with the IP address INADDR_ANY (required) */
+	memset(&address, 0, sizeof(address));
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = getDownlinkPort();
+
+	errno = 0;
+	if (bind(downlinkSocket, (struct sockaddr *) &address,
+			sizeof(address))) {
+		pudError(true, "Could not bind downlink socket to port %d", getDownlinkPort());
+		goto bail;
+	}
+
+	add_olsr_socket(downlinkSocket, rxSocketHandlerFunction, NULL, NULL,
+			SP_PR_READ);
+
+	downlinkHandler = rxSocketHandlerFunction;
+
+	return downlinkSocket;
+
+	bail: if (downlinkSocket >= 0) {
+		close(downlinkSocket);
+	}
+	return -1;
+}
+
+/*
  * OLSR interfaces
  */
 
@@ -555,12 +620,15 @@ static int createOlsrInterface(struct interface *olsrIntf) {
 
  @param rxSocketHandlerFunction
  The function to call upon reception of data on a receive socket
+ @param rxSocketHandlerFunctionDownlink
+ The function to call upon reception of data on a downlink receive socket
 
  @return
  - true on success
  - false on failure
  */
-bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction) {
+bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
+		socket_handler_func rxSocketHandlerFunctionDownlink) {
 	int retval = false;
 	struct ifaddrs *ifAddrs = NULL;
 	struct ifaddrs *ifAddr = NULL;
@@ -647,6 +715,11 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction) {
 		if (uplinkSocketFd == -1) {
 			goto end;
 		}
+
+		downlinkSocketFd = createDownlinkSocket(rxSocketHandlerFunctionDownlink);
+		if (downlinkSocketFd == -1) {
+			goto end;
+		}
 	} else {
 		uplinkSocketFd = -1;
 	}
@@ -719,5 +792,14 @@ void closeNetworkInterfaces(void) {
 	if (uplinkSocketFd != -1 ) {
 		close(uplinkSocketFd);
 		uplinkSocketFd = -1;
+	}
+
+	if (downlinkSocketFd != -1 ) {
+		if (downlinkHandler) {
+			remove_olsr_socket (downlinkSocketFd, downlinkHandler, NULL);
+			downlinkHandler = NULL;
+		}
+		close(downlinkSocketFd);
+		downlinkSocketFd = -1;
 	}
 }
