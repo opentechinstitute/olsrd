@@ -13,9 +13,11 @@
 #include "ipcalc.h"
 #include "parser.h"
 #include "olsr.h"
+#include "net_olsr.h"
 
 /* System includes */
 #include <assert.h>
+#include <sys/socket.h>
 
 /** The size of the buffer in which the received NMEA string is stored */
 #define BUFFER_SIZE_FOR_OLSR	2048
@@ -174,7 +176,142 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
  */
 static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused))) {
 	if (skfd >= 0) {
-		// empty now
+		unsigned char rxBuffer[BUFFER_SIZE_FOR_OLSR];
+		ssize_t rxCount;
+		ssize_t rxIndex = 0;
+		struct sockaddr sender;
+		socklen_t senderSize = sizeof(sender);
+
+		/* Receive the captured Ethernet frame */
+		memset(&sender, 0, senderSize);
+		errno = 0;
+		rxCount = recvfrom(skfd, &rxBuffer[0], (sizeof(rxBuffer) - 1), 0,
+				&sender, &senderSize);
+		if (rxCount < 0) {
+			pudError(true, "Receive error in %s, ignoring message.", __func__);
+			return;
+		}
+
+#ifdef PUD_DUMP_GPS_PACKETS_TX_DOWNLINK
+		{
+			void * src;
+			in_port_t port;
+			char fromAddr[64];
+
+			if (olsr_cnf->ip_version == AF_INET) {
+				src = &((struct sockaddr_in*) &sender)->sin_addr;
+				port = ntohs(((struct sockaddr_in*) &sender)->sin_port);
+			} else {
+				src = &((struct sockaddr_in6*) &sender)->sin6_addr;
+				port = ntohs(((struct sockaddr_in6*) &sender)->sin6_port);
+			}
+
+			inet_ntop(olsr_cnf->ip_version, src, &fromAddr[0], sizeof(fromAddr));
+			olsr_printf(0, "\n%s: downlink packet received from %s, port %u (%lu bytes)\n",
+					PUD_PLUGIN_ABBR, &fromAddr[0],
+					port, (size_t) rxCount);
+		}
+#endif
+
+		while (rxIndex < rxCount) {
+			UplinkMessage * msg = (UplinkMessage *) &rxBuffer[rxIndex];
+			uint8_t type;
+			uint16_t uplinkMessageLength;
+			uint16_t olsrMessageLength;
+			bool ipv6;
+			union olsr_message * olsrMessage;
+
+			type = getUplinkMessageType(&msg->header);
+			if (type != POSITION) {
+				pudError(false, "Received wrong type (%d) in %s,"
+						" ignoring message.", type, __func__);
+				continue;
+			}
+
+			ipv6 = getUplinkMessageIPv6(&msg->header);
+			if (unlikely(ipv6 && (olsr_cnf->ip_version != AF_INET6))) {
+				pudError(false, "Received wrong IPv6 status (%s) in %s,"
+						" ignoring message.", (ipv6 ? "true" : "false"),
+						__func__);
+				continue;
+			}
+
+			olsrMessageLength = getUplinkMessageLength(&msg->header);
+			uplinkMessageLength = olsrMessageLength + sizeof(UplinkHeader);
+
+			if (unlikely((rxIndex + uplinkMessageLength) > rxCount)) {
+				pudError(false, "Received wrong length (%d) in %s,"
+						" ignoring the rest of the messages.", olsrMessageLength,
+						__func__);
+				break;
+			}
+
+			olsrMessage = &msg->msg.olsrMessage;
+
+			/* we now have a position update (olsrMessage) of a certain length
+			 * (length). this needs to be transmitted over OLSR and on the LAN */
+
+			if (!isInDeDupList(&deDupList, olsrMessage)) {
+				/* send out over OLSR interfaces */
+				int r;
+				struct interface *ifn;
+				for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+					r = net_outbuffer_push(ifn, olsrMessage, olsrMessageLength);
+					if (r != (int) olsrMessageLength) {
+						pudError(
+								false,
+								"Could not send to OLSR interface %s: %s"
+										" (length=%u, r=%d)",
+								ifn->int_name,
+								((r == -1) ? "no buffer was found" :
+									(r == 0) ? "there was not enough room in the buffer" :
+											"unknown reason"), olsrMessageLength, r);
+					}
+#ifdef PUD_DUMP_GPS_PACKETS_TX_DOWNLINK
+					else {
+						olsr_printf(0, "%s: downlink position update sent"
+								" to OLSR interface %s (%d bytes)\n",
+								PUD_PLUGIN_ABBR, ifn->int_name, olsrMessageLength);
+					}
+#endif
+				}
+
+				/* send out over tx interfaces */
+				(void) packetReceivedFromOlsr(olsrMessage, NULL, NULL);
+#ifdef PUD_DUMP_GPS_PACKETS_TX_DOWNLINK
+				olsr_printf(0, "%s: downlink position update sent"
+						" to tx interfaces (%d bytes)\n", PUD_PLUGIN_ABBR,
+						olsrMessageLength);
+#endif
+
+#ifdef PUD_DUMP_GPS_PACKETS_TX_DOWNLINK
+			{
+				void * src;
+				char fromAddr[64];
+				union olsr_ip_addr * originator = getOlsrMessageOriginator(
+						olsr_cnf->ip_version, olsrMessage);
+
+				if (olsr_cnf->ip_version == AF_INET) {
+					src = &originator->v4;
+				} else {
+					src = &originator->v6;
+				}
+
+				inet_ntop(olsr_cnf->ip_version, src, &fromAddr[0],
+						sizeof(fromAddr));
+				olsr_printf(
+						0,
+						"%s: downlink position update from %s (%u bytes)\n",
+						PUD_PLUGIN_ABBR, &fromAddr[0], uplinkMessageLength);
+
+				dump_packet((unsigned char *) msg, uplinkMessageLength);
+
+				olsr_printf(0, "\n");
+			}
+#endif
+			}
+			rxIndex += uplinkMessageLength;
+		}
 	}
 }
 

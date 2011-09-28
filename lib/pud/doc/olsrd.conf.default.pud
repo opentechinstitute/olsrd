@@ -581,6 +581,8 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.0.0"
 
     # downlinkPort is the UDP port on which the plugin will receive GPS position
     #              updates. Can't be the same as the uplink port.
+    #              The downlink is only active when a proper uplink has been
+    #              configured.
     #
     # Default: 2242
     #
