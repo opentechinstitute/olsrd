@@ -54,7 +54,7 @@ uninstall:
 
 clean: doc-clean
 	@echo "[$@]"
-	@rm -f $(OBJS) $(SRCS:%.c=%.d) "$(PLUGIN_FULLNAME)" "$(VERSION_FILE)"
+	@rm -f $(OBJS) $(SRCS:%.c=%.d) "$(PLUGIN_FULLNAME)"
 
 dist:				distclean
 distclean:			clean
