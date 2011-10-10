@@ -31,18 +31,18 @@ else
 
 all: default_target
 
-default_target: $(VERSION_FILE) $(PLUGIN_FULLNAME)
+default_target: version $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 	@echo "[LD] $@"
 	@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
-$(VERSION_FILE): Makefile scripts/makeVersionH
-	@echo "[$@]"
-	@./scripts/makeVersionH "$@" "$(PLUGIN_VER)"
 
+.PHONY:	version install uninstall clean dist distclean doc doc-clean
 
-.PHONY:	install uninstall clean dist distclean doc doc-clean
+version: Makefile scripts/makeVersionH
+	@echo "[$(VERSION_FILE)]"
+	@./scripts/makeVersionH "$(VERSION_FILE)" "$(PLUGIN_VER)"
 
 install: $(PLUGIN_FULLNAME)
 	$(INSTALL_LIB)
