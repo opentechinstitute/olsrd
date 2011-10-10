@@ -18,11 +18,13 @@ cat > "${outfile}" << EOF
 #define PLUGIN_VER "${version}"
 EOF
 
-if [[ -n "${sha:-}" ]]; then
-  cat >> "${outfile}" << EOF
+if [[ -z "${sha:-}" ]]; then
+  sha="OLSRD_Unknown-g0000000"
+fi
+
+cat >> "${outfile}" << EOF
 #define GIT_SHA    "${sha}"
 EOF
-fi
 
 cat >> "${outfile}" << EOF
 
