@@ -24,11 +24,13 @@ typedef struct _DeDupEntry {
  The list is a circular list.
  */
 typedef struct _DeDupList {
-		unsigned long long entriesMaxCount; /**< the maximum number of entries in the list */
-		DeDupEntry * entries; /**< the list entries */
+	pthread_mutex_t mutex; /**< access mutex */
 
-		unsigned long long entriesCount; /**< the number of entries in the list */
-		unsigned long long newestEntryIndex; /**< index of the newest entry in the list (zero-based) */
+	unsigned long long entriesMaxCount; /**< the maximum number of entries in the list */
+	DeDupEntry * entries; /**< the list entries */
+
+	unsigned long long entriesCount; /**< the number of entries in the list */
+	unsigned long long newestEntryIndex; /**< index of the newest entry in the list (zero-based) */
 } DeDupList;
 
 bool initDeDupList(DeDupList * deDupList, unsigned long long maxEntries);

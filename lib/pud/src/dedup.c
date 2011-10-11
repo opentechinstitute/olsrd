@@ -7,6 +7,7 @@
 
 /* System includes */
 #include <assert.h>
+#include <pthread.h>
 
 #ifdef PUD_DUMP_DEDUP
 #include <arpa/inet.h>
@@ -34,12 +35,23 @@
  - true otherwise
  */
 bool initDeDupList(DeDupList * deDupList, unsigned long long maxEntries) {
+	pthread_mutexattr_t attr;
 	void * p;
 
 	if (deDupList == NULL) {
 		return false;
 	}
 	if (maxEntries < 1) {
+		return false;
+	}
+
+	if (pthread_mutexattr_init(&attr)) {
+		return false;
+	}
+	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP)) {
+		return false;
+	}
+	if (pthread_mutex_init(&deDupList->mutex, &attr)) {
 		return false;
 	}
 
@@ -67,6 +79,8 @@ bool initDeDupList(DeDupList * deDupList, unsigned long long maxEntries) {
 void destroyDeDupList(DeDupList * deDupList) {
 	assert (deDupList != NULL);
 
+	(void) pthread_mutex_lock(&deDupList->mutex);
+
 	if (deDupList->entries != NULL) {
 		free(deDupList->entries);
 		deDupList->entries = NULL;
@@ -76,6 +90,10 @@ void destroyDeDupList(DeDupList * deDupList) {
 
 	deDupList->entriesCount = 0;
 	deDupList->newestEntryIndex = 0;
+
+	(void) pthread_mutex_unlock(&deDupList->mutex);
+
+	pthread_mutex_destroy(&deDupList->mutex);
 }
 
 /**
@@ -91,6 +109,8 @@ void addToDeDup(DeDupList * deDupList, union olsr_message *olsrMessage) {
 	DeDupEntry * newEntry;
 
 	assert (deDupList != NULL);
+
+	(void) pthread_mutex_lock(&deDupList->mutex);
 
 	incomingIndex = INCOMINGINDEX(deDupList);
 	newEntry = &deDupList->entries[incomingIndex];
@@ -129,6 +149,8 @@ void addToDeDup(DeDupList * deDupList, union olsr_message *olsrMessage) {
 				deDupList->newestEntryIndex, INCOMINGINDEX(deDupList));
 	}
 #endif
+
+	(void) pthread_mutex_unlock(&deDupList->mutex);
 }
 
 /**
@@ -146,8 +168,13 @@ void addToDeDup(DeDupList * deDupList, union olsr_message *olsrMessage) {
  */
 bool isInDeDupList(DeDupList * deDupList, union olsr_message *olsrMessage) {
 	bool retval = false;
-	unsigned long long iteratedIndex = NEWESTINDEX(deDupList);
-	unsigned long long count = deDupList->entriesCount;
+	unsigned long long iteratedIndex;
+	unsigned long long count;
+
+	(void) pthread_mutex_lock(&deDupList->mutex);
+
+	iteratedIndex = NEWESTINDEX(deDupList);
+	count = deDupList->entriesCount;
 
 #ifdef PUD_DUMP_DEDUP
 	olsr_printf(0, "isInDeDupList: count=%llu, iteratedIndex=%llu"
@@ -223,6 +250,8 @@ bool isInDeDupList(DeDupList * deDupList, union olsr_message *olsrMessage) {
 #ifdef PUD_DUMP_DEDUP
 	olsr_printf(0,"isInDeDupList: result = %s\n\n", retval ? "true" : "false");
 #endif
+
+	(void) pthread_mutex_unlock(&deDupList->mutex);
 
 	return retval;
 }
