@@ -1,6 +1,26 @@
 #include <OlsrdPudWireFormat/wireFormat.h>
 #include <OlsrdPudWireFormat/compiler.h>
 
+bool isValidNodeIdType(unsigned long long nodeIdType) {
+	switch (nodeIdType) {
+			case PUD_NODEIDTYPE_MAC:
+			case PUD_NODEIDTYPE_MSISDN:
+			case PUD_NODEIDTYPE_TETRA:
+			case PUD_NODEIDTYPE_DNS:
+			case PUD_NODEIDTYPE_IPV4:
+			case PUD_NODEIDTYPE_IPV6:
+			case PUD_NODEIDTYPE_MMSI:
+			case PUD_NODEIDTYPE_URN:
+			case PUD_NODEIDTYPE_192:
+			case PUD_NODEIDTYPE_193:
+			case PUD_NODEIDTYPE_194:
+				return true;
+
+			default:
+				return false;
+		}
+}
+
 /* ************************************************************************
  * VALIDITY TIME CACHE
  * ************************************************************************ */

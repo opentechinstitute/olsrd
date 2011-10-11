@@ -284,6 +284,12 @@ typedef struct _UplinkMessage {
  * ************************************************************************ */
 
 /*
+ * NodeIdType
+ */
+
+bool isValidNodeIdType(unsigned long long nodeIdType);
+
+/*
  * Validity Time
  */
 

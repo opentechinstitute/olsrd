@@ -179,24 +179,10 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 		return true;
 	}
 
-	switch (nodeIdTypeNew) {
-		case PUD_NODEIDTYPE_MAC:
-		case PUD_NODEIDTYPE_MSISDN:
-		case PUD_NODEIDTYPE_TETRA:
-		case PUD_NODEIDTYPE_DNS:
-		case PUD_NODEIDTYPE_IPV4:
-		case PUD_NODEIDTYPE_IPV6:
-		case PUD_NODEIDTYPE_MMSI:
-		case PUD_NODEIDTYPE_URN:
-		case PUD_NODEIDTYPE_192:
-		case PUD_NODEIDTYPE_193:
-		case PUD_NODEIDTYPE_194:
-			break;
-
-		default:
-			pudError(false, "Configured %s (%llu) is reserved", valueName,
-					nodeIdTypeNew);
-			return true;
+	if (!isValidNodeIdType(nodeIdTypeNew)) {
+		pudError(false, "Configured %s (%llu) is reserved", valueName,
+				nodeIdTypeNew);
+		return true;
 	}
 
 	nodeIdType = nodeIdTypeNew;
