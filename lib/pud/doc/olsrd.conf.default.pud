@@ -674,7 +674,7 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.0.0"
     # deDupDepth the number of messages that are tracked to detect duplucates
     #            messages received from the OLSR network
     #
-    # Default: 56
+    # Default: 256
     #
     #PlParam     "deDupDepth"                   "256"
 
