@@ -417,8 +417,8 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 		return 0;
 	}
 
-	setPositionUpdateSmask(olsrGpsMessage,
-			getPositionUpdateSmask(olsrGpsMessage) | PUD_FLAGS_ID);
+	setPositionUpdateFlags(olsrGpsMessage,
+			getPositionUpdateFlags(olsrGpsMessage) | PUD_FLAGS_ID);
 	return ((sizeof(NodeInfo)
 			- (sizeof(olsrGpsMessage->nodeInfo.nodeId) /* nodeId placeholder */))
 			+ length);

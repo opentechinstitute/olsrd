@@ -16,11 +16,10 @@
  */
 
 /** The version of the wire format */
-#define PUD_WIRE_FORMAT_VERSION		0
+#define PUD_WIRE_FORMAT_VERSION		1
 
 /*
  * Flags
- * We use the smask of nmeaINFO and the flags below on top of that
  */
 
 /** Flags that the GPS information contains the nodeId */
@@ -225,6 +224,7 @@ typedef struct _PudOlsrPositionUpdate {
 	uint8_t version; /**< the version of the sentence */
 	uint8_t validityTime; /**< the validity time of the sentence */
 	uint8_t smask; /**< mask signaling the contents of the sentence */
+	uint8_t flags; /**< mask signaling extra contents of the sentence */
 	GpsInfo gpsInfo; /**< the GPS information (MANDATORY) */
 	NodeInfo nodeInfo; /**< placeholder for node information (OPTIONAL) */
 }__attribute__((__packed__)) PudOlsrPositionUpdate;
@@ -522,6 +522,32 @@ static inline uint8_t getPositionUpdateSmask(
 static inline void setPositionUpdateSmask(
 		PudOlsrPositionUpdate * olsrGpsMessage, uint8_t smask) {
 	olsrGpsMessage->smask = smask;
+}
+
+/**
+ Get the flags of the position update message
+
+ @param olsrGpsMessage
+ A pointer to the position update message
+ @return
+ The flags of the position update message
+ */
+static inline uint8_t getPositionUpdateFlags(
+		PudOlsrPositionUpdate * olsrGpsMessage) {
+	return olsrGpsMessage->flags;
+}
+
+/**
+ Set the flags of the position update message
+
+ @param olsrGpsMessage
+ A pointer to the position update message
+ @param flags
+ The flags of the position update message
+ */
+static inline void setPositionUpdateFlags(
+		PudOlsrPositionUpdate * olsrGpsMessage, uint8_t flags) {
+	olsrGpsMessage->flags = flags;
 }
 
 /*
@@ -833,7 +859,7 @@ unsigned long long val, unsigned long long min, unsigned long long max,
  */
 static inline NodeIdType getPositionUpdateNodeIdType(int ipVersion,
 		PudOlsrPositionUpdate * olsrGpsMessage) {
-	if (getPositionUpdateSmask(olsrGpsMessage) & PUD_FLAGS_ID) {
+	if (getPositionUpdateFlags(olsrGpsMessage) & PUD_FLAGS_ID) {
 		return olsrGpsMessage->nodeInfo.nodeIdType;
 	}
 
