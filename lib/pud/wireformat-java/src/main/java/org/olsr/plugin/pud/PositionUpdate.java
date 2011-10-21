@@ -57,6 +57,11 @@ public class PositionUpdate extends UplinkMessage {
 	 */
 	public native int getPositionUpdateSMask();
 
+	/**
+	 * @return the content flags the position update message
+	 */
+	public native int getPositionUpdateFlags();
+
 	/*
 	 * GpsInfo
 	 */
