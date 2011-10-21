@@ -248,6 +248,7 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 	/*
 	 * Compose message contents
 	 */
+	memset(olsrGpsMessage, 0, sizeof (PudOlsrPositionUpdate));
 
 	setPositionUpdateVersion(olsrGpsMessage, PUD_WIRE_FORMAT_VERSION);
 	setValidityTime(&olsrGpsMessage->validityTime, validityTime);
