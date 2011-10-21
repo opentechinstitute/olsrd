@@ -15,6 +15,7 @@
 #include <nmea/info.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 #include <OlsrdPudWireFormat/wireFormat.h>
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
 
@@ -56,6 +57,9 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 	char nodeIdTypeString[PUD_TX_NODEIDTYPE_DIGITS + 1];
 	char nodeIdString[PUD_TX_NODEID_BUFFERSIZE + 1];
 	const char * nodeId;
+	const void * ipAddr;
+	char originatorBuffer[64];
+	const char * originator;
 
 	unsigned int transmitStringLength;
 
@@ -69,6 +73,12 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 			getPositionUpdateVersion(olsrGpsMessage), PUD_WIRE_FORMAT_VERSION);
 		return 0;
 	}
+
+	ipAddr = (olsr_cnf->ip_version == AF_INET) ?
+				(void *) &olsrMessage->v4.originator :
+				(void *) &olsrMessage->v6.originator;
+	originator = inet_ntop(olsr_cnf->ip_version, ipAddr, &originatorBuffer[0],
+			sizeof(originatorBuffer));
 
 	validityTime = getValidityTime(&olsrGpsMessage->validityTime);
 
@@ -189,6 +199,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 			- 1, "$P%s," /* prefix (always) */
 		"%u," /* sentence version (always) */
 		"%s," /* gateway flag (always) */
+		"%s," /* OLSR originator (always) */
 		"%s,%s," /* nodeIdType/nodeId (always) */
 		"%02u%02u%02u," /* date (always) */
 		"%02u%02u%02u," /* time (always) */
@@ -199,7 +210,8 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		"%s," /* speed (optional) */
 		"%s," /* track (optional) */
 		"%s" /* hdop (optional) */
-	, getTxNmeaMessagePrefix(), PUD_TX_SENTENCE_VERSION, &gateway[0], &nodeIdTypeString[0],
+	, getTxNmeaMessagePrefix(), PUD_TX_SENTENCE_VERSION, &gateway[0],
+			originator , &nodeIdTypeString[0],
 			nodeId, timeStruct.tm_mday, timeStruct.tm_mon + 1, (timeStruct.tm_year
 					% 100), timeStruct.tm_hour, timeStruct.tm_min,
 			timeStruct.tm_sec, validityTime, &latitudeString[0],
