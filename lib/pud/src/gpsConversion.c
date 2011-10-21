@@ -50,6 +50,8 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 	char trackString[PUD_TX_TRACK_DIGITS + 1];
 	char hdopString[PUD_TX_HDOP_DIGITS + 1];
 	uint8_t smask;
+	uint8_t flags;
+	char gateway[2] = { '0', '\0' };
 
 	char nodeIdTypeString[PUD_TX_NODEIDTYPE_DIGITS + 1];
 	char nodeIdString[PUD_TX_NODEID_BUFFERSIZE + 1];
@@ -71,6 +73,12 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 	validityTime = getValidityTime(&olsrGpsMessage->validityTime);
 
 	smask = getPositionUpdateSmask(olsrGpsMessage);
+
+	flags = getPositionUpdateSmask(olsrGpsMessage);
+
+	if (flags & PUD_FLAGS_GATEWAY) {
+		gateway[0] = '1';
+	}
 
 	/* time is ALWAYS present so we can just use it */
 	getPositionUpdateTime(olsrGpsMessage, time(NULL), &timeStruct);
@@ -180,6 +188,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 	transmitStringLength = nmea_printf((char *) txGpsBuffer, txGpsBufferSize
 			- 1, "$P%s," /* prefix (always) */
 		"%u," /* sentence version (always) */
+		"%s," /* gateway flag (always) */
 		"%s,%s," /* nodeIdType/nodeId (always) */
 		"%02u%02u%02u," /* date (always) */
 		"%02u%02u%02u," /* time (always) */
@@ -190,7 +199,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		"%s," /* speed (optional) */
 		"%s," /* track (optional) */
 		"%s" /* hdop (optional) */
-	, getTxNmeaMessagePrefix(), PUD_TX_SENTENCE_VERSION, &nodeIdTypeString[0],
+	, getTxNmeaMessagePrefix(), PUD_TX_SENTENCE_VERSION, &gateway[0], &nodeIdTypeString[0],
 			nodeId, timeStruct.tm_mday, timeStruct.tm_mon + 1, (timeStruct.tm_year
 					% 100), timeStruct.tm_hour, timeStruct.tm_min,
 			timeStruct.tm_sec, validityTime, &latitudeString[0],
