@@ -25,6 +25,9 @@
 /** Flags that the GPS information contains the nodeId */
 #define PUD_FLAGS_ID				0x80
 
+/** Flags that the GPS information is originating from a gateway */
+#define PUD_FLAGS_GATEWAY			0x40
+
 /*
  * Time
  */

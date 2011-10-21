@@ -16,6 +16,7 @@ public class WireFormatConstants {
 	public static final int VERSION = PUD_WIRE_FORMAT_VERSION;
 
 	public static final int FLAGS_ID = PUD_FLAGS_ID;
+	public static final int FLAGS_GATEWAY = PUD_FLAGS_GATEWAY;
 
 	public static final int TIME_BITS = PUD_TIME_BITS;
 

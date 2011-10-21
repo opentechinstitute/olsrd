@@ -253,6 +253,8 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 	setPositionUpdateVersion(olsrGpsMessage, PUD_WIRE_FORMAT_VERSION);
 	setValidityTime(&olsrGpsMessage->validityTime, validityTime);
 	setPositionUpdateSmask(olsrGpsMessage, nmeaInfo->smask);
+	setPositionUpdateFlags(olsrGpsMessage,
+			getPositionUpdateFlags(olsrGpsMessage) & ~PUD_FLAGS_GATEWAY);
 
 	/* utc is always present, we make sure of that elsewhere, so just use it */
 	setPositionUpdateTime(olsrGpsMessage, nmeaInfo->utc.hour, nmeaInfo->utc.min,
