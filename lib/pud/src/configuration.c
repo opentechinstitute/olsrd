@@ -190,11 +190,11 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
  */
 
 /**
- The type that is used by setupNodeIdNumberForOlsrCacheAndValidate
+ The type that is used to store the nodeId as a binary representation
  */
-typedef union _nodeIdNumberType {
-		unsigned long long val;
-} nodeIdNumberType;
+typedef union _nodeIdBinaryType {
+		unsigned long long longValue;
+} nodeIdBinaryType;
 
 /** The maximum length of a nodeId */
 #define PUD_NODEIDMAXLENGTH 255
@@ -209,7 +209,7 @@ static size_t nodeIdLength = 0;
 static bool nodeIdSet = false;
 
 /** The nodeId as a nuber */
-static nodeIdNumberType nodeIdNumber;
+static nodeIdBinaryType nodeIdNumber;
 
 /** True when the nodeIdNumber is set */
 static bool nodeIdNumberSet = false;
@@ -297,24 +297,25 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  the number of bytes in the buffer
  */
 static bool setupNodeIdNumberForOlsrCacheAndValidateULongLong(
-		nodeIdNumberType * valueBuffer, unsigned long long min,
+		nodeIdBinaryType * valueBuffer, unsigned long long min,
 		unsigned long long max,
 		unsigned int bytes) {
 	if (!nodeIdNumberSet) {
 		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0],
-				&nodeIdNumber.val)) {
+				&nodeIdNumber.longValue)) {
 			return false;
 		}
 		nodeIdNumberSet = true;
 	}
-	valueBuffer->val = nodeIdNumber.val;
+	valueBuffer->longValue = nodeIdNumber.longValue;
 
-	if (setupNodeIdNumberForOlsrCache(valueBuffer->val, min, max, bytes)) {
+	if (setupNodeIdNumberForOlsrCache(valueBuffer->longValue, min, max,
+			bytes)) {
 		return true;
 	}
 
 	pudError(false, "%s value %llu is out of range [%llu,%llu]",
-			PUD_NODE_ID_NAME, valueBuffer->val, min, max);
+			PUD_NODE_ID_NAME, valueBuffer->longValue, min, max);
 	return false;
 }
 
@@ -343,9 +344,9 @@ static bool setupNodeIdNumberForOlsrCacheAndValidateString(void) {
  - false on failure
  */
 static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber) {
-	nodeIdNumberType valueBuffer;
+	nodeIdBinaryType valueBuffer;
 
-	memset(&valueBuffer, 0, sizeof(nodeIdNumberType));
+	memset(&valueBuffer, 0, sizeof(nodeIdBinaryType));
 	switch (nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
