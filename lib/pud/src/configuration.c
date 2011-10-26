@@ -287,8 +287,6 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  Validate whether the configured nodeId is valid w.r.t. the configured
  nodeIdType, for types that fit in an unsigned long long (64 bits)
 
- @param valueBuffer
- the buffer in which the value must be stored
  @param min
  the minimum value
  @param max
@@ -296,10 +294,8 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  @param bytes
  the number of bytes in the buffer
  */
-static bool setupNodeIdBinaryLongLong(
-		nodeIdBinaryType * valueBuffer, unsigned long long min,
-		unsigned long long max,
-		unsigned int bytes) {
+static bool setupNodeIdBinaryLongLong(unsigned long long min,
+		unsigned long long max, unsigned int bytes) {
 	if (!nodeIdBinarySet) {
 		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0],
 				&nodeIdBinary.longValue)) {
@@ -307,15 +303,14 @@ static bool setupNodeIdBinaryLongLong(
 		}
 		nodeIdBinarySet = true;
 	}
-	valueBuffer->longValue = nodeIdBinary.longValue;
 
-	if (setupNodeIdNumberForOlsrCache(valueBuffer->longValue, min, max,
+	if (setupNodeIdNumberForOlsrCache(nodeIdBinary.longValue, min, max,
 			bytes)) {
 		return true;
 	}
 
 	pudError(false, "%s value %llu is out of range [%llu,%llu]",
-			PUD_NODE_ID_NAME, valueBuffer->longValue, min, max);
+			PUD_NODE_ID_NAME, nodeIdBinary.longValue, min, max);
 	return false;
 }
 
@@ -344,9 +339,6 @@ static bool setupNodeIdNumberForOlsrCacheAndValidateString(void) {
  - false on failure
  */
 static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
-	nodeIdBinaryType valueBuffer;
-
-	memset(&valueBuffer, 0, sizeof(nodeIdBinaryType));
 	switch (nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
@@ -355,37 +347,34 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 			return true;
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-			return setupNodeIdBinaryLongLong(
-					&valueBuffer, 0LL, 999999999999999LL,
-					PUD_NODEIDTYPE_MSISDN_BYTES);
+			return setupNodeIdBinaryLongLong(0LL, 999999999999999LL,
+				PUD_NODEIDTYPE_MSISDN_BYTES);
 
 		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-			return setupNodeIdBinaryLongLong(
-					&valueBuffer, 0LL, 99999999999999999LL,
-					PUD_NODEIDTYPE_TETRA_BYTES);
+			return setupNodeIdBinaryLongLong(0LL, 99999999999999999LL,
+				PUD_NODEIDTYPE_TETRA_BYTES);
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
 			return setupNodeIdNumberForOlsrCacheAndValidateString();
 
 		case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
-			return setupNodeIdBinaryLongLong(
-					&valueBuffer, 0LL, 999999999LL, PUD_NODEIDTYPE_MMSI_BYTES);
+			return setupNodeIdBinaryLongLong(0LL, 999999999LL,
+				PUD_NODEIDTYPE_MMSI_BYTES);
 
 		case PUD_NODEIDTYPE_URN: /* a URN number */
-			return setupNodeIdBinaryLongLong(
-					&valueBuffer, 0LL, 16777215LL, PUD_NODEIDTYPE_URN_BYTES);
+			return setupNodeIdBinaryLongLong(0LL, 16777215LL,
+				PUD_NODEIDTYPE_URN_BYTES);
 
 		case PUD_NODEIDTYPE_192:
-			return setupNodeIdBinaryLongLong(
-					&valueBuffer, 0LL, 9999999LL, PUD_NODEIDTYPE_192_BYTES);
+			return setupNodeIdBinaryLongLong(0LL, 9999999LL,
+				PUD_NODEIDTYPE_192_BYTES);
 
 		case PUD_NODEIDTYPE_193:
-			return setupNodeIdBinaryLongLong(
-					&valueBuffer, 0LL, 999999LL, PUD_NODEIDTYPE_193_BYTES);
+			return setupNodeIdBinaryLongLong(0LL, 999999LL,
+				PUD_NODEIDTYPE_193_BYTES);
 
 		case PUD_NODEIDTYPE_194:
-			return setupNodeIdBinaryLongLong(
-					&valueBuffer, 1LL, 8191LL, PUD_NODEIDTYPE_194_BYTES);
+			return setupNodeIdBinaryLongLong(1LL, 8191LL, PUD_NODEIDTYPE_194_BYTES);
 
 		default: /* unsupported */
 			/* explicit return: configured nodeId is not relevant, will
