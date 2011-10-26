@@ -228,25 +228,6 @@ unsigned char * getNodeId(void) {
 }
 
 /**
- @param value
- A pointer to the node ID number
- @return
- - true on success
- - false otherwise
- */
-static bool getNodeIdAsNumber(unsigned long long * value) {
-	if (!nodeIdNumberSet) {
-		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0],
-				&nodeIdNumber.val)) {
-			return false;
-		}
-		nodeIdNumberSet = true;
-	}
-	*value = nodeIdNumber.val;
-	return true;
-}
-
-/**
  Get the nodeId and its length
 
  @param length
@@ -324,9 +305,14 @@ static bool setupNodeIdNumberForOlsrCacheAndValidateULongLong(
 		nodeIdNumberType * valueBuffer, unsigned long long min,
 		unsigned long long max,
 		unsigned int bytes) {
-	if (!getNodeIdAsNumber(&valueBuffer->val)) {
-		return false;
+	if (!nodeIdNumberSet) {
+		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0],
+				&nodeIdNumber.val)) {
+			return false;
+		}
+		nodeIdNumberSet = true;
 	}
+	valueBuffer->val = nodeIdNumber.val;
 
 	if (setupNodeIdNumberForOlsrCache(valueBuffer->val, min, max, bytes)) {
 		return true;
