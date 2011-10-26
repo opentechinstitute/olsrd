@@ -294,6 +294,10 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  the maximum value
  @param bytes
  the number of bytes in the buffer
+
+ @return
+ - true when ok
+ - false on failure
  */
 static bool setupNodeIdBinaryLongLong(unsigned long long min,
 		unsigned long long max, unsigned int bytes) {
@@ -321,6 +325,10 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
 /**
  Validate whether the configured nodeId is valid w.r.t. the configured
  nodeIdType, for types that are strings
+
+ @return
+ - true when ok
+ - false on failure
  */
 static bool setupNodeIdBinaryString(void) {
 	bool invalidChars;
