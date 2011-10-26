@@ -430,8 +430,8 @@ bool initPud(void) {
 	}
 
 	/*
-	 * Tell OLSR to launch olsr_parser when the packets for this plugin
-	 * arrive from the OLSR network
+	 * Tell OLSR to call packetReceivedFromOlsr when the packets for this
+	 * plugin arrive from the OLSR network
 	 */
 	olsr_parser_add_function(&packetReceivedFromOlsr, PUD_OLSR_MSG_TYPE);
 
