@@ -27,7 +27,7 @@ static void setupCachedValidityTimeMsn(void) {
  * ************************************************************************ */
 
 /** The size of the cached nodeId buffer */
-#define PUD_CACHED_NODEID_BUFFER_SIZE 16
+#define PUD_CACHED_NODEID_BUFFER_SIZE 256
 
 /** The cached nodeId buffer: contains a pre-processed version of the nodeId
  in order to improve performance. It is currently used for nodeIdTypes
