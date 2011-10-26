@@ -181,24 +181,38 @@ typedef enum _NodeIdType {
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_MSISDN */
 #define PUD_NODEIDTYPE_MSISDN_BYTES		7
+#define PUD_NODEIDTYPE_MSISDN_MIN		0LL
+#define PUD_NODEIDTYPE_MSISDN_MAX		999999999999999LL
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_TETRA */
 #define PUD_NODEIDTYPE_TETRA_BYTES		8
+#define PUD_NODEIDTYPE_TETRA_MIN		0LL
+#define PUD_NODEIDTYPE_TETRA_MAX		99999999999999999LL
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_MMSI */
 #define PUD_NODEIDTYPE_MMSI_BYTES		4
+#define PUD_NODEIDTYPE_MMSI_MIN			0LL
+#define PUD_NODEIDTYPE_MMSI_MAX			999999999LL
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_URN */
 #define PUD_NODEIDTYPE_URN_BYTES		3
+#define PUD_NODEIDTYPE_URN_MIN			0LL
+#define PUD_NODEIDTYPE_URN_MAX			16777215LL
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_192 */
 #define PUD_NODEIDTYPE_192_BYTES		3
+#define PUD_NODEIDTYPE_192_MIN			0LL
+#define PUD_NODEIDTYPE_192_MAX			9999999LL
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_193 */
 #define PUD_NODEIDTYPE_193_BYTES		3
+#define PUD_NODEIDTYPE_193_MIN			0LL
+#define PUD_NODEIDTYPE_193_MAX			999999LL
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_194 */
 #define PUD_NODEIDTYPE_194_BYTES		2
+#define PUD_NODEIDTYPE_194_MIN			1LL
+#define PUD_NODEIDTYPE_194_MAX			8191LL
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_IPV4 (sizeof(struct in_addr)) */
 #define PUD_NODEIDTYPE_IPV4_BYTES		4

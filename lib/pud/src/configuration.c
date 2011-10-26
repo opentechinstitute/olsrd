@@ -402,34 +402,35 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 			return setupNodeIdBinaryMAC();
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-			return setupNodeIdBinaryLongLong(0LL, 999999999999999LL,
-				PUD_NODEIDTYPE_MSISDN_BYTES);
+			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_MSISDN_MIN,
+				PUD_NODEIDTYPE_MSISDN_MAX, PUD_NODEIDTYPE_MSISDN_BYTES);
 
 		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-			return setupNodeIdBinaryLongLong(0LL, 99999999999999999LL,
-				PUD_NODEIDTYPE_TETRA_BYTES);
+			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_TETRA_MIN,
+				PUD_NODEIDTYPE_TETRA_MAX, PUD_NODEIDTYPE_TETRA_BYTES);
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
 			return setupNodeIdBinaryString();
 
 		case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
-			return setupNodeIdBinaryLongLong(0LL, 999999999LL,
-				PUD_NODEIDTYPE_MMSI_BYTES);
+			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_MMSI_MIN,
+				PUD_NODEIDTYPE_MMSI_MAX, PUD_NODEIDTYPE_MMSI_BYTES);
 
 		case PUD_NODEIDTYPE_URN: /* a URN number */
-			return setupNodeIdBinaryLongLong(0LL, 16777215LL,
-				PUD_NODEIDTYPE_URN_BYTES);
+			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_URN_MIN,
+				PUD_NODEIDTYPE_URN_MAX, PUD_NODEIDTYPE_URN_BYTES);
 
 		case PUD_NODEIDTYPE_192:
-			return setupNodeIdBinaryLongLong(0LL, 9999999LL,
-				PUD_NODEIDTYPE_192_BYTES);
+			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_192_MIN,
+				PUD_NODEIDTYPE_192_MAX, PUD_NODEIDTYPE_192_BYTES);
 
 		case PUD_NODEIDTYPE_193:
-			return setupNodeIdBinaryLongLong(0LL, 999999LL,
-				PUD_NODEIDTYPE_193_BYTES);
+			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_193_MIN,
+				PUD_NODEIDTYPE_193_MAX, PUD_NODEIDTYPE_193_BYTES);
 
 		case PUD_NODEIDTYPE_194:
-			return setupNodeIdBinaryLongLong(1LL, 8191LL, PUD_NODEIDTYPE_194_BYTES);
+			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_194_MIN,
+				PUD_NODEIDTYPE_194_MAX, PUD_NODEIDTYPE_194_BYTES);
 
 		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
