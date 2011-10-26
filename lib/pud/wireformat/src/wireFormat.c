@@ -40,15 +40,10 @@ static unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
 static unsigned int cachedNodeIdBufferLength = 0;
 
 /**
- Check a nodeId number for validity and if valid set it up in the
- cachedNodeIdBuffer. The valid range for the number is [min, max].
+ Setup a nodeId number in the cachedNodeIdBuffer.
 
  @param val
  The value to setup in the cache
- @param min
- The lower bound for a valid number
- @param max
- The upper bound for a valid number
  @param bytes
  The number of bytes used by the number in the wire format
 
@@ -56,25 +51,23 @@ static unsigned int cachedNodeIdBufferLength = 0;
  - true when the number is valid
  - false otherwise
  */
-bool setupNodeIdNumberForOlsrCache(unsigned long long val,
-		unsigned long long min, unsigned long long max, unsigned int bytes) {
-	assert(bytes <= PUD_CACHED_NODEID_BUFFER_SIZE);
+bool setupNodeIdNumberForOlsrCache(unsigned long long val, unsigned int bytes) {
+	int i = bytes - 1;
 
-	if ((val >= min) && (val <= max)) {
-		int i = bytes - 1;
-		while (i >= 0) {
-			cachedNodeIdBuffer[i] = val & 0xff;
-			val >>= 8;
-			i--;
-		}
-
-		assert(val == 0);
-
-		cachedNodeIdBufferLength = bytes;
-		return true;
+	if (bytes > PUD_CACHED_NODEID_BUFFER_SIZE) {
+		return false;
 	}
 
-	return false;
+	while (i >= 0) {
+		cachedNodeIdBuffer[i] = val & 0xff;
+		val >>= 8;
+		i--;
+	}
+
+	assert(val == 0);
+
+	cachedNodeIdBufferLength = bytes;
+	return true;
 }
 
 /**

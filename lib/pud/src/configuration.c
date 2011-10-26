@@ -305,13 +305,16 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
 		nodeIdBinarySet = true;
 	}
 
-	if (setupNodeIdNumberForOlsrCache(nodeIdBinary.longValue, min, max,
-			bytes)) {
+	if ((nodeIdBinary.longValue < min) || (nodeIdBinary.longValue > max)) {
+		pudError(false, "%s value %llu is out of range [%llu,%llu]",
+				PUD_NODE_ID_NAME, nodeIdBinary.longValue, min, max);
+		return false;
+	}
+
+	if (setupNodeIdNumberForOlsrCache(nodeIdBinary.longValue, bytes)) {
 		return true;
 	}
 
-	pudError(false, "%s value %llu is out of range [%llu,%llu]",
-			PUD_NODE_ID_NAME, nodeIdBinary.longValue, min, max);
 	return false;
 }
 
