@@ -174,12 +174,6 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 		return true;
 	}
 
-	if (nodeIdTypeNew > PUD_NODE_ID_TYPE_MAX) {
-		pudError(false, "Configured %s (%llu) is out of range 0-%u", valueName,
-				nodeIdTypeNew, PUD_NODE_ID_TYPE_MAX);
-		return true;
-	}
-
 	if (!isValidNodeIdType(nodeIdTypeNew)) {
 		pudError(false, "Configured %s (%llu) is reserved", valueName,
 				nodeIdTypeNew);

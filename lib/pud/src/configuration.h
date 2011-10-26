@@ -21,9 +21,6 @@
 /** The default value of the nodeIdType plugin parameter */
 #define PUD_NODE_ID_TYPE_DEFAULT				PUD_NODEIDTYPE_IPV4
 
-/** The maximum value of the nodeIdType plugin parameter */
-#define PUD_NODE_ID_TYPE_MAX					254
-
 NodeIdType getNodeIdTypeNumber(void);
 int setNodeIdType(const char *value, void *data,
 		set_plugin_parameter_addon addon);
