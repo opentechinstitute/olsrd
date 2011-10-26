@@ -214,7 +214,7 @@ static size_t nodeIdLength = 0;
 static bool nodeIdSet = false;
 
 /** The nodeId as a nuber */
-static unsigned long long nodeIdNumber = 0;
+static nodeIdNumberType nodeIdNumber;
 
 /** True when the nodeIdNumber is set */
 static bool nodeIdNumberSet = false;
@@ -234,14 +234,15 @@ unsigned char * getNodeId(void) {
  - true on success
  - false otherwise
  */
-bool getNodeIdAsNumber(unsigned long long * value) {
+static bool getNodeIdAsNumber(unsigned long long * value) {
 	if (!nodeIdNumberSet) {
-		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0], &nodeIdNumber)) {
+		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0],
+				&nodeIdNumber.val)) {
 			return false;
 		}
 		nodeIdNumberSet = true;
 	}
-	*value = nodeIdNumber;
+	*value = nodeIdNumber.val;
 	return true;
 }
 

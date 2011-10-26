@@ -32,7 +32,6 @@ int setNodeIdType(const char *value, void *data,
 #define PUD_NODE_ID_NAME						"nodeId"
 
 unsigned char * getNodeId(void);
-bool getNodeIdAsNumber(unsigned long long * value);
 unsigned char * getNodeIdWithLength(size_t *length);
 int setNodeId(const char *value, void *data, set_plugin_parameter_addon addon);
 
