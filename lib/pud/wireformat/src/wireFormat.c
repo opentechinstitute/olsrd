@@ -51,7 +51,8 @@ static unsigned int cachedNodeIdBufferLength = 0;
  - true when the number is valid
  - false otherwise
  */
-bool setupNodeIdNumberForOlsrCache(unsigned long long val, unsigned int bytes) {
+bool setupNodeIdBinaryLongForOlsrCache(unsigned long long val,
+		unsigned int bytes) {
 	int i = bytes - 1;
 
 	if (bytes > PUD_CACHED_NODEID_BUFFER_SIZE) {

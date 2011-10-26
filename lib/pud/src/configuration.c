@@ -311,7 +311,7 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
 		return false;
 	}
 
-	if (setupNodeIdNumberForOlsrCache(nodeIdBinary.longValue, bytes)) {
+	if (setupNodeIdBinaryLongForOlsrCache(nodeIdBinary.longValue, bytes)) {
 		return true;
 	}
 
