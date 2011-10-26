@@ -127,6 +127,9 @@
 
 /** nodeIdType legal values */
 typedef enum _NodeIdType {
+	/** the first id of the globally unique node type IDs */
+	PUD_NODEIDTYPE_GLOBAL_FIRST = 0,
+
 	/** MAC address, 48 bits, 6 bytes */
 	PUD_NODEIDTYPE_MAC = 0,
 
@@ -142,6 +145,9 @@ typedef enum _NodeIdType {
 	/** IPv4 address, 32 bits, 4 bytes */
 	PUD_NODEIDTYPE_IPV4 = 4,
 
+	/** gap 1 */
+	PUD_NODEIDTYPE_GAP1 = 5,
+
 	/** IPv6 address, 128 bits, 16 bytes */
 	PUD_NODEIDTYPE_IPV6 = 6,
 
@@ -151,6 +157,12 @@ typedef enum _NodeIdType {
 	/** URN number, 24 bits, 3 bytes */
 	PUD_NODEIDTYPE_URN = 8,
 
+	/** the last id of the globally unique node type IDs */
+	PUD_NODEIDTYPE_GLOBAL_LAST = PUD_NODEIDTYPE_URN,
+
+	/** the first id of the locally unique node type IDs */
+	PUD_NODEIDTYPE_LOCAL_FIRST = 192,
+
 	/** Brandweer number, 7 digits, 24 bits, 3 bytes */
 	PUD_NODEIDTYPE_192 = 192,
 
@@ -158,7 +170,10 @@ typedef enum _NodeIdType {
 	PUD_NODEIDTYPE_193 = 193,
 
 	/** Number in the range [1, 8191], 4 digits, 13 bits, 2 bytes */
-	PUD_NODEIDTYPE_194 = 194
+	PUD_NODEIDTYPE_194 = 194,
+
+	/** the last id of the locally unique node type IDs */
+	PUD_NODEIDTYPE_LOCAL_LAST = PUD_NODEIDTYPE_194
 } NodeIdType;
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_MAC (IFHWADDRLEN) */
@@ -289,7 +304,19 @@ typedef struct _UplinkMessage {
  * NodeIdType
  */
 
-bool isValidNodeIdType(unsigned long long nodeIdType);
+static inline bool isValidNodeIdType(unsigned long long nodeIdType) {
+	return
+	(
+		(
+			(/* (nodeIdType >= PUD_NODEIDTYPE_GLOBAL_FIRST) && */ (nodeIdType <= PUD_NODEIDTYPE_GLOBAL_LAST)) ||
+			(   (nodeIdType >= PUD_NODEIDTYPE_LOCAL_FIRST ) &&    (nodeIdType <= PUD_NODEIDTYPE_LOCAL_LAST ))
+		)
+		&&
+		(
+			(nodeIdType != PUD_NODEIDTYPE_GAP1)
+		)
+	);
+}
 
 /*
  * Validity Time
