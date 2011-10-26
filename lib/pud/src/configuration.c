@@ -194,6 +194,13 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
  * nodeId
  */
 
+/**
+ The type that is used by setupNodeIdNumberForOlsrCacheAndValidate
+ */
+typedef union _nodeIdNumberType {
+		unsigned long long val;
+} nodeIdNumberType;
+
 /** The maximum length of a nodeId */
 #define PUD_NODEIDMAXLENGTH 255
 
@@ -300,13 +307,6 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  */
 
 /**
- The type that is used by setupNodeIdNumberForOlsrCacheAndValidate
- */
-typedef union _valueType {
-		unsigned long long val;
-} valueType;
-
-/**
  Validate whether the configured nodeId is valid w.r.t. the configured
  nodeIdType, for types that fit in an unsigned long long (64 bits)
 
@@ -320,7 +320,8 @@ typedef union _valueType {
  the number of bytes in the buffer
  */
 static bool setupNodeIdNumberForOlsrCacheAndValidateULongLong(
-		valueType * valueBuffer, unsigned long long min, unsigned long long max,
+		nodeIdNumberType * valueBuffer, unsigned long long min,
+		unsigned long long max,
 		unsigned int bytes) {
 	if (!getNodeIdAsNumber(&valueBuffer->val)) {
 		return false;
@@ -360,9 +361,9 @@ static bool setupNodeIdNumberForOlsrCacheAndValidateString(void) {
  - false on failure
  */
 static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber) {
-	valueType valueBuffer;
+	nodeIdNumberType valueBuffer;
 
-	memset(&valueBuffer, 0, sizeof(valueType));
+	memset(&valueBuffer, 0, sizeof(nodeIdNumberType));
 	switch (nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
