@@ -318,7 +318,7 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
  Validate whether the configured nodeId is valid w.r.t. the configured
  nodeIdType, for types that are strings
  */
-static bool setupNodeIdNumberForOlsrCacheAndValidateString(void) {
+static bool setupNodeIdBinaryString(void) {
 	bool invalidChars;
 	char report[256];
 
@@ -355,7 +355,7 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 				PUD_NODEIDTYPE_TETRA_BYTES);
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
-			return setupNodeIdNumberForOlsrCacheAndValidateString();
+			return setupNodeIdBinaryString();
 
 		case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
 			return setupNodeIdBinaryLongLong(0LL, 999999999LL,
