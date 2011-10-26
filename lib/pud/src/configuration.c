@@ -32,15 +32,15 @@
  The IP version (AF_INET or AF_INET6)
  @param addr
  A pointer to OLSR socket address
- @return
- A pointer to the port
+ @param port
+ A pointer to the location where the pointer to the port will be stored
  */
-static in_port_t * getOlsrSockaddrPortAddress(int ipVersion,
-		union olsr_sockaddr * addr) {
+static void getOlsrSockaddrPortAddress(int ipVersion,
+		union olsr_sockaddr * addr, in_port_t ** port) {
 	if (ipVersion == AF_INET) {
-		return &addr->in4.sin_port;
+		*port = &addr->in4.sin_port;
 	} else {
-		return &addr->in6.sin6_port;
+		*port = &addr->in6.sin6_port;
 	}
 }
 
@@ -680,8 +680,9 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  The receive multicast port (in network byte order)
  */
 unsigned short getRxMcPort(void) {
-	union olsr_sockaddr * addr = getRxMcAddr();
-	return *getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
+	in_port_t * port;
+	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, getRxMcAddr(), &port);
+	return *port;
 }
 
 /**
@@ -716,7 +717,7 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	port = getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
+	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr, &port);
 	*port = htons((uint16_t) rxMcPortNew);
 
 	return false;
@@ -895,8 +896,9 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  The transmit multicast port (in network byte order)
  */
 unsigned short getTxMcPort(void) {
-	union olsr_sockaddr * addr = getTxMcAddr();
-	return *getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
+	in_port_t * port;
+	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, getTxMcAddr(), &port);
+	return *port;
 }
 
 /**
@@ -931,7 +933,7 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	port = getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
+	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr, &port);
 	*port = htons((uint16_t) txMcPortNew);
 
 	return false;
@@ -1040,8 +1042,9 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
  The uplink port (in network byte order)
  */
 unsigned short getUplinkPort(void) {
-	union olsr_sockaddr * addr = getUplinkAddr();
-	return *getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
+	in_port_t * port;
+	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, getUplinkAddr(), &port);
+	return *port;
 }
 
 /**
@@ -1076,7 +1079,7 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 		return true;
 	}
 
-	port = getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
+	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr, &port);
 	*port = htons((uint16_t) uplinkPortNew);
 	uplinkPortSet = true;
 
