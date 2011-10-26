@@ -45,7 +45,7 @@ static in_port_t * getOlsrSockaddrPortAddress(int ipVersion,
 }
 
 /**
- Get pointer to the IP address and port in an OLSR socket address
+ Get pointers to the IP address and port in an OLSR socket address
  @param ipVersion
  The IP version (AF_INET or AF_INET6)
  @param addr
@@ -55,8 +55,8 @@ static in_port_t * getOlsrSockaddrPortAddress(int ipVersion,
  @param port
  A pointer to the location where the pointer to the port will be stored
  */
-static void getOlsrSockAddrAndPort(int ipVersion, union olsr_sockaddr * addr,
-		void ** ipAddress, in_port_t ** port) {
+static void getOlsrSockAddrAndPortAddresses(int ipVersion,
+		union olsr_sockaddr * addr, void ** ipAddress, in_port_t ** port) {
 	if (ipVersion == AF_INET) {
 		*ipAddress = (void *) &addr->in4.sin_addr;
 		*port = (void *) &addr->in4.sin_port;
@@ -635,7 +635,8 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 	const char * valueInternal = value;
 	int conversion;
 
-	getOlsrSockAddrAndPort(olsr_cnf->ip_version, &rxMcAddr, &ipAddress, &port);
+	getOlsrSockAddrAndPortAddresses(olsr_cnf->ip_version, &rxMcAddr, &ipAddress,
+			&port);
 	if (olsr_cnf->ip_version == AF_INET) {
 		rxMcAddr.in4.sin_family = olsr_cnf->ip_version;
 		if (valueInternal == NULL) {
@@ -849,7 +850,8 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 	const char * valueInternal = value;
 	int conversion;
 
-	getOlsrSockAddrAndPort(olsr_cnf->ip_version, &txMcAddr, &ipAddress, &port);
+	getOlsrSockAddrAndPortAddresses(olsr_cnf->ip_version, &txMcAddr, &ipAddress,
+			&port);
 	if (olsr_cnf->ip_version == AF_INET) {
 		txMcAddr.in4.sin_family = olsr_cnf->ip_version;
 		if (valueInternal == NULL) {
@@ -993,7 +995,8 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
 	int conversion;
 	bool defaultValue = false;
 
-	getOlsrSockAddrAndPort(olsr_cnf->ip_version, &uplinkAddr, &ipAddress, &port);
+	getOlsrSockAddrAndPortAddresses(olsr_cnf->ip_version, &uplinkAddr,
+			&ipAddress, &port);
 	if (olsr_cnf->ip_version == AF_INET) {
 		uplinkAddr.in4.sin_family = olsr_cnf->ip_version;
 		if (valueInternal == NULL) {
