@@ -40,19 +40,6 @@ static unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
 static unsigned int cachedNodeIdBufferLength = 0;
 
 /**
- @param nodeId
- A pointer to the location in which to store a pointer to the nodeId cache
- buffer
- @param nodeIdSize
- A pointer to the location in which to store the number of bytes in the buffer
- */
-static inline void getNodeIdNumberForOlsrCache(unsigned char ** nodeId,
-		unsigned int * nodeIdSize) {
-	*nodeId = &cachedNodeIdBuffer[0];
-	*nodeIdSize = cachedNodeIdBufferLength;
-}
-
-/**
  Check a nodeId number for validity and if valid set it up in the
  cachedNodeIdBuffer. The valid range for the number is [min, max].
 
@@ -363,7 +350,8 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 	case PUD_NODEIDTYPE_192:
 	case PUD_NODEIDTYPE_193:
 	case PUD_NODEIDTYPE_194:
-		getNodeIdNumberForOlsrCache(&buffer, &length);
+		buffer = &cachedNodeIdBuffer[0];
+		length = cachedNodeIdBufferLength;
 		setPositionUpdateNodeId(olsrGpsMessage, buffer, length, false);
 		break;
 
