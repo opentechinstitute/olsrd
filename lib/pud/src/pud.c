@@ -20,10 +20,14 @@
 #include <sys/socket.h>
 
 /** The size of the buffer in which the received NMEA string is stored */
-#define BUFFER_SIZE_FOR_OLSR	2048
+#define BUFFER_SIZE_RX_NMEA		2048
 
-/** The size of the buffer in which the transmit NMEA string is assembled */
-#define BUFFER_SIZE_FROM_OLSR 	512
+/** The size of the buffer in which the received downlink message is stored */
+#define BUFFER_SIZE_RX_DOWNLINK	2048
+
+/** The size of the buffer in which the converted NMEA string is assembled for
+ * transmission over OSLR */
+#define BUFFER_SIZE_TX_OLSR 	512
 
 /** The transmit socket address */
 static union olsr_sockaddr * txAddress;
@@ -124,7 +128,7 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
 	const union olsr_ip_addr * originator = getOlsrMessageOriginator(
 			olsr_cnf->ip_version, olsrMessage);
 	unsigned int transmitStringLength;
-	unsigned char buffer[BUFFER_SIZE_FROM_OLSR];
+	unsigned char buffer[BUFFER_SIZE_TX_OLSR];
 
 #ifdef PUD_DUMP_GPS_PACKETS_RX_OLSR
 	unsigned short olsrMessageSize =
@@ -176,7 +180,7 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
  */
 static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused))) {
 	if (skfd >= 0) {
-		unsigned char rxBuffer[BUFFER_SIZE_FOR_OLSR];
+		unsigned char rxBuffer[BUFFER_SIZE_RX_DOWNLINK];
 		ssize_t rxCount;
 		ssize_t rxIndex = 0;
 		struct sockaddr sender;
@@ -333,7 +337,7 @@ static void packetReceivedForOlsr(int skfd, void *data, unsigned int flags __att
 static void packetReceivedForOlsr(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused))) {
 #endif
 	if (skfd >= 0) {
-		unsigned char rxBuffer[BUFFER_SIZE_FOR_OLSR];
+		unsigned char rxBuffer[BUFFER_SIZE_RX_NMEA];
 		ssize_t rxCount;
 		struct sockaddr sender;
 		socklen_t senderSize = sizeof(sender);
