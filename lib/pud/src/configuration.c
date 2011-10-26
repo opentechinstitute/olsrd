@@ -208,11 +208,11 @@ static size_t nodeIdLength = 0;
 /** True when the nodeId is set */
 static bool nodeIdSet = false;
 
-/** The nodeId as a nuber */
-static nodeIdBinaryType nodeIdNumber;
+/** The nodeId as a binary representation */
+static nodeIdBinaryType nodeIdBinary;
 
-/** True when the nodeIdNumber is set */
-static bool nodeIdNumberSet = false;
+/** True when the nodeIdBinary is set */
+static bool nodeIdBinarySet = false;
 
 /**
  @return
@@ -300,14 +300,14 @@ static bool setupNodeIdNumberForOlsrCacheAndValidateULongLong(
 		nodeIdBinaryType * valueBuffer, unsigned long long min,
 		unsigned long long max,
 		unsigned int bytes) {
-	if (!nodeIdNumberSet) {
+	if (!nodeIdBinarySet) {
 		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0],
-				&nodeIdNumber.longValue)) {
+				&nodeIdBinary.longValue)) {
 			return false;
 		}
-		nodeIdNumberSet = true;
+		nodeIdBinarySet = true;
 	}
-	valueBuffer->longValue = nodeIdNumber.longValue;
+	valueBuffer->longValue = nodeIdBinary.longValue;
 
 	if (setupNodeIdNumberForOlsrCache(valueBuffer->longValue, min, max,
 			bytes)) {
