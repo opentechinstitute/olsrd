@@ -35,7 +35,8 @@
  @return
  A pointer to the port
  */
-static in_port_t * getOlsrSockaddrPort(int ipVersion, union olsr_sockaddr * addr) {
+static in_port_t * getOlsrSockaddrPortAddress(int ipVersion,
+		union olsr_sockaddr * addr) {
 	if (ipVersion == AF_INET) {
 		return &addr->in4.sin_port;
 	} else {
@@ -679,7 +680,7 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  */
 unsigned short getRxMcPort(void) {
 	union olsr_sockaddr * addr = getRxMcAddr();
-	return *getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
+	return *getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
 }
 
 /**
@@ -714,7 +715,7 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	port = getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
+	port = getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
 	*port = htons((uint16_t) rxMcPortNew);
 
 	return false;
@@ -893,7 +894,7 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  */
 unsigned short getTxMcPort(void) {
 	union olsr_sockaddr * addr = getTxMcAddr();
-	return *getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
+	return *getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
 }
 
 /**
@@ -928,7 +929,7 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	port = getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
+	port = getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
 	*port = htons((uint16_t) txMcPortNew);
 
 	return false;
@@ -1037,7 +1038,7 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
  */
 unsigned short getUplinkPort(void) {
 	union olsr_sockaddr * addr = getUplinkAddr();
-	return *getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
+	return *getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
 }
 
 /**
@@ -1072,7 +1073,7 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 		return true;
 	}
 
-	port = getOlsrSockaddrPort(olsr_cnf->ip_version, addr);
+	port = getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr);
 	*port = htons((uint16_t) uplinkPortNew);
 	uplinkPortSet = true;
 
