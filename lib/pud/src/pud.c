@@ -196,7 +196,7 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			return;
 		}
 
-#ifdef PUD_DUMP_GPS_PACKETS_TX_DOWNLINK
+#ifdef PUD_DUMP_GPS_PACKETS_RX_DOWNLINK
 		{
 			void * src;
 			in_port_t port;
