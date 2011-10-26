@@ -29,9 +29,6 @@
  * transmission over OSLR */
 #define BUFFER_SIZE_TX_OLSR 	512
 
-/** The transmit socket address */
-static union olsr_sockaddr * txAddress;
-
 /** The de-duplication list */
 static DeDupList deDupList;
 
@@ -87,6 +84,7 @@ void pudError(bool useErrno, const char *format, ...) {
  */
 static void sendToAllTxInterfaces(unsigned char *buffer,
 		unsigned int bufferLength) {
+	union olsr_sockaddr * txAddress;
 	TRxTxNetworkInterface *txNetworkInterfaces = getTxNetworkInterfaces();
 	while (txNetworkInterfaces != NULL) {
 		TRxTxNetworkInterface *networkInterface = txNetworkInterfaces;
@@ -98,6 +96,7 @@ static void sendToAllTxInterfaces(unsigned char *buffer,
 #endif
 
 		errno = 0;
+		txAddress = getTxMcAddr();
 		if (sendto(networkInterface->socketFd, buffer, bufferLength, 0,
 				(struct sockaddr *) &txAddress->in, sizeof(txAddress->in)) < 0) {
 			pudError(true, "Transmit error on interface %s",
@@ -409,9 +408,6 @@ bool initPud(void) {
 	}
 
 	initDeDupList(&deDupList, getDeDupDepth());
-
-	/* set global transmit socket config */
-	txAddress = getTxMcAddr();
 
 	if (!startReceiver()) {
 		pudError(false, "Could not start receiver");
