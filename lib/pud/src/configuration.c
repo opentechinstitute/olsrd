@@ -296,7 +296,7 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  @param bytes
  the number of bytes in the buffer
  */
-static bool setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+static bool setupNodeIdBinaryLongLong(
 		nodeIdBinaryType * valueBuffer, unsigned long long min,
 		unsigned long long max,
 		unsigned int bytes) {
@@ -343,7 +343,7 @@ static bool setupNodeIdNumberForOlsrCacheAndValidateString(void) {
  - true when ok
  - false on failure
  */
-static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber) {
+static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 	nodeIdBinaryType valueBuffer;
 
 	memset(&valueBuffer, 0, sizeof(nodeIdBinaryType));
@@ -355,12 +355,12 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			return true;
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+			return setupNodeIdBinaryLongLong(
 					&valueBuffer, 0LL, 999999999999999LL,
 					PUD_NODEIDTYPE_MSISDN_BYTES);
 
 		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+			return setupNodeIdBinaryLongLong(
 					&valueBuffer, 0LL, 99999999999999999LL,
 					PUD_NODEIDTYPE_TETRA_BYTES);
 
@@ -368,23 +368,23 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			return setupNodeIdNumberForOlsrCacheAndValidateString();
 
 		case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
-			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+			return setupNodeIdBinaryLongLong(
 					&valueBuffer, 0LL, 999999999LL, PUD_NODEIDTYPE_MMSI_BYTES);
 
 		case PUD_NODEIDTYPE_URN: /* a URN number */
-			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+			return setupNodeIdBinaryLongLong(
 					&valueBuffer, 0LL, 16777215LL, PUD_NODEIDTYPE_URN_BYTES);
 
 		case PUD_NODEIDTYPE_192:
-			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+			return setupNodeIdBinaryLongLong(
 					&valueBuffer, 0LL, 9999999LL, PUD_NODEIDTYPE_192_BYTES);
 
 		case PUD_NODEIDTYPE_193:
-			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+			return setupNodeIdBinaryLongLong(
 					&valueBuffer, 0LL, 999999LL, PUD_NODEIDTYPE_193_BYTES);
 
 		case PUD_NODEIDTYPE_194:
-			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+			return setupNodeIdBinaryLongLong(
 					&valueBuffer, 1LL, 8191LL, PUD_NODEIDTYPE_194_BYTES);
 
 		default: /* unsupported */
@@ -2076,7 +2076,7 @@ unsigned int checkConfig(void) {
 		}
 	}
 
-	if (!setupNodeIdNumberForOlsrCacheAndValidate(nodeIdType)) {
+	if (!setupNodeIdBinaryAndValidate(nodeIdType)) {
 		retval = false;
 	}
 
