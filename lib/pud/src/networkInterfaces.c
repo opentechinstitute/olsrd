@@ -27,11 +27,32 @@
 /** the MAC address of the main IP address */
 static unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES] = { 0 };
 
+/** true when the MAC address of the main IP address has been retrieved */
+static bool macSet = false;
+
 /**
  * @return
  * the MAC address of the main IP address
  */
 unsigned char * getMainIpMacAddress(void) {
+	if (!macSet) {
+		struct ifreq ifr;
+		unsigned char * macInIfr;
+
+		struct interface *mainInterface = if_ifwithaddr(&olsr_cnf->main_addr);
+		if (!mainInterface) {
+			pudError(true, "Could not get the main interface");
+			return NULL;
+		}
+		macInIfr = getHardwareAddress(mainInterface->int_name,olsr_cnf->ip_version,&ifr);
+		if (!macInIfr) {
+			pudError(true, "Could not get the MAC address of the main interface");
+			return NULL;
+		}
+		memcpy(&mac[0], &macInIfr[0], PUD_NODEIDTYPE_MAC_BYTES);
+		macSet = true;
+	}
+
 	return &mac[0];
 }
 
@@ -600,20 +621,6 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 	int retval = false;
 	struct ifaddrs *ifAddrs = NULL;
 	struct ifaddrs *ifAddr = NULL;
-	struct ifreq ifr;
-	unsigned char * macInIfr;
-
-	struct interface *mainInterface = if_ifwithaddr(&olsr_cnf->main_addr);
-	if (!mainInterface) {
-		pudError(true, "Could not get the main interface");
-		return retval;
-	}
-	macInIfr = getHardwareAddress(mainInterface->int_name,olsr_cnf->ip_version,&ifr);
-	if (!macInIfr) {
-		pudError(true, "Could not get the MAC address of the main interface");
-		return retval;
-	}
-	memcpy(&mac[0], &macInIfr[0], PUD_NODEIDTYPE_MAC_BYTES);
 
 	errno = 0;
 	if (getifaddrs(&ifAddrs) != 0) {
