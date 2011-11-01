@@ -141,8 +141,8 @@ JNIEXPORT jlong JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpdat
 	UplinkMessage * uplinkMessage = getUplinkMessage(env, this, &dataObject,
 			&isCopy);
 
-	jlong baseDateSeconds = baseDate / 1000;
-	jlong baseDateMilliSeconds = baseDate % 1000;
+	jlong baseDateSeconds = baseDate / 1000LL;
+	jlong baseDateMilliSeconds = baseDate % 1000LL;
 
 	struct tm timeStruct;
 	time_t updateTimeSeconds;
@@ -153,8 +153,9 @@ JNIEXPORT jlong JNICALL Java_org_olsr_plugin_pud_PositionUpdate_getPositionUpdat
 	releaseUplinkMessage(env, uplinkMessage, dataObject, isCopy, JNI_ABORT);
 
 	updateTimeSeconds = mktime(&timeStruct);
-	return (updateTimeSeconds * 1000) + baseDateMilliSeconds - timezoneOffset;
+	return (updateTimeSeconds * 1000LL) + baseDateMilliSeconds - timezoneOffset;
 }
+
 
 /*
  * Class:     org_olsr_plugin_pud_PositionUpdate
