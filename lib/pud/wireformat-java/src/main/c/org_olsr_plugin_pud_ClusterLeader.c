@@ -1,5 +1,6 @@
 #include "org_olsr_plugin_pud_ClusterLeader.h"
 #include "util.h"
+#include <arpa/inet.h>
 
 /*
  * Class:     org_olsr_plugin_pud_ClusterLeader
@@ -53,8 +54,8 @@ JNIEXPORT jint JNICALL Java_org_olsr_plugin_pud_ClusterLeader_getClusterLeaderDo
 	UplinkMessage * uplinkMessage = getUplinkMessage(env, this, &dataObject,
 			&isCopy);
 
-	unsigned short downlinkPort = getClusterLeaderDownlinkPort(
-			getClusterLeaderMessage(uplinkMessage));
+	unsigned short downlinkPort = ntohs(getClusterLeaderDownlinkPort(
+			getClusterLeaderMessage(uplinkMessage)));
 
 	releaseUplinkMessage(env, uplinkMessage, dataObject, isCopy, JNI_ABORT);
 
