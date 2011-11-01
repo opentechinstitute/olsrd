@@ -1,6 +1,7 @@
 #include "org_olsr_plugin_pud_ClusterLeader.h"
 #include "util.h"
 #include <arpa/inet.h>
+#include <stdbool.h>
 
 /*
  * Class:     org_olsr_plugin_pud_ClusterLeader
