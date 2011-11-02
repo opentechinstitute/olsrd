@@ -404,13 +404,15 @@ static void detemineMoving(PositionUpdateEntry * avg,
 	 */
 
 	if (!positionValid(avg)) {
-		/* everything is unknown */
+		/* force stationary when the position is invalid */
+		result->moving = UNSET;
 		return;
 	}
 
 	/* avg is valid here */
 
 	if (!positionValid(lastTx)) {
+		/* the position just became valid: force moving */
 		result->moving = SET;
 		/* the rest is unknown */
 		return;
