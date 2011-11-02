@@ -381,7 +381,17 @@ static void detemineMoving(PositionUpdateEntry * avg,
 	bool vdopDistanceValid;
 
 	/* clear outputs */
-	memset(result, UNKNOWN, sizeof(MovementType));
+	result->moving = UNKNOWN;
+	result->overThresholds = UNKNOWN;
+	result->speedOverThreshold = UNKNOWN;
+	result->hDistanceOverThreshold = UNKNOWN;
+	result->vDistanceOverThreshold = UNKNOWN;
+	result->outside = UNKNOWN;
+	result->outsideHdop = UNKNOWN;
+	result->outsideVdop = UNKNOWN;
+	result->inside = UNKNOWN;
+	result->insideHdop = UNKNOWN;
+	result->insideVdop = UNKNOWN;
 
 	/*
 	 * Validity
