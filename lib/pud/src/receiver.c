@@ -652,7 +652,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	bool retval = false;
 	PositionUpdateEntry * incomingEntry;
-	MovementState newState = MOVING;
+	MovementState newState = STATIONARY;
 	PositionUpdateEntry * posAvgEntry;
 	MovementType movementResult;
 	TristateBoolean movingNow;
@@ -779,8 +779,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 				break;
 
 			default:
-				/* when unknown do just as if we transition into moving */
-				newState = MOVING;
+				/* when unknown do just as if we transition into stationary */
+				newState = STATIONARY;
 				break;
 		}
 	}
@@ -880,8 +880,8 @@ bool startReceiver(void) {
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 
-	state.internalState = MOVING;
-	state.externalState = MOVING;
+	state.internalState = STATIONARY;
+	state.externalState = STATIONARY;
 	state.hysteresisCounter = 0;
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
@@ -909,8 +909,8 @@ void stopReceiver(void) {
 	destroyPositionAverageList(&positionAverageList);
 
 	state.hysteresisCounter = 0;
-	state.externalState = MOVING;
-	state.internalState = MOVING;
+	state.externalState = STATIONARY;
+	state.internalState = STATIONARY;
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 
