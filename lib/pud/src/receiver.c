@@ -632,6 +632,31 @@ static void detemineMoving(PositionUpdateEntry * avg,
 }
 
 /**
+ Restart the OLSR tx timer
+ */
+static void restartOlsrTimer(void) {
+	if (!restartOlsrTxTimer(
+			(state.externalState == STATIONARY) ? getUpdateIntervalStationary() :
+					getUpdateIntervalMoving(), &pud_olsr_tx_timer_callback)) {
+		pudError(0, "Could not restart OLSR tx timer, no periodic"
+				" position updates will be sent to the OLSR network");
+	}
+}
+
+/**
+ Restart the uplink tx timer
+ */
+static void restartUplinkTimer(void) {
+	if (!restartUplinkTxTimer(
+			(state.externalState == STATIONARY) ? getUplinkUpdateIntervalStationary() :
+					getUplinkUpdateIntervalMoving(),
+			&pud_uplink_timer_callback)) {
+		pudError(0, "Could not restart uplink timer, no periodic"
+				" position updates will be uplinked");
+	}
+}
+
+/**
  Update the latest GPS information. This function is called when a packet is
  received from a rxNonOlsr interface, containing one or more NMEA strings with
  GPS information.
@@ -818,22 +843,11 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	if (updateTransmitGpsInformation) {
 		TimedTxInterface interfaces = OLSR; /* always send over olsr */
-		if (!restartOlsrTxTimer(
-				(state.externalState == STATIONARY) ? getUpdateIntervalStationary()
-				: getUpdateIntervalMoving(), &pud_olsr_tx_timer_callback)) {
-			pudError(0, "Could not restart OLSR tx timer, no periodic"
-					" position updates will be sent to the OLSR network");
-		}
+		restartOlsrTimer();
 
 		if (isUplinkAddrSet()) {
 			interfaces |= UPLINK;
-			if (!restartUplinkTxTimer(
-					(state.externalState == STATIONARY) ? getUplinkUpdateIntervalStationary()
-					: getUplinkUpdateIntervalMoving(), &pud_uplink_timer_callback)
-					) {
-				pudError(0, "Could not restart uplink timer, no periodic"
-						" position updates will be uplinked");
-			}
+			restartUplinkTimer();
 		}
 
 		/* do an immediate transmit */
@@ -894,6 +908,9 @@ bool startReceiver(void) {
 		stopReceiver();
 		return false;
 	}
+
+	restartOlsrTimer();
+	restartUplinkTimer();
 
 	return true;
 }
