@@ -4,14 +4,9 @@
 extern "C" {
 #endif
 
+#include <olsr_types.h>
 #include <jni.h>
 #include <OlsrdPudWireFormat/wireFormat.h>
-//#include <OlsrdPudWireFormat/nodeIdConversion.h>
-
-//#include <stdio.h>
-//#include <stddef.h>
-//#include <string.h>
-//#include <arpa/inet.h>
 
 /*
  * Helpers

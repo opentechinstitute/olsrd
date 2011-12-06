@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
 

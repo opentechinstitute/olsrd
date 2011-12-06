@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <net/if.h>
 #include <netinet/in.h>

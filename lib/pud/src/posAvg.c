@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <nmea/sentence.h>
 #include <nmea/info.h>
 
