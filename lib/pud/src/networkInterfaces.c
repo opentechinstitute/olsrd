@@ -454,8 +454,19 @@ int getDownlinkSocketFd(void) {
  */
 static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
 	int downlinkSocket = -1;
-	int reuse = 1;
-	struct sockaddr_in address;
+	int socketReuseFlagValue = 1;
+	union olsr_sockaddr address;
+
+	memset(&address, 0, sizeof(address));
+	if (olsr_cnf->ip_version == AF_INET) {
+		address.in4.sin_family = AF_INET;
+		address.in4.sin_addr.s_addr = INADDR_ANY;
+		address.in4.sin_port = getDownlinkPort();
+	} else {
+		address.in6.sin6_family = AF_INET6;
+		address.in6.sin6_addr = in6addr_any;
+		address.in6.sin6_port = getDownlinkPort();
+	}
 
 	/*  Create a datagram socket on which to receive */
 	errno = 0;
@@ -468,22 +479,18 @@ static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
 	/* Enable SO_REUSEADDR to allow multiple applications to receive the same
 	 * messages */
 	errno = 0;
-	if (setsockopt(downlinkSocket, SOL_SOCKET, SO_REUSEADDR, &reuse,
-			sizeof(reuse)) < 0) {
+	if (setsockopt(downlinkSocket, SOL_SOCKET, SO_REUSEADDR, &socketReuseFlagValue,
+			sizeof(socketReuseFlagValue)) < 0) {
 		pudError(true, "Could not set REUSE option on the downlink socket");
 		goto bail;
 	}
 
-	/* Bind to the proper port number with the IP address INADDR_ANY (required) */
-	memset(&address, 0, sizeof(address));
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = getDownlinkPort();
-
+	/* Bind to the proper port number with the IP address INADDR_ANY
+	 * (INADDR_ANY is really required here, do not change it) */
 	errno = 0;
-	if (bind(downlinkSocket, (struct sockaddr *) &address,
-			sizeof(address))) {
-		pudError(true, "Could not bind downlink socket to port %d", getDownlinkPort());
+	if (bind(downlinkSocket, (struct sockaddr *) &address, sizeof(address))) {
+		pudError(true, "Could not bind downlink socket to port %d",
+				getDownlinkPort());
 		goto bail;
 	}
 
