@@ -46,7 +46,7 @@ void closeNetworkInterfaces(void);
 unsigned char * getMainIpMacAddress(void);
 TRxTxNetworkInterface * getRxNetworkInterfaces(void);
 TRxTxNetworkInterface * getTxNetworkInterfaces(void);
-int getUplinkSocketFd(void);
+int getDownlinkSocketFd(void);
 TOLSRNetworkInterface * getOlsrNetworkInterface(struct interface * olsrIntf);
 
 #endif /* _PUD_NETWORKINTERFACES_H */

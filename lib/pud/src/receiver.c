@@ -234,7 +234,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 
 	/* push out over uplink when an uplink is configured */
 	if (((interfaces & UPLINK) != 0) && isUplinkAddrSet()) {
-		int fd = getUplinkSocketFd();
+		int fd = getDownlinkSocketFd();
 		if (fd != -1) {
 			union olsr_sockaddr * uplink_addr = getUplinkAddr();
 			union olsr_ip_addr * gw_addr = getBestUplinkGateway();
