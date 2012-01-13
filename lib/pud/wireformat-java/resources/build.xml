@@ -13,8 +13,8 @@
 
 	<property name="debug" value="DEBUG" />
 	<property name="debug.flags" value="lines,vars,source" />
-	<property name="source.version" value="1.6" />
-	<property name="target.version" value="1.6" />
+	<property name="source.version" value="JAVAVERSIONSRC" />
+	<property name="target.version" value="JAVAVERSIONDST" />
 
 	<property name="build.dir" location="${basedir}/BUILD_DIR/classes" />
 	<property name="src.dir" location="${basedir}/JAVASRC" />
@@ -23,6 +23,7 @@
 	<property name="jar.file" value="${lib.dir}/${name}.jar" />
 
 	<property name="javadoc.dir" location="${basedir}/doc/javadoc" />
+	<property name="javac.bootclasspath" location="${basedir}/resources/jre/${source.version}/rt.jar" />
 
 	<!--
 
@@ -48,7 +49,7 @@
 
 	<target name="build" description="Build plugin jar file" depends="clean,init,getgitcommit">
 		<echo message="Compiling Plugin classes. (debug: ${debug})" />
-		<javac srcdir="${src.dir}" destdir="${build.dir}" source="${source.version}" target="${target.version}" debug="${debug}" debuglevel="${debug.flags}" includeantruntime="false" />
+		<javac bootclasspath="${javac.bootclasspath}" srcdir="${src.dir}" destdir="${build.dir}" source="${source.version}" target="${target.version}" debug="${debug}" debuglevel="${debug.flags}" includeantruntime="false" />
 
 		<delete file="${jar.file}" />
 		<jar destfile="${jar.file}">
@@ -77,7 +78,7 @@
 	<target name="javadoc">
 		<delete dir="${javadoc.dir}" />
 		<mkdir dir="${javadoc.dir}" />
-		<javadoc destdir="${javadoc.dir}" windowtitle="${fullname}" use="yes" linksource="yes" splitindex="yes" access="private" author="true" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" version="true" source="${source.version}" sourcepath="${src.dir}" maxmemory="256M">
+		<javadoc bootclasspath="${javac.bootclasspath}" destdir="${javadoc.dir}" windowtitle="${fullname}" use="yes" linksource="yes" splitindex="yes" access="private" author="true" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" version="true" source="${source.version}" sourcepath="${src.dir}" maxmemory="256M">
 			<packageset dir="${src.dir}" defaultexcludes="yes">
 				<include name="org/olsr/**" />
 			</packageset>

@@ -54,6 +54,9 @@ JAVA_DIR_INSTALL = usr/share/java/olsrd
 BUILD_DIR_JNI = $(BUILD_DIR)/jni
 
 JAVASRC = src/main/java
+JAVAVERSIONSRC = 1.6
+JAVAVERSIONDST = 1.6
+JAVABOOTCLASSPATH = resources/jre/$(JAVAVERSIONSRC)/rt.jar
 JAVA_PKG = org.olsr.plugin.pud
 JAVA_PKG_DIR = $(subst .,/,$(JAVA_PKG))
 JAVA_PKG_UNDER = $(subst .,_,$(JAVA_PKG))
@@ -100,7 +103,7 @@ $(BUILD_DIR_JNI)/$(JAVA_PKG_DIR)/PositionUpdate.class: $(JAVASRC)/$(JAVA_PKG_DIR
                                                        $(JAVASRC)/$(JAVA_PKG_DIR)/LibraryLoader.java \
                                                        $(JAVASRC)/$(JAVA_PKG_DIR)/WireFormatConstants.java
 	@echo "[JavaC] $<"
-	@javac -classpath $(JAVASRC) -source 1.6 -target 1.6 -Xlint -d "$(BUILD_DIR_JNI)" "$<"
+	@javac -bootclasspath $(JAVABOOTCLASSPATH) -classpath $(JAVASRC) -source 1.6 -target 1.6 -Xlint -d "$(BUILD_DIR_JNI)" "$<"
 
 # ClusterLeader
 $(BUILD_DIR)/$(JAVA_PKG_UNDER)_ClusterLeader.o: $(SRC_DIR_C)/$(JAVA_PKG_UNDER)_ClusterLeader.c \
@@ -119,7 +122,7 @@ $(BUILD_DIR_JNI)/$(JAVA_PKG_DIR)/ClusterLeader.class: $(JAVASRC)/$(JAVA_PKG_DIR)
                                                       $(JAVASRC)/$(JAVA_PKG_DIR)/LibraryLoader.java \
                                                       $(JAVASRC)/$(JAVA_PKG_DIR)/WireFormatConstants.java
 	@echo "[JavaC] $<"
-	@javac -classpath $(JAVASRC) -source 1.6 -target 1.6 -Xlint -d "$(BUILD_DIR_JNI)" "$<"
+	@javac -bootclasspath $(JAVABOOTCLASSPATH) -classpath $(JAVASRC) -source 1.6 -target 1.6 -Xlint -d "$(BUILD_DIR_JNI)" "$<"
 
 # UplinkMessage
 $(BUILD_DIR)/$(JAVA_PKG_UNDER)_UplinkMessage.o: $(SRC_DIR_C)/$(JAVA_PKG_UNDER)_UplinkMessage.c \
@@ -138,7 +141,7 @@ $(BUILD_DIR_JNI)/$(JAVA_PKG_DIR)/UplinkMessage.class: $(JAVASRC)/$(JAVA_PKG_DIR)
                                                       $(JAVASRC)/$(JAVA_PKG_DIR)/LibraryLoader.java \
                                                       $(JAVASRC)/$(JAVA_PKG_DIR)/WireFormatConstants.java
 	@echo "[JavaC] $<"
-	@javac -classpath $(JAVASRC) -source 1.6 -target 1.6 -Xlint -d "$(BUILD_DIR_JNI)" "$<"
+	@javac -bootclasspath $(JAVABOOTCLASSPATH) -classpath $(JAVASRC) -source 1.6 -target 1.6 -Xlint -d "$(BUILD_DIR_JNI)" "$<"
 
 
 #
@@ -158,6 +161,8 @@ build.xml: $(RESOURCES_DIR)/build.xml
 	        -e "s#BUILD_DIR#$(BUILD_DIR)#g" \
 	        -e "s#LIBDIR_BUILD#$(LIBDIR_BUILD)#g" \
 	        -e "s#JAVASRC#$(JAVASRC)#g" \
+	        -e "s#JAVAVERSIONSRC#$(JAVAVERSIONSRC)#g" \
+	        -e "s#JAVAVERSIONDST#$(JAVAVERSIONDST)#g" \
 	        -e "s#DEBUG#$(DEBUGBOOLEAN)#g" \
 	        "$<" > "$@"
 
