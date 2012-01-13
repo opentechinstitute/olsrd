@@ -16,7 +16,7 @@
  */
 
 /** The version of the wire format */
-#define PUD_WIRE_FORMAT_VERSION		1
+#define PUD_WIRE_FORMAT_VERSION		2
 
 /*
  * Flags
@@ -249,7 +249,6 @@ typedef enum _UplinkMessageType {
 typedef struct _UplinkClusterLeader {
 	uint8_t version; /**< the version of the message */
 	uint8_t validityTime; /**< the validity time of the sentence */
-	uint16_t downlinkPort; /**< the UDP port on which downlink messages are expected (in network byte order) */
 	union _leader {
 		struct _v4 {
 			struct in_addr originator;
@@ -938,32 +937,6 @@ static inline uint8_t getClusterLeaderVersion(
 static inline void setClusterLeaderVersion(
 		UplinkClusterLeader * clusterLeaderMessage, uint8_t version) {
 	clusterLeaderMessage->version = version;
-}
-
-/**
- Get the downlink port of the cluster leader message
-
- @param clusterLeaderMessage
- A pointer to the cluster leader message
- @return
- The downlink port of the cluster leader message (in network byte order)
- */
-static inline uint16_t getClusterLeaderDownlinkPort(
-		UplinkClusterLeader * clusterLeaderMessage) {
-	return clusterLeaderMessage->downlinkPort;
-}
-
-/**
- Set the downlink port of the cluster leader message
-
- @param clusterLeaderMessage
- A pointer to the cluster leader message
- @param port
- The downlink port of the cluster leader message (in network byte order)
- */
-static inline void setClusterLeaderDownlinkPort(
-		UplinkClusterLeader * clusterLeaderMessage, uint16_t port) {
-	clusterLeaderMessage->downlinkPort = port;
 }
 
 /**

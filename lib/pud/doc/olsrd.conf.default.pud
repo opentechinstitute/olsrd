@@ -434,7 +434,7 @@ LoadPlugin "./lib/txtinfo/olsrd_txtinfo.so.0.1"
 #{
 #}
 
-LoadPlugin "./lib/pud/olsrd_pud.so.1.0.0"
+LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
 {
     # nodeIdType is used to indicate the type of the nodeId field and is a
     #            number in the range 0-255, with the following meaning:

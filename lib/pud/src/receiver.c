@@ -285,7 +285,6 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 					&cl->validityTime,
 					(state.externalState == MOVING) ?
 							getUplinkUpdateIntervalMoving() : getUplinkUpdateIntervalStationary());
-			setClusterLeaderDownlinkPort(cl, getDownlinkPort());
 
 			memcpy(cl_originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 			memcpy(cl_clusterLeader, gw_addr, olsr_cnf->ipsize);

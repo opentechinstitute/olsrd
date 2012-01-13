@@ -42,11 +42,6 @@ public class ClusterLeader extends UplinkMessage {
 	public native long getClusterLeaderValidityTime();
 
 	/**
-	 * @return the downlink UDP port of the cluster leader message
-	 */
-	public native int getClusterLeaderDownlinkPort();
-
-	/**
 	 * @return the (OLSR main) IP address of the OLSR node that sent the cluster
 	 *         leader message
 	 */

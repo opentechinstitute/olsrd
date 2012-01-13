@@ -45,26 +45,6 @@ JNIEXPORT jlong JNICALL Java_org_olsr_plugin_pud_ClusterLeader_getClusterLeaderV
 
 /*
  * Class:     org_olsr_plugin_pud_ClusterLeader
- * Method:    getClusterLeaderDownlinkPort
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_org_olsr_plugin_pud_ClusterLeader_getClusterLeaderDownlinkPort
-  (JNIEnv * env, jobject this) {
-	jobject dataObject;
-	jboolean isCopy;
-	UplinkMessage * uplinkMessage = getUplinkMessage(env, this, &dataObject,
-			&isCopy);
-
-	unsigned short downlinkPort = ntohs(getClusterLeaderDownlinkPort(
-			getClusterLeaderMessage(uplinkMessage)));
-
-	releaseUplinkMessage(env, uplinkMessage, dataObject, isCopy, JNI_ABORT);
-
-	return (jint) downlinkPort;
-}
-
-/*
- * Class:     org_olsr_plugin_pud_ClusterLeader
  * Method:    getClusterLeaderOriginator
  * Signature: ()Ljava/net/InetAddress;
  */
