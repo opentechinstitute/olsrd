@@ -23,7 +23,7 @@
  * A gateway is better when the sum of its uplink and downlink are greater than
  * the previous best gateway. In case of a tie, the lowest IP address wins.
  *
- * This code is copied from lib/txtinfo/src/olsrd_txtinfo.c::ipc_print_gateway.
+ * This code is copied from lib/txtinfo/src/olsrd_txtinfo.c, function ipc_print_gateway.
  * It adjusted for best gateway selection but otherwise kept the same as much
  * as possible.
  *
