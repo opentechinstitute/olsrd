@@ -755,7 +755,7 @@ InterfaceDefaults {
 # multiple configuration blocks can be specified
 
 # WARNING, don't forget to insert your interface names here !
-Interface "br0"
+Interface "em1"
 {
     # Interface Mode is used to prevent unnecessary
     # packet forwarding on switched ethernet interfaces
