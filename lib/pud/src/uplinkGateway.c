@@ -14,6 +14,16 @@
 #include <sys/socket.h>
 
 /**
+ * Determine the speed on which a gateway is chosen
+ * @param uplink the uplink speed of the gateway
+ * @param downlink the downlink speed of the gateway
+ * @return the speed
+ */
+static inline unsigned long long gw_speed(struct gateway_entry *gw) {
+	return (gw->uplink + gw->downlink);
+}
+
+/**
  * Determine the best gateway for uplink: this is the cluster leader.
  *
  * Loop over all gateways to find the best one and return it.
@@ -59,7 +69,7 @@ union olsr_ip_addr * getBestUplinkGateway(void) {
 		}
 
 		if (eval4 || eval6) {
-			unsigned long long gw_value = gw->uplink + gw->downlink;
+			unsigned long long gw_value = gw_speed(gw);
 			if (gw_value > gw_best_value) {
 				gw_best = gw;
 				gw_best_value = gw_value;
