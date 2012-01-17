@@ -41,23 +41,9 @@ static inline unsigned long long gw_speed(struct gateway_entry *gw) {
  * a pointer to the IP address of the best gateway
  */
 union olsr_ip_addr * getBestUplinkGateway(void) {
-	struct gateway_entry me;
 	struct gateway_entry *gw_best = NULL;
 	unsigned long long gw_best_value = 0;
 	struct gateway_entry *gw;
-
-	/* First we start with ourselves as best gateway and then determine whether there is a better one.
-	 *
-	 * The usage of the uplink and downlink speed is the same as in gateway.c,
-	 * function refresh_smartgw_netmask. If that should change, then this must change as well.
-	 * Might be better to obtain a pointer to the last HNA that was sent and then to deserialize
-	 * that HNA. Or when the olsr_cnf->smart_gw_uplink/downlink fields are modified directly then
-	 * obtaining such a pointer is not needed */
-	me.originator = olsr_cnf->main_addr;
-	me.uplink = olsr_cnf->smart_gw_uplink;
-	me.downlink = olsr_cnf->smart_gw_downlink;
-	gw_best = &me;
-	gw_best_value = gw_speed(&me);
 
 	OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
 		bool eval4 = false;
@@ -104,11 +90,10 @@ union olsr_ip_addr * getBestUplinkGateway(void) {
 		}
 	} OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 
-	if (gw_best == &me) {
-		/* I'm the chosen gateway */
+	if (!gw_best) {
+		/* degrade gracefully */
 		return &olsr_cnf->main_addr;
 	}
 
-	/* the chosen gateway is better */
 	return &gw_best->originator;
 }
