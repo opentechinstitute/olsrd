@@ -840,7 +840,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 		(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 	}
 
-	if (updateTransmitGpsInformation) {
+	if (externalStateChange) {
 		TimedTxInterface interfaces = OLSR; /* always send over olsr */
 		restartOlsrTimer();
 
