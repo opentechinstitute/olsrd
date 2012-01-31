@@ -395,26 +395,21 @@ static void detemineMoving(PositionUpdateEntry * avg,
 	 * Validity
 	 *
 	 * avg  last  movingNow
-	 *  0     0   STATIONARY : can't determine whether we're moving, force STATIONARY
-	 *  0     1   STATIONARY : can't determine whether we're moving, force STATIONARY
-	 *  1     0   STATIONARY : position just became valid, force STATIONARY to do averageing since we
-	 *                         might be dealing with bad signal quality. we will go into moving when
-	 *                         signal quality is good and we're actually moving.
+	 *  0     0   UNKNOWN : can't determine whether we're moving
+	 *  0     1   UNKNOWN : can't determine whether we're moving
+	 *  1     0   UNKNOWN : can't determine whether we're moving
 	 *  1     1   determine via other parameters
 	 */
 
 	if (!positionValid(avg)) {
-		/* force stationary when the position is invalid */
-		result->moving = UNSET;
+		result->moving = UNKNOWN;
 		return;
 	}
 
 	/* avg is valid here */
 
 	if (!positionValid(lastTx)) {
-		/* the position just became valid: force stationary */
-		result->moving = UNSET;
-		/* the rest is unknown */
+		result->moving = UNKNOWN;
 		return;
 	}
 
