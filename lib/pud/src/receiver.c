@@ -395,8 +395,8 @@ static void detemineMoving(PositionUpdateEntry * avg,
 	 * Validity
 	 *
 	 * avg  last  movingNow
-	 *  0     0   UNKNOWN : can't determine whether we're moving
-	 *  0     1   UNKNOWN : can't determine whether we're moving
+	 *  0     0   STATIONARY : can't determine whether we're moving, force STATIONARY
+	 *  0     1   STATIONARY : can't determine whether we're moving, force STATIONARY
 	 *  1     0   MOVING  : always seen as movement
 	 *  1     1   determine via other parameters
 	 */
