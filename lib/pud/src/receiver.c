@@ -74,8 +74,8 @@ typedef struct _StateType {
 
 /** The state */
 static StateType state = {
-		.internalState = MOVING,
-		.externalState = MOVING,
+		.internalState = STATIONARY,
+		.externalState = STATIONARY,
 		.hysteresisCounter = 0
 };
 
