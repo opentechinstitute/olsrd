@@ -179,24 +179,18 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	union olsr_message * pu = &pu_uplink->msg.olsrMessage;
 	unsigned int pu_size = 0;
 
-	/*
-	 * convert nmeaINFO to wireformat olsr message (always, since we always try
-	 * to send the position)
-	 */
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 
-	/* only get the position when it is valid (no tx on invalid position) */
-	if (positionValid(&transmitGpsInformation.txPosition)) {
-		/* fixup timestamp when the position was not updated */
-		if (!transmitGpsInformation.updated) {
-			nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
-		}
-
-		txBufferBytesUsed += sizeof(UplinkHeader); /* keep before txBufferSpaceFree usage */
-		pu_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo, pu, txBufferBytesFree,
-				((state.externalState == MOVING) ? getUpdateIntervalMoving() : getUpdateIntervalStationary()));
-		txBufferBytesUsed += pu_size;
+	/* only fixup timestamp when the position is valid _and_ when the position was not updated */
+	if (positionValid(&transmitGpsInformation.txPosition) && !transmitGpsInformation.updated) {
+		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
 	}
+
+	/* convert nmeaINFO to wireformat olsr message */
+	txBufferBytesUsed += sizeof(UplinkHeader); /* keep before txBufferSpaceFree usage */
+	pu_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo, pu, txBufferBytesFree,
+			((state.externalState == MOVING) ? getUpdateIntervalMoving() : getUpdateIntervalStationary()));
+	txBufferBytesUsed += pu_size;
 
 	transmitGpsInformation.updated = false;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
