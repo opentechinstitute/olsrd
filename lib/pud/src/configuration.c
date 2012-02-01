@@ -308,11 +308,16 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  - false on failure
  */
 static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber) {
-	unsigned long long val = 0LL;
+	typedef union _valueType {
+			unsigned long long val;
+	} valueType;
+
+	valueType valueBuffer;
 	unsigned long long min = 0LL;
 	unsigned long long max = 0LL;
 	unsigned int bytes = 0;
 
+	memset(&valueBuffer, 0, sizeof(valueType));
 	switch (nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
@@ -381,17 +386,18 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			return true;
 	}
 
+	/* generic number handling (for types that fit in an unsigned long long (64 bits) */
 
-	if (!getNodeIdAsNumber(&val)) {
+	if (!getNodeIdAsNumber(&valueBuffer.val)) {
 		return false;
 	}
 
-	if (setupNodeIdNumberForOlsrCache(val, min, max, bytes) ) {
+	if (setupNodeIdNumberForOlsrCache(valueBuffer.val, min, max, bytes) ) {
 		return true;
 	}
 
 	pudError(false, "%s value %llu is out of range [%llu,%llu]",
-			PUD_NODE_ID_NAME, val, min, max);
+			PUD_NODE_ID_NAME, valueBuffer.val, min, max);
 	return false;
 }
 
