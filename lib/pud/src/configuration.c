@@ -300,6 +300,58 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  */
 
 /**
+ The type that is used by setupNodeIdNumberForOlsrCacheAndValidate
+ */
+typedef union _valueType {
+		unsigned long long val;
+} valueType;
+
+/**
+ Validate whether the configured nodeId is valid w.r.t. the configured
+ nodeIdType, for types that fit in an unsigned long long (64 bits)
+
+ @param valueBuffer
+ the buffer in which the value must be stored
+ @param min
+ the minimum value
+ @param max
+ the maximum value
+ @param bytes
+ the number of bytes in the buffer
+ */
+static bool setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+		valueType * valueBuffer, unsigned long long min, unsigned long long max,
+		unsigned int bytes) {
+	if (!getNodeIdAsNumber(&valueBuffer->val)) {
+		return false;
+	}
+
+	if (setupNodeIdNumberForOlsrCache(valueBuffer->val, min, max, bytes)) {
+		return true;
+	}
+
+	pudError(false, "%s value %llu is out of range [%llu,%llu]",
+			PUD_NODE_ID_NAME, valueBuffer->val, min, max);
+	return false;
+}
+
+/**
+ Validate whether the configured nodeId is valid w.r.t. the configured
+ nodeIdType, for types that are strings
+ */
+static bool setupNodeIdNumberForOlsrCacheAndValidateString(void) {
+	bool invalidChars;
+	char report[256];
+
+	invalidChars = nmea_string_has_invalid_chars((char *) getNodeId(),
+			PUD_NODE_ID_NAME, &report[0], sizeof(report));
+	if (invalidChars) {
+		pudError(false, &report[0]);
+	}
+	return !invalidChars;
+}
+
+/**
  Validate whether the configured nodeId is valid w.r.t. the configured
  nodeIdType
 
@@ -308,14 +360,7 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  - false on failure
  */
 static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber) {
-	typedef union _valueType {
-			unsigned long long val;
-	} valueType;
-
 	valueType valueBuffer;
-	unsigned long long min = 0LL;
-	unsigned long long max = 0LL;
-	unsigned int bytes = 0;
 
 	memset(&valueBuffer, 0, sizeof(valueType));
 	switch (nodeIdTypeNumber) {
@@ -326,59 +371,37 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			return true;
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-			min = 0LL;
-			max = 999999999999999LL;
-			bytes = PUD_NODEIDTYPE_MSISDN_BYTES;
-			break;
+			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+					&valueBuffer, 0LL, 999999999999999LL,
+					PUD_NODEIDTYPE_MSISDN_BYTES);
 
 		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-			min = 0LL;
-			max = 99999999999999999LL;
-			bytes = PUD_NODEIDTYPE_TETRA_BYTES;
-			break;
+			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+					&valueBuffer, 0LL, 99999999999999999LL,
+					PUD_NODEIDTYPE_TETRA_BYTES);
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
-		{
-			bool invalidChars;
-			char report[256];
-
-			invalidChars = nmea_string_has_invalid_chars((char *) getNodeId(),
-					PUD_NODE_ID_NAME, &report[0], sizeof(report));
-			if (invalidChars) {
-				pudError(false, &report[0]);
-			}
-			return !invalidChars;
-		}
+			return setupNodeIdNumberForOlsrCacheAndValidateString();
 
 		case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
-			min = 0LL;
-			max = 999999999LL;
-			bytes = PUD_NODEIDTYPE_MMSI_BYTES;
-			break;
+			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+					&valueBuffer, 0LL, 999999999LL, PUD_NODEIDTYPE_MMSI_BYTES);
 
 		case PUD_NODEIDTYPE_URN: /* a URN number */
-			min = 0LL;
-			max = 16777215LL;
-			bytes = PUD_NODEIDTYPE_URN_BYTES;
-			break;
+			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+					&valueBuffer, 0LL, 16777215LL, PUD_NODEIDTYPE_URN_BYTES);
 
 		case PUD_NODEIDTYPE_192:
-			min = 0LL;
-			max = 9999999LL;
-			bytes = PUD_NODEIDTYPE_192_BYTES;
-			break;
+			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+					&valueBuffer, 0LL, 9999999LL, PUD_NODEIDTYPE_192_BYTES);
 
 		case PUD_NODEIDTYPE_193:
-			min = 0LL;
-			max = 999999LL;
-			bytes = PUD_NODEIDTYPE_193_BYTES;
-			break;
+			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+					&valueBuffer, 0LL, 999999LL, PUD_NODEIDTYPE_193_BYTES);
 
 		case PUD_NODEIDTYPE_194:
-			min = 1LL;
-			max = 8191LL;
-			bytes = PUD_NODEIDTYPE_194_BYTES;
-			break;
+			return setupNodeIdNumberForOlsrCacheAndValidateULongLong(
+					&valueBuffer, 1LL, 8191LL, PUD_NODEIDTYPE_194_BYTES);
 
 		default: /* unsupported */
 			/* explicit return: configured nodeId is not relevant, will
@@ -386,18 +409,6 @@ static bool setupNodeIdNumberForOlsrCacheAndValidate(NodeIdType nodeIdTypeNumber
 			return true;
 	}
 
-	/* generic number handling (for types that fit in an unsigned long long (64 bits) */
-
-	if (!getNodeIdAsNumber(&valueBuffer.val)) {
-		return false;
-	}
-
-	if (setupNodeIdNumberForOlsrCache(valueBuffer.val, min, max, bytes) ) {
-		return true;
-	}
-
-	pudError(false, "%s value %llu is out of range [%llu,%llu]",
-			PUD_NODE_ID_NAME, valueBuffer.val, min, max);
 	return false;
 }
 
