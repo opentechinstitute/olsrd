@@ -25,9 +25,9 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1217212171" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.337486796" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
 								<option id="gnu.c.compiler.option.include.paths.1373903940" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/olsrdPudWireFormat/include}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/lib/jvm/java/include"/>
 									<listOptionValue builtIn="false" value="/usr/lib/jvm/java/include/linux"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/olsrdPudWireFormat/include}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.666066058" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
