@@ -329,7 +329,7 @@ static bool setupNodeIdBinaryMAC(void) {
 static bool setupNodeIdBinaryLongLong(unsigned long long min,
 		unsigned long long max, unsigned int bytes) {
 	if (!nodeIdBinarySet) {
-		if (!readULL(PUD_NODE_ID_NAME, (char *) &nodeId[0],
+		if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(),
 				&nodeIdBinary.longValue)) {
 			return false;
 		}
