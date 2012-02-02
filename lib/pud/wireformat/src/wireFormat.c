@@ -77,6 +77,28 @@ bool setupNodeIdNumberForOlsrCache(unsigned long long val,
 	return false;
 }
 
+/**
+ Setup a nodeId buffer in the cachedNodeIdBuffer.
+
+ @param val
+ The value to setup in the cache
+ @param bytes
+ The number of bytes used by the number in the wire format
+
+ @return
+ - true when the number is valid
+ - false otherwise
+ */
+bool setupNodeIdBinaryBufferForOlsrCache(void * val, size_t bytes) {
+	if (bytes >= PUD_CACHED_NODEID_BUFFER_SIZE) {
+		return false;
+	}
+
+	memcpy(cachedNodeIdBuffer, val, bytes);
+	cachedNodeIdBufferLength = bytes;
+	return true;
+}
+
 /* ************************************************************************
  * Validity Time
  * ************************************************************************ */

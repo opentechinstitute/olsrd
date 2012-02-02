@@ -326,8 +326,16 @@ static bool setupNodeIdBinaryString(void) {
 			PUD_NODE_ID_NAME, &report[0], sizeof(report));
 	if (invalidChars) {
 		pudError(false, &report[0]);
+		return false;
 	}
-	return !invalidChars;
+
+	/* including trailing \0 */
+	if (setupNodeIdBinaryBufferForOlsrCache(&nodeId[0], nodeIdLength + 1)) {
+		return true;
+	}
+
+	pudError(false, "%s value \"%s\" is too long", PUD_NODE_ID_NAME, getNodeId());
+	return false;
 }
 
 /**
