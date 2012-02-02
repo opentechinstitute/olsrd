@@ -16,8 +16,7 @@
 
 /**
  * Determine the speed on which a gateway is chosen
- * @param uplink the uplink speed of the gateway
- * @param downlink the downlink speed of the gateway
+ * @param gw the gateway entry
  * @return the speed
  */
 static inline unsigned long long gw_speed(struct gateway_entry *gw) {
