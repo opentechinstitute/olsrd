@@ -214,6 +214,9 @@ static bool nodeIdSet = false;
 /** The nodeId as a binary representation */
 static nodeIdBinaryType nodeIdBinary;
 
+/** The length of the string in the nodeIdBinary buffer */
+static size_t nodeIdBinaryLength = 0;
+
 /** True when the nodeIdBinary is set */
 static bool nodeIdBinarySet = false;
 
@@ -301,6 +304,7 @@ static bool setupNodeIdBinaryMAC(void) {
 	}
 
 	memcpy(&nodeIdBinary.mac, mac, PUD_NODEIDTYPE_MAC_BYTES);
+	nodeIdBinaryLength = PUD_NODEIDTYPE_MAC_BYTES;
 	nodeIdBinarySet = true;
 
 	if (setupNodeIdBinaryBufferForOlsrCache(mac, PUD_NODEIDTYPE_MAC_BYTES)) {
@@ -333,6 +337,7 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
 				&nodeIdBinary.longValue)) {
 			return false;
 		}
+		nodeIdBinaryLength = bytes;
 		nodeIdBinarySet = true;
 	}
 
@@ -377,6 +382,7 @@ static bool setupNodeIdBinaryString(void) {
 
 	/* including trailing \0 */
 	memcpy(&nodeIdBinary.stringValue[0], &nodeid[0], nodeidlength + 1);
+	nodeIdBinaryLength = nodeIdLength + 1;
 	nodeIdBinarySet = true;
 
 	/* including trailing \0 */
@@ -437,12 +443,14 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 		default: /* unsupported */
 			if (olsr_cnf->ip_version == AF_INET) {
 				memcpy(&nodeIdBinary.ip, &olsr_cnf->main_addr.v4, sizeof(olsr_cnf->main_addr.v4));
+				nodeIdBinaryLength = sizeof(olsr_cnf->main_addr.v4);
 				nodeIdBinarySet = true;
 				if (setupNodeIdBinaryBufferForOlsrCache(&olsr_cnf->main_addr.v4, sizeof(olsr_cnf->main_addr.v4))) {
 					return true;
 				}
 			} else {
 				memcpy(&nodeIdBinary.ip, &olsr_cnf->main_addr.v6, sizeof(olsr_cnf->main_addr.v6));
+				nodeIdBinaryLength = sizeof(olsr_cnf->main_addr.v6);
 				nodeIdBinarySet = true;
 				if (setupNodeIdBinaryBufferForOlsrCache(&olsr_cnf->main_addr.v6, sizeof(olsr_cnf->main_addr.v6))) {
 					return true;
