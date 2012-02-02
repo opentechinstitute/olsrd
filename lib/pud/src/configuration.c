@@ -189,15 +189,16 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
  * nodeId
  */
 
+/** The maximum length of a nodeId */
+#define PUD_NODEIDMAXLENGTH 255
+
 /**
  The type that is used to store the nodeId as a binary representation
  */
 typedef union _nodeIdBinaryType {
 		unsigned long long longValue;
+		unsigned char stringValue[PUD_NODEIDMAXLENGTH + 1];
 } nodeIdBinaryType;
-
-/** The maximum length of a nodeId */
-#define PUD_NODEIDMAXLENGTH 255
 
 /** The nodeId buffer */
 static unsigned char nodeId[PUD_NODEIDMAXLENGTH + 1];
@@ -321,20 +322,31 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
 static bool setupNodeIdBinaryString(void) {
 	bool invalidChars;
 	char report[256];
+	size_t nodeidlength;
+	char * nodeid = (char *)getNodeIdWithLength(&nodeidlength);
 
-	invalidChars = nmea_string_has_invalid_chars((char *) getNodeId(),
+	invalidChars = nmea_string_has_invalid_chars(nodeid,
 			PUD_NODE_ID_NAME, &report[0], sizeof(report));
 	if (invalidChars) {
 		pudError(false, &report[0]);
 		return false;
 	}
 
+	if (nodeidlength > PUD_NODEIDMAXLENGTH) {
+		pudError(false, "%s value \"%s\" is too long", PUD_NODE_ID_NAME, &nodeid[0]);
+		return false;
+	}
+
 	/* including trailing \0 */
-	if (setupNodeIdBinaryBufferForOlsrCache(&nodeId[0], nodeIdLength + 1)) {
+	memcpy(&nodeIdBinary.stringValue[0], &nodeid[0], nodeidlength + 1);
+	nodeIdBinarySet = true;
+
+	/* including trailing \0 */
+	if (setupNodeIdBinaryBufferForOlsrCache(&nodeid[0], nodeidlength + 1)) {
 		return true;
 	}
 
-	pudError(false, "%s value \"%s\" is too long", PUD_NODE_ID_NAME, getNodeId());
+	pudError(false, "%s value \"%s\" is too long", PUD_NODE_ID_NAME, &nodeid[0]);
 	return false;
 }
 
