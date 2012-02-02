@@ -198,6 +198,7 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 typedef union _nodeIdBinaryType {
 		unsigned long long longValue;
 		unsigned char stringValue[PUD_NODEIDMAXLENGTH + 1];
+		union olsr_ip_addr ip;
 } nodeIdBinaryType;
 
 /** The nodeId buffer */
@@ -371,8 +372,6 @@ static bool setupNodeIdBinaryString(void) {
  */
 static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 	switch (nodeIdTypeNumber) {
-		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
-		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
 		case PUD_NODEIDTYPE_MAC: /* hardware address */
 			/* explicit return: configured nodeId is not relevant */
 			return true;
@@ -407,10 +406,25 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_194:
 			return setupNodeIdBinaryLongLong(1LL, 8191LL, PUD_NODEIDTYPE_194_BYTES);
 
+		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
+		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
 		default: /* unsupported */
-			/* explicit return: configured nodeId is not relevant, will
-			 * fallback to IP addresses */
-			return true;
+			if (olsr_cnf->ip_version == AF_INET) {
+				memcpy(&nodeIdBinary.ip, &olsr_cnf->main_addr.v4, sizeof(olsr_cnf->main_addr.v4));
+				nodeIdBinarySet = true;
+				if (setupNodeIdBinaryBufferForOlsrCache(&olsr_cnf->main_addr.v4, sizeof(olsr_cnf->main_addr.v4))) {
+					return true;
+				}
+			} else {
+				memcpy(&nodeIdBinary.ip, &olsr_cnf->main_addr.v6, sizeof(olsr_cnf->main_addr.v6));
+				nodeIdBinarySet = true;
+				if (setupNodeIdBinaryBufferForOlsrCache(&olsr_cnf->main_addr.v6, sizeof(olsr_cnf->main_addr.v6))) {
+					return true;
+				}
+			}
+
+			pudError(false, "%s value \"OLSRd main IP address\" could not be setup", PUD_NODE_ID_NAME);
+			return false;
 	}
 
 	return false;
