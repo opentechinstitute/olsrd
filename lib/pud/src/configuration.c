@@ -199,6 +199,7 @@ typedef union _nodeIdBinaryType {
 		unsigned long long longValue;
 		unsigned char stringValue[PUD_NODEIDMAXLENGTH + 1];
 		union olsr_ip_addr ip;
+		unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES];
 } nodeIdBinaryType;
 
 /** The nodeId buffer */
@@ -284,6 +285,31 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
 /*
  * nodeId Validation
  */
+
+/**
+ Validate whether the configured nodeId is valid w.r.t. the configured
+ nodeIdType, for types that are MAC addresses
+
+ @return
+ - true when ok
+ - false on failure
+ */
+static bool setupNodeIdBinaryMAC(void) {
+	unsigned char * mac = getMainIpMacAddress();
+	if (!mac) {
+		return false;
+	}
+
+	memcpy(&nodeIdBinary.mac, mac, PUD_NODEIDTYPE_MAC_BYTES);
+	nodeIdBinarySet = true;
+
+	if (setupNodeIdBinaryBufferForOlsrCache(mac, PUD_NODEIDTYPE_MAC_BYTES)) {
+		return true;
+	}
+
+	pudError(false, "%s value \"MAC address\" could not be setup", PUD_NODE_ID_NAME);
+	return false;
+}
 
 /**
  Validate whether the configured nodeId is valid w.r.t. the configured
@@ -373,8 +399,7 @@ static bool setupNodeIdBinaryString(void) {
 static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 	switch (nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_MAC: /* hardware address */
-			/* explicit return: configured nodeId is not relevant */
-			return true;
+			return setupNodeIdBinaryMAC();
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
 			return setupNodeIdBinaryLongLong(0LL, 999999999999999LL,
