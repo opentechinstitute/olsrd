@@ -660,9 +660,9 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     #               resulting in earlier movement detection. Setting it to a
     #               value larger than 1.0 will detect movement later.
     #
-    # Default: 1.0
+    # Default: 2.5
     #
-    #PlParam     "dopMultiplier"                "1.0"
+    #PlParam     "dopMultiplier"                "2.5"
 
     # defaultHdop is the default value that is taken for HDOP (in meters) in
     #             determining whether we are moving when there is a position

@@ -253,7 +253,7 @@ int setMovingDistanceThreshold(const char *value, void *data,
 #define PUD_DOP_MULTIPLIER_NAME		"dopMultiplier"
 
 /** The default value of the DOP multiplier plugin parameter */
-#define PUD_DOP_MULTIPLIER_DEFAULT	1.0
+#define PUD_DOP_MULTIPLIER_DEFAULT	2.5
 
 double getDopMultiplier(void);
 int setDopMultiplier(const char *value, void *data,
