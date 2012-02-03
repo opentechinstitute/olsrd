@@ -333,20 +333,29 @@ static bool setupNodeIdBinaryMAC(void) {
  */
 static bool setupNodeIdBinaryLongLong(unsigned long long min,
 		unsigned long long max, unsigned int bytes) {
-	if (!nodeIdBinarySet) {
-		if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(),
-				&nodeIdBinary.longValue)) {
-			return false;
-		}
-		nodeIdBinaryLength = bytes;
-		nodeIdBinarySet = true;
-	}
+	unsigned long long longValue = 0;
+	int i = bytes - 1;
 
-	if ((nodeIdBinary.longValue < min) || (nodeIdBinary.longValue > max)) {
-		pudError(false, "%s value %llu is out of range [%llu,%llu]",
-				PUD_NODE_ID_NAME, nodeIdBinary.longValue, min, max);
+	if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(), &longValue)) {
 		return false;
 	}
+
+	if ((longValue < min) || (longValue > max)) {
+		pudError(false, "%s value %llu is out of range [%llu,%llu]",
+				PUD_NODE_ID_NAME, longValue, min, max);
+		return false;
+	}
+
+	while (i >= 0) {
+		((unsigned char *)&nodeIdBinary.longValue)[i] = longValue & 0xff;
+		longValue >>= 8;
+		i--;
+	}
+
+	assert(longValue == 0);
+
+	nodeIdBinaryLength = bytes;
+	nodeIdBinarySet = true;
 
 	if (setupNodeIdBinaryLongForOlsrCache(nodeIdBinary.longValue, bytes)) {
 		return true;
