@@ -885,8 +885,6 @@ static inline void setPositionUpdateHdop(PudOlsrPositionUpdate * olsrGpsMessage,
  * NodeInfo
  */
 
-bool setupNodeIdBinaryLongForOlsrCache(unsigned long long val,
-		unsigned int bytes);
 bool setupNodeIdBinaryBufferForOlsrCache(void * val, size_t bytes);
 
 /**

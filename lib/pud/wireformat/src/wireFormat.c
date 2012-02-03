@@ -40,38 +40,6 @@ static unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
 static unsigned int cachedNodeIdBufferLength = 0;
 
 /**
- Setup a nodeId number in the cachedNodeIdBuffer.
-
- @param val
- The value to setup in the cache
- @param bytes
- The number of bytes used by the number in the wire format
-
- @return
- - true when the number is valid
- - false otherwise
- */
-bool setupNodeIdBinaryLongForOlsrCache(unsigned long long val,
-		unsigned int bytes) {
-	int i = bytes - 1;
-
-	if (bytes > PUD_CACHED_NODEID_BUFFER_SIZE) {
-		return false;
-	}
-
-	while (i >= 0) {
-		cachedNodeIdBuffer[i] = val & 0xff;
-		val >>= 8;
-		i--;
-	}
-
-	assert(val == 0);
-
-	cachedNodeIdBufferLength = bytes;
-	return true;
-}
-
-/**
  Setup a nodeId buffer in the cachedNodeIdBuffer.
 
  @param val
