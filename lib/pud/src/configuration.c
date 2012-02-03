@@ -10,6 +10,7 @@
 #include "olsr_cfg.h"
 
 /* System includes */
+#include <OlsrdPudWireFormat/nodeIdConversion.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -190,16 +191,6 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
  * nodeId
  */
 
-/**
- The type that is used to store the nodeId as a binary representation
- */
-typedef union _nodeIdBinaryType {
-		unsigned long long longValue;
-		unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE + 1];
-		union olsr_ip_addr ip;
-		unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES];
-} nodeIdBinaryType;
-
 /** The nodeId buffer */
 static unsigned char nodeId[PUD_TX_NODEID_BUFFERSIZE + 1];
 
@@ -317,16 +308,14 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
  - true when ok
  - false on failure
  */
-static bool setupNodeIdBinaryMAC(void) {
+static bool intSetupNodeIdBinaryMAC(void) {
 	unsigned char * mac = getMainIpMacAddress();
 	if (!mac) {
 		return false;
 	}
 
-	memcpy(&nodeIdBinary.mac, mac, PUD_NODEIDTYPE_MAC_BYTES);
-	nodeIdBinaryLength = PUD_NODEIDTYPE_MAC_BYTES;
-	nodeIdBinarySet = true;
-	return true;
+	return setupNodeIdBinaryMAC(&nodeIdBinary, &nodeIdBinaryLength,
+			&nodeIdBinarySet, mac);
 }
 
 /**
@@ -344,11 +333,9 @@ static bool setupNodeIdBinaryMAC(void) {
  - true when ok
  - false on failure
  */
-static bool setupNodeIdBinaryLongLong(unsigned long long min,
+static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
 		unsigned long long max, unsigned int bytes) {
 	unsigned long long longValue = 0;
-	int i = bytes - 1;
-
 	if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(), &longValue)) {
 		return false;
 	}
@@ -359,17 +346,8 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
 		return false;
 	}
 
-	while (i >= 0) {
-		((unsigned char *)&nodeIdBinary.longValue)[i] = longValue & 0xff;
-		longValue >>= 8;
-		i--;
-	}
-
-	assert(longValue == 0);
-
-	nodeIdBinaryLength = bytes;
-	nodeIdBinarySet = true;
-	return true;
+	return setupNodeIdBinaryLongLong(&nodeIdBinary, &nodeIdBinaryLength,
+				&nodeIdBinarySet, longValue, bytes);
 }
 
 /**
@@ -380,7 +358,7 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
  - true when ok
  - false on failure
  */
-static bool setupNodeIdBinaryString(void) {
+static bool intSetupNodeIdBinaryString(void) {
 	bool invalidChars;
 	char report[256];
 	size_t nodeidlength;
@@ -398,11 +376,8 @@ static bool setupNodeIdBinaryString(void) {
 		return false;
 	}
 
-	/* including trailing \0 */
-	memcpy(&nodeIdBinary.stringValue[0], &nodeid[0], nodeidlength + 1);
-	nodeIdBinaryLength = nodeIdLength + 1;
-	nodeIdBinarySet = true;
-	return true;
+	return setupNodeIdBinaryString(&nodeIdBinary, &nodeIdBinaryLength,
+			&nodeIdBinarySet, nodeid, nodeidlength);
 }
 
 /**
@@ -413,7 +388,7 @@ static bool setupNodeIdBinaryString(void) {
  - true when ok
  - false on failure
  */
-static bool setupNodeIdBinaryIp(void) {
+static bool intSetupNodeIdBinaryIp(void) {
 	void * src;
 	size_t length;
 	if (olsr_cnf->ip_version == AF_INET) {
@@ -424,10 +399,8 @@ static bool setupNodeIdBinaryIp(void) {
 		length = sizeof(struct in6_addr);
 	}
 
-	memcpy(&nodeIdBinary.ip, src, length);
-	nodeIdBinaryLength = length;
-	nodeIdBinarySet = true;
-	return true;
+	return setupNodeIdBinaryIp(&nodeIdBinary, &nodeIdBinaryLength,
+			&nodeIdBinarySet, src, length);
 }
 
 /**
@@ -441,43 +414,43 @@ static bool setupNodeIdBinaryIp(void) {
 static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 	switch (nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_MAC: /* hardware address */
-			return setupNodeIdBinaryMAC();
+			return intSetupNodeIdBinaryMAC();
 
 		case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
-			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_MSISDN_MIN,
+			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_MSISDN_MIN,
 				PUD_NODEIDTYPE_MSISDN_MAX, PUD_NODEIDTYPE_MSISDN_BYTES);
 
 		case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
-			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_TETRA_MIN,
+			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_TETRA_MIN,
 				PUD_NODEIDTYPE_TETRA_MAX, PUD_NODEIDTYPE_TETRA_BYTES);
 
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
-			return setupNodeIdBinaryString();
+			return intSetupNodeIdBinaryString();
 
 		case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
-			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_MMSI_MIN,
+			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_MMSI_MIN,
 				PUD_NODEIDTYPE_MMSI_MAX, PUD_NODEIDTYPE_MMSI_BYTES);
 
 		case PUD_NODEIDTYPE_URN: /* a URN number */
-			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_URN_MIN,
+			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_URN_MIN,
 				PUD_NODEIDTYPE_URN_MAX, PUD_NODEIDTYPE_URN_BYTES);
 
 		case PUD_NODEIDTYPE_192:
-			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_192_MIN,
+			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_192_MIN,
 				PUD_NODEIDTYPE_192_MAX, PUD_NODEIDTYPE_192_BYTES);
 
 		case PUD_NODEIDTYPE_193:
-			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_193_MIN,
+			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_193_MIN,
 				PUD_NODEIDTYPE_193_MAX, PUD_NODEIDTYPE_193_BYTES);
 
 		case PUD_NODEIDTYPE_194:
-			return setupNodeIdBinaryLongLong(PUD_NODEIDTYPE_194_MIN,
+			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_194_MIN,
 				PUD_NODEIDTYPE_194_MAX, PUD_NODEIDTYPE_194_BYTES);
 
 		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
 		default: /* unsupported */
-			return setupNodeIdBinaryIp();
+			return intSetupNodeIdBinaryIp();
 	}
 
 	return false;

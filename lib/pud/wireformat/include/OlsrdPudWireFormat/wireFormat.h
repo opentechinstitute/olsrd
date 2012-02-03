@@ -230,6 +230,16 @@ typedef enum _NodeIdType {
 /** The maximum size of the string representation of the nodeId */
 #define PUD_TX_NODEID_BUFFERSIZE		1023
 
+/**
+ The type that is used to store the nodeId as a binary representation
+ */
+typedef union _nodeIdBinaryType {
+		unsigned long long longValue;
+		unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE + 1];
+		union olsr_ip_addr ip;
+		unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES];
+} nodeIdBinaryType;
+
 /*
  * Wire Format Structures
  */

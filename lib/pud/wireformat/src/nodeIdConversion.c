@@ -170,3 +170,125 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 
 	return;
 }
+
+/**
+ Convert a given MAC address to the binary/wireformat representation of it.
+
+ @param nodeIdBinary
+ a pointer to the buffer in which to store the binary/wireformat representation
+ @param nodeIdBinaryLength
+ a pointer to the variable in which to store the number of bytes used by the
+ binary/wireformat representation
+ @param nodeIdBinarySet
+ a pointer to a variable in which to store the result of whether the binary/wireformat
+ representation was stored
+ @param mac
+ a pointer to a buffer in which the MAC address is stored (in network byte-order)
+ @return
+ - true when ok
+ - false on failure
+ */
+bool setupNodeIdBinaryMAC(nodeIdBinaryType * nodeIdBinary,
+		size_t * nodeIdBinaryLength, bool * nodeIdBinarySet,
+		unsigned char * mac) {
+	memcpy(&nodeIdBinary->mac, mac, PUD_NODEIDTYPE_MAC_BYTES);
+	*nodeIdBinaryLength = PUD_NODEIDTYPE_MAC_BYTES;
+	*nodeIdBinarySet = true;
+	return true;
+}
+
+/**
+ Convert a given unsigned long long to the binary/wireformat representation of it.
+
+ @param nodeIdBinary
+ a pointer to the buffer in which to store the binary/wireformat representation
+ @param nodeIdBinaryLength
+ a pointer to the variable in which to store the number of bytes used by the
+ binary/wireformat representation
+ @param nodeIdBinarySet
+ a pointer to a variable in which to store the result of whether the binary/wireformat
+ representation was stored
+ @param value
+ the value to convert (in machine byte-order)
+ @param bytes
+ the number of bytes used by the value
+
+ @return
+ - true when ok
+ - false on failure
+ */
+bool setupNodeIdBinaryLongLong(nodeIdBinaryType * nodeIdBinary,
+		size_t * nodeIdBinaryLength, bool * nodeIdBinarySet,
+		unsigned long long value, size_t bytes) {
+	unsigned long long longValue = value;
+	int i = bytes - 1;
+
+	while (i >= 0) {
+		((unsigned char *)&nodeIdBinary->longValue)[i] = longValue & 0xff;
+		longValue >>= 8;
+		i--;
+	}
+
+	assert(longValue == 0);
+
+	*nodeIdBinaryLength = bytes;
+	*nodeIdBinarySet = true;
+	return true;
+}
+
+/**
+ Convert a given string to the binary/wireformat representation of it.
+
+ @param nodeIdBinary
+ a pointer to the buffer in which to store the binary/wireformat representation
+ @param nodeIdBinaryLength
+ a pointer to the variable in which to store the number of bytes used by the
+ binary/wireformat representation
+ @param nodeIdBinarySet
+ a pointer to a variable in which to store the result of whether the binary/wireformat
+ representation was stored
+ @param nodeId
+ a pointer to the nodeId string
+ @param nodeIdLength
+ the length of the nodeId string
+ @return
+ - true when ok
+ - false on failure
+ */
+bool setupNodeIdBinaryString(nodeIdBinaryType * nodeIdBinary,
+		size_t * nodeIdBinaryLength, bool * nodeIdBinarySet,
+		char * nodeId, size_t nodeIdLength) {
+	/* including trailing \0 */
+	memcpy(&nodeIdBinary->stringValue[0], &nodeId[0], nodeIdLength + 1);
+	*nodeIdBinaryLength = nodeIdLength + 1;
+	*nodeIdBinarySet = true;
+	return true;
+}
+
+/**
+ Convert a given IP address to the binary/wireformat representation of it.
+
+ @param nodeIdBinary
+ a pointer to the buffer in which to store the binary/wireformat representation
+ @param nodeIdBinaryLength
+ a pointer to the variable in which to store the number of bytes used by the
+ binary/wireformat representation
+ @param nodeIdBinarySet
+ a pointer to a variable in which to store the result of whether the binary/wireformat
+ representation was stored
+ @param ip
+ a pointer to a buffer in which the IP address is stored (in network byte-order)
+ @param ipLength
+ the number of bytes used by the IP address
+ @return
+ - true when ok
+ - false on failure
+ */
+bool setupNodeIdBinaryIp(nodeIdBinaryType * nodeIdBinary,
+		size_t * nodeIdBinaryLength, bool * nodeIdBinarySet, void * ip,
+		size_t ipLength) {
+	memcpy(&nodeIdBinary->ip, ip, ipLength);
+	*nodeIdBinaryLength = ipLength;
+	*nodeIdBinarySet = true;
+	return true;
+}
