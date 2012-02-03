@@ -462,7 +462,7 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     #       IP address, which is either an IPv4 or an IPv6 address, depending
     #       on the IP version under which olsrd is run.
     #
-    # Default: 4
+    # Default: 4 or 6, depending on the IP version olsrd is using
     #
     #PlParam     "nodeIdType"                   "4"
 
