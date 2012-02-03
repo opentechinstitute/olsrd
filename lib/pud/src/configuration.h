@@ -233,7 +233,7 @@ int setUplinkUpdateIntervalMoving(const char *value, void *data,
 #define PUD_MOVING_SPEED_THRESHOLD_NAME			"movingSpeedThreshold"
 
 /** The default value of the moving speed threshold plugin parameter */
-#define PUD_MOVING_SPEED_THRESHOLD_DEFAULT		5
+#define PUD_MOVING_SPEED_THRESHOLD_DEFAULT		9
 
 unsigned long long getMovingSpeedThreshold(void);
 int setMovingSpeedThreshold(const char *value, void *data,

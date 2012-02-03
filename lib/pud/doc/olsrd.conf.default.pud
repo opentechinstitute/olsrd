@@ -640,9 +640,9 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     # movingSpeedThreshold is the speed from which we consider the node is
     #                      moving
     #
-    # Default: 5
+    # Default: 9
     #
-    #PlParam     "movingSpeedThreshold"         "5"
+    #PlParam     "movingSpeedThreshold"         "9"
 
     # movingDistanceThreshold is the distance from the previous position from
     #                         which we consider the node is moving
