@@ -137,7 +137,7 @@ int setTxNmeaMessagePrefix(const char *value, void *data,
 /** The name of the uplink address plugin parameter */
 #define PUD_UPLINK_ADDR_NAME					"uplinkAddr"
 
-/** The default value of the uplink address plugin parameter fro IPv4*/
+/** The default value of the uplink address plugin parameter for IPv4*/
 #define PUD_UPLINK_ADDR_4_DEFAULT				"0.0.0.0"
 
 /** The default value of the uplink address plugin parameter for IPv6 */
