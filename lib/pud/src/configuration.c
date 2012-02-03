@@ -190,21 +190,18 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
  * nodeId
  */
 
-/** The maximum length of a nodeId */
-#define PUD_NODEIDMAXLENGTH 255
-
 /**
  The type that is used to store the nodeId as a binary representation
  */
 typedef union _nodeIdBinaryType {
 		unsigned long long longValue;
-		unsigned char stringValue[PUD_NODEIDMAXLENGTH + 1];
+		unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE + 1];
 		union olsr_ip_addr ip;
 		unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES];
 } nodeIdBinaryType;
 
 /** The nodeId buffer */
-static unsigned char nodeId[PUD_NODEIDMAXLENGTH + 1];
+static unsigned char nodeId[PUD_TX_NODEID_BUFFERSIZE + 1];
 
 /** The length of the string in the nodeId buffer */
 static size_t nodeIdLength = 0;
@@ -294,9 +291,9 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
 	assert (value != NULL);
 
 	valueLength = strlen(value);
-	if (valueLength > PUD_NODEIDMAXLENGTH) {
+	if (valueLength > PUD_TX_NODEID_BUFFERSIZE) {
 		pudError(false, "Configured %s is too long, maximum length is"
-			" %u, current length is %lu", valueName, PUD_NODEIDMAXLENGTH,
+			" %u, current length is %lu", valueName, PUD_TX_NODEID_BUFFERSIZE,
 				(unsigned long) valueLength);
 		return true;
 	}
@@ -396,7 +393,7 @@ static bool setupNodeIdBinaryString(void) {
 		return false;
 	}
 
-	if (nodeidlength > PUD_NODEIDMAXLENGTH) {
+	if (nodeidlength > PUD_TX_NODEID_BUFFERSIZE) {
 		pudError(false, "%s value \"%s\" is too long", PUD_NODE_ID_NAME, &nodeid[0]);
 		return false;
 	}
@@ -2148,7 +2145,7 @@ unsigned int checkConfig(void) {
 
 	if (!nodeIdSet) {
 		if (nodeIdType == PUD_NODEIDTYPE_DNS) {
-			char name[PUD_NODEIDMAXLENGTH + 1];
+			char name[PUD_TX_NODEID_BUFFERSIZE + 1];
 
 			errno = 0;
 			if (gethostname(&name[0], sizeof(name)) < 0) {
