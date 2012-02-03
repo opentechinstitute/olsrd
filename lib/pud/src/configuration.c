@@ -252,6 +252,28 @@ unsigned char * getNodeIdWithLength(size_t *length) {
 }
 
 /**
+ Get the nodeIdBinary and its length
+
+ @param length
+ a pointer to the variable in which to store the nodeIdBinary length (allowed to be
+ NULL, in which case the length is not stored)
+
+ @return
+ The node ID in binary representation
+ */
+unsigned char * getNodeIdBinaryWithLength(size_t *length) {
+	if (!nodeIdBinarySet) {
+		setNodeId("", NULL, (set_plugin_parameter_addon) {.pc = NULL});
+	}
+
+	if (length != NULL) {
+		*length = nodeIdBinaryLength;
+	}
+
+	return (unsigned char *)&nodeIdBinary;
+}
+
+/**
  Set the node ID.
 
  @param value
