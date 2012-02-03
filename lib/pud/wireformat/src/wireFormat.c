@@ -2,27 +2,6 @@
 #include <OlsrdPudWireFormat/compiler.h>
 
 /* ************************************************************************
- * VALIDITY TIME CACHE
- * ************************************************************************ */
-
-static unsigned long long cachedValidityTimeMsn[16];
-
-static bool cachedValidityTimeMsnValid = false;
-
-/**
- Setup of cache of calculated most significant nibble results of the validity
- time calculation to speed up run-time calculations. This method has to be
- called once upon first use of ValidityTime functions.
- */
-static void setupCachedValidityTimeMsn(void) {
-	unsigned int msn;
-	for (msn = 0; msn < 16; msn++) {
-		cachedValidityTimeMsn[msn] = PUD_VALIDITY_TIME_FROM_OLSR(msn, 0);
-	}
-	cachedValidityTimeMsnValid = true;
-}
-
-/* ************************************************************************
  * Validity Time
  * ************************************************************************ */
 
@@ -42,13 +21,10 @@ void setValidityTime(uint8_t * validityTimeField,
 	unsigned long long lsn = 0;
 	unsigned long long upperBound;
 
-	if (!cachedValidityTimeMsnValid) {
-		setupCachedValidityTimeMsn();
-	}
-	upperBound = cachedValidityTimeMsn[msn];
+	upperBound = PUD_VALIDITY_TIME_FROM_OLSR(msn, 0);
 	while ((msn < 16) && (validityTime >= upperBound)) {
 		msn++;
-		upperBound = cachedValidityTimeMsn[msn];
+		upperBound = PUD_VALIDITY_TIME_FROM_OLSR(msn, 0);
 	}
 	msn--;
 
