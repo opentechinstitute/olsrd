@@ -23,45 +23,6 @@ static void setupCachedValidityTimeMsn(void) {
 }
 
 /* ************************************************************************
- * NODEID CACHE
- * ************************************************************************ */
-
-/** The size of the cached nodeId buffer */
-#define PUD_CACHED_NODEID_BUFFER_SIZE 256
-
-/** The cached nodeId buffer: contains a pre-processed version of the nodeId
- in order to improve performance. It is currently used for nodeIdTypes
- PUD_NODEIDTYPE_MSISDN, PUD_NODEIDTYPE_TETRA, PUD_NODEIDTYPE_MMSI,
- PUD_NODEIDTYPE_URN, PUD_NODEIDTYPE_192, PUD_NODEIDTYPE_193
- (so basically for numbers that will not change) */
-static unsigned char cachedNodeIdBuffer[PUD_CACHED_NODEID_BUFFER_SIZE];
-
-/** The number of bytes stored in cachedNodeIdBuffer */
-static unsigned int cachedNodeIdBufferLength = 0;
-
-/**
- Setup a nodeId buffer in the cachedNodeIdBuffer.
-
- @param val
- The value to setup in the cache
- @param bytes
- The number of bytes used by the number in the wire format
-
- @return
- - true when the number is valid
- - false otherwise
- */
-bool setupNodeIdBinaryBufferForOlsrCache(void * val, size_t bytes) {
-	if (bytes >= PUD_CACHED_NODEID_BUFFER_SIZE) {
-		return false;
-	}
-
-	memcpy(cachedNodeIdBuffer, val, bytes);
-	cachedNodeIdBufferLength = bytes;
-	return true;
-}
-
-/* ************************************************************************
  * Validity Time
  * ************************************************************************ */
 
@@ -306,7 +267,7 @@ void getPositionUpdateNodeId(int ipVersion, union olsr_message * olsrMessage,
  @param nodeIdType
  The nodeIdType
  @param nodeId
- The (configured) nodeId
+ The (configured) nodeId in binary/wireformat representation
  @param nodeIdLength
  The number of bytes in the nodeId
 
@@ -317,16 +278,11 @@ void getPositionUpdateNodeId(int ipVersion, union olsr_message * olsrMessage,
 size_t setPositionUpdateNodeInfo(int ipVersion,
 		PudOlsrPositionUpdate * olsrGpsMessage, unsigned int olsrMessageSize,
 		NodeIdType nodeIdType, unsigned char * nodeId, size_t nodeIdLength) {
-	unsigned char * buffer;
 	unsigned int length = 0;
 
 	setPositionUpdateNodeIdType(olsrGpsMessage, nodeIdType);
 	switch (nodeIdType) {
 	case PUD_NODEIDTYPE_MAC: /* hardware address */
-		length = nodeIdLength;
-		setPositionUpdateNodeId(olsrGpsMessage, nodeId, nodeIdLength, false);
-		break;
-
 	case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
 	case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
 	case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
@@ -334,9 +290,8 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 	case PUD_NODEIDTYPE_192:
 	case PUD_NODEIDTYPE_193:
 	case PUD_NODEIDTYPE_194:
-		buffer = &cachedNodeIdBuffer[0];
-		length = cachedNodeIdBufferLength;
-		setPositionUpdateNodeId(olsrGpsMessage, buffer, length, false);
+		length = nodeIdLength;
+		setPositionUpdateNodeId(olsrGpsMessage, nodeId, nodeIdLength, false);
 		break;
 
 	case PUD_NODEIDTYPE_DNS: /* DNS name */

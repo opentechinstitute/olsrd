@@ -329,13 +329,7 @@ static bool setupNodeIdBinaryMAC(void) {
 	memcpy(&nodeIdBinary.mac, mac, PUD_NODEIDTYPE_MAC_BYTES);
 	nodeIdBinaryLength = PUD_NODEIDTYPE_MAC_BYTES;
 	nodeIdBinarySet = true;
-
-	if (setupNodeIdBinaryBufferForOlsrCache(mac, PUD_NODEIDTYPE_MAC_BYTES)) {
-		return true;
-	}
-
-	pudError(false, "%s value \"MAC address\" could not be setup", PUD_NODE_ID_NAME);
-	return false;
+	return true;
 }
 
 /**
@@ -378,12 +372,7 @@ static bool setupNodeIdBinaryLongLong(unsigned long long min,
 
 	nodeIdBinaryLength = bytes;
 	nodeIdBinarySet = true;
-
-	if (setupNodeIdBinaryBufferForOlsrCache(&nodeIdBinary.longValue, bytes)) {
-		return true;
-	}
-
-	return false;
+	return true;
 }
 
 /**
@@ -416,14 +405,7 @@ static bool setupNodeIdBinaryString(void) {
 	memcpy(&nodeIdBinary.stringValue[0], &nodeid[0], nodeidlength + 1);
 	nodeIdBinaryLength = nodeIdLength + 1;
 	nodeIdBinarySet = true;
-
-	/* including trailing \0 */
-	if (setupNodeIdBinaryBufferForOlsrCache(&nodeid[0], nodeidlength + 1)) {
-		return true;
-	}
-
-	pudError(false, "%s value \"%s\" is too long", PUD_NODE_ID_NAME, &nodeid[0]);
-	return false;
+	return true;
 }
 
 /**
@@ -448,13 +430,7 @@ static bool setupNodeIdBinaryIp(void) {
 	memcpy(&nodeIdBinary.ip, src, length);
 	nodeIdBinaryLength = length;
 	nodeIdBinarySet = true;
-
-	if (setupNodeIdBinaryBufferForOlsrCache(src, length)) {
-		return true;
-	}
-
-	pudError(false, "%s value \"OLSRd main IP address\" could not be setup", PUD_NODE_ID_NAME);
-	return false;
+	return true;
 }
 
 /**

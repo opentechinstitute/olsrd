@@ -258,10 +258,9 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		unsigned int olsrMessageSize, unsigned long long validityTime) {
 	unsigned int aligned_size;
 	unsigned int aligned_size_remainder;
-	NodeIdType nodeIdType;
-	unsigned char * nodeId;
-	size_t nodeIdLength;
 	size_t nodeLength;
+	size_t nodeidbinarylength;
+	unsigned char * nodeidbinary = NULL;
 
 	PudOlsrPositionUpdate * olsrGpsMessage =
 			getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
@@ -317,17 +316,9 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		setPositionUpdateHdop(olsrGpsMessage, PUD_HDOP_MAX);
 	}
 
-	nodeIdType = getNodeIdTypeNumber();
-	if (unlikely(nodeIdType == PUD_NODEIDTYPE_MAC)) {
-		nodeLength = setPositionUpdateNodeInfo(olsr_cnf->ip_version,
-				olsrGpsMessage, olsrMessageSize, nodeIdType,
-				getMainIpMacAddress(), PUD_NODEIDTYPE_MAC_BYTES);
-	} else {
-		nodeId = getNodeIdWithLength(&nodeIdLength);
-		nodeLength = setPositionUpdateNodeInfo(olsr_cnf->ip_version,
-				olsrGpsMessage, olsrMessageSize, nodeIdType, nodeId,
-				nodeIdLength);
-	}
+	nodeidbinary = getNodeIdBinaryWithLength(&nodeidbinarylength);
+	nodeLength = setPositionUpdateNodeInfo(olsr_cnf->ip_version, olsrGpsMessage,
+			olsrMessageSize, getNodeIdTypeNumber(), nodeidbinary, nodeidbinarylength);
 
 	/*
 	 * Messages in OLSR are 4-byte aligned: align
