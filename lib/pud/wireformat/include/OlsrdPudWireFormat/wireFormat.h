@@ -231,13 +231,18 @@ typedef enum _NodeIdType {
 #define PUD_TX_NODEID_BUFFERSIZE		1023
 
 /**
- The type that is used to store the nodeId as a binary representation
+ The type that is used to store the nodeId as a binary representation along
+ with its length and setup status
  */
-typedef union _nodeIdBinaryType {
-		unsigned long long longValue;
-		unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE + 1];
-		union olsr_ip_addr ip;
-		unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES];
+typedef struct _nodeIdBinaryType {
+		bool set;
+		size_t length;
+		union _buffer {
+				unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES];
+				union olsr_ip_addr ip;
+				unsigned long long longValue;
+				unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE + 1];
+		} buffer;
 } nodeIdBinaryType;
 
 /*

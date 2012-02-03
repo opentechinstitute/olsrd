@@ -259,8 +259,7 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 	unsigned int aligned_size;
 	unsigned int aligned_size_remainder;
 	size_t nodeLength;
-	size_t nodeidbinarylength;
-	unsigned char * nodeidbinary = NULL;
+	nodeIdBinaryType * nodeIdBinary = NULL;
 
 	PudOlsrPositionUpdate * olsrGpsMessage =
 			getOlsrMessagePayload(olsr_cnf->ip_version, olsrMessage);
@@ -316,9 +315,10 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		setPositionUpdateHdop(olsrGpsMessage, PUD_HDOP_MAX);
 	}
 
-	nodeidbinary = getNodeIdBinaryWithLength(&nodeidbinarylength);
+	nodeIdBinary = getNodeIdBinary();
 	nodeLength = setPositionUpdateNodeInfo(olsr_cnf->ip_version, olsrGpsMessage,
-			olsrMessageSize, getNodeIdTypeNumber(), nodeidbinary, nodeidbinarylength);
+			olsrMessageSize, getNodeIdTypeNumber(),
+			(unsigned char *) &nodeIdBinary->buffer, nodeIdBinary->length);
 
 	/*
 	 * Messages in OLSR are 4-byte aligned: align

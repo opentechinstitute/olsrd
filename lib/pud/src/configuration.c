@@ -200,14 +200,8 @@ static size_t nodeIdLength = 0;
 /** True when the nodeId is set */
 static bool nodeIdSet = false;
 
-/** The nodeId as a binary representation */
+/** The nodeId as a binary representation, with status */
 static nodeIdBinaryType nodeIdBinary;
-
-/** The length of the string in the nodeIdBinary buffer */
-static size_t nodeIdBinaryLength = 0;
-
-/** True when the nodeIdBinary is set */
-static bool nodeIdBinarySet = false;
 
 /**
  @return
@@ -240,25 +234,17 @@ unsigned char * getNodeIdWithLength(size_t *length) {
 }
 
 /**
- Get the nodeIdBinary and its length
-
- @param length
- a pointer to the variable in which to store the nodeIdBinary length (allowed to be
- NULL, in which case the length is not stored)
+ Get the nodeIdBinary
 
  @return
  The node ID in binary representation
  */
-unsigned char * getNodeIdBinaryWithLength(size_t *length) {
-	if (!nodeIdBinarySet) {
+nodeIdBinaryType * getNodeIdBinary(void) {
+	if (!nodeIdBinary.set) {
 		setNodeId("", NULL, (set_plugin_parameter_addon) {.pc = NULL});
 	}
 
-	if (length != NULL) {
-		*length = nodeIdBinaryLength;
-	}
-
-	return (unsigned char *)&nodeIdBinary;
+	return &nodeIdBinary;
 }
 
 /**
@@ -314,8 +300,7 @@ static bool intSetupNodeIdBinaryMAC(void) {
 		return false;
 	}
 
-	return setupNodeIdBinaryMAC(&nodeIdBinary, &nodeIdBinaryLength,
-			&nodeIdBinarySet, mac);
+	return setupNodeIdBinaryMAC(&nodeIdBinary, mac);
 }
 
 /**
@@ -346,8 +331,7 @@ static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
 		return false;
 	}
 
-	return setupNodeIdBinaryLongLong(&nodeIdBinary, &nodeIdBinaryLength,
-				&nodeIdBinarySet, longValue, bytes);
+	return setupNodeIdBinaryLongLong(&nodeIdBinary, longValue, bytes);
 }
 
 /**
@@ -376,8 +360,7 @@ static bool intSetupNodeIdBinaryString(void) {
 		return false;
 	}
 
-	return setupNodeIdBinaryString(&nodeIdBinary, &nodeIdBinaryLength,
-			&nodeIdBinarySet, nodeid, nodeidlength);
+	return setupNodeIdBinaryString(&nodeIdBinary, nodeid, nodeidlength);
 }
 
 /**
@@ -399,8 +382,7 @@ static bool intSetupNodeIdBinaryIp(void) {
 		length = sizeof(struct in6_addr);
 	}
 
-	return setupNodeIdBinaryIp(&nodeIdBinary, &nodeIdBinaryLength,
-			&nodeIdBinarySet, src, length);
+	return setupNodeIdBinaryIp(&nodeIdBinary, src, length);
 }
 
 /**

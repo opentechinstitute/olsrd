@@ -30,7 +30,7 @@ int setNodeIdType(const char *value, void *data,
 
 unsigned char * getNodeId(void);
 unsigned char * getNodeIdWithLength(size_t *length);
-unsigned char * getNodeIdBinaryWithLength(size_t *length);
+nodeIdBinaryType * getNodeIdBinary(void);
 int setNodeId(const char *value, void *data, set_plugin_parameter_addon addon);
 
 /*
