@@ -1,0 +1,43 @@
+#!/bin/sh
+
+channel=7
+essid=olsr.org
+bssid=CC:CC:CC:CC:CC:CC
+
+wlan=`/sbin/iwconfig 2>&1 | grep -v 'no wireless extensions.' | grep '^[a-z]' | cut -b1-10 | head -1`
+
+if [ "$wlan" = "" ]; then
+    echo "No wifi network interface found! Perhaps you need to modprobe?"
+    exit
+fi
+
+# ifconfig down before setting ad-hoc mode because some chips require that
+/sbin/ifconfig $wlan down
+
+/sbin/iwconfig $wlan mode ad-hoc
+/sbin/iwconfig $wlan ap $bssid
+/sbin/iwconfig $wlan channel $channel
+/sbin/iwconfig $wlan essid $essid
+/sbin/iwconfig $wlan key off
+/sbin/iwconfig $wlan rate auto
+/sbin/iwconfig $wlan txpower auto
+# many devices don't support the follow options so hide the errors
+/sbin/iwconfig $wlan modu auto  > /dev/null 2>&1
+/sbin/iwconfig $wlan commit     > /dev/null 2>&1
+
+/sbin/ifconfig $wlan up
+
+# get MAC to generate hopefully unique IP address with, by using the last two
+# hex pairs as the last two hex pairs for the IP address, converting the hex
+# to decimal first.  Wait for things to settle before trying.
+sleep 2
+MAC=`/sbin/ifconfig | grep wlan0 | sed 's|.*HWaddr ||'`
+MAC5=`echo $MAC | cut -d : -f 5`
+MAC6=`echo $MAC | cut -d : -f 6`
+ip3=`printf %d 0x$MAC5`
+ip4=`printf %d 0x$MAC6`
+net=172.29
+ip=$net.$ip3.$ip4
+
+/sbin/ifconfig $wlan inet $ip broadcast $net.255.255
+echo "OLSR mesh setup on $essid/$bssid on channel $channel with IP $ip"
