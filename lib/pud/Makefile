@@ -32,32 +32,32 @@ LIBRARY_LIB = $(LIBRARY_PATH)/lib
 CFLAGS += -I $(LIBRARY_INC)
 LIBS += -L $(LIBRARY_LIB) -lnmea -lm -l$(LIBRARY_NAME)
 
-
-# repeat from toplevel Makefile.inc, and adjust: we need the library includes
-%.d: %.c
-	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) -I $(LIBRARY_INC) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc) /g' >"$@"
-
-
 ifneq ($(OS),linux)
+
+.PHONY: all default_target install clean
+
+all: default_target
 
 default_target install clean:
 	@echo "*** $(PLUGIN_NAME) plugin only supported on Linux, sorry!"
 
 else
 
+.PHONY: all default_target install uninstall clean doc doc-clean library java java-instal java-uninstall
+
 all: default_target
 
-default_target: version $(PLUGIN_FULLNAME)
+default_target: library $(VERSION_FILE) $(PLUGIN_FULLNAME)
 
-$(PLUGIN_FULLNAME): library $(OBJS) version-script.txt
+# repeat from toplevel Makefile.inc, and adjust: we need the library includes
+%.d: %.c
+	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) -I $(LIBRARY_INC) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc) /g' >"$@"
+
+$(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 	@echo "[LD] $@"
 	@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
-
-.PHONY:	version install uninstall clean dist distclean doc doc-clean library library-clean library-doc library-doc-clean
-
-version: Makefile scripts/makeVersionH
-	@echo "[$(VERSION_FILE)]"
+$(VERSION_FILE): library scripts/makeVersionH
 	@./scripts/makeVersionH "$(VERSION_FILE)" "$(PLUGIN_VER)"
 
 install: all
@@ -78,18 +78,18 @@ clean:
 	@$(MAKE) -C $(LIBRARY_PATH) clean
 	@$(MAKE) -C $(JAVA_PATH) clean
 
-dist:				distclean
-distclean:			clean
-
-
 doc:
 	@$(MAKE) -C doc all
 	@$(MAKE) -C $(LIBRARY_PATH) doc
 	@$(MAKE) -C $(JAVA_PATH) doc
 
+doc-clean:
+	@$(MAKE) -C doc clean
+	@$(MAKE) -C $(LIBRARY_PATH) doc clean
+	@$(MAKE) -C $(JAVA_PATH) doc clean
+
 library:
 	@$(MAKE) -C $(LIBRARY_PATH) all
-
 
 java:
 	@$(MAKE) -C $(JAVA_PATH) all

@@ -42,10 +42,16 @@ INC_DIR_INSTALL = usr/$(INC_DIR_C)
 
 ifneq ($(OS),linux)
 
-default_target install clean all:
+.PHONY: all default_target install clean
+
+all: default_target
+
+default_target install clean:
 	@echo "*** only supported on Linux"
 
 else
+
+.PHONY: all default_target prepare clean doc doc-clean install uninstall
 
 #
 # Targets
@@ -63,18 +69,16 @@ $(BUILD_DIR)/%.o: $(SRC_DIR_C)/%.c $(INC_DIR_C)/compiler.h
 	@echo "[CC] $<"
 	@$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c -o "$@" "$<"
 
-
-#
-# Phony Targets
-#
-
-.PHONY: .gitignore prepare clean doc doc-clean install uninstall java-clean java-doc java-install java-uninstall
-
 .gitignore:
 	@echo "[$@]"
 	@echo "/$(BUILD_DIR)/" > $@
 	@echo "/$(LIBDIR_BUILD)/" >> $@
 	@$(MAKE) -C doc $@
+
+
+#
+# Phony Targets
+#
 
 prepare:
 	@mkdir -p "$(BUILD_DIR)" "$(LIBDIR_BUILD)"

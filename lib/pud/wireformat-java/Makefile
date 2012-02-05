@@ -64,10 +64,16 @@ JAVA_PKG_UNDER = $(subst .,_,$(JAVA_PKG))
 
 ifneq ($(OS),linux)
 
-default_target install clean all:
+.PHONY: all default_target install clean
+
+all: default_target
+
+default_target install clean:
 	@echo "*** only supported on Linux"
 
 else
+
+.PHONY: all default_target java prepare clean doc doc-clean install uninstall
 
 #
 # Targets
@@ -76,6 +82,17 @@ else
 all: default_target
 
 default_target: prepare $(LIBDIR_BUILD)/$(SONAME) java
+
+.gitignore:
+	@echo "[$@]"
+	@echo "/$(BUILD_DIR)/" > $@
+	@echo "/$(LIBDIR_BUILD)/" >> $@
+	@echo "/build.xml" >> $@
+	@echo "/$(SRC_DIR_C)/$(JAVA_PKG_UNDER)_PositionUpdate.h" >> $@
+	@echo "/$(SRC_DIR_C)/$(JAVA_PKG_UNDER)_ClusterLeader.h" >> $@
+	@echo "/$(SRC_DIR_C)/$(JAVA_PKG_UNDER)_UplinkMessage.h" >> $@
+	@echo "/$(JAVASRC)/$(JAVA_PKG_DIR)/WireFormatConstants.java" >> $@
+	@$(MAKE) -C doc $@
 
 $(LIBDIR_BUILD)/$(SONAME): $(BUILD_DIR)/$(JAVA_PKG_UNDER)_UplinkMessage.o \
                            $(BUILD_DIR)/$(JAVA_PKG_UNDER)_ClusterLeader.o \
@@ -203,19 +220,6 @@ $(BUILD_DIR_JNI)/c/wireFormat.h: $(INC_DIR_WIREFORMAT_FULL)/wireFormat.h
 #
 # Phony Targets
 #
-
-.PHONY: .gitignore prepare clean doc doc-clean install uninstall
-
-.gitignore:
-	@echo "[$@]"
-	@echo "/$(BUILD_DIR)/" > $@
-	@echo "/$(LIBDIR_BUILD)/" >> $@
-	@echo "/build.xml" >> $@
-	@echo "/$(SRC_DIR_C)/$(JAVA_PKG_UNDER)_PositionUpdate.h" >> $@
-	@echo "/$(SRC_DIR_C)/$(JAVA_PKG_UNDER)_ClusterLeader.h" >> $@
-	@echo "/$(SRC_DIR_C)/$(JAVA_PKG_UNDER)_UplinkMessage.h" >> $@
-	@echo "/$(JAVASRC)/$(JAVA_PKG_DIR)/WireFormatConstants.java" >> $@
-	@$(MAKE) -C doc $@
 
 prepare:
 	@mkdir -p "$(BUILD_DIR)" \
