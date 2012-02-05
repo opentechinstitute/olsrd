@@ -3,15 +3,26 @@
 set -e
 set -u
 
+if [[ ${#} -ne 2 ]]; then
+  echo "Need 2 arguments: outfile version"
+  exit 1
+fi
+
 outfile="${1}"
 version="${2}"
+
+
+outfileDir="$(dirname "${outfile}")"
+outfileName="$(basename "${outfile}")"
+tmpFile="$(mktemp --tmpdir="${outfileDir}" "${outfileName}.XXXXXXXXXX")"
+
 
 set +e
 sha="$(git describe 2> /dev/null)"
 set -e
 
 
-cat > "${outfile}" << EOF
+cat > "${tmpFile}" << EOF
 #ifndef _PUD_VERSION_H_
 #define _PUD_VERSION_H_
 
@@ -22,11 +33,25 @@ if [[ -z "${sha:-}" ]]; then
   sha="OLSRD_Unknown-g0000000"
 fi
 
-cat >> "${outfile}" << EOF
+cat >> "${tmpFile}" << EOF
 #define GIT_SHA    "${sha}"
 EOF
 
-cat >> "${outfile}" << EOF
+cat >> "${tmpFile}" << EOF
 
 #endif /* _PUD_VERSION_H_ */
 EOF
+
+
+set +e
+diff "${outfile}" "${tmpFile}" &> /dev/null
+declare -i diffResult=$?
+set -e
+
+if [[ ${diffResult} -eq 0 ]]; then
+  rm -f "${tmpFile}"
+else
+  echo "[${outfile}]"
+  mv "${tmpFile}" "${outfile}"
+fi
+
