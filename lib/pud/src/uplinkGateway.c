@@ -7,6 +7,7 @@
 #include "tc_set.h"
 #include "ipcalc.h"
 #include "olsr_types.h"
+#include "lq_plugin.h"
 
 /* System includes */
 #include <stddef.h>
@@ -51,6 +52,11 @@ union olsr_ip_addr * getBestUplinkGateway(void) {
 
 		struct tc_entry * tc = olsr_lookup_tc_entry(&gw->originator);
 		if (tc == NULL) {
+			continue;
+		}
+
+		/* do not consider nodes with an infinite ETX */
+		if (tc->path_cost == ROUTE_COST_BROKEN) {
 			continue;
 		}
 
