@@ -915,6 +915,7 @@ bool startReceiver(void) {
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 	memset(&txGateway, 0, sizeof(txGateway));
+	memcpy(&txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 
 	state.internalState = MOVING;
 	state.externalState = MOVING;
@@ -952,6 +953,7 @@ void stopReceiver(void) {
 	state.internalState = MOVING;
 
 	memset(&txGateway, 0, sizeof(txGateway));
+	memcpy(&txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 
 	transmitGpsInformation.updated = false;
