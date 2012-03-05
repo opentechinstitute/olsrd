@@ -359,8 +359,7 @@ static void pud_uplink_timer_callback(void *context __attribute__ ((unused))) {
 }
 
 /**
- Detemine whether we are moving by comparing fields from the average
- position against those of the last transmitted position.
+ Detemine whether we are moving from the gateway.
 
  MUST be called which the position average list locked.
 
@@ -375,9 +374,35 @@ static void pud_uplink_timer_callback(void *context __attribute__ ((unused))) {
  @param result
  the results of all movement criteria
  */
-static void detemineMoving(PositionUpdateEntry * avg, union olsr_ip_addr * gateway,
-		PositionUpdateEntry * lastTx, union olsr_ip_addr * lastGateway,
+static void detemineMovingFromGateway(union olsr_ip_addr * gateway, union olsr_ip_addr * lastGateway,
 		MovementType * result) {
+	/*
+	 * When the gateway is different from the gateway during last transmit, then
+	 * we force MOVING
+	 */
+	if (!ipequal(gateway, lastGateway)) {
+		result->moving = SET;
+		result->differentGateway = SET;
+		return;
+	}
+
+	result->differentGateway = UNSET;
+}
+
+/**
+ Detemine whether we are moving from the position, by comparing fields from the
+ average position against those of the last transmitted position.
+
+ MUST be called which the position average list locked.
+
+ @param avg
+ the average position
+ @param lastTx
+ the last transmitted position
+ @param result
+ the results of all movement criteria
+ */
+static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdateEntry * lastTx, MovementType * result) {
 	/* avg field presence booleans */
 	bool avgHasSpeed;
 	bool avgHasPos;
@@ -408,16 +433,6 @@ static void detemineMoving(PositionUpdateEntry * avg, union olsr_ip_addr * gatew
 	bool hdopDistanceValid;
 	bool vDistanceValid;
 	bool vdopDistanceValid;
-
-	/*
-	 * When the gateway is different from the gateway during last transmit, then
-	 * we force MOVING
-	 */
-	if (!ipequal(gateway, lastGateway)) {
-		result->moving = SET;
-		result->differentGateway = SET;
-		return;
-	}
 
 	/*
 	 * Validity
@@ -766,7 +781,10 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	bestGateway = getBestUplinkGateway();
 	clearMovementType(&movementResult);
-	detemineMoving(posAvgEntry, bestGateway, &txPosition, &txGateway, &movementResult);
+	detemineMovingFromGateway(bestGateway,&txGateway, &movementResult);
+	if (movementResult.moving != SET) {
+		detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
+	}
 	movingNow = movementResult.moving;
 
 #if defined(PUD_DUMP_AVERAGING)
