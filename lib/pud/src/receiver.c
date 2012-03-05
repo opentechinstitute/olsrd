@@ -148,6 +148,26 @@ static union olsr_ip_addr txGateway;
  */
 
 /**
+ Clear the MovementType
+ * @param result a pointer to the MovementType
+ */
+static void clearMovementType(MovementType * result) {
+	/* clear outputs */
+	result->moving = UNKNOWN;
+	result->differentGateway = UNSET;
+	result->overThresholds = UNKNOWN;
+	result->speedOverThreshold = UNKNOWN;
+	result->hDistanceOverThreshold = UNKNOWN;
+	result->vDistanceOverThreshold = UNKNOWN;
+	result->outside = UNKNOWN;
+	result->outsideHdop = UNKNOWN;
+	result->outsideVdop = UNKNOWN;
+	result->inside = UNKNOWN;
+	result->insideHdop = UNKNOWN;
+	result->insideVdop = UNKNOWN;
+}
+
+/**
  Determine whether s position is valid.
 
  @param position
@@ -388,20 +408,6 @@ static void detemineMoving(PositionUpdateEntry * avg, union olsr_ip_addr * gatew
 	bool hdopDistanceValid;
 	bool vDistanceValid;
 	bool vdopDistanceValid;
-
-	/* clear outputs */
-	result->moving = UNKNOWN;
-	result->differentGateway = UNSET;
-	result->overThresholds = UNKNOWN;
-	result->speedOverThreshold = UNKNOWN;
-	result->hDistanceOverThreshold = UNKNOWN;
-	result->vDistanceOverThreshold = UNKNOWN;
-	result->outside = UNKNOWN;
-	result->outsideHdop = UNKNOWN;
-	result->outsideVdop = UNKNOWN;
-	result->inside = UNKNOWN;
-	result->insideHdop = UNKNOWN;
-	result->insideVdop = UNKNOWN;
 
 	/*
 	 * When the gateway is different from the gateway during last transmit, then
@@ -759,6 +765,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 */
 
 	bestGateway = getBestUplinkGateway();
+	clearMovementType(&movementResult);
 	detemineMoving(posAvgEntry, bestGateway, &txPosition, &txGateway, &movementResult);
 	movingNow = movementResult.moving;
 
