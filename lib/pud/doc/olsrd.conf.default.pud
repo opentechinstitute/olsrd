@@ -570,7 +570,7 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     #
     # Default: none
     #
-    PlParam     "uplinkAddr"                   "127.0.0.2"
+    PlParam     "uplinkAddr"                   "127.0.0.1"
 
     # uplinkPort is the UDP port to which the plugin will transmit GPS position
     #            updates. Can't be the same as the downlink port.
