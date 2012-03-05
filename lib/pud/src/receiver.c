@@ -75,8 +75,8 @@ typedef struct _StateType {
 
 /** The state */
 static StateType state = {
-		.internalState = STATIONARY,
-		.externalState = STATIONARY,
+		.internalState = MOVING,
+		.externalState = MOVING,
 		.hysteresisCounter = 0
 };
 
@@ -916,8 +916,8 @@ bool startReceiver(void) {
 	nmea_zero_INFO(&txPosition.nmeaInfo);
 	memset(&txGateway, 0, sizeof(txGateway));
 
-	state.internalState = STATIONARY;
-	state.externalState = STATIONARY;
+	state.internalState = MOVING;
+	state.externalState = MOVING;
 	state.hysteresisCounter = 0;
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
@@ -948,8 +948,8 @@ void stopReceiver(void) {
 	destroyPositionAverageList(&positionAverageList);
 
 	state.hysteresisCounter = 0;
-	state.externalState = STATIONARY;
-	state.internalState = STATIONARY;
+	state.externalState = MOVING;
+	state.internalState = MOVING;
 
 	memset(&txGateway, 0, sizeof(txGateway));
 	nmea_zero_INFO(&txPosition.nmeaInfo);
