@@ -911,6 +911,7 @@ bool startReceiver(void) {
 	}
 
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
+	memcpy(&transmitGpsInformation.txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 	transmitGpsInformation.updated = false;
 
 	nmea_zero_INFO(&txPosition.nmeaInfo);
@@ -958,6 +959,7 @@ void stopReceiver(void) {
 
 	transmitGpsInformation.updated = false;
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
+	memcpy(&transmitGpsInformation.txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 
 	nmea_parser_destroy(&nmeaParser);
 
