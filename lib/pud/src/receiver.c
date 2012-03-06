@@ -729,12 +729,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 		return true;
 	}
 
-	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-	txPosition = transmitGpsInformation.txPosition;
-	txGateway = transmitGpsInformation.txGateway;
-	bestGateway = transmitGpsInformation.bestGateway;
-	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
-
 	/* parse all NMEA strings in the rxBuffer into the incoming entry */
 	incomingEntry = getPositionAverageEntry(&positionAverageList, INCOMING);
 	nmea_zero_INFO(&incomingEntry->nmeaInfo);
@@ -781,6 +775,12 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	/*
 	 * Movement detection
 	 */
+
+	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
+	txPosition = transmitGpsInformation.txPosition;
+	txGateway = transmitGpsInformation.txGateway;
+	bestGateway = transmitGpsInformation.bestGateway;
+	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	clearMovementType(&movementResult);
 	detemineMovingFromGateway(&bestGateway, &txGateway, &movementResult);
