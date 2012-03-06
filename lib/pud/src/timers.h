@@ -16,4 +16,8 @@ int initUplinkTxTimer(void);
 void destroyUplinkTxTimer(void);
 int restartUplinkTxTimer(unsigned long long interval, timer_cb_func cb_func);
 
+int initGatewayTimer(void);
+void destroyGatewayTimer(void);
+int restartGatewayTimer(unsigned long long interval, timer_cb_func cb_func);
+
 #endif /* _PUD_TIMERS_H_ */

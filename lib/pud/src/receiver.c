@@ -348,6 +348,18 @@ static void pud_uplink_timer_callback(void *context __attribute__ ((unused))) {
 }
 
 /**
+ The gateway timer callback
+
+ @param context
+ unused
+ */
+static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
+	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
+	getBestUplinkGateway(&transmitGpsInformation.bestGateway);
+	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
+}
+
+/**
  Detemine whether we are moving from the gateway.
 
  MUST be called which the position average list locked.
@@ -718,8 +730,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	}
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-	getBestUplinkGateway(&transmitGpsInformation.bestGateway);
-
 	txPosition = transmitGpsInformation.txPosition;
 	txGateway = transmitGpsInformation.txGateway;
 	bestGateway = transmitGpsInformation.bestGateway;
@@ -946,8 +956,18 @@ bool startReceiver(void) {
 		return false;
 	}
 
+	if (!initGatewayTimer()) {
+		stopReceiver();
+		return false;
+	}
+
 	restartOlsrTimer();
 	restartUplinkTimer();
+	if (!restartGatewayTimer(getGatewayDeterminationInterval(), &pud_gateway_timer_callback)) {
+		pudError(0, "Could not start gateway timer");
+		stopReceiver();
+		return false;
+	}
 
 	return true;
 }
@@ -956,6 +976,7 @@ bool startReceiver(void) {
  Stop the receiver
  */
 void stopReceiver(void) {
+	destroyGatewayTimer();
 	destroyUplinkTxTimer();
 	destroyOlsrTxTimer();
 
