@@ -125,12 +125,10 @@ void addToDeDup(DeDupList * deDupList, union olsr_message *olsrMessage) {
 	memset(newEntry, 0, sizeof(DeDupEntry));
 	if (olsr_cnf->ip_version == AF_INET) {
 		newEntry->seqno = olsrMessage->v4.seqno;
-		memcpy(&newEntry->originator.v4, &olsrMessage->v4.originator,
-				sizeof(newEntry->originator.v4));
+		newEntry->originator.v4.s_addr = olsrMessage->v4.originator;
 	} else {
 		newEntry->seqno = olsrMessage->v6.seqno;
-		memcpy(&newEntry->originator.v6, &olsrMessage->v6.originator,
-				sizeof(newEntry->originator.v6));
+		newEntry->originator.v6 = olsrMessage->v6.originator;
 	}
 
 	deDupList->newestEntryIndex = incomingIndex;

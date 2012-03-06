@@ -619,8 +619,7 @@ int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((un
 			return true;
 		}
 
-		memcpy(&rxAllowedSourceIpAddresses[rxAllowedSourceIpAddressesCount],
-				&addr, sizeof(addr));
+		rxAllowedSourceIpAddresses[rxAllowedSourceIpAddressesCount] = addr;
 		rxAllowedSourceIpAddressesCount++;
 	}
 

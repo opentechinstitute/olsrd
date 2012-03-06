@@ -448,9 +448,7 @@ static void updatePositionAverageFromCumulative(
 	dump_nmeaInfo(&positionAverageList->positionAverage.nmeaInfo, "updatePositionAverageFromCumulative: positionAverageList->positionAverage (before)");
 #endif /* PUD_DUMP_AVERAGING */
 
-	memcpy(&positionAverageList->positionAverage,
-			&positionAverageList->positionAverageCumulative,
-			sizeof(positionAverageList->positionAverage));
+	positionAverageList->positionAverage = positionAverageList->positionAverageCumulative;
 
 	/* smask: use from cumulative average */
 

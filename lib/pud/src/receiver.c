@@ -210,7 +210,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	pu_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo, pu, txBufferBytesFree,
 			((state.externalState == MOVING) ? getUpdateIntervalMoving() : getUpdateIntervalStationary()));
 	txBufferBytesUsed += pu_size;
-	memcpy(&gateway, &transmitGpsInformation.txGateway, olsr_cnf->ipsize);
+	gateway = transmitGpsInformation.txGateway;
 
 	transmitGpsInformation.updated = false;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
@@ -299,6 +299,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 					(state.externalState == MOVING) ?
 							getUplinkUpdateIntervalMoving() : getUplinkUpdateIntervalStationary());
 
+			/* really need 2 memcpy's here because of olsr_cnf->ipsize */
 			memcpy(cl_originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 			memcpy(cl_clusterLeader, &gateway, olsr_cnf->ipsize);
 
@@ -720,8 +721,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	}
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-	memcpy(&txPosition, &transmitGpsInformation.txPosition, sizeof(PositionUpdateEntry));
-	memcpy(&txGateway, &transmitGpsInformation.txGateway, olsr_cnf->ipsize);
+	txPosition = transmitGpsInformation.txPosition;
+	txGateway = transmitGpsInformation.txGateway;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	/* parse all NMEA strings in the rxBuffer into the incoming entry */
@@ -865,8 +866,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	if ((state.externalState == MOVING) || updateTransmitGpsInformation) {
 		(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-		memcpy(&transmitGpsInformation.txPosition.nmeaInfo, &posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
-		memcpy(&transmitGpsInformation.txGateway, bestGateway, olsr_cnf->ipsize);
+		transmitGpsInformation.txPosition.nmeaInfo = posAvgEntry->nmeaInfo;
+		transmitGpsInformation.txGateway = *bestGateway;
 		transmitGpsInformation.updated = true;
 		(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
@@ -924,7 +925,7 @@ bool startReceiver(void) {
 	}
 
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
-	memcpy(&transmitGpsInformation.txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	transmitGpsInformation.updated = false;
 
 	state.internalState = MOVING;
@@ -964,7 +965,7 @@ void stopReceiver(void) {
 
 	transmitGpsInformation.updated = false;
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
-	memcpy(&transmitGpsInformation.txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 
 	nmea_parser_destroy(&nmeaParser);
 

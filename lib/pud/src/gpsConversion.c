@@ -342,8 +342,7 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		olsrMessage->v4.olsr_msgtype = PUD_OLSR_MSG_TYPE;
 		olsrMessage->v4.olsr_vtime = reltime_to_me(validityTime * 1000);
 		/* message->v4.olsr_msgsize at the end */
-		memcpy(&olsrMessage->v4.originator, &olsr_cnf->main_addr,
-				olsr_cnf->ipsize);
+		olsrMessage->v4.originator = olsr_cnf->main_addr.v4.s_addr;
 		olsrMessage->v4.ttl = getOlsrTtl();
 		olsrMessage->v4.hopcnt = 0;
 		olsrMessage->v4.seqno = htons(get_msg_seqno());
@@ -358,8 +357,7 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 		olsrMessage->v6.olsr_msgtype = PUD_OLSR_MSG_TYPE;
 		olsrMessage->v6.olsr_vtime = reltime_to_me(validityTime * 1000);
 		/* message->v6.olsr_msgsize at the end */
-		memcpy(&olsrMessage->v6.originator, &olsr_cnf->main_addr,
-				olsr_cnf->ipsize);
+		olsrMessage->v6.originator = olsr_cnf->main_addr.v6;
 		olsrMessage->v6.ttl = getOlsrTtl();
 		olsrMessage->v6.hopcnt = 0;
 		olsrMessage->v6.seqno = htons(get_msg_seqno());
