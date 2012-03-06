@@ -127,19 +127,6 @@ typedef struct _TransmitGpsInformation {
 /** The latest position information that is transmitted */
 static TransmitGpsInformation transmitGpsInformation;
 
-/** The last transmitted position.
- * The same as transmitGpsInformation.txPosition.
- * We keep this because then we can access the information without locking
- * mutexes. */
-static PositionUpdateEntry txPosition;
-
-/**
- * The best gateway.
- * The same as transmitGpsInformation.txGateway.
- * We keep this because then we can access the information without locking
- */
-static union olsr_ip_addr txGateway;
-
 /** The size of the buffer in which the OLSR and uplink messages are assembled */
 #define TX_BUFFER_SIZE_FOR_OLSR 1024
 
@@ -723,12 +710,19 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	bool externalStateChange = false;
 	bool updateTransmitGpsInformation = false;
 	union olsr_ip_addr * bestGateway;
+	PositionUpdateEntry txPosition;
+	union olsr_ip_addr txGateway;
 
 	/* do not process when the message does not start with $GP */
 	if ((rxCount < rxBufferPrefixLength) || (strncmp((char *) rxBuffer,
 			rxBufferPrefix, rxBufferPrefixLength) != 0)) {
 		return true;
 	}
+
+	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
+	memcpy(&txPosition, &transmitGpsInformation.txPosition, sizeof(PositionUpdateEntry));
+	memcpy(&txGateway, &transmitGpsInformation.txGateway, olsr_cnf->ipsize);
+	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	(void) pthread_mutex_lock(&positionAverageList.mutex);
 
@@ -872,12 +866,9 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 			|| (movementResult.inside == SET);
 
 	if ((state.externalState == MOVING) || updateTransmitGpsInformation) {
-		memcpy(&txPosition.nmeaInfo, &posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
-		memcpy(&txGateway, bestGateway, sizeof(txGateway));
 		(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-		memcpy(&transmitGpsInformation.txPosition.nmeaInfo,
-				&posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
-		memcpy(&transmitGpsInformation.txGateway, &txGateway, sizeof(transmitGpsInformation.txGateway));
+		memcpy(&transmitGpsInformation.txPosition.nmeaInfo, &posAvgEntry->nmeaInfo, sizeof(nmeaINFO));
+		memcpy(&transmitGpsInformation.txGateway, bestGateway, olsr_cnf->ipsize);
 		transmitGpsInformation.updated = true;
 
 #if defined(PUD_DUMP_AVERAGING)
@@ -939,10 +930,6 @@ bool startReceiver(void) {
 	memcpy(&transmitGpsInformation.txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
 	transmitGpsInformation.updated = false;
 
-	nmea_zero_INFO(&txPosition.nmeaInfo);
-	memset(&txGateway, 0, sizeof(txGateway));
-	memcpy(&txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
-
 	state.internalState = MOVING;
 	state.externalState = MOVING;
 	state.hysteresisCounter = 0;
@@ -977,10 +964,6 @@ void stopReceiver(void) {
 	state.hysteresisCounter = 0;
 	state.externalState = MOVING;
 	state.internalState = MOVING;
-
-	memset(&txGateway, 0, sizeof(txGateway));
-	memcpy(&txGateway, &olsr_cnf->main_addr, olsr_cnf->ipsize);
-	nmea_zero_INFO(&txPosition.nmeaInfo);
 
 	transmitGpsInformation.updated = false;
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
