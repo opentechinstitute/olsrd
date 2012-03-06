@@ -351,12 +351,8 @@ static void pud_uplink_timer_callback(void *context __attribute__ ((unused))) {
 
  MUST be called which the position average list locked.
 
- @param avg
- the average position
  @param gateway
  the current best gateway
- @param lastTx
- the last transmitted position
  @param lastGateway
  the last best gateway
  @param result
