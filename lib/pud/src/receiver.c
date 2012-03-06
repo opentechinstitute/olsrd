@@ -703,7 +703,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	bool retval = false;
 	PositionUpdateEntry * incomingEntry;
-	MovementState newState = STATIONARY;
+	MovementState newState;
 	PositionUpdateEntry * posAvgEntry;
 	MovementType movementResult;
 	TristateBoolean movingNow;
@@ -794,6 +794,9 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	if (movingNow == SET) {
 		newState = MOVING;
 	} else if (movingNow == UNSET) {
+		newState = STATIONARY;
+	} else {
+		/* force back to stationary for unknown movement */
 		newState = STATIONARY;
 	}
 	internalStateChange = (state.internalState != newState);
