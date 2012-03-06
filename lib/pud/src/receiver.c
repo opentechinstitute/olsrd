@@ -70,14 +70,14 @@ typedef enum _MovementState {
 typedef struct _StateType {
 	MovementState internalState; /**< the internal movement state */
 	MovementState externalState; /**< the externally visible movement state */
-	unsigned long long hysteresisCounter; /**< the hysteresis counter external state changes */
+	unsigned long long hysteresisCounterPosition; /**< the hysteresis counter for position related external state changes */
 } StateType;
 
 /** The state */
 static StateType state = {
 		.internalState = MOVING,
 		.externalState = MOVING,
-		.hysteresisCounter = 0
+		.hysteresisCounterPosition = 0
 };
 
 /** Type describing movement calculations */
@@ -818,7 +818,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	if (internalStateChange) {
 		/* restart hysteresis for external state change when we have an internal
 		 * state change */
-		state.hysteresisCounter = 0;
+		state.hysteresisCounterPosition = 0;
 	}
 
 	/* when internal state and external state are not the same we need to
@@ -831,9 +831,9 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 				/* external state is MOVING */
 
 				/* delay going to stationary a bit */
-				state.hysteresisCounter++;
+				state.hysteresisCounterPosition++;
 
-				if (state.hysteresisCounter
+				if (state.hysteresisCounterPosition
 						>= getHysteresisCountToStationary()) {
 					/* outside the hysteresis range, go to stationary */
 					newState = STATIONARY;
@@ -844,9 +844,9 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 				/* external state is STATIONARY */
 
 				/* delay going to moving a bit */
-				state.hysteresisCounter++;
+				state.hysteresisCounterPosition++;
 
-				if (state.hysteresisCounter >= getHysteresisCountToMoving()) {
+				if (state.hysteresisCounterPosition >= getHysteresisCountToMoving()) {
 					/* outside the hysteresis range, go to moving */
 					newState = MOVING;
 				}
@@ -942,7 +942,7 @@ bool startReceiver(void) {
 
 	state.internalState = MOVING;
 	state.externalState = MOVING;
-	state.hysteresisCounter = 0;
+	state.hysteresisCounterPosition = 0;
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
@@ -982,7 +982,7 @@ void stopReceiver(void) {
 
 	destroyPositionAverageList(&positionAverageList);
 
-	state.hysteresisCounter = 0;
+	state.hysteresisCounterPosition = 0;
 	state.externalState = MOVING;
 	state.internalState = MOVING;
 
