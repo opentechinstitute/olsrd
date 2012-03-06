@@ -122,6 +122,7 @@ typedef struct _TransmitGpsInformation {
 	bool updated; /**< true when the information was updated */
 	PositionUpdateEntry txPosition; /**< The last transmitted position */
 	union olsr_ip_addr txGateway; /**< the best gateway at the time the transmitted position was determined */
+	union olsr_ip_addr bestGateway; /**< the current best gateway */
 } TransmitGpsInformation;
 
 /** The latest position information that is transmitted */
@@ -717,8 +718,11 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	}
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
+	getBestUplinkGateway(&transmitGpsInformation.bestGateway);
+
 	txPosition = transmitGpsInformation.txPosition;
 	txGateway = transmitGpsInformation.txGateway;
+	bestGateway = transmitGpsInformation.bestGateway;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	/* parse all NMEA strings in the rxBuffer into the incoming entry */
@@ -768,7 +772,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 * Movement detection
 	 */
 
-	getBestUplinkGateway(&bestGateway);
 	clearMovementType(&movementResult);
 	detemineMovingFromGateway(&bestGateway, &txGateway, &movementResult);
 	if (movementResult.moving != SET) {
