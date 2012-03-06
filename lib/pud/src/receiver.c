@@ -724,8 +724,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	memcpy(&txGateway, &transmitGpsInformation.txGateway, olsr_cnf->ipsize);
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
-	(void) pthread_mutex_lock(&positionAverageList.mutex);
-
 	/* parse all NMEA strings in the rxBuffer into the incoming entry */
 	incomingEntry = getPositionAverageEntry(&positionAverageList, INCOMING);
 	nmea_zero_INFO(&incomingEntry->nmeaInfo);
@@ -893,7 +891,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	retval = true;
 
-	end: (void) pthread_mutex_unlock(&positionAverageList.mutex);
+	end:
 	return retval;
 }
 

@@ -59,8 +59,6 @@ typedef struct _PositionUpdateCounters {
  calculations to be performed.
  */
 typedef struct _PositionAverageList {
-		pthread_mutex_t mutex; /**< access mutex */
-
 		unsigned long long entriesMaxCount; /**< the maximum number of entries in the list */
 		PositionUpdateEntry * entries; /**< the list entries */
 

@@ -31,16 +31,12 @@
 void flushPositionAverageList(PositionAverageList * positionAverageList) {
 	assert (positionAverageList != NULL);
 
-	(void) pthread_mutex_lock(&positionAverageList->mutex);
-
 	positionAverageList->entriesCount = 0;
 	memset(&positionAverageList->counters, 0,
 			sizeof(positionAverageList->counters));
 
 	nmea_zero_INFO(&positionAverageList->positionAverageCumulative.nmeaInfo);
 	nmea_zero_INFO(&positionAverageList->positionAverage.nmeaInfo);
-
-	(void) pthread_mutex_unlock(&positionAverageList->mutex);
 
 #if defined(PUD_DUMP_AVERAGING)
 	olsr_printf(0, "flushPositionAverageList: Flushed the averaging list\n");
@@ -63,23 +59,12 @@ void flushPositionAverageList(PositionAverageList * positionAverageList) {
  */
 bool initPositionAverageList(PositionAverageList * positionAverageList,
 		unsigned long long maxEntries) {
-	pthread_mutexattr_t attr;
 	void * p;
 
 	if (positionAverageList == NULL) {
 		return false;
 	}
 	if (maxEntries < 2) {
-		return false;
-	}
-
-	if (pthread_mutexattr_init(&attr)) {
-		return false;
-	}
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP)) {
-		return false;
-	}
-	if (pthread_mutex_init(&positionAverageList->mutex, &attr)) {
 		return false;
 	}
 
@@ -107,8 +92,6 @@ bool initPositionAverageList(PositionAverageList * positionAverageList,
 void destroyPositionAverageList(PositionAverageList * positionAverageList) {
 	assert (positionAverageList != NULL);
 
-	(void) pthread_mutex_lock(&positionAverageList->mutex);
-
 	flushPositionAverageList(positionAverageList);
 
 	if (positionAverageList->entries != NULL) {
@@ -118,10 +101,6 @@ void destroyPositionAverageList(PositionAverageList * positionAverageList) {
 
 	positionAverageList->entriesMaxCount = 0;
 	positionAverageList->newestEntryIndex = 0;
-
-	(void) pthread_mutex_unlock(&positionAverageList->mutex);
-
-	pthread_mutex_destroy(&positionAverageList->mutex);
 }
 
 /**
@@ -140,7 +119,6 @@ PositionUpdateEntry * getPositionAverageEntry(
 		AverageEntryPositionType positionType) {
 	PositionUpdateEntry * r = NULL;
 
-	(void) pthread_mutex_lock(&positionAvgList->mutex);
 	switch (positionType) {
 		case OLDEST:
 			assert(positionAvgList->entriesCount >= positionAvgList->entriesMaxCount);
@@ -167,7 +145,6 @@ PositionUpdateEntry * getPositionAverageEntry(
 			r = NULL;
 			break;
 	}
-	(void) pthread_mutex_unlock(&positionAvgList->mutex);
 
 	return r;
 }
@@ -523,8 +500,6 @@ void addNewPositionToAverage(PositionAverageList * positionAverageList,
 	dump_nmeaInfo(&positionAverageList->positionAverageCumulative.nmeaInfo, "addNewPositionToAverage: positionAverageList->positionAverageCumulative.nmeaInfo (before)");
 #endif /* PUD_DUMP_AVERAGING */
 
-	(void) pthread_mutex_lock(&positionAverageList->mutex);
-
 	if (positionAverageList->entriesCount
 			>= positionAverageList->entriesMaxCount) {
 		/* list is full, so first remove the oldest from the average */
@@ -550,6 +525,4 @@ void addNewPositionToAverage(PositionAverageList * positionAverageList,
 #if defined(PUD_DUMP_AVERAGING)
 	dump_nmeaInfo(&positionAverageList->positionAverage.nmeaInfo, "addNewPositionToAverage: positionAverageList->positionAverage.nmeaInfo (after)");
 #endif /* PUD_DUMP_AVERAGING */
-
-	(void) pthread_mutex_unlock(&positionAverageList->mutex);
 }
