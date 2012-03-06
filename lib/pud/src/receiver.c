@@ -692,6 +692,94 @@ static void restartUplinkTimer(void) {
 	}
 }
 
+/*
+ * External State (+ hysteresis)
+ */
+static bool determineStateWithHysteresis(TristateBoolean movingNow) {
+	MovementState newState;
+	bool internalStateChange;
+	bool externalStateChange;
+
+#if defined(PUD_DUMP_AVERAGING)
+	olsr_printf(0, "determineStateWithHysteresis: internalState = %s\n",
+			MovementStateToString(state.internalState));
+	olsr_printf(0, "determineStateWithHysteresis: movingNow     = %s\n",
+			TristateBooleanToString(movingNow));
+#endif /* PUD_DUMP_AVERAGING */
+
+	/*
+	 * Internal State
+	 */
+
+	if (movingNow == SET) {
+		newState = MOVING;
+	} else if (movingNow == UNSET) {
+		newState = STATIONARY;
+	} else {
+		/* force back to stationary for unknown movement */
+		newState = STATIONARY;
+	}
+	internalStateChange = (state.internalState != newState);
+	state.internalState = newState;
+
+	/*
+	 * External State (+ hysteresis)
+	 */
+
+	if (internalStateChange) {
+		/* restart hysteresis for external state change when we have an internal
+		 * state change */
+		state.hysteresisCounterPosition = 0;
+	}
+
+	/* when internal state and external state are not the same we need to
+	 * perform hysteresis before we can propagate the internal state to the
+	 * external state */
+	newState = state.externalState;
+	if (state.internalState != state.externalState) {
+		switch (state.internalState) {
+			case STATIONARY:
+				/* external state is MOVING */
+
+				/* delay going to stationary a bit */
+				state.hysteresisCounterPosition++;
+
+				if (state.hysteresisCounterPosition >= getHysteresisCountToStationary()) {
+					/* outside the hysteresis range, go to stationary */
+					newState = STATIONARY;
+				}
+				break;
+
+			case MOVING:
+				/* external state is STATIONARY */
+
+				/* delay going to moving a bit */
+				state.hysteresisCounterPosition++;
+
+				if (state.hysteresisCounterPosition >= getHysteresisCountToMoving()) {
+					/* outside the hysteresis range, go to moving */
+					newState = MOVING;
+				}
+				break;
+
+			default:
+				/* when unknown do just as if we transition into stationary */
+				newState = STATIONARY;
+				break;
+		}
+	}
+
+	externalStateChange = (state.externalState != newState);
+	state.externalState = newState;
+
+#if defined(PUD_DUMP_AVERAGING)
+	olsr_printf(0, "determineStateWithHysteresis: newState = %s\n",
+			MovementStateToString(newState));
+#endif /* PUD_DUMP_AVERAGING */
+
+	return externalStateChange;
+}
+
 /**
  Update the latest GPS information. This function is called when a packet is
  received from a rxNonOlsr interface, containing one or more NMEA strings with
@@ -712,11 +800,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	bool retval = false;
 	PositionUpdateEntry * incomingEntry;
-	MovementState newState;
 	PositionUpdateEntry * posAvgEntry;
 	MovementType movementResult;
-	TristateBoolean movingNow;
-	bool internalStateChange = false;
 	bool externalStateChange = false;
 	bool updateTransmitGpsInformation = false;
 	union olsr_ip_addr bestGateway;
@@ -762,7 +847,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 #endif /* PUD_DUMP_AVERAGING */
 
 	/*
-	 * Averageing
+	 * Averaging
 	 */
 
 	if (state.internalState == MOVING) {
@@ -771,6 +856,11 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	}
 	addNewPositionToAverage(&positionAverageList, incomingEntry);
 	posAvgEntry = getPositionAverageEntry(&positionAverageList, AVERAGE);
+
+#if defined(PUD_DUMP_AVERAGING)
+	dump_nmeaInfo(&posAvgEntry->nmeaInfo,
+			"receiverUpdateGpsInformation: posAvgEntry");
+#endif /* PUD_DUMP_AVERAGING */
 
 	/*
 	 * Movement detection
@@ -787,86 +877,12 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	if (movementResult.moving != SET) {
 		detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
 	}
-	movingNow = movementResult.moving;
-
-#if defined(PUD_DUMP_AVERAGING)
-	olsr_printf(0, "receiverUpdateGpsInformation: internalState = %s\n",
-			MovementStateToString(state.internalState));
-	olsr_printf(0, "receiverUpdateGpsInformation: movingNow     = %s\n",
-			TristateBooleanToString(movingNow));
-#endif /* PUD_DUMP_AVERAGING */
 
 	/*
-	 * Internal State
+	 * State Determination
 	 */
 
-	if (movingNow == SET) {
-		newState = MOVING;
-	} else if (movingNow == UNSET) {
-		newState = STATIONARY;
-	} else {
-		/* force back to stationary for unknown movement */
-		newState = STATIONARY;
-	}
-	internalStateChange = (state.internalState != newState);
-	state.internalState = newState;
-
-	/*
-	 * External State (+ hysteresis)
-	 */
-
-	if (internalStateChange) {
-		/* restart hysteresis for external state change when we have an internal
-		 * state change */
-		state.hysteresisCounterPosition = 0;
-	}
-
-	/* when internal state and external state are not the same we need to
-	 * perform hysteresis before we can propagate the internal state to the
-	 * external state */
-	newState = state.externalState;
-	if (state.internalState != state.externalState) {
-		switch (state.internalState) {
-			case STATIONARY:
-				/* external state is MOVING */
-
-				/* delay going to stationary a bit */
-				state.hysteresisCounterPosition++;
-
-				if (state.hysteresisCounterPosition
-						>= getHysteresisCountToStationary()) {
-					/* outside the hysteresis range, go to stationary */
-					newState = STATIONARY;
-				}
-				break;
-
-			case MOVING:
-				/* external state is STATIONARY */
-
-				/* delay going to moving a bit */
-				state.hysteresisCounterPosition++;
-
-				if (state.hysteresisCounterPosition >= getHysteresisCountToMoving()) {
-					/* outside the hysteresis range, go to moving */
-					newState = MOVING;
-				}
-				break;
-
-			default:
-				/* when unknown do just as if we transition into stationary */
-				newState = STATIONARY;
-				break;
-		}
-	}
-	externalStateChange = (state.externalState != newState);
-	state.externalState = newState;
-
-#if defined(PUD_DUMP_AVERAGING)
-	olsr_printf(0, "receiverUpdateGpsInformation: newState = %s\n",
-			MovementStateToString(newState));
-	dump_nmeaInfo(&posAvgEntry->nmeaInfo,
-			"receiverUpdateGpsInformation: posAvgEntry");
-#endif /* PUD_DUMP_AVERAGING */
+	externalStateChange = determineStateWithHysteresis(movementResult.moving);
 
 	/*
 	 * Update transmitGpsInformation
