@@ -37,10 +37,10 @@ static inline unsigned long long gw_speed(struct gateway_entry *gw) {
  * It adjusted for best gateway selection but otherwise kept the same as much
  * as possible.
  *
- * @return
- * a pointer to the IP address of the best gateway
+ * @param bestGateway
+ * a pointer to the variable in which to store the best gateway
  */
-union olsr_ip_addr * getBestUplinkGateway(void) {
+void getBestUplinkGateway(union olsr_ip_addr * bestGateway) {
 	struct gateway_entry *gw_best = NULL;
 	unsigned long long gw_best_value = 0;
 	struct gateway_entry *gw;
@@ -97,8 +97,9 @@ union olsr_ip_addr * getBestUplinkGateway(void) {
 
 	if (!gw_best) {
 		/* degrade gracefully */
-		return &olsr_cnf->main_addr;
+		*bestGateway = olsr_cnf->main_addr;
+		return;
 	}
 
-	return &gw_best->originator;
+	*bestGateway = gw_best->originator;
 }

@@ -706,7 +706,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	bool internalStateChange = false;
 	bool externalStateChange = false;
 	bool updateTransmitGpsInformation = false;
-	union olsr_ip_addr * bestGateway;
+	union olsr_ip_addr bestGateway;
 	PositionUpdateEntry txPosition;
 	union olsr_ip_addr txGateway;
 
@@ -768,9 +768,9 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 * Movement detection
 	 */
 
-	bestGateway = getBestUplinkGateway();
+	getBestUplinkGateway(&bestGateway);
 	clearMovementType(&movementResult);
-	detemineMovingFromGateway(bestGateway,&txGateway, &movementResult);
+	detemineMovingFromGateway(&bestGateway, &txGateway, &movementResult);
 	if (movementResult.moving != SET) {
 		detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
 	}
@@ -866,7 +866,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	if ((state.externalState == MOVING) || updateTransmitGpsInformation) {
 		(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 		transmitGpsInformation.txPosition.nmeaInfo = posAvgEntry->nmeaInfo;
-		transmitGpsInformation.txGateway = *bestGateway;
+		transmitGpsInformation.txGateway = bestGateway;
 		transmitGpsInformation.updated = true;
 		(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 

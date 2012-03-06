@@ -8,6 +8,6 @@
 
 /* System includes */
 
-union olsr_ip_addr * getBestUplinkGateway(void);
+void getBestUplinkGateway(union olsr_ip_addr * bestGateway);
 
 #endif /* _PUD_UPLINKGATEWAY_H_ */
