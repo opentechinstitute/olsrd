@@ -112,8 +112,8 @@ static PositionAverageList positionAverageList;
  */
 
 typedef enum _TimedTxInterface {
-	OLSR = 1,
-	UPLINK = 2
+	TX_INTERFACE_OLSR = 1,
+	TX_INTERFACE_UPLINK = 2
 } TimedTxInterface;
 
 /** Structure of the latest GPS information that is transmitted */
@@ -219,7 +219,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	/*
 	 * push out to all OLSR interfaces
 	 */
-	if (((interfaces & OLSR) != 0) && (pu_size > 0)) {
+	if (((interfaces & TX_INTERFACE_OLSR) != 0) && (pu_size > 0)) {
 		int r;
 		struct interface *ifn;
 		for (ifn = ifnet; ifn; ifn = ifn->int_next) {
@@ -248,7 +248,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	}
 
 	/* push out over uplink when an uplink is configured */
-	if (((interfaces & UPLINK) != 0) && isUplinkAddrSet()) {
+	if (((interfaces & TX_INTERFACE_UPLINK) != 0) && isUplinkAddrSet()) {
 		int fd = getDownlinkSocketFd();
 		if (fd != -1) {
 			union olsr_sockaddr * uplink_addr = getUplinkAddr();
@@ -334,7 +334,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
  unused
  */
 static void pud_olsr_tx_timer_callback(void *context __attribute__ ((unused))) {
-	txToAllOlsrInterfaces(OLSR);
+	txToAllOlsrInterfaces(TX_INTERFACE_OLSR);
 }
 
 /**
@@ -344,7 +344,7 @@ static void pud_olsr_tx_timer_callback(void *context __attribute__ ((unused))) {
  unused
  */
 static void pud_uplink_timer_callback(void *context __attribute__ ((unused))) {
-	txToAllOlsrInterfaces(UPLINK);
+	txToAllOlsrInterfaces(TX_INTERFACE_UPLINK);
 }
 
 /**
@@ -906,11 +906,11 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	}
 
 	if (externalStateChange) {
-		TimedTxInterface interfaces = OLSR; /* always send over olsr */
+		TimedTxInterface interfaces = TX_INTERFACE_OLSR; /* always send over olsr */
 		restartOlsrTimer();
 
 		if (isUplinkAddrSet()) {
-			interfaces |= UPLINK;
+			interfaces |= TX_INTERFACE_UPLINK;
 			restartUplinkTimer();
 		}
 
