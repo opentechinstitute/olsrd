@@ -142,7 +142,7 @@ static TransmitGpsInformation transmitGpsInformation;
 static void clearMovementType(MovementType * result) {
 	/* clear outputs */
 	result->moving = TRISTATE_BOOLEAN_UNKNOWN;
-	result->differentGateway = TRISTATE_BOOLEAN_UNSET;
+	result->differentGateway = TRISTATE_BOOLEAN_UNKNOWN;
 	result->overThresholds = TRISTATE_BOOLEAN_UNKNOWN;
 	result->speedOverThreshold = TRISTATE_BOOLEAN_UNKNOWN;
 	result->hDistanceOverThreshold = TRISTATE_BOOLEAN_UNKNOWN;
