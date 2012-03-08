@@ -48,13 +48,13 @@ static nmeaPARSER nmeaParser;
 
 /** Type describing a tri-state boolean */
 typedef enum _TristateBoolean {
-	UNKNOWN = 0,
-	UNSET = 1,
-	SET = 2
+	TRISTATE_BOOLEAN_UNKNOWN = 0,
+	TRISTATE_BOOLEAN_UNSET = 1,
+	TRISTATE_BOOLEAN_SET = 2
 } TristateBoolean;
 
-#define TristateBooleanToString(s)	((s == SET) ? "set" : \
-									 (s == UNSET) ? "unset" : \
+#define TristateBooleanToString(s)	((s == TRISTATE_BOOLEAN_SET) ? "set" : \
+									 (s == TRISTATE_BOOLEAN_UNSET) ? "unset" : \
 									 "unknown")
 
 /** Type describing movement state */
@@ -141,18 +141,18 @@ static TransmitGpsInformation transmitGpsInformation;
  */
 static void clearMovementType(MovementType * result) {
 	/* clear outputs */
-	result->moving = UNKNOWN;
-	result->differentGateway = UNSET;
-	result->overThresholds = UNKNOWN;
-	result->speedOverThreshold = UNKNOWN;
-	result->hDistanceOverThreshold = UNKNOWN;
-	result->vDistanceOverThreshold = UNKNOWN;
-	result->outside = UNKNOWN;
-	result->outsideHdop = UNKNOWN;
-	result->outsideVdop = UNKNOWN;
-	result->inside = UNKNOWN;
-	result->insideHdop = UNKNOWN;
-	result->insideVdop = UNKNOWN;
+	result->moving = TRISTATE_BOOLEAN_UNKNOWN;
+	result->differentGateway = TRISTATE_BOOLEAN_UNSET;
+	result->overThresholds = TRISTATE_BOOLEAN_UNKNOWN;
+	result->speedOverThreshold = TRISTATE_BOOLEAN_UNKNOWN;
+	result->hDistanceOverThreshold = TRISTATE_BOOLEAN_UNKNOWN;
+	result->vDistanceOverThreshold = TRISTATE_BOOLEAN_UNKNOWN;
+	result->outside = TRISTATE_BOOLEAN_UNKNOWN;
+	result->outsideHdop = TRISTATE_BOOLEAN_UNKNOWN;
+	result->outsideVdop = TRISTATE_BOOLEAN_UNKNOWN;
+	result->inside = TRISTATE_BOOLEAN_UNKNOWN;
+	result->insideHdop = TRISTATE_BOOLEAN_UNKNOWN;
+	result->insideVdop = TRISTATE_BOOLEAN_UNKNOWN;
 }
 
 /**
@@ -378,12 +378,12 @@ static void detemineMovingFromGateway(union olsr_ip_addr * gateway, union olsr_i
 	 * we force MOVING
 	 */
 	if (!ipequal(gateway, lastGateway)) {
-		result->moving = SET;
-		result->differentGateway = SET;
+		result->moving = TRISTATE_BOOLEAN_SET;
+		result->differentGateway = TRISTATE_BOOLEAN_SET;
 		return;
 	}
 
-	result->differentGateway = UNSET;
+	result->differentGateway = TRISTATE_BOOLEAN_UNSET;
 }
 
 /**
@@ -442,14 +442,14 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 	 */
 
 	if (!positionValid(avg)) {
-		result->moving = UNKNOWN;
+		result->moving = TRISTATE_BOOLEAN_UNKNOWN;
 		return;
 	}
 
 	/* avg is valid here */
 
 	if (!positionValid(lastTx)) {
-		result->moving = UNKNOWN;
+		result->moving = TRISTATE_BOOLEAN_UNKNOWN;
 		return;
 	}
 
@@ -532,9 +532,9 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 	/* Speed */
 	if (avgHasSpeed) {
 		if (avg->nmeaInfo.speed >= getMovingSpeedThreshold()) {
-			result->speedOverThreshold = SET;
+			result->speedOverThreshold = TRISTATE_BOOLEAN_SET;
 		} else {
-			result->speedOverThreshold = UNSET;
+			result->speedOverThreshold = TRISTATE_BOOLEAN_UNSET;
 		}
 	}
 
@@ -548,12 +548,12 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 	 *  1     1   determine via distance threshold and HDOP
 	 */
 	if (avgHasPos && !lastTxHasPos) {
-		result->hDistanceOverThreshold = SET;
+		result->hDistanceOverThreshold = TRISTATE_BOOLEAN_SET;
 	} else if (hDistanceValid) {
 		if (hDistance >= getMovingDistanceThreshold()) {
-			result->hDistanceOverThreshold = SET;
+			result->hDistanceOverThreshold = TRISTATE_BOOLEAN_SET;
 		} else {
-			result->hDistanceOverThreshold = UNSET;
+			result->hDistanceOverThreshold = TRISTATE_BOOLEAN_UNSET;
 		}
 
 		/*
@@ -568,16 +568,16 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 		if (hdopDistanceValid) {
 			/* we are outside the HDOP when the HDOPs no longer overlap */
 			if (hDistance > hdopDistanceForOutside) {
-				result->outsideHdop = SET;
+				result->outsideHdop = TRISTATE_BOOLEAN_SET;
 			} else {
-				result->outsideHdop = UNSET;
+				result->outsideHdop = TRISTATE_BOOLEAN_UNSET;
 			}
 
 			/* we are inside the HDOP when the HDOPs fully overlap */
 			if (hDistance <= hdopDistanceForInside) {
-				result->insideHdop = SET;
+				result->insideHdop = TRISTATE_BOOLEAN_SET;
 			} else {
-				result->insideHdop = UNSET;
+				result->insideHdop = TRISTATE_BOOLEAN_UNSET;
 			}
 		}
 	}
@@ -592,12 +592,12 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 	 *  1     1   determine via distance threshold and VDOP
 	 */
 	if (avgHasElv && !lastTxHasElv) {
-		result->vDistanceOverThreshold = SET;
+		result->vDistanceOverThreshold = TRISTATE_BOOLEAN_SET;
 	} else if (vDistanceValid) {
 		if (vDistance >= getMovingDistanceThreshold()) {
-			result->vDistanceOverThreshold = SET;
+			result->vDistanceOverThreshold = TRISTATE_BOOLEAN_SET;
 		} else {
-			result->vDistanceOverThreshold = UNSET;
+			result->vDistanceOverThreshold = TRISTATE_BOOLEAN_UNSET;
 		}
 
 		/*
@@ -612,16 +612,16 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 		if (vdopDistanceValid) {
 			/* we are outside the VDOP when the VDOPs no longer overlap */
 			if (vDistance > vdopDistanceForOutside) {
-				result->outsideVdop = SET;
+				result->outsideVdop = TRISTATE_BOOLEAN_SET;
 			} else {
-				result->outsideVdop = UNSET;
+				result->outsideVdop = TRISTATE_BOOLEAN_UNSET;
 			}
 
 			/* we are inside the VDOP when the VDOPs fully overlap */
 			if (vDistance <= vdopDistanceForInside) {
-				result->insideVdop = SET;
+				result->insideVdop = TRISTATE_BOOLEAN_SET;
 			} else {
-				result->insideVdop = UNSET;
+				result->insideVdop = TRISTATE_BOOLEAN_UNSET;
 			}
 		}
 	}
@@ -631,37 +631,37 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 	 */
 
 	/* accumulate inside criteria */
-	if ((result->insideHdop == SET) && (result->insideVdop == SET)) {
-		result->inside = SET;
-	} else if ((result->insideHdop == UNSET) || (result->insideVdop == UNSET)) {
-		result->inside = UNSET;
+	if ((result->insideHdop == TRISTATE_BOOLEAN_SET) && (result->insideVdop == TRISTATE_BOOLEAN_SET)) {
+		result->inside = TRISTATE_BOOLEAN_SET;
+	} else if ((result->insideHdop == TRISTATE_BOOLEAN_UNSET) || (result->insideVdop == TRISTATE_BOOLEAN_UNSET)) {
+		result->inside = TRISTATE_BOOLEAN_UNSET;
 	}
 
 	/* accumulate outside criteria */
-	if ((result->outsideHdop == SET) || (result->outsideVdop == SET)) {
-		result->outside = SET;
-	} else if ((result->outsideHdop == UNSET)
-			|| (result->outsideVdop == UNSET)) {
-		result->outside = UNSET;
+	if ((result->outsideHdop == TRISTATE_BOOLEAN_SET) || (result->outsideVdop == TRISTATE_BOOLEAN_SET)) {
+		result->outside = TRISTATE_BOOLEAN_SET;
+	} else if ((result->outsideHdop == TRISTATE_BOOLEAN_UNSET)
+			|| (result->outsideVdop == TRISTATE_BOOLEAN_UNSET)) {
+		result->outside = TRISTATE_BOOLEAN_UNSET;
 	}
 
 	/* accumulate threshold criteria */
-	if ((result->speedOverThreshold == SET)
-			|| (result->hDistanceOverThreshold == SET)
-			|| (result->vDistanceOverThreshold == SET)) {
-		result->overThresholds = SET;
-	} else if ((result->speedOverThreshold == UNSET)
-			|| (result->hDistanceOverThreshold == UNSET)
-			|| (result->vDistanceOverThreshold == UNSET)) {
-		result->overThresholds = UNSET;
+	if ((result->speedOverThreshold == TRISTATE_BOOLEAN_SET)
+			|| (result->hDistanceOverThreshold == TRISTATE_BOOLEAN_SET)
+			|| (result->vDistanceOverThreshold == TRISTATE_BOOLEAN_SET)) {
+		result->overThresholds = TRISTATE_BOOLEAN_SET;
+	} else if ((result->speedOverThreshold == TRISTATE_BOOLEAN_UNSET)
+			|| (result->hDistanceOverThreshold == TRISTATE_BOOLEAN_UNSET)
+			|| (result->vDistanceOverThreshold == TRISTATE_BOOLEAN_UNSET)) {
+		result->overThresholds = TRISTATE_BOOLEAN_UNSET;
 	}
 
 	/* accumulate moving criteria */
-	if ((result->overThresholds == SET) || (result->outside == SET)) {
-		result->moving = SET;
-	} else if ((result->overThresholds == UNSET)
-			&& (result->outside == UNSET)) {
-		result->moving = UNSET;
+	if ((result->overThresholds == TRISTATE_BOOLEAN_SET) || (result->outside == TRISTATE_BOOLEAN_SET)) {
+		result->moving = TRISTATE_BOOLEAN_SET;
+	} else if ((result->overThresholds == TRISTATE_BOOLEAN_UNSET)
+			&& (result->outside == TRISTATE_BOOLEAN_UNSET)) {
+		result->moving = TRISTATE_BOOLEAN_UNSET;
 	}
 
 	return;
@@ -711,9 +711,9 @@ static bool determineStateWithHysteresis(TristateBoolean movingNow) {
 	 * Internal State
 	 */
 
-	if (movingNow == SET) {
+	if (movingNow == TRISTATE_BOOLEAN_SET) {
 		newState = MOVING;
-	} else if (movingNow == UNSET) {
+	} else if (movingNow == TRISTATE_BOOLEAN_UNSET) {
 		newState = STATIONARY;
 	} else {
 		/* force back to stationary for unknown movement */
@@ -874,7 +874,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	clearMovementType(&movementResult);
 	detemineMovingFromGateway(&bestGateway, &txGateway, &movementResult);
-	if (movementResult.moving != SET) {
+	if (movementResult.moving != TRISTATE_BOOLEAN_SET) {
 		detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
 	}
 
@@ -890,7 +890,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	updateTransmitGpsInformation = externalStateChange
 			|| (positionValid(posAvgEntry) && !positionValid(&txPosition))
-			|| (movementResult.inside == SET);
+			|| (movementResult.inside == TRISTATE_BOOLEAN_SET);
 
 	if ((state.externalState == MOVING) || updateTransmitGpsInformation) {
 		(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
