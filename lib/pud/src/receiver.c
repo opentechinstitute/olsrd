@@ -59,11 +59,11 @@ typedef enum _TristateBoolean {
 
 /** Type describing movement state */
 typedef enum _MovementState {
-	STATIONARY = 0,
-	MOVING = 1
+	MOVEMENT_STATE_STATIONARY = 0,
+	MOVEMENT_STATE_MOVING = 1
 } MovementState;
 
-#define MovementStateToString(s)	((s == MOVING) ? "moving" : \
+#define MovementStateToString(s)	((s == MOVEMENT_STATE_MOVING) ? "moving" : \
 									 "stationary")
 
 /** Type describing state */
@@ -75,8 +75,8 @@ typedef struct _StateType {
 
 /** The state */
 static StateType state = {
-		.internalState = MOVING,
-		.externalState = MOVING,
+		.internalState = MOVEMENT_STATE_MOVING,
+		.externalState = MOVEMENT_STATE_MOVING,
 		.hysteresisCounterPosition = 0
 };
 
@@ -209,7 +209,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	/* convert nmeaINFO to wireformat olsr message */
 	txBufferBytesUsed += sizeof(UplinkHeader); /* keep before txBufferSpaceFree usage */
 	pu_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo, pu, txBufferBytesFree,
-			((state.externalState == MOVING) ? getUpdateIntervalMoving() : getUpdateIntervalStationary()));
+			((state.externalState == MOVEMENT_STATE_MOVING) ? getUpdateIntervalMoving() : getUpdateIntervalStationary()));
 	txBufferBytesUsed += pu_size;
 	gateway = transmitGpsInformation.txGateway;
 
@@ -279,7 +279,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 				/* fixup validity time */
 				setValidityTime(
 						&pu_gpsMessage->validityTime,
-						(state.externalState == MOVING) ?
+						(state.externalState == MOVEMENT_STATE_MOVING) ?
 								getUplinkUpdateIntervalMoving() : getUplinkUpdateIntervalStationary());
 			}
 
@@ -297,7 +297,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 			setClusterLeaderVersion(cl, PUD_WIRE_FORMAT_VERSION);
 			setValidityTime(
 					&cl->validityTime,
-					(state.externalState == MOVING) ?
+					(state.externalState == MOVEMENT_STATE_MOVING) ?
 							getUplinkUpdateIntervalMoving() : getUplinkUpdateIntervalStationary());
 
 			/* really need 2 memcpy's here because of olsr_cnf->ipsize */
@@ -672,7 +672,7 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
  */
 static void restartOlsrTimer(void) {
 	if (!restartOlsrTxTimer(
-			(state.externalState == STATIONARY) ? getUpdateIntervalStationary() :
+			(state.externalState == MOVEMENT_STATE_STATIONARY) ? getUpdateIntervalStationary() :
 					getUpdateIntervalMoving(), &pud_olsr_tx_timer_callback)) {
 		pudError(0, "Could not restart OLSR tx timer, no periodic"
 				" position updates will be sent to the OLSR network");
@@ -684,7 +684,7 @@ static void restartOlsrTimer(void) {
  */
 static void restartUplinkTimer(void) {
 	if (!restartUplinkTxTimer(
-			(state.externalState == STATIONARY) ? getUplinkUpdateIntervalStationary() :
+			(state.externalState == MOVEMENT_STATE_STATIONARY) ? getUplinkUpdateIntervalStationary() :
 					getUplinkUpdateIntervalMoving(),
 			&pud_uplink_timer_callback)) {
 		pudError(0, "Could not restart uplink timer, no periodic"
@@ -712,12 +712,12 @@ static bool determineStateWithHysteresis(TristateBoolean movingNow) {
 	 */
 
 	if (movingNow == TRISTATE_BOOLEAN_SET) {
-		newState = MOVING;
+		newState = MOVEMENT_STATE_MOVING;
 	} else if (movingNow == TRISTATE_BOOLEAN_UNSET) {
-		newState = STATIONARY;
+		newState = MOVEMENT_STATE_STATIONARY;
 	} else {
 		/* force back to stationary for unknown movement */
-		newState = STATIONARY;
+		newState = MOVEMENT_STATE_STATIONARY;
 	}
 	internalStateChange = (state.internalState != newState);
 	state.internalState = newState;
@@ -738,7 +738,7 @@ static bool determineStateWithHysteresis(TristateBoolean movingNow) {
 	newState = state.externalState;
 	if (state.internalState != state.externalState) {
 		switch (state.internalState) {
-			case STATIONARY:
+			case MOVEMENT_STATE_STATIONARY:
 				/* external state is MOVING */
 
 				/* delay going to stationary a bit */
@@ -746,11 +746,11 @@ static bool determineStateWithHysteresis(TristateBoolean movingNow) {
 
 				if (state.hysteresisCounterPosition >= getHysteresisCountToStationary()) {
 					/* outside the hysteresis range, go to stationary */
-					newState = STATIONARY;
+					newState = MOVEMENT_STATE_STATIONARY;
 				}
 				break;
 
-			case MOVING:
+			case MOVEMENT_STATE_MOVING:
 				/* external state is STATIONARY */
 
 				/* delay going to moving a bit */
@@ -758,13 +758,13 @@ static bool determineStateWithHysteresis(TristateBoolean movingNow) {
 
 				if (state.hysteresisCounterPosition >= getHysteresisCountToMoving()) {
 					/* outside the hysteresis range, go to moving */
-					newState = MOVING;
+					newState = MOVEMENT_STATE_MOVING;
 				}
 				break;
 
 			default:
 				/* when unknown do just as if we transition into stationary */
-				newState = STATIONARY;
+				newState = MOVEMENT_STATE_STATIONARY;
 				break;
 		}
 	}
@@ -850,7 +850,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 * Averaging
 	 */
 
-	if (state.internalState == MOVING) {
+	if (state.internalState == MOVEMENT_STATE_MOVING) {
 		/* flush average: keep only the incoming entry */
 		flushPositionAverageList(&positionAverageList);
 	}
@@ -892,7 +892,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 			|| (positionValid(posAvgEntry) && !positionValid(&txPosition))
 			|| (movementResult.inside == TRISTATE_BOOLEAN_SET);
 
-	if ((state.externalState == MOVING) || updateTransmitGpsInformation) {
+	if ((state.externalState == MOVEMENT_STATE_MOVING) || updateTransmitGpsInformation) {
 		(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 		transmitGpsInformation.txPosition.nmeaInfo = posAvgEntry->nmeaInfo;
 		transmitGpsInformation.txGateway = bestGateway;
@@ -956,8 +956,8 @@ bool startReceiver(void) {
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	transmitGpsInformation.updated = false;
 
-	state.internalState = MOVING;
-	state.externalState = MOVING;
+	state.internalState = MOVEMENT_STATE_MOVING;
+	state.externalState = MOVEMENT_STATE_MOVING;
 	state.hysteresisCounterPosition = 0;
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
@@ -999,8 +999,8 @@ void stopReceiver(void) {
 	destroyPositionAverageList(&positionAverageList);
 
 	state.hysteresisCounterPosition = 0;
-	state.externalState = MOVING;
-	state.internalState = MOVING;
+	state.externalState = MOVEMENT_STATE_MOVING;
+	state.internalState = MOVEMENT_STATE_MOVING;
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 	transmitGpsInformation.updated = false;
