@@ -1972,6 +1972,96 @@ int setHysteresisCountToMoving(const char *value, void *data __attribute__ ((unu
 }
 
 /*
+ * gatewayHysteresisCountToStationary
+ */
+
+/** The hysteresis count for changing state from moving to stationary */
+static unsigned long long gatewayHysteresisCountToStationary = PUD_GAT_HYSTERESIS_COUNT_2STAT_DEFAULT;
+
+/**
+ @return
+ The hysteresis count for changing state from moving to stationary
+ */
+unsigned long long getGatewayHysteresisCountToStationary(void) {
+	return gatewayHysteresisCountToStationary;
+}
+
+/**
+ Set hysteresis count plugin parameter
+
+ @param value
+ The hysteresis count plugin parameter
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setGatewayHysteresisCountToStationary(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_GAT_HYSTERESIS_COUNT_2STAT_NAME;
+	unsigned long long hysteresisCountNew;
+
+	assert (value != NULL);
+
+	if (!readULL(valueName, value, &hysteresisCountNew)) {
+		return true;
+	}
+
+	gatewayHysteresisCountToStationary = hysteresisCountNew;
+
+	return false;
+}
+
+/*
+ * gatewayHysteresisCountToMoving
+ */
+
+/** The hysteresis count for changing state from stationary to moving */
+static unsigned long long gatewayHysteresisCountToMoving = PUD_GAT_HYSTERESIS_COUNT_2MOV_DEFAULT;
+
+/**
+ @return
+ The hysteresis count for changing state from stationary to moving
+ */
+unsigned long long getGatewayHysteresisCountToMoving(void) {
+	return gatewayHysteresisCountToMoving;
+}
+
+/**
+ Set hysteresis count plugin parameter
+
+ @param value
+ The hysteresis count plugin parameter
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setGatewayHysteresisCountToMoving(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_GAT_HYSTERESIS_COUNT_2MOV_NAME;
+	unsigned long long hysteresisCountNew;
+
+	assert (value != NULL);
+
+	if (!readULL(valueName, value, &hysteresisCountNew)) {
+		return true;
+	}
+
+	gatewayHysteresisCountToMoving = hysteresisCountNew;
+
+	return false;
+}
+
+/*
  * useDeDup
  */
 

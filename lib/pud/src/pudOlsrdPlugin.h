@@ -56,6 +56,8 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 	{	.name = PUD_DOP_MULTIPLIER_NAME, .set_plugin_parameter = &setDopMultiplier, .data = NULL},
 	{	.name = PUD_HYSTERESIS_COUNT_2STAT_NAME, .set_plugin_parameter = &setHysteresisCountToStationary, .data = NULL},
 	{	.name = PUD_HYSTERESIS_COUNT_2MOV_NAME, .set_plugin_parameter = &setHysteresisCountToMoving, .data = NULL},
+	{	.name = PUD_GAT_HYSTERESIS_COUNT_2STAT_NAME, .set_plugin_parameter = &setGatewayHysteresisCountToStationary, .data = NULL},
+	{	.name = PUD_GAT_HYSTERESIS_COUNT_2MOV_NAME, .set_plugin_parameter = &setGatewayHysteresisCountToMoving, .data = NULL},
 
 	/* DEFAULTS */
 	{	.name = PUD_DEFAULT_HDOP_NAME, .set_plugin_parameter = &setDefaultHdop, .data = NULL},

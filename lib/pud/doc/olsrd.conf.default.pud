@@ -714,6 +714,24 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     #
     #PlParam     "hysteresisCountToMoving"      "5"
 
+    # gatewayHysteresisCountToStationary is the number of times the gateway
+    #                             must be the same that effectuate a state transition from
+    #                             moving to stationary that must be received
+    #                             before the actual transition is taken
+    #
+    # Default: 17
+    #
+    #PlParam     "gatewayHysteresisCountToStationary"  "17"
+
+    # gatewayHysteresisCountToMoving is the number of gateway updates that
+    #                         effectuate a state transition from stationary to
+    #                         moving that must be received before the actual
+    #                         transition is taken
+    #
+    # Default: 5
+    #
+    #PlParam     "gatewayHysteresisCountToMoving"      "5"
+
 
     #
     # Other Plugin Parameters

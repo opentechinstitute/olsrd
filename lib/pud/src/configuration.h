@@ -316,6 +316,26 @@ unsigned long long getHysteresisCountToMoving(void);
 int setHysteresisCountToMoving(const char *value, void *data,
 		set_plugin_parameter_addon addon);
 
+/** The name of the hysteresis count to stationary plugin parameter */
+#define PUD_GAT_HYSTERESIS_COUNT_2STAT_NAME			"gatewayHysteresisCountToStationary"
+
+/** The default value of the hysteresis count to stationary plugin parameter */
+#define PUD_GAT_HYSTERESIS_COUNT_2STAT_DEFAULT		17
+
+unsigned long long getGatewayHysteresisCountToStationary(void);
+int setGatewayHysteresisCountToStationary(const char *value, void *data,
+		set_plugin_parameter_addon addon);
+
+/** The name of the hysteresis count to moving plugin parameter */
+#define PUD_GAT_HYSTERESIS_COUNT_2MOV_NAME			"GatewayHysteresisCountToMoving"
+
+/** The default value of the hysteresis count to moving plugin parameter */
+#define PUD_GAT_HYSTERESIS_COUNT_2MOV_DEFAULT		5
+
+unsigned long long getGatewayHysteresisCountToMoving(void);
+int setGatewayHysteresisCountToMoving(const char *value, void *data,
+		set_plugin_parameter_addon addon);
+
 /*
  * Other Plugin Settings
  */
