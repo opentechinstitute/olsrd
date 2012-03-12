@@ -74,11 +74,7 @@ typedef struct _StateType {
 } StateType;
 
 /** The state */
-static StateType state = {
-		.internalState = MOVEMENT_STATE_MOVING,
-		.externalState = MOVEMENT_STATE_MOVING,
-		.hysteresisCounterPosition = 0
-};
+static StateType state;
 
 /** Type describing movement calculations */
 typedef struct _MovementType {
@@ -928,6 +924,16 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
  * Receiver start/stop
  */
 
+static void initState(void) {
+	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
+	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
+	transmitGpsInformation.updated = false;
+
+	state.internalState = MOVEMENT_STATE_MOVING;
+	state.externalState = MOVEMENT_STATE_MOVING;
+	state.hysteresisCounterPosition = 0;
+}
+
 /**
  Start the receiver
 
@@ -952,13 +958,7 @@ bool startReceiver(void) {
 		return false;
 	}
 
-	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
-	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
-	transmitGpsInformation.updated = false;
-
-	state.internalState = MOVEMENT_STATE_MOVING;
-	state.externalState = MOVEMENT_STATE_MOVING;
-	state.hysteresisCounterPosition = 0;
+	initState();
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
@@ -998,14 +998,8 @@ void stopReceiver(void) {
 
 	destroyPositionAverageList(&positionAverageList);
 
-	state.hysteresisCounterPosition = 0;
-	state.externalState = MOVEMENT_STATE_MOVING;
-	state.internalState = MOVEMENT_STATE_MOVING;
-
+	initState();
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-	transmitGpsInformation.updated = false;
-	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
-	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	nmea_parser_destroy(&nmeaParser);
