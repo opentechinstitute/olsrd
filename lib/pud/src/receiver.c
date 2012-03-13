@@ -43,8 +43,6 @@ static nmeaPARSER nmeaParser;
 typedef struct _MovementType {
 	TristateBoolean moving; /**< SET: we are moving */
 
-	TristateBoolean differentGateway; /**< SET: the gateway is different */
-
 	TristateBoolean overThresholds; /**< SET: at least 1 threshold state is set */
 	TristateBoolean speedOverThreshold; /**< SET: speed is over threshold */
 	TristateBoolean hDistanceOverThreshold; /**< SET: horizontal distance is outside threshold */
@@ -80,8 +78,7 @@ typedef struct _TransmitGpsInformation {
 	pthread_mutex_t mutex; /**< access mutex */
 	bool updated; /**< true when the information was updated */
 	PositionUpdateEntry txPosition; /**< The last transmitted position */
-	union olsr_ip_addr txGateway; /**< the best gateway at the time the transmitted position was determined */
-	union olsr_ip_addr bestGateway; /**< the current best gateway */
+	union olsr_ip_addr txGateway; /**< the best gateway */
 } TransmitGpsInformation;
 
 /** The latest position information that is transmitted */
@@ -101,7 +98,6 @@ static TransmitGpsInformation transmitGpsInformation;
 static void clearMovementType(MovementType * result) {
 	/* clear outputs */
 	result->moving = TRISTATE_BOOLEAN_UNKNOWN;
-	result->differentGateway = TRISTATE_BOOLEAN_UNKNOWN;
 	result->overThresholds = TRISTATE_BOOLEAN_UNKNOWN;
 	result->speedOverThreshold = TRISTATE_BOOLEAN_UNKNOWN;
 	result->hDistanceOverThreshold = TRISTATE_BOOLEAN_UNKNOWN;
@@ -304,42 +300,87 @@ static void pud_uplink_timer_callback(void *context __attribute__ ((unused))) {
 }
 
 /**
+ Restart the OLSR tx timer
+ */
+static void restartOlsrTimer(MovementState externalState) {
+	if (!restartOlsrTxTimer(
+			(externalState == MOVEMENT_STATE_STATIONARY) ? getUpdateIntervalStationary() :
+					getUpdateIntervalMoving(), &pud_olsr_tx_timer_callback)) {
+		pudError(0, "Could not restart OLSR tx timer, no periodic"
+				" position updates will be sent to the OLSR network");
+	}
+}
+
+/**
+ Restart the uplink tx timer
+ */
+static void restartUplinkTimer(MovementState externalState) {
+	if (!restartUplinkTxTimer(
+			(externalState == MOVEMENT_STATE_STATIONARY) ? getUplinkUpdateIntervalStationary() :
+					getUplinkUpdateIntervalMoving(),
+			&pud_uplink_timer_callback)) {
+		pudError(0, "Could not restart uplink timer, no periodic"
+				" position updates will be uplinked");
+	}
+}
+
+static void doImmediateTransmit(MovementState externalState, bool externalStateChange) {
+	if (externalStateChange) {
+		TimedTxInterface interfaces = TX_INTERFACE_OLSR; /* always send over olsr */
+		restartOlsrTimer(externalState);
+
+		if (isUplinkAddrSet()) {
+			interfaces |= TX_INTERFACE_UPLINK;
+			restartUplinkTimer(externalState);
+		}
+
+		/* do an immediate transmit */
+		txToAllOlsrInterfaces(interfaces);
+	}
+}
+
+/**
  The gateway timer callback
 
  @param context
  unused
  */
 static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
+	union olsr_ip_addr bestGateway;
+	bool externalStateChange;
+	MovementState externalState;
+	TristateBoolean movingNow = TRISTATE_BOOLEAN_UNSET;
+
+	getBestUplinkGateway(&bestGateway);
+
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-	getBestUplinkGateway(&transmitGpsInformation.bestGateway);
-	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
-}
 
-/**
- Detemine whether we are moving from the gateway.
-
- MUST be called which the position average list locked.
-
- @param gateway
- the current best gateway
- @param lastGateway
- the last best gateway
- @param result
- the results of all movement criteria
- */
-static void detemineMovingFromGateway(union olsr_ip_addr * gateway, union olsr_ip_addr * lastGateway,
-		MovementType * result) {
 	/*
-	 * When the gateway is different from the gateway during last transmit, then
-	 * we force MOVING
+	 * Movement detection
 	 */
-	if (!ipequal(gateway, lastGateway)) {
-		result->moving = TRISTATE_BOOLEAN_SET;
-		result->differentGateway = TRISTATE_BOOLEAN_SET;
-		return;
+
+	if (!ipequal(&bestGateway, &transmitGpsInformation.txGateway)) {
+		movingNow = TRISTATE_BOOLEAN_SET;
 	}
 
-	result->differentGateway = TRISTATE_BOOLEAN_UNSET;
+	/*
+	 * State Determination
+	 */
+
+	externalStateChange = determineStateWithHysteresis(SUBSTATE_GATEWAY, movingNow, &externalState);
+
+	/*
+	 * Update transmitGpsInformation
+	 */
+
+	if ((externalState == MOVEMENT_STATE_MOVING) || externalStateChange) {
+		transmitGpsInformation.txGateway = bestGateway;
+		transmitGpsInformation.updated = true;
+	}
+
+	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
+
+	doImmediateTransmit(externalState, externalStateChange);
 }
 
 /**
@@ -624,32 +665,6 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 }
 
 /**
- Restart the OLSR tx timer
- */
-static void restartOlsrTimer(void) {
-	if (!restartOlsrTxTimer(
-			(getExternalState() == MOVEMENT_STATE_STATIONARY) ? getUpdateIntervalStationary() :
-					getUpdateIntervalMoving(), &pud_olsr_tx_timer_callback)) {
-		pudError(0, "Could not restart OLSR tx timer, no periodic"
-				" position updates will be sent to the OLSR network");
-	}
-}
-
-/**
- Restart the uplink tx timer
- */
-static void restartUplinkTimer(void) {
-	if (!restartUplinkTxTimer(
-			(getExternalState() == MOVEMENT_STATE_STATIONARY) ? getUplinkUpdateIntervalStationary() :
-					getUplinkUpdateIntervalMoving(),
-			&pud_uplink_timer_callback)) {
-		pudError(0, "Could not restart uplink timer, no periodic"
-				" position updates will be uplinked");
-	}
-}
-
-
-/**
  Update the latest GPS information. This function is called when a packet is
  received from a rxNonOlsr interface, containing one or more NMEA strings with
  GPS information.
@@ -673,9 +688,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	MovementType movementResult;
 	bool externalStateChange = false;
 	bool updateTransmitGpsInformation = false;
-	union olsr_ip_addr bestGateway;
 	PositionUpdateEntry txPosition;
-	union olsr_ip_addr txGateway;
 	MovementState externalState;
 
 	/* do not process when the message does not start with $GP */
@@ -736,23 +749,18 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 * Movement detection
 	 */
 
+	clearMovementType(&movementResult);
+
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 	txPosition = transmitGpsInformation.txPosition;
-	txGateway = transmitGpsInformation.txGateway;
-	bestGateway = transmitGpsInformation.bestGateway;
-	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
-	clearMovementType(&movementResult);
-	detemineMovingFromGateway(&bestGateway, &txGateway, &movementResult);
 	detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
 
 	/*
 	 * State Determination
 	 */
 
-	externalStateChange = determineStateWithHysteresis(SUBSTATE_GATEWAY, movementResult.moving);
-	externalStateChange = externalStateChange || determineStateWithHysteresis(SUBSTATE_POSITION, movementResult.moving);
-	externalState = getExternalState();
+	externalStateChange = determineStateWithHysteresis(SUBSTATE_POSITION, movementResult.moving, &externalState);
 
 	/*
 	 * Update transmitGpsInformation
@@ -763,11 +771,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 			|| (movementResult.inside == TRISTATE_BOOLEAN_SET);
 
 	if ((externalState == MOVEMENT_STATE_MOVING) || updateTransmitGpsInformation) {
-		(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 		transmitGpsInformation.txPosition.nmeaInfo = posAvgEntry->nmeaInfo;
-		transmitGpsInformation.txGateway = bestGateway;
 		transmitGpsInformation.updated = true;
-		(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 #if defined(PUD_DUMP_AVERAGING)
 		dump_nmeaInfo(&posAvgEntry->nmeaInfo,
@@ -775,18 +780,9 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 #endif /* PUD_DUMP_AVERAGING */
 	}
 
-	if (externalStateChange) {
-		TimedTxInterface interfaces = TX_INTERFACE_OLSR; /* always send over olsr */
-		restartOlsrTimer();
+	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
-		if (isUplinkAddrSet()) {
-			interfaces |= TX_INTERFACE_UPLINK;
-			restartUplinkTimer();
-		}
-
-		/* do an immediate transmit */
-		txToAllOlsrInterfaces(interfaces);
-	}
+	doImmediateTransmit(externalState, externalStateChange);
 
 	retval = true;
 
@@ -802,6 +798,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
  - true otherwise
  */
 bool startReceiver(void) {
+	MovementState externalState;
+
 	pthread_mutexattr_t attr;
 	if (pthread_mutexattr_init(&attr)) {
 		return false;
@@ -839,8 +837,9 @@ bool startReceiver(void) {
 		return false;
 	}
 
-	restartOlsrTimer();
-	restartUplinkTimer();
+	externalState = getExternalState();
+	restartOlsrTimer(externalState);
+	restartUplinkTimer(externalState);
 	if (!restartGatewayTimer(getGatewayDeterminationInterval(), &pud_gateway_timer_callback)) {
 		pudError(0, "Could not start gateway timer");
 		stopReceiver();

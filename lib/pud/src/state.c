@@ -71,7 +71,13 @@ void destroyState(void) {
 }
 
 MovementState getExternalState(void) {
-	return state.externalState;
+	MovementState externalState;
+
+	(void) pthread_mutex_lock(&state.mutex);
+	externalState = state.externalState;
+	(void) pthread_mutex_unlock(&state.mutex);
+
+	return externalState;
 }
 
 /**
@@ -80,11 +86,17 @@ MovementState getExternalState(void) {
  * the sub-state for/from which the new state should be determined
  * @param movingNow
  * the movement result of the sub-state
- */bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean movingNow) {
+ * @param externalState
+ * a pointer to the variable in which to store the new external state
+ */
+bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean movingNow,
+		MovementState * externalState) {
 	MovementState newState;
 	bool internalStateChange;
 	bool externalStateChange;
 	SubStateType * subState = &state.substate[subStateIndex];
+
+	(void) pthread_mutex_lock(&state.mutex);
 
 	/*
 	 * Substate Internal State
@@ -177,9 +189,19 @@ MovementState getExternalState(void) {
 	}
 
 
+	*externalState = state.externalState;
+
+	(void) pthread_mutex_unlock(&state.mutex);
+
 	return externalStateChange;
 }
 
 MovementState getInternalState(SubStateIndex subStateIndex) {
-	return state.substate[subStateIndex].internalState;
+	MovementState internalState;
+
+	(void) pthread_mutex_lock(&state.mutex);
+	internalState = state.substate[subStateIndex].internalState;
+	(void) pthread_mutex_unlock(&state.mutex);
+
+	return internalState;
 }
