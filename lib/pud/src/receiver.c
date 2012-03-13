@@ -962,9 +962,11 @@ void stopReceiver(void) {
 	state.externalState = MOVING;
 	state.internalState = MOVING;
 
+	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 	transmitGpsInformation.updated = false;
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
+	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	nmea_parser_destroy(&nmeaParser);
 
