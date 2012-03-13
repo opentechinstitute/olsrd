@@ -50,6 +50,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 
 	/* MOVEMENT DETECTION */
 	{	.name = PUD_AVERAGE_DEPTH_NAME, .set_plugin_parameter = &setAverageDepth, .data = NULL},
+	{	.name = PUD_GATEWAY_DETERMINATION_INTERVAL_NAME, .set_plugin_parameter = &setGatewayDeterminationInterval, .data = NULL},
 	{	.name = PUD_MOVING_SPEED_THRESHOLD_NAME, .set_plugin_parameter = &setMovingSpeedThreshold, .data = NULL},
 	{	.name = PUD_MOVING_DISTANCE_THRESHOLD_NAME, .set_plugin_parameter = &setMovingDistanceThreshold, .data = NULL},
 	{	.name = PUD_DOP_MULTIPLIER_NAME, .set_plugin_parameter = &setDopMultiplier, .data = NULL},

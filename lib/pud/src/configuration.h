@@ -226,6 +226,16 @@ unsigned long long getUplinkUpdateIntervalMoving(void);
 int setUplinkUpdateIntervalMoving(const char *value, void *data,
 		set_plugin_parameter_addon addon);
 
+/** The name of the gateway determination interval plugin parameter */
+#define PUD_GATEWAY_DETERMINATION_INTERVAL_NAME			"gatewayDeterminationInterval"
+
+/** The default value of the gateway determination interval plugin parameter */
+#define PUD_GATEWAY_DETERMINATION_INTERVAL_DEFAULT		1
+
+unsigned long long getGatewayDeterminationInterval(void);
+int setGatewayDeterminationInterval(const char *value, void *data,
+		set_plugin_parameter_addon addon);
+
 /** The name of the moving speed threshold plugin parameter */
 #define PUD_MOVING_SPEED_THRESHOLD_NAME			"movingSpeedThreshold"
 

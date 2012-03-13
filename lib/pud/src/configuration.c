@@ -1557,6 +1557,56 @@ int setUplinkUpdateIntervalMoving(const char *value, void *data __attribute__ ((
 }
 
 /*
+ * gatewayDeterminationInterval
+ */
+
+/** The gateway determination interval plugin parameter (in seconds) */
+static unsigned long long gatewayDeterminationInterval = PUD_GATEWAY_DETERMINATION_INTERVAL_DEFAULT;
+
+/**
+ @return
+ The gateway determination interval plugin parameter (in seconds)
+ */
+unsigned long long getGatewayDeterminationInterval(void) {
+	return gatewayDeterminationInterval;
+}
+
+/**
+ Set gateway determination interval plugin parameter
+
+ @param value
+ The gateway determination interval plugin parameter (in seconds)
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setGatewayDeterminationInterval(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_GATEWAY_DETERMINATION_INTERVAL_NAME;
+	unsigned long long gatewayDeterminationIntervalNew;
+
+	assert (value != NULL);
+
+	if (!readULL(valueName, value, &gatewayDeterminationIntervalNew)) {
+		return true;
+	}
+
+	if (gatewayDeterminationIntervalNew < 1) {
+		pudError(false, "Configured %s must be at least 1", valueName);
+		return true;
+	}
+
+	gatewayDeterminationInterval = gatewayDeterminationIntervalNew;
+
+	return false;
+}
+
+/*
  * movingSpeedThreshold
  */
 
