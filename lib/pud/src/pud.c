@@ -413,7 +413,10 @@ bool initPud(void) {
 		goto error;
 	}
 
-	initDeDupList(&deDupList, getDeDupDepth());
+	if (!initDeDupList(&deDupList, getDeDupDepth())) {
+		pudError(false, "Could not initialise de-duplication list");
+		goto error;
+	}
 
 	if (!startReceiver()) {
 		pudError(false, "Could not start receiver");
