@@ -66,11 +66,26 @@ typedef enum _MovementState {
 #define MovementStateToString(s)	((s == MOVEMENT_STATE_MOVING) ? "moving" : \
 									 "stationary")
 
+/** Type describing substate indexes */
+typedef enum _SubStateIndex {
+	SUBSTATE_POSITION = 0,
+	SUBSTATE_GATEWAY = 1,
+	SUBSTATE_COUNT = 2
+} SubStateIndex;
+
+/** Type describing substate */
+typedef struct _SubStateType {
+	MovementState internalState; /**< the internal movement state */
+	unsigned long long hysteresisCounter; /**< the hysteresis counter */
+	unsigned long long hysteresisCounterToStationary; /**< the hysteresis counter threshold for changing the state to STATIONARY */
+	unsigned long long hysteresisCounterToMoving; /**< the hysteresis counter threshold for changing the state to MOVING */
+	MovementState externalState; /**< the externally visible movement state */
+} SubStateType;
+
 /** Type describing state */
 typedef struct _StateType {
-	MovementState internalState; /**< the internal movement state */
+	SubStateType substate[SUBSTATE_COUNT]; /**< the sub states */
 	MovementState externalState; /**< the externally visible movement state */
-	unsigned long long hysteresisCounterPosition; /**< the hysteresis counter for position related external state changes */
 } StateType;
 
 /** The state */
@@ -691,20 +706,21 @@ static void restartUplinkTimer(void) {
 /*
  * External State (+ hysteresis)
  */
-static bool determineStateWithHysteresis(TristateBoolean movingNow) {
+static bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean movingNow) {
 	MovementState newState;
 	bool internalStateChange;
 	bool externalStateChange;
+	SubStateType * subState = &state.substate[subStateIndex];
 
 #if defined(PUD_DUMP_AVERAGING)
-	olsr_printf(0, "determineStateWithHysteresis: internalState = %s\n",
-			MovementStateToString(state.internalState));
-	olsr_printf(0, "determineStateWithHysteresis: movingNow     = %s\n",
+	olsr_printf(0, "determineStateWithHysteresis: internalState(%d) = %s\n", subStateIndex,
+			MovementStateToString(subState->internalState));
+	olsr_printf(0, "determineStateWithHysteresis: movingNow         = %s\n",
 			TristateBooleanToString(movingNow));
 #endif /* PUD_DUMP_AVERAGING */
 
 	/*
-	 * Internal State
+	 * Substate Internal State
 	 */
 
 	if (movingNow == TRISTATE_BOOLEAN_SET) {
@@ -715,44 +731,44 @@ static bool determineStateWithHysteresis(TristateBoolean movingNow) {
 		/* force back to stationary for unknown movement */
 		newState = MOVEMENT_STATE_STATIONARY;
 	}
-	internalStateChange = (state.internalState != newState);
-	state.internalState = newState;
+	internalStateChange = (subState->internalState != newState);
+	subState->internalState = newState;
 
 	/*
-	 * External State (+ hysteresis)
+	 * Substate External State (+ hysteresis)
 	 */
 
 	if (internalStateChange) {
 		/* restart hysteresis for external state change when we have an internal
 		 * state change */
-		state.hysteresisCounterPosition = 0;
+		subState->hysteresisCounter = 0;
 	}
 
 	/* when internal state and external state are not the same we need to
 	 * perform hysteresis before we can propagate the internal state to the
 	 * external state */
-	newState = state.externalState;
-	if (state.internalState != state.externalState) {
-		switch (state.internalState) {
+	newState = subState->externalState;
+	if (subState->internalState != subState->externalState) {
+		switch (subState->internalState) {
 			case MOVEMENT_STATE_STATIONARY:
-				/* external state is MOVING */
+				/* internal state is STATIONARY, external state is MOVING */
 
 				/* delay going to stationary a bit */
-				state.hysteresisCounterPosition++;
+				subState->hysteresisCounter++;
 
-				if (state.hysteresisCounterPosition >= getHysteresisCountToStationary()) {
+				if (subState->hysteresisCounter >= subState->hysteresisCounterToStationary) {
 					/* outside the hysteresis range, go to stationary */
 					newState = MOVEMENT_STATE_STATIONARY;
 				}
 				break;
 
 			case MOVEMENT_STATE_MOVING:
-				/* external state is STATIONARY */
+				/* internal state is MOVING, external state is STATIONARY */
 
 				/* delay going to moving a bit */
-				state.hysteresisCounterPosition++;
+				subState->hysteresisCounter++;
 
-				if (state.hysteresisCounterPosition >= getHysteresisCountToMoving()) {
+				if (subState->hysteresisCounter >= subState->hysteresisCounterToMoving) {
 					/* outside the hysteresis range, go to moving */
 					newState = MOVEMENT_STATE_MOVING;
 				}
@@ -765,12 +781,44 @@ static bool determineStateWithHysteresis(TristateBoolean movingNow) {
 		}
 	}
 
-	externalStateChange = (state.externalState != newState);
-	state.externalState = newState;
+	externalStateChange = (subState->externalState != newState);
+	subState->externalState = newState;
 
 #if defined(PUD_DUMP_AVERAGING)
-	olsr_printf(0, "determineStateWithHysteresis: newState = %s\n",
-			MovementStateToString(newState));
+	olsr_printf(0, "determineStateWithHysteresis: externalState(%d) = %s\n", subStateIndex,
+			MovementStateToString(subState->externalState));
+#endif /* PUD_DUMP_AVERAGING */
+
+	/*
+	 * external state may transition into MOVING when either one of the sub-states say so (OR), and
+	 * may transition into STATIONARY when all of the sub-states say so (AND)
+	 */
+	if (externalStateChange) {
+		bool transition = false;
+
+		if (newState == MOVEMENT_STATE_STATIONARY) {
+			/* AND: all sub-states must agree on STATIONARY */
+			int i = 0;
+			for (i = 0; i < SUBSTATE_COUNT; i++) {
+				transition = transition && (state.substate[i].externalState == newState);
+			}
+		} else /* if (newState == MOVEMENT_STATE_MOVING) */{
+			/* OR: one sub-state wanting MOVING is enough */
+			int i = 0;
+			for (i = 0; i < SUBSTATE_COUNT; i++) {
+				transition = transition || (state.substate[i].externalState == newState);
+			}
+		}
+
+		if (transition) {
+			externalStateChange = (state.externalState != newState);
+			state.externalState = newState;
+		}
+	}
+
+#if defined(PUD_DUMP_AVERAGING)
+	olsr_printf(0, "determineStateWithHysteresis: externalState    = %s\n", subStateIndex,
+			MovementStateToString(externalState));
 #endif /* PUD_DUMP_AVERAGING */
 
 	return externalStateChange;
@@ -846,7 +894,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 * Averaging
 	 */
 
-	if (state.internalState == MOVEMENT_STATE_MOVING) {
+	if (state.substate[SUBSTATE_POSITION].internalState == MOVEMENT_STATE_MOVING) {
 		/* flush average: keep only the incoming entry */
 		flushPositionAverageList(&positionAverageList);
 	}
@@ -870,15 +918,14 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	clearMovementType(&movementResult);
 	detemineMovingFromGateway(&bestGateway, &txGateway, &movementResult);
-	if (movementResult.moving != TRISTATE_BOOLEAN_SET) {
-		detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
-	}
+	detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
 
 	/*
 	 * State Determination
 	 */
 
-	externalStateChange = determineStateWithHysteresis(movementResult.moving);
+	externalStateChange = determineStateWithHysteresis(SUBSTATE_GATEWAY, movementResult.moving);
+	externalStateChange = externalStateChange || determineStateWithHysteresis(SUBSTATE_POSITION, movementResult.moving);
 
 	/*
 	 * Update transmitGpsInformation
@@ -929,9 +976,17 @@ static void initState(void) {
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	transmitGpsInformation.updated = false;
 
-	state.internalState = MOVEMENT_STATE_MOVING;
+	state.substate[SUBSTATE_POSITION].internalState = MOVEMENT_STATE_MOVING;
+	state.substate[SUBSTATE_POSITION].hysteresisCounter = 0;
+	state.substate[SUBSTATE_POSITION].hysteresisCounterToStationary = getHysteresisCountToStationary();
+	state.substate[SUBSTATE_POSITION].hysteresisCounterToMoving = getHysteresisCountToMoving();
+	state.substate[SUBSTATE_POSITION].externalState = MOVEMENT_STATE_MOVING;
+	state.substate[SUBSTATE_GATEWAY].internalState = MOVEMENT_STATE_MOVING;
+	state.substate[SUBSTATE_GATEWAY].hysteresisCounter = 0;
+	state.substate[SUBSTATE_GATEWAY].hysteresisCounterToStationary = getGatewayHysteresisCountToStationary();
+	state.substate[SUBSTATE_GATEWAY].hysteresisCounterToMoving = getGatewayHysteresisCountToMoving();
+	state.substate[SUBSTATE_GATEWAY].externalState = MOVEMENT_STATE_MOVING;
 	state.externalState = MOVEMENT_STATE_MOVING;
-	state.hysteresisCounterPosition = 0;
 }
 
 /**
