@@ -8,6 +8,7 @@
 #include "receiver.h"
 #include "dedup.h"
 #include "compiler.h"
+#include "state.h"
 
 /* OLSRD includes */
 #include "ipcalc.h"
@@ -413,6 +414,11 @@ bool initPud(void) {
 		goto error;
 	}
 
+	if (!initState()) {
+		pudError(false, "Could not initialise state");
+		goto error;
+	}
+
 	if (!initDeDupList(&deDupList, getDeDupDepth())) {
 		pudError(false, "Could not initialise de-duplication list");
 		goto error;
@@ -459,4 +465,5 @@ void closePud(void) {
 	closeNetworkInterfaces();
 	stopReceiver();
 	destroyDeDupList(&deDupList);
+	destroyState();
 }
