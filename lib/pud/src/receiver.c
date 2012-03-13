@@ -725,8 +725,8 @@ static bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBo
 	} else if (movingNow == TRISTATE_BOOLEAN_UNSET) {
 		newState = MOVEMENT_STATE_STATIONARY;
 	} else {
-		/* force back to stationary for unknown movement */
-		newState = MOVEMENT_STATE_STATIONARY;
+		/* keep current sub-state */
+		newState = subState->internalState;
 	}
 	internalStateChange = (subState->internalState != newState);
 	subState->internalState = newState;
@@ -772,8 +772,7 @@ static bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBo
 				break;
 
 			default:
-				/* when unknown do just as if we transition into stationary */
-				newState = MOVEMENT_STATE_STATIONARY;
+				/* when unknown then don't change state */
 				break;
 		}
 	}
