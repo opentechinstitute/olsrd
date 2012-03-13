@@ -209,6 +209,10 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	union olsr_message * pu = &pu_uplink->msg.olsrMessage;
 	unsigned int pu_size = 0;
 	union olsr_ip_addr gateway;
+	unsigned long long updateInterval;
+
+	updateInterval =
+			(state.externalState == MOVEMENT_STATE_MOVING) ? getUpdateIntervalMoving() : getUpdateIntervalStationary();
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 
@@ -219,8 +223,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 
 	/* convert nmeaINFO to wireformat olsr message */
 	txBufferBytesUsed += sizeof(UplinkHeader); /* keep before txBufferSpaceFree usage */
-	pu_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo, pu, txBufferBytesFree,
-			((state.externalState == MOVEMENT_STATE_MOVING) ? getUpdateIntervalMoving() : getUpdateIntervalStationary()));
+	pu_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo, pu, txBufferBytesFree, updateInterval);
 	txBufferBytesUsed += pu_size;
 	gateway = transmitGpsInformation.txGateway;
 
@@ -288,10 +291,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 				setUplinkMessagePadding(&pu_uplink->header, 0);
 
 				/* fixup validity time */
-				setValidityTime(
-						&pu_gpsMessage->validityTime,
-						(state.externalState == MOVEMENT_STATE_MOVING) ?
-								getUplinkUpdateIntervalMoving() : getUplinkUpdateIntervalStationary());
+				setValidityTime(&pu_gpsMessage->validityTime, updateInterval);
 			}
 
 			/*
@@ -306,10 +306,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 
 			/* setup cl */
 			setClusterLeaderVersion(cl, PUD_WIRE_FORMAT_VERSION);
-			setValidityTime(
-					&cl->validityTime,
-					(state.externalState == MOVEMENT_STATE_MOVING) ?
-							getUplinkUpdateIntervalMoving() : getUplinkUpdateIntervalStationary());
+			setValidityTime(&cl->validityTime, updateInterval);
 
 			/* really need 2 memcpy's here because of olsr_cnf->ipsize */
 			memcpy(cl_originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
