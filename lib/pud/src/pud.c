@@ -452,6 +452,7 @@ bool initPud(void) {
  the NMEA parser.
  */
 void closePud(void) {
+	olsr_parser_remove_function(&packetReceivedFromOlsr, PUD_OLSR_MSG_TYPE);
 	closeNetworkInterfaces();
 	stopReceiver();
 	destroyDeDupList(&deDupList);
