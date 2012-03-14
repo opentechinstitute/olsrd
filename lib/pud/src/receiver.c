@@ -77,7 +77,7 @@ typedef enum _TimedTxInterface {
 /** Structure of the latest GPS information that is transmitted */
 typedef struct _TransmitGpsInformation {
 	pthread_mutex_t mutex; /**< access mutex */
-	bool updated; /**< true when the information was updated */
+	bool positionUpdated; /**< true when the position information was updated */
 	PositionUpdateEntry txPosition; /**< The last transmitted position */
 	union olsr_ip_addr txGateway; /**< the best gateway */
 } TransmitGpsInformation;
@@ -162,7 +162,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 
 	/* only fixup timestamp when the position is valid _and_ when the position was not updated */
-	if (positionValid(&transmitGpsInformation.txPosition) && !transmitGpsInformation.updated) {
+	if (positionValid(&transmitGpsInformation.txPosition) && !transmitGpsInformation.positionUpdated) {
 		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
 	}
 
@@ -172,7 +172,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	txBufferBytesUsed += pu_size;
 	gateway = transmitGpsInformation.txGateway;
 
-	transmitGpsInformation.updated = false;
+	transmitGpsInformation.positionUpdated = false;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	/*
@@ -824,7 +824,7 @@ bool startReceiver(void) {
 
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
-	transmitGpsInformation.updated = false;
+	transmitGpsInformation.positionUpdated = false;
 
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
@@ -868,7 +868,7 @@ void stopReceiver(void) {
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
-	transmitGpsInformation.updated = false;
+	transmitGpsInformation.positionUpdated = false;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	nmea_parser_destroy(&nmeaParser);
