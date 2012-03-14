@@ -325,19 +325,17 @@ static void restartUplinkTimer(MovementState externalState) {
 	}
 }
 
-static void doImmediateTransmit(MovementState externalState, bool externalStateChange) {
-	if (externalStateChange) {
-		TimedTxInterface interfaces = TX_INTERFACE_OLSR; /* always send over olsr */
-		restartOlsrTimer(externalState);
+static void doImmediateTransmit(MovementState externalState) {
+	TimedTxInterface interfaces = TX_INTERFACE_OLSR; /* always send over olsr */
+	restartOlsrTimer(externalState);
 
-		if (isUplinkAddrSet()) {
-			interfaces |= TX_INTERFACE_UPLINK;
-			restartUplinkTimer(externalState);
-		}
-
-		/* do an immediate transmit */
-		txToAllOlsrInterfaces(interfaces);
+	if (isUplinkAddrSet()) {
+		interfaces |= TX_INTERFACE_UPLINK;
+		restartUplinkTimer(externalState);
 	}
+
+	/* do an immediate transmit */
+		txToAllOlsrInterfaces(interfaces);
 }
 
 /**
@@ -382,7 +380,9 @@ static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
 
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
-	doImmediateTransmit(externalState, externalStateChange);
+	if (externalStateChange) {
+		doImmediateTransmit(externalState);
+	}
 }
 
 /**
@@ -776,7 +776,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	if ((externalState == MOVEMENT_STATE_MOVING) || updateTransmitGpsInformation) {
 		transmitGpsInformation.txPosition.nmeaInfo = posAvgEntry->nmeaInfo;
-		transmitGpsInformation.updated = true;
+		transmitGpsInformation.positionUpdated = true;
 
 #if defined(PUD_DUMP_AVERAGING)
 		dump_nmeaInfo(&posAvgEntry->nmeaInfo,
@@ -786,7 +786,9 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
-	doImmediateTransmit(externalState, externalStateChange);
+	if (externalStateChange) {
+		doImmediateTransmit(externalState);
+	}
 
 	retval = true;
 
