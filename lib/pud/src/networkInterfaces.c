@@ -6,18 +6,10 @@
 #include "netTools.h"
 
 /* OLSRD includes */
-#include "olsr_cfg.h"
 #include "olsr.h"
-#include "interfaces.h"
 
 /* System includes */
-#include <assert.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <errno.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stddef.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
 

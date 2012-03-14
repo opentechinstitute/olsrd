@@ -7,7 +7,6 @@
 
 /* System includes */
 #include <nmea/info.h>
-#include <pthread.h>
 #include <stdbool.h>
 
 /** Stores an nmeaINFO entry, used in the averaging */

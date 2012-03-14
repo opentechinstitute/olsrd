@@ -5,10 +5,11 @@
 
 /* OLSR includes */
 #include "olsrd_plugin.h"
+#include "olsr_types.h"
 
 /* System includes */
 #include <stdbool.h>
-#include <sys/socket.h>
+#include <stddef.h>
 #include <OlsrdPudWireFormat/wireFormat.h>
 
 /*

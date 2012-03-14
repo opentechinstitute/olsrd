@@ -2,14 +2,13 @@
 
 /* Plugin includes */
 #include "pud.h"
-#include "gpsConversion.h"
-#include "configuration.h"
-#include "timers.h"
-#include "posAvg.h"
-#include "networkInterfaces.h"
-#include "uplinkGateway.h"
 #include "state.h"
-#include "OlsrdPudWireFormat/wireFormat.h"
+#include "posAvg.h"
+#include "configuration.h"
+#include "gpsConversion.h"
+#include "networkInterfaces.h"
+#include "timers.h"
+#include "uplinkGateway.h"
 #include "dump.h"
 
 /* OLSRD includes */
@@ -17,9 +16,11 @@
 #include "net_olsr.h"
 
 /* System includes */
+#include <pthread.h>
 #include <nmea/parser.h>
 #include <nmea/gmath.h>
 #include <nmea/sentence.h>
+#include <OlsrdPudWireFormat/wireFormat.h>
 
 /* Debug includes */
 #if defined(PUD_DUMP_GPS_PACKETS_TX_OLSR) || \

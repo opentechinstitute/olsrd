@@ -7,8 +7,6 @@
 
 /* System includes */
 #include <assert.h>
-#include <pthread.h>
-#include <stddef.h>
 
 #ifdef PUD_DUMP_DEDUP
 #include <arpa/inet.h>

@@ -5,14 +5,9 @@
 /* OLSRD includes */
 #include "gateway.h"
 #include "tc_set.h"
-#include "ipcalc.h"
-#include "olsr_types.h"
 #include "lq_plugin.h"
 
 /* System includes */
-#include <stddef.h>
-#include <stdbool.h>
-#include <sys/socket.h>
 
 /**
  * Determine the speed on which a gateway is chosen

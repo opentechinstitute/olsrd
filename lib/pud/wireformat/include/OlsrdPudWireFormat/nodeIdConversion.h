@@ -1,10 +1,7 @@
 #ifndef _PUD_NODEIDCONVERSION_H_
 #define _PUD_NODEIDCONVERSION_H_
 
-#include "olsr_protocol.h"
-
 #include <OlsrdPudWireFormat/wireFormat.h>
-#include <stddef.h>
 
 void getNodeTypeStringFromOlsr(int ipVersion,
 		PudOlsrPositionUpdate * olsrGpsMessage, char * nodeIdTypeBuffer,

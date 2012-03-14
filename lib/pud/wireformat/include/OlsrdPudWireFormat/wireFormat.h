@@ -1,15 +1,18 @@
 #ifndef _PUD_WIREFORMAT_H_
 #define _PUD_WIREFORMAT_H_
 
+#include "olsr_types.h"
 #include "olsr_protocol.h"
 
-#include <OlsrdPudWireFormat/compiler.h>
-#include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
-#include <time.h>
-#include <math.h>
+#include <stdint.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
+#include <math.h>
+#include <string.h>
 #include <assert.h>
+#include <OlsrdPudWireFormat/compiler.h>
 
 /*
  * Version

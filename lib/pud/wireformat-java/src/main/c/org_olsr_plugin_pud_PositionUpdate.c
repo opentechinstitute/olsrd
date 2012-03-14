@@ -1,13 +1,7 @@
 #include "org_olsr_plugin_pud_PositionUpdate.h"
+
 #include "util.h"
-
-#include <OlsrdPudWireFormat/wireFormat.h>
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
-
-#include <stdio.h>
-#include <stddef.h>
-#include <string.h>
-#include <arpa/inet.h>
 
 /*
  * OLSR header

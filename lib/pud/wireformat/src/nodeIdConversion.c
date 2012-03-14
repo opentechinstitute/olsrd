@@ -1,9 +1,8 @@
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
-#include <OlsrdPudWireFormat/compiler.h>
 
-#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <arpa/inet.h>
-#include <net/if.h>
 
 /* ************************************************************************
  * Node Information

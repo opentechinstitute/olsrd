@@ -3,20 +3,14 @@
 /* Plugin includes */
 #include "pud.h"
 #include "configuration.h"
-#include "compiler.h"
-#include "networkInterfaces.h"
 
 /* OLSR includes */
 #include "olsr.h"
 
 /* System includes */
-#include <nmea/gmath.h>
 #include <nmea/tok.h>
-#include <nmea/info.h>
-#include <netinet/in.h>
-#include <stdio.h>
+#include <nmea/gmath.h>
 #include <arpa/inet.h>
-#include <OlsrdPudWireFormat/wireFormat.h>
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
 
 /* ************************************************************************

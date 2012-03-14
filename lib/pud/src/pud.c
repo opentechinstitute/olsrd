@@ -1,24 +1,21 @@
 #include "pud.h"
 
 /* Plugin includes */
-#include "configuration.h"
+#include "dedup.h"
 #include "networkInterfaces.h"
-#include "dump.h"
+#include "configuration.h"
 #include "gpsConversion.h"
 #include "receiver.h"
-#include "dedup.h"
-#include "compiler.h"
 #include "state.h"
+#include "dump.h"
 
 /* OLSRD includes */
-#include "ipcalc.h"
-#include "parser.h"
 #include "olsr.h"
+#include "ipcalc.h"
 #include "net_olsr.h"
+#include "parser.h"
 
 /* System includes */
-#include <assert.h>
-#include <sys/socket.h>
 
 /** The size of the buffer in which the received NMEA string is stored */
 #define BUFFER_SIZE_RX_NMEA		2048

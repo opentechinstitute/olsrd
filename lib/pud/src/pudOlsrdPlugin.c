@@ -5,11 +5,9 @@
 #include "version.h"
 
 /* OLSRD includes */
-#include "defs.h"
 #include "olsr.h"
 
 /* System includes */
-#include <stdbool.h>
 
 /*
  * OLSR Entrypoints

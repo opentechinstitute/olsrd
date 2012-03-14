@@ -1,5 +1,6 @@
 #include <OlsrdPudWireFormat/wireFormat.h>
-#include <OlsrdPudWireFormat/compiler.h>
+
+#include <time.h>
 
 /* ************************************************************************
  * Validity Time

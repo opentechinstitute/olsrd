@@ -7,10 +7,7 @@
 
 /* System includes */
 #include <assert.h>
-#include <stddef.h>
-#include <string.h>
 #include <sys/ioctl.h>
-#include <errno.h>
 #include <unistd.h>
 
 /**

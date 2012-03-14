@@ -5,11 +5,8 @@
 
 /* OLSRD includes */
 #include "olsr_cookie.h"
-#include "scheduler.h"
 
 /* System includes */
-#include <stddef.h>
-#include <stdbool.h>
 
 /*
  * OLSR Tx Timer

@@ -2,26 +2,16 @@
 
 /* Plugin includes */
 #include "pud.h"
-#include "netTools.h"
 #include "networkInterfaces.h"
+#include "netTools.h"
 
 /* OLSR includes */
-#include "olsr_types.h"
-#include "olsr_cfg.h"
 
 /* System includes */
-#include <OlsrdPudWireFormat/nodeIdConversion.h>
-#include <assert.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <nmea/util.h>
+#include <OlsrdPudWireFormat/nodeIdConversion.h>
 
 /*
  * Utility functions

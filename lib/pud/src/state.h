@@ -2,7 +2,6 @@
 #define _PUD_STATE_H_
 
 /* Plugin includes */
-#include "receiver.h"
 
 /* OLSRD includes */
 
