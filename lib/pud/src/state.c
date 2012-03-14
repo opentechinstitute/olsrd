@@ -88,12 +88,15 @@ MovementState getExternalState(void) {
  * the movement result of the sub-state
  * @param externalState
  * a pointer to the variable in which to store the new external state
+ * @param externalStateChange
+ * a pointer to the variable in which to store whether the external state changed
+ * @param subStateExternalStateChange
+ * a pointer to the variable in which to store whether the sub-state external state changed
  */
-bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean movingNow,
-		MovementState * externalState) {
+void determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean movingNow, MovementState * externalState,
+		bool * externalStateChange, bool * subStateExternalStateChange) {
 	MovementState newState;
 	bool internalStateChange;
-	bool externalStateChange;
 	SubStateType * subState = &state.substate[subStateIndex];
 
 	(void) pthread_mutex_lock(&state.mutex);
@@ -159,14 +162,15 @@ bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean m
 		}
 	}
 
-	externalStateChange = (subState->externalState != newState);
+	*subStateExternalStateChange = (subState->externalState != newState);
 	subState->externalState = newState;
 
 	/*
 	 * external state may transition into MOVING when either one of the sub-states say so (OR), and
 	 * may transition into STATIONARY when all of the sub-states say so (AND)
 	 */
-	if (externalStateChange) {
+	*externalStateChange = false;
+	if (*subStateExternalStateChange) {
 		bool transition;
 
 		if (newState == MOVEMENT_STATE_STATIONARY) {
@@ -183,17 +187,14 @@ bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean m
 		}
 
 		if (transition) {
-			externalStateChange = (state.externalState != newState);
+			*externalStateChange = (state.externalState != newState);
 			state.externalState = newState;
 		}
 	}
 
-
 	*externalState = state.externalState;
 
 	(void) pthread_mutex_unlock(&state.mutex);
-
-	return externalStateChange;
 }
 
 MovementState getInternalState(SubStateIndex subStateIndex) {

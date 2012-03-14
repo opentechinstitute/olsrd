@@ -348,6 +348,7 @@ static void doImmediateTransmit(MovementState externalState, bool externalStateC
  */
 static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
 	union olsr_ip_addr bestGateway;
+	bool subStateExternalStateChange;
 	bool externalStateChange;
 	MovementState externalState;
 	TristateBoolean movingNow = TRISTATE_BOOLEAN_UNSET;
@@ -368,15 +369,15 @@ static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
 	 * State Determination
 	 */
 
-	externalStateChange = determineStateWithHysteresis(SUBSTATE_GATEWAY, movingNow, &externalState);
+	determineStateWithHysteresis(SUBSTATE_GATEWAY, movingNow, &externalState, &externalStateChange,
+			&subStateExternalStateChange);
 
 	/*
 	 * Update transmitGpsInformation
 	 */
 
-	if ((externalState == MOVEMENT_STATE_MOVING) || externalStateChange) {
+	if ((externalState == MOVEMENT_STATE_MOVING) || subStateExternalStateChange) {
 		transmitGpsInformation.txGateway = bestGateway;
-		transmitGpsInformation.updated = true;
 	}
 
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
@@ -687,7 +688,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	PositionUpdateEntry * incomingEntry;
 	PositionUpdateEntry * posAvgEntry;
 	MovementType movementResult;
-	bool externalStateChange = false;
+	bool subStateExternalStateChange;
+	bool externalStateChange;
 	bool updateTransmitGpsInformation = false;
 	PositionUpdateEntry txPosition;
 	MovementState externalState;
@@ -761,13 +763,14 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 * State Determination
 	 */
 
-	externalStateChange = determineStateWithHysteresis(SUBSTATE_POSITION, movementResult.moving, &externalState);
+	determineStateWithHysteresis(SUBSTATE_POSITION, movementResult.moving, &externalState, &externalStateChange,
+			&subStateExternalStateChange);
 
 	/*
 	 * Update transmitGpsInformation
 	 */
 
-	updateTransmitGpsInformation = externalStateChange
+	updateTransmitGpsInformation = subStateExternalStateChange
 			|| (positionValid(posAvgEntry) && !positionValid(&txPosition))
 			|| (movementResult.inside == TRISTATE_BOOLEAN_SET);
 

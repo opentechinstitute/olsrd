@@ -47,7 +47,7 @@ bool initState(void);
 void destroyState(void);
 MovementState getExternalState(void);
 MovementState getInternalState(SubStateIndex subStateIndex);
-bool determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean movingNow,
-		MovementState * externalState);
+void determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean movingNow, MovementState * externalState,
+		bool * externalStateChange, bool * subStateExternalStateChange);
 
 #endif /* _PUD_STATE_H_ */
