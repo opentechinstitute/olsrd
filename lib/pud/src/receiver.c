@@ -142,9 +142,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	/*
 	 * The first message in txBuffer is an OLSR position update.
 	 *
-	 * The position update is not present when the position is not valid.
-	 * Otherwise it is always present: when we transmit onto the OLSR network
-	 * and/or when we transmit onto the uplink.
+	 * The position update is always present.
 	 *
 	 * The second message is the cluster leader message, but only when uplink
 	 * was requested and correctly configured.
@@ -154,10 +152,10 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	union olsr_message * pu = &pu_uplink->msg.olsrMessage;
 	unsigned int pu_size = 0;
 	union olsr_ip_addr gateway;
-	unsigned long long updateInterval;
+	MovementState externalState;
+	nmeaINFO nmeaInfo;
 
-	updateInterval =
-			(getExternalState() == MOVEMENT_STATE_STATIONARY) ? getUpdateIntervalStationary() : getUpdateIntervalMoving();
+	externalState = getExternalState();
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 
@@ -166,14 +164,17 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
 	}
 
-	/* convert nmeaINFO to wireformat olsr message */
-	txBufferBytesUsed += sizeof(UplinkHeader); /* keep before txBufferSpaceFree usage */
-	pu_size = gpsToOlsr(&transmitGpsInformation.txPosition.nmeaInfo, pu, txBufferBytesFree, updateInterval);
-	txBufferBytesUsed += pu_size;
+	nmeaInfo = transmitGpsInformation.txPosition.nmeaInfo;
+	transmitGpsInformation.positionUpdated = false;
 	gateway = transmitGpsInformation.txGateway;
 
-	transmitGpsInformation.positionUpdated = false;
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
+
+	/* convert nmeaINFO to wireformat olsr message */
+	txBufferBytesUsed += sizeof(UplinkHeader); /* keep before txBufferSpaceFree usage */
+	pu_size = gpsToOlsr(&nmeaInfo, pu, txBufferBytesFree,
+			((externalState == MOVEMENT_STATE_STATIONARY) ? getUpdateIntervalStationary() : getUpdateIntervalMoving()));
+	txBufferBytesUsed += pu_size;
 
 	/*
 	 * push out to all OLSR interfaces
@@ -221,6 +222,9 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 							+ ((olsr_cnf->ip_version == AF_INET) ? sizeof(cl->leader.v4) :
 									sizeof(cl->leader.v6));
 
+			unsigned long long uplinkUpdateInterval =
+					(externalState == MOVEMENT_STATE_STATIONARY) ? getUplinkUpdateIntervalStationary() : getUplinkUpdateIntervalMoving();
+
 			/*
 			 * position update message (pu)
 			 */
@@ -236,7 +240,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 				setUplinkMessagePadding(&pu_uplink->header, 0);
 
 				/* fixup validity time */
-				setValidityTime(&pu_gpsMessage->validityTime, updateInterval);
+				setValidityTime(&pu_gpsMessage->validityTime, uplinkUpdateInterval);
 			}
 
 			/*
@@ -251,7 +255,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 
 			/* setup cl */
 			setClusterLeaderVersion(cl, PUD_WIRE_FORMAT_VERSION);
-			setValidityTime(&cl->validityTime, updateInterval);
+			setValidityTime(&cl->validityTime, uplinkUpdateInterval);
 
 			/* really need 2 memcpy's here because of olsr_cnf->ipsize */
 			memcpy(cl_originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
@@ -335,7 +339,7 @@ static void doImmediateTransmit(MovementState externalState) {
 	}
 
 	/* do an immediate transmit */
-		txToAllOlsrInterfaces(interfaces);
+	txToAllOlsrInterfaces(interfaces);
 }
 
 /**
