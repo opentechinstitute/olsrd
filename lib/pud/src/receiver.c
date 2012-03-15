@@ -471,7 +471,7 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 		lastTxPos.lat = nmea_degree2radian(lastTx->nmeaInfo.lat);
 		lastTxPos.lon = nmea_degree2radian(lastTx->nmeaInfo.lon);
 
-		hDistance = nmea_distance_ellipsoid(&avgPos, &lastTxPos, NULL, NULL);
+		hDistance = fabs(nmea_distance_ellipsoid(&avgPos, &lastTxPos, NULL, NULL));
 		hDistanceValid = true;
 	} else {
 		hDistanceValid = false;
