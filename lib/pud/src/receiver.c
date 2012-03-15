@@ -378,7 +378,7 @@ static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
 	 * Update transmitGpsInformation
 	 */
 
-	if ((externalState == MOVEMENT_STATE_MOVING) || subStateExternalStateChange) {
+	if (movingNow == TRISTATE_BOOLEAN_SET) {
 		transmitGpsInformation.txGateway = bestGateway;
 	}
 
