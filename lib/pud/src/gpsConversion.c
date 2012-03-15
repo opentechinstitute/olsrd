@@ -3,6 +3,7 @@
 /* Plugin includes */
 #include "pud.h"
 #include "configuration.h"
+#include "compiler.h"
 
 /* OLSR includes */
 #include "olsr.h"

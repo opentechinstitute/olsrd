@@ -7,6 +7,7 @@
 #include "gpsConversion.h"
 #include "receiver.h"
 #include "state.h"
+#include "compiler.h"
 
 /* OLSRD includes */
 #include "olsr.h"
