@@ -350,7 +350,6 @@ static void doImmediateTransmit(MovementState externalState) {
  */
 static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
 	union olsr_ip_addr bestGateway;
-	bool subStateExternalStateChange;
 	bool externalStateChange;
 	MovementState externalState;
 	TristateBoolean movingNow = TRISTATE_BOOLEAN_UNSET;
@@ -371,8 +370,7 @@ static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
 	 * State Determination
 	 */
 
-	determineStateWithHysteresis(SUBSTATE_GATEWAY, movingNow, &externalState, &externalStateChange,
-			&subStateExternalStateChange);
+	determineStateWithHysteresis(SUBSTATE_GATEWAY, movingNow, &externalState, &externalStateChange, NULL);
 
 	/*
 	 * Update transmitGpsInformation

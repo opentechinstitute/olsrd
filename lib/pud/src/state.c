@@ -97,6 +97,7 @@ void determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean m
 		bool * externalStateChange, bool * subStateExternalStateChange) {
 	MovementState newState;
 	bool internalStateChange;
+	bool subStateExternalStateChanged;
 	SubStateType * subState = &state.substate[subStateIndex];
 
 	(void) pthread_mutex_lock(&state.mutex);
@@ -162,15 +163,20 @@ void determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean m
 		}
 	}
 
-	*subStateExternalStateChange = (subState->externalState != newState);
+	subStateExternalStateChanged = (subState->externalState != newState);
+	if (subStateExternalStateChange) {
+		*subStateExternalStateChange = subStateExternalStateChanged;
+	}
 	subState->externalState = newState;
 
 	/*
 	 * external state may transition into MOVING when either one of the sub-states say so (OR), and
 	 * may transition into STATIONARY when all of the sub-states say so (AND)
 	 */
-	*externalStateChange = false;
-	if (*subStateExternalStateChange) {
+	if (externalStateChange) {
+		*externalStateChange = false;
+	}
+	if (subStateExternalStateChanged) {
 		bool transition;
 
 		if (newState == MOVEMENT_STATE_STATIONARY) {
@@ -187,12 +193,16 @@ void determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean m
 		}
 
 		if (transition) {
-			*externalStateChange = (state.externalState != newState);
+			if (externalStateChange) {
+				*externalStateChange = (state.externalState != newState);
+			}
 			state.externalState = newState;
 		}
 	}
 
-	*externalState = state.externalState;
+	if (externalState) {
+		*externalState = state.externalState;
+	}
 
 	(void) pthread_mutex_unlock(&state.mutex);
 }
