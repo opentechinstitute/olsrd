@@ -7,7 +7,6 @@
 #include "gpsConversion.h"
 #include "receiver.h"
 #include "state.h"
-#include "dump.h"
 
 /* OLSRD includes */
 #include "olsr.h"
@@ -86,13 +85,6 @@ static void sendToAllTxInterfaces(unsigned char *buffer,
 	TRxTxNetworkInterface *txNetworkInterfaces = getTxNetworkInterfaces();
 	while (txNetworkInterfaces != NULL) {
 		TRxTxNetworkInterface *networkInterface = txNetworkInterfaces;
-
-#ifdef PUD_DUMP_GPS_PACKETS_TX_NON_OLSR
-		olsr_printf(0, "%s: packet sent to non-OLSR interface %s (%u bytes)\n",
-				PUD_PLUGIN_ABBR, &networkInterface->name[0], bufferLength);
-		dump_packet(&buffer[0], bufferLength);
-#endif
-
 		errno = 0;
 		txAddress = getTxMcAddr();
 		if (sendto(networkInterface->socketFd, buffer, bufferLength, 0,
@@ -127,11 +119,6 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
 	unsigned int transmitStringLength;
 	unsigned char buffer[BUFFER_SIZE_TX_OLSR];
 
-#ifdef PUD_DUMP_GPS_PACKETS_RX_OLSR
-	unsigned short olsrMessageSize =
-			getOlsrMessageSize(olsr_cnf->ip_version, olsrMessage);
-#endif
-
 	/* when we do not loopback then check if the message originated from this
 	 * node: back off */
 	if (!getUseLoopback() && ipequal(originator, &olsr_cnf->main_addr)) {
@@ -147,12 +134,6 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
 
 		addToDeDup(&deDupList, olsrMessage);
 	}
-
-#ifdef PUD_DUMP_GPS_PACKETS_RX_OLSR
-	olsr_printf(0, "\n%s: packet received from OLSR interface %s (%u bytes)\n",
-			PUD_PLUGIN_ABBR, in_if->int_name, olsrMessageSize);
-	dump_packet((unsigned char *) olsrMessage, olsrMessageSize);
-#endif
 
 	transmitStringLength = gpsFromOlsr(olsrMessage, &buffer[0], sizeof(buffer));
 	if (unlikely(transmitStringLength == 0)) {
@@ -193,27 +174,6 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			pudError(true, "Receive error in %s, ignoring message.", __func__);
 			return;
 		}
-
-#ifdef PUD_DUMP_GPS_PACKETS_RX_DOWNLINK
-		{
-			void * src;
-			in_port_t port;
-			char fromAddr[64];
-
-			if (olsr_cnf->ip_version == AF_INET) {
-				src = &((struct sockaddr_in*) &sender)->sin_addr;
-				port = ntohs(((struct sockaddr_in*) &sender)->sin_port);
-			} else {
-				src = &((struct sockaddr_in6*) &sender)->sin6_addr;
-				port = ntohs(((struct sockaddr_in6*) &sender)->sin6_port);
-			}
-
-			inet_ntop(olsr_cnf->ip_version, src, &fromAddr[0], sizeof(fromAddr));
-			olsr_printf(0, "\n%s: downlink packet received from %s, port %u (%lu bytes)\n",
-					PUD_PLUGIN_ABBR, &fromAddr[0],
-					port, (size_t) rxCount);
-		}
-#endif
 
 		while (rxIndex < rxCount) {
 			UplinkMessage * msg = (UplinkMessage *) &rxBuffer[rxIndex];
@@ -274,48 +234,10 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 									(r == 0) ? "there was not enough room in the buffer" :
 											"unknown reason"), olsrMessageLength, r);
 					}
-#ifdef PUD_DUMP_GPS_PACKETS_TX_DOWNLINK
-					else {
-						olsr_printf(0, "%s: downlink position update sent"
-								" to OLSR interface %s (%d bytes)\n",
-								PUD_PLUGIN_ABBR, ifn->int_name, olsrMessageLength);
-					}
-#endif
 				}
 
 				/* send out over tx interfaces */
 				(void) packetReceivedFromOlsr(olsrMessage, NULL, NULL);
-#ifdef PUD_DUMP_GPS_PACKETS_TX_DOWNLINK
-				olsr_printf(0, "%s: downlink position update sent"
-						" to tx interfaces (%d bytes)\n", PUD_PLUGIN_ABBR,
-						olsrMessageLength);
-#endif
-
-#ifdef PUD_DUMP_GPS_PACKETS_TX_DOWNLINK
-			{
-				void * src;
-				char fromAddr[64];
-				union olsr_ip_addr * originator = getOlsrMessageOriginator(
-						olsr_cnf->ip_version, olsrMessage);
-
-				if (olsr_cnf->ip_version == AF_INET) {
-					src = &originator->v4;
-				} else {
-					src = &originator->v6;
-				}
-
-				inet_ntop(olsr_cnf->ip_version, src, &fromAddr[0],
-						sizeof(fromAddr));
-				olsr_printf(
-						0,
-						"%s: downlink position update from %s (%u bytes)\n",
-						PUD_PLUGIN_ABBR, &fromAddr[0], uplinkMessageLength);
-
-				dump_packet((unsigned char *) msg, uplinkMessageLength);
-
-				olsr_printf(0, "\n");
-			}
-#endif
 			}
 			rxIndex += uplinkMessageLength;
 		}
@@ -334,11 +256,7 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
  @param flags
  unused
  */
-#ifdef PUD_DUMP_GPS_PACKETS_RX_NON_OLSR
-static void packetReceivedForOlsr(int skfd, void *data, unsigned int flags __attribute__ ((unused))) {
-#else
 static void packetReceivedForOlsr(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused))) {
-#endif
 	if (skfd >= 0) {
 		unsigned char rxBuffer[BUFFER_SIZE_RX_NMEA];
 		ssize_t rxCount;
@@ -364,30 +282,6 @@ static void packetReceivedForOlsr(int skfd, void *data __attribute__ ((unused)),
 		if (!isRxAllowedSourceIpAddress(&sender)) {
 			return;
 		}
-
-#ifdef PUD_DUMP_GPS_PACKETS_RX_NON_OLSR
-		{
-			TRxTxNetworkInterface * networkInterface = data;
-			void * src;
-			in_port_t port;
-			char fromAddr[64];
-
-			if (olsr_cnf->ip_version == AF_INET) {
-				src = &((struct sockaddr_in*) &sender)->sin_addr;
-				port = ntohs(((struct sockaddr_in*) &sender)->sin_port);
-			} else {
-				src = &((struct sockaddr_in6*) &sender)->sin6_addr;
-				port = ntohs(((struct sockaddr_in6*) &sender)->sin6_port);
-			}
-
-			inet_ntop(olsr_cnf->ip_version, src, &fromAddr[0], sizeof(fromAddr));
-			olsr_printf(0, "\n%s: packet received from %s, port %u on non-OLSR"
-					" interface %s (%lu bytes)\n", PUD_PLUGIN_ABBR, &fromAddr[0],
-					port, &networkInterface->name[0], (size_t) rxCount);
-
-			dump_packet(&rxBuffer[0], (size_t)rxCount);
-		}
-#endif
 
 		/* we have the received string in the rxBuffer now */
 

@@ -1,7 +1,6 @@
 #include "posAvg.h"
 
 /* Plugin includes */
-#include "dump.h"
 
 /* OLSR includes */
 #include "olsr.h"
@@ -33,10 +32,6 @@ void flushPositionAverageList(PositionAverageList * positionAverageList) {
 
 	nmea_zero_INFO(&positionAverageList->positionAverageCumulative.nmeaInfo);
 	nmea_zero_INFO(&positionAverageList->positionAverage.nmeaInfo);
-
-#if defined(PUD_DUMP_AVERAGING)
-	olsr_printf(0, "flushPositionAverageList: Flushed the averaging list\n");
-#endif /* PUD_DUMP_AVERAGING */
 }
 
 /**
@@ -306,39 +301,6 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 	PositionUpdateEntry * cumulative =
 			&positionAverageList->positionAverageCumulative;
 
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&entry->nmeaInfo, "addOrRemoveEntryToFromCumulativeAverage: entry");
-	dump_nmeaInfo(&cumulative->nmeaInfo, "addOrRemoveEntryToFromCumulativeAverage: positionAverageList->positionAverageCumulative (before)");
-	olsr_printf(0,
-			"addOrRemoveEntryToFromCumulativeAverage: positionAverageList->counters (before)\n"
-			"  gpgga   = %llu\n"
-			"  gpgsa   = %llu\n"
-			"  gpgsv   = %llu\n"
-			"  gprmc   = %llu\n"
-			"  gpvtg   = %llu\n"
-			"  sigBad  = %llu\n"
-			"  sigLow  = %llu\n"
-			"  sigMid  = %llu\n"
-			"  sigHigh = %llu\n"
-			"  fixBad  = %llu\n"
-			"  fix2d   = %llu\n"
-			"  fix3d   = %llu\n"
-			"\n",
-			positionAverageList->counters.gpgga,
-			positionAverageList->counters.gpgsa,
-			positionAverageList->counters.gpgsv,
-			positionAverageList->counters.gprmc,
-			positionAverageList->counters.gpvtg,
-			positionAverageList->counters.sigBad,
-			positionAverageList->counters.sigLow,
-			positionAverageList->counters.sigMid,
-			positionAverageList->counters.sigHigh,
-			positionAverageList->counters.fixBad,
-			positionAverageList->counters.fix2d,
-			positionAverageList->counters.fix3d
-	);
-#endif /* PUD_DUMP_AVERAGING */
-
 	if (!add) {
 		assert(positionAverageList->entriesCount >= positionAverageList->entriesMaxCount);
 		assert(entry == getPositionAverageEntry(positionAverageList, OLDEST));
@@ -395,38 +357,6 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 
 	updateCounters(positionAverageList, entry, add);
 	determineCumulativeSmaskSigFix(positionAverageList);
-
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&cumulative->nmeaInfo, "addOrRemoveEntryToFromCumulativeAverage: positionAverageList->positionAverageCumulative (after)");
-	olsr_printf(0,
-			"addOrRemoveEntryToFromCumulativeAverage: positionAverageList->counters (before)\n"
-			"  gpgga   = %llu\n"
-			"  gpgsa   = %llu\n"
-			"  gpgsv   = %llu\n"
-			"  gprmc   = %llu\n"
-			"  gpvtg   = %llu\n"
-			"  sigBad  = %llu\n"
-			"  sigLow  = %llu\n"
-			"  sigMid  = %llu\n"
-			"  sigHigh = %llu\n"
-			"  fixBad  = %llu\n"
-			"  fix2d   = %llu\n"
-			"  fix3d   = %llu\n"
-			"\n",
-			positionAverageList->counters.gpgga,
-			positionAverageList->counters.gpgsa,
-			positionAverageList->counters.gpgsv,
-			positionAverageList->counters.gprmc,
-			positionAverageList->counters.gpvtg,
-			positionAverageList->counters.sigBad,
-			positionAverageList->counters.sigLow,
-			positionAverageList->counters.sigMid,
-			positionAverageList->counters.sigHigh,
-			positionAverageList->counters.fixBad,
-			positionAverageList->counters.fix2d,
-			positionAverageList->counters.fix3d
-	);
-#endif /* PUD_DUMP_AVERAGING */
 }
 
 /**
@@ -439,10 +369,6 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 static void updatePositionAverageFromCumulative(
 		PositionAverageList * positionAverageList) {
 	double divider = positionAverageList->entriesCount;
-
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&positionAverageList->positionAverage.nmeaInfo, "updatePositionAverageFromCumulative: positionAverageList->positionAverage (before)");
-#endif /* PUD_DUMP_AVERAGING */
 
 	positionAverageList->positionAverage = positionAverageList->positionAverageCumulative;
 
@@ -468,10 +394,6 @@ static void updatePositionAverageFromCumulative(
 	}
 
 	/* satinfo: use from average */
-
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&positionAverageList->positionAverage.nmeaInfo, "updatePositionAverageFromCumulative: positionAverageList->positionAverage (after)");
-#endif /* PUD_DUMP_AVERAGING */
 }
 
 /**
@@ -488,12 +410,6 @@ void addNewPositionToAverage(PositionAverageList * positionAverageList,
 	assert (positionAverageList != NULL);
 	assert (newEntry == getPositionAverageEntry(positionAverageList, INCOMING));
 
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&newEntry->nmeaInfo, "addNewPositionToAverage: newEntry");
-	olsr_printf(0, "addNewPositionToAverage: positionAverageList->newestEntryIndex = %llu (before)\n", NEWESTINDEX(positionAverageList));
-	dump_nmeaInfo(&positionAverageList->positionAverageCumulative.nmeaInfo, "addNewPositionToAverage: positionAverageList->positionAverageCumulative.nmeaInfo (before)");
-#endif /* PUD_DUMP_AVERAGING */
-
 	if (positionAverageList->entriesCount
 			>= positionAverageList->entriesMaxCount) {
 		/* list is full, so first remove the oldest from the average */
@@ -508,15 +424,6 @@ void addNewPositionToAverage(PositionAverageList * positionAverageList,
 	positionAverageList->newestEntryIndex
 			= WRAPINDEX(positionAverageList, NEWESTINDEX(positionAverageList) + 1);
 
-#if defined(PUD_DUMP_AVERAGING)
-	olsr_printf(0, "addNewPositionToAverage: positionAverageList->newestEntryIndex = %llu (after)\n", NEWESTINDEX(positionAverageList));
-	dump_nmeaInfo(&positionAverageList->positionAverageCumulative.nmeaInfo, "addNewPositionToAverage: positionAverageList->positionAverageCumulative.nmeaInfo (before)");
-#endif /* PUD_DUMP_AVERAGING */
-
 	/* update average position */
 	updatePositionAverageFromCumulative(positionAverageList);
-
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&positionAverageList->positionAverage.nmeaInfo, "addNewPositionToAverage: positionAverageList->positionAverage.nmeaInfo (after)");
-#endif /* PUD_DUMP_AVERAGING */
 }

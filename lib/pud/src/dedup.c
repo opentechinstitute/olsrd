@@ -8,10 +8,6 @@
 /* System includes */
 #include <assert.h>
 
-#ifdef PUD_DUMP_DEDUP
-#include <arpa/inet.h>
-#endif
-
 /* Defines */
 
 #define LISTSIZE(x)			((x)->entriesMaxCount) /* always valid */
@@ -114,12 +110,6 @@ void addToDeDup(DeDupList * deDupList, union olsr_message *olsrMessage) {
 	incomingIndex = INCOMINGINDEX(deDupList);
 	newEntry = &deDupList->entries[incomingIndex];
 
-#ifdef PUD_DUMP_DEDUP
-	olsr_printf(0, "addToDeDup: entriesCount=%llu, newestEntryIndex=%llu,"
-			" incomingIndex=%llu (before)\n", deDupList->entriesCount,
-			deDupList->newestEntryIndex, INCOMINGINDEX(deDupList));
-#endif
-
 	memset(newEntry, 0, sizeof(DeDupEntry));
 	if (olsr_cnf->ip_version == AF_INET) {
 		newEntry->seqno = olsrMessage->v4.seqno;
@@ -133,19 +123,6 @@ void addToDeDup(DeDupList * deDupList, union olsr_message *olsrMessage) {
 	if (deDupList->entriesCount < deDupList->entriesMaxCount) {
 		deDupList ->entriesCount++;
 	}
-
-#ifdef PUD_DUMP_DEDUP
-	{
-		char addr[64];
-		olsr_printf(0, "addToDeDup: added seqno %u from %s\n", newEntry->seqno,
-				inet_ntop(olsr_cnf->ip_version,
-						&newEntry->originator,
-						&addr[0],sizeof(addr)));
-		olsr_printf(0, "addToDeDup: entriesCount=%llu, newestEntryIndex=%llu,"
-				" incomingIndex=%llu (after)\n\n", deDupList->entriesCount,
-				deDupList->newestEntryIndex, INCOMINGINDEX(deDupList));
-	}
-#endif
 
 	(void) pthread_mutex_unlock(&deDupList->mutex);
 }
@@ -173,41 +150,12 @@ bool isInDeDupList(DeDupList * deDupList, union olsr_message *olsrMessage) {
 	iteratedIndex = NEWESTINDEX(deDupList);
 	count = deDupList->entriesCount;
 
-#ifdef PUD_DUMP_DEDUP
-	olsr_printf(0, "isInDeDupList: count=%llu, iteratedIndex=%llu"
-			" maxCount=%llu (iteration start)\n", count, iteratedIndex,
-			deDupList->entriesMaxCount);
-#endif
-
 	/* we iterate from newest until oldest: we have a higher probability to
 	 * match on the newest entries */
 
 	while (count > 0) {
 		DeDupEntry * iteratedEntry = &deDupList->entries[iteratedIndex];
-
-#ifdef PUD_DUMP_DEDUP
-		olsr_printf(0, "isInDeDupList: count=%llu, iteratedIndex=%llu"
-				" (iteration)\n", count, iteratedIndex);
-#endif
-
 		if (olsr_cnf->ip_version == AF_INET) {
-#ifdef PUD_DUMP_DEDUP
-			{
-				char iteratedAddr[64];
-				char olsrMessageAddr[64];
-
-				olsr_printf(0, "isInDeDupList: iterated.seqno %u ==?"
-						" olsrMessage.seqno %u\n", iteratedEntry->seqno,
-						olsrMessage->v4.seqno);
-				olsr_printf(0, "isInDeDupList: iterated.addr %s ==?"
-						" olsrMessage.addr %s\n", inet_ntop(olsr_cnf->ip_version,
-								&iteratedEntry->originator.v4,
-								&iteratedAddr[0],sizeof(iteratedAddr)),
-								inet_ntop(olsr_cnf->ip_version,
-								&olsrMessage->v4.originator,
-								&olsrMessageAddr[0],sizeof(olsrMessageAddr)));
-			}
-#endif
 			if ((iteratedEntry->seqno == olsrMessage->v4.seqno) && (memcmp(
 					&iteratedEntry->originator.v4, &olsrMessage->v4.originator,
 					sizeof(iteratedEntry->originator.v4))) == 0) {
@@ -215,23 +163,6 @@ bool isInDeDupList(DeDupList * deDupList, union olsr_message *olsrMessage) {
 				break;
 			}
 		} else {
-#ifdef PUD_DUMP_DEDUP
-			{
-				char iteratedAddr[64];
-				char olsrMessageAddr[64];
-
-				olsr_printf(0, "isInDeDupList: iterated.seqno %u ==?"
-						" olsrMessage.seqno %u\n", iteratedEntry->seqno,
-						olsrMessage->v6.seqno);
-				olsr_printf(0, "isInDeDupList: iterated.addr %s ==?"
-						" olsrMessage.addr %s\n", inet_ntop(olsr_cnf->ip_version,
-								&iteratedEntry->originator.v6,
-								&iteratedAddr[0],sizeof(iteratedAddr)),
-								inet_ntop(olsr_cnf->ip_version,
-								&olsrMessage->v6.originator,
-								&olsrMessageAddr[0],sizeof(olsrMessageAddr)));
-			}
-#endif
 			if ((iteratedEntry->seqno == olsrMessage->v6.seqno) && (memcmp(
 					&iteratedEntry->originator.v6, &olsrMessage->v6.originator,
 					sizeof(iteratedEntry->originator.v6)) == 0)) {
@@ -243,10 +174,6 @@ bool isInDeDupList(DeDupList * deDupList, union olsr_message *olsrMessage) {
 		iteratedIndex = WRAPINDEX(deDupList, iteratedIndex + 1); /* go the the next older entry */
 		count--;
 	}
-
-#ifdef PUD_DUMP_DEDUP
-	olsr_printf(0,"isInDeDupList: result = %s\n\n", retval ? "true" : "false");
-#endif
 
 	(void) pthread_mutex_unlock(&deDupList->mutex);
 

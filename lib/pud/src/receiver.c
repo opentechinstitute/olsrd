@@ -9,7 +9,6 @@
 #include "networkInterfaces.h"
 #include "timers.h"
 #include "uplinkGateway.h"
-#include "dump.h"
 
 /* OLSRD includes */
 #include "olsr_types.h"
@@ -21,13 +20,6 @@
 #include <nmea/gmath.h>
 #include <nmea/sentence.h>
 #include <OlsrdPudWireFormat/wireFormat.h>
-
-/* Debug includes */
-#if defined(PUD_DUMP_GPS_PACKETS_TX_OLSR) || \
-	defined(PUD_DUMP_GPS_PACKETS_TX_UPLINK) || \
-	defined(PUD_DUMP_AVERAGING)
-#include "olsr.h"
-#endif
 
 /*
  * NMEA parser
@@ -192,13 +184,6 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 						((r == -1) ? "no buffer was found" :
 							(r == 0) ? "there was not enough room in the buffer" : "unknown reason"), pu_size, r);
 			}
-#ifdef PUD_DUMP_GPS_PACKETS_TX_OLSR
-			else {
-				olsr_printf(0, "%s: packet sent to OLSR interface %s (%d bytes)\n",
-						PUD_PLUGIN_ABBR, ifn->int_name, pu_size);
-				dump_packet((unsigned char *)pu, pu_size);
-			}
-#endif
 		}
 
 		/* loopback to tx interface when so configured */
@@ -269,13 +254,6 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 					sizeof(uplink_addr->in)) < 0) {
 				pudError(true, "Could not send to uplink (size=%u)", txBufferBytesUsed);
 			}
-#ifdef PUD_DUMP_GPS_PACKETS_TX_UPLINK
-			else {
-				olsr_printf(0, "%s: packet sent to uplink (%d bytes)\n",
-						PUD_PLUGIN_ABBR, pu_size);
-				dump_packet((unsigned char *)&txBuffer, txBufferBytesUsed);
-			}
-#endif
 		}
 	}
 }
@@ -708,11 +686,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	nmea_parse(&nmeaParser, (char *) rxBuffer, rxCount,
 			&incomingEntry->nmeaInfo);
 
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&incomingEntry->nmeaInfo,
-			"receiverUpdateGpsInformation: incoming entry");
-#endif /* PUD_DUMP_AVERAGING */
-
 	/* ignore when no useful information */
 	if (incomingEntry->nmeaInfo.smask == GPNON) {
 		retval = true;
@@ -721,18 +694,8 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	nmea_INFO_sanitise(&incomingEntry->nmeaInfo);
 
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&incomingEntry->nmeaInfo,
-			"receiverUpdateGpsInformation: incoming entry after sanitise");
-#endif /* PUD_DUMP_AVERAGING */
-
 	/* we always work with latitude, longitude in degrees and DOPs in meters */
 	nmea_INFO_unit_conversion(&incomingEntry->nmeaInfo);
-
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&incomingEntry->nmeaInfo,
-			"receiverUpdateGpsInformation: incoming entry after unit conversion");
-#endif /* PUD_DUMP_AVERAGING */
 
 	/*
 	 * Averaging
@@ -744,11 +707,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	}
 	addNewPositionToAverage(&positionAverageList, incomingEntry);
 	posAvgEntry = getPositionAverageEntry(&positionAverageList, AVERAGE);
-
-#if defined(PUD_DUMP_AVERAGING)
-	dump_nmeaInfo(&posAvgEntry->nmeaInfo,
-			"receiverUpdateGpsInformation: posAvgEntry");
-#endif /* PUD_DUMP_AVERAGING */
 
 	/*
 	 * Movement detection
@@ -779,11 +737,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	if ((externalState == MOVEMENT_STATE_MOVING) || updateTransmitGpsInformation) {
 		transmitGpsInformation.txPosition.nmeaInfo = posAvgEntry->nmeaInfo;
 		transmitGpsInformation.positionUpdated = true;
-
-#if defined(PUD_DUMP_AVERAGING)
-		dump_nmeaInfo(&posAvgEntry->nmeaInfo,
-			"receiverUpdateGpsInformation: transmitGpsInformation");
-#endif /* PUD_DUMP_AVERAGING */
 	}
 
 	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
