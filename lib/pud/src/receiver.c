@@ -157,7 +157,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	unsigned long long updateInterval;
 
 	updateInterval =
-			(getExternalState() == MOVEMENT_STATE_MOVING) ? getUpdateIntervalMoving() : getUpdateIntervalStationary();
+			(getExternalState() == MOVEMENT_STATE_STATIONARY) ? getUpdateIntervalStationary() : getUpdateIntervalMoving();
 
 	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 
