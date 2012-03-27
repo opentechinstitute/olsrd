@@ -15,7 +15,6 @@
 #include "net_olsr.h"
 
 /* System includes */
-#include <pthread.h>
 #include <nmea/parser.h>
 #include <nmea/gmath.h>
 #include <nmea/sentence.h>
@@ -68,7 +67,6 @@ typedef enum _TimedTxInterface {
 
 /** Structure of the latest GPS information that is transmitted */
 typedef struct _TransmitGpsInformation {
-	pthread_mutex_t mutex; /**< access mutex */
 	bool positionUpdated; /**< true when the position information was updated */
 	PositionUpdateEntry txPosition; /**< The last transmitted position */
 	union olsr_ip_addr txGateway; /**< the best gateway */
@@ -149,8 +147,6 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 
 	externalState = getExternalState();
 
-	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-
 	/* only fixup timestamp when the position is valid _and_ when the position was not updated */
 	if (positionValid(&transmitGpsInformation.txPosition) && !transmitGpsInformation.positionUpdated) {
 		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
@@ -159,8 +155,6 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	nmeaInfo = transmitGpsInformation.txPosition.nmeaInfo;
 	transmitGpsInformation.positionUpdated = false;
 	gateway = transmitGpsInformation.txGateway;
-
-	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	/* convert nmeaINFO to wireformat olsr message */
 	txBufferBytesUsed += sizeof(UplinkHeader); /* keep before txBufferSpaceFree usage */
@@ -334,8 +328,6 @@ static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
 
 	getBestUplinkGateway(&bestGateway);
 
-	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
-
 	/*
 	 * Movement detection
 	 */
@@ -357,8 +349,6 @@ static void pud_gateway_timer_callback(void *context __attribute__ ((unused))) {
 	if (movingNow == TRISTATE_BOOLEAN_SET) {
 		transmitGpsInformation.txGateway = bestGateway;
 	}
-
-	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	if (externalStateChange) {
 		doImmediateTransmit(externalState);
@@ -714,7 +704,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	clearMovementType(&movementResult);
 
-	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 	txPosition = transmitGpsInformation.txPosition;
 
 	detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
@@ -739,8 +728,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 		transmitGpsInformation.positionUpdated = true;
 	}
 
-	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
-
 	if (externalStateChange) {
 		doImmediateTransmit(externalState);
 	}
@@ -760,17 +747,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
  */
 bool startReceiver(void) {
 	MovementState externalState;
-
-	pthread_mutexattr_t attr;
-	if (pthread_mutexattr_init(&attr)) {
-		return false;
-	}
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP)) {
-		return false;
-	}
-	if (pthread_mutex_init(&transmitGpsInformation.mutex, &attr)) {
-		return false;
-	}
 
 	if (!nmea_parser_init(&nmeaParser)) {
 		pudError(false, "Could not initialise NMEA parser");
@@ -820,13 +796,9 @@ void stopReceiver(void) {
 
 	destroyPositionAverageList(&positionAverageList);
 
-	(void) pthread_mutex_lock(&transmitGpsInformation.mutex);
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	transmitGpsInformation.positionUpdated = false;
-	(void) pthread_mutex_unlock(&transmitGpsInformation.mutex);
 
 	nmea_parser_destroy(&nmeaParser);
-
-	(void) pthread_mutex_destroy(&transmitGpsInformation.mutex);
 }
