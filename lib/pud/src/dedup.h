@@ -10,7 +10,6 @@
 /* System includes */
 #include <stdint.h>
 #include <stdbool.h>
-#include <pthread.h>
 
 /* A de-duplication entry holding the information to compare, 18 bytes */
 typedef struct _DeDupEntry {
@@ -25,8 +24,6 @@ typedef struct _DeDupEntry {
  The list is a circular list.
  */
 typedef struct _DeDupList {
-	pthread_mutex_t mutex; /**< access mutex */
-
 	unsigned long long entriesMaxCount; /**< the maximum number of entries in the list */
 	DeDupEntry * entries; /**< the list entries */
 
