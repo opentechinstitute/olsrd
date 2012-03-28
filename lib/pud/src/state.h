@@ -43,7 +43,7 @@ typedef enum _SubStateIndex {
  * Functions
  */
 
-bool initState(void);
+void initState(void);
 void destroyState(void);
 MovementState getExternalState(void);
 MovementState getInternalState(SubStateIndex subStateIndex);

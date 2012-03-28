@@ -6,7 +6,6 @@
 /* OLSRD includes */
 
 /* System includes */
-#include <pthread.h>
 
 /*
  * Types
@@ -23,7 +22,6 @@ typedef struct _SubStateType {
 
 /** Type describing state */
 typedef struct _StateType {
-	pthread_mutex_t mutex; /**< access mutex */
 	SubStateType substate[SUBSTATE_COUNT]; /**< the sub states */
 	MovementState externalState; /**< the externally visible movement state */
 } StateType;
@@ -39,18 +37,7 @@ static StateType state;
  * Functions
  */
 
-bool initState(void) {
-	pthread_mutexattr_t attr;
-	if (pthread_mutexattr_init(&attr)) {
-		return false;
-	}
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP)) {
-		return false;
-	}
-	if (pthread_mutex_init(&state.mutex, &attr)) {
-		return false;
-	}
-
+void initState(void) {
 	state.substate[SUBSTATE_POSITION].internalState = MOVEMENT_STATE_STATIONARY;
 	state.substate[SUBSTATE_POSITION].hysteresisCounter = 0;
 	state.substate[SUBSTATE_POSITION].hysteresisCounterToStationary = getHysteresisCountToStationary();
@@ -62,22 +49,10 @@ bool initState(void) {
 	state.substate[SUBSTATE_GATEWAY].hysteresisCounterToMoving = getGatewayHysteresisCountToMoving();
 	state.substate[SUBSTATE_GATEWAY].externalState = MOVEMENT_STATE_MOVING;
 	state.externalState = MOVEMENT_STATE_MOVING; /* must comply to AND/OR conditions of sub-states */
-
-	return true;
-}
-
-void destroyState(void) {
-	(void) pthread_mutex_destroy(&state.mutex);
 }
 
 MovementState getExternalState(void) {
-	MovementState externalState;
-
-	(void) pthread_mutex_lock(&state.mutex);
-	externalState = state.externalState;
-	(void) pthread_mutex_unlock(&state.mutex);
-
-	return externalState;
+	return state.externalState;
 }
 
 /**
@@ -99,8 +74,6 @@ void determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean m
 	bool internalStateChange;
 	bool subStateExternalStateChanged;
 	SubStateType * subState = &state.substate[subStateIndex];
-
-	(void) pthread_mutex_lock(&state.mutex);
 
 	/*
 	 * Substate Internal State
@@ -203,16 +176,8 @@ void determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean m
 	if (externalState) {
 		*externalState = state.externalState;
 	}
-
-	(void) pthread_mutex_unlock(&state.mutex);
 }
 
 MovementState getInternalState(SubStateIndex subStateIndex) {
-	MovementState internalState;
-
-	(void) pthread_mutex_lock(&state.mutex);
-	internalState = state.substate[subStateIndex].internalState;
-	(void) pthread_mutex_unlock(&state.mutex);
-
-	return internalState;
+	return state.substate[subStateIndex].internalState;
 }

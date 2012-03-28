@@ -306,10 +306,7 @@ bool initPud(void) {
 		goto error;
 	}
 
-	if (!initState()) {
-		pudError(false, "Could not initialise state");
-		goto error;
-	}
+	initState();
 
 	if (!initDeDupList(&deDupList, getDeDupDepth())) {
 		pudError(false, "Could not initialise de-duplication list");
