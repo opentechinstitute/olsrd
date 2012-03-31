@@ -252,6 +252,8 @@ struct olsrd_config {
 
   float min_tc_vtime;
 
+  bool set_ip_forward;
+
   char *lock_file;
   bool use_niit;
 

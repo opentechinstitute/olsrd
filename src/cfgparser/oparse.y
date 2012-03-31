@@ -223,6 +223,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_SMART_GW_PREFIX
 %token TOK_SRC_IP_ROUTES
 %token TOK_MAIN_IP
+%token TOK_SET_IPFORWARD
 
 %token TOK_HOSTLABEL
 %token TOK_NETLABEL
@@ -303,6 +304,7 @@ stmt:       idebug
           | ismart_gw_prefix
           | bsrc_ip_routes
           | amain_ip
+          | bset_ipforward
 ;
 
 block:      TOK_HNA4 hna4body
@@ -1398,6 +1400,16 @@ amain_ip: TOK_MAIN_IP TOK_IPV4_ADDR
   }
   free($2);
 }
+;
+
+bset_ipforward: TOK_SET_IPFORWARD TOK_BOOLEAN
+{
+  PARSER_DEBUG_PRINTF("Set IP-Forward procfile variable: %s\n", $2->boolean ? "yes" : "no");
+  olsr_cnf->set_ip_forward = $2->boolean;
+  free($2);
+}
+;
+
 
 plblock: TOK_PLUGIN TOK_STRING
 {

@@ -508,6 +508,10 @@ IPV6ADDR {IPV6PAT1}|{IPV6PAT2}|{IPV6PAT3}|{IPV6PAT4}|{IPV6PAT5}|{IPV6PAT6}|{IPV6
     yylval = NULL;
     return TOK_MAIN_IP;
 }
+"SetIpForward" {
+    yylval = NULL;
+    return TOK_SET_IPFORWARD;
+}
 "Ip4Broadcast" {
     yylval = NULL;
     return TOK_IP4BROADCAST;

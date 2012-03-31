@@ -177,9 +177,18 @@
 
 # Specifies the EXTERNAL ipv6 prefix of the uplink. A prefix
 # length of more than 64 is not allowed.
-# (default is 0::/0
+# (default is 0::/0)
 
 # SmartGatewayPrefix 0::/0
+
+# Set to yes will make OLSRd to set the file 
+# /proc/sys/net/ipv4/ip_forward to 1 during startup. It will be
+# restored to the original value during shutdown
+# Set this to no makes OLSRd check the value, if its not 1
+# OLSRd will exit with an error.
+# (default is yes)
+
+# SetIpForward yes
 
 ##############################
 ### OLSR protocol settings ###

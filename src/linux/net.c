@@ -139,7 +139,7 @@ static int writeToProc(const char *file, char *old, char value) {
     return -1;
   }
 
-  if (rv != value) {
+  if (rv != value && value != 0) {
     if (lseek(fd, SEEK_SET, 0) == -1) {
       OLSR_PRINTF(0, "Error, cannot rewind proc entry %s: %s (%d)\n", file, strerror(errno), errno);
       return -1;
@@ -159,7 +159,10 @@ static int writeToProc(const char *file, char *old, char value) {
   if (old) {
     *old = rv;
   }
-  olsr_syslog(OLSR_LOG_INFO, "Writing '%c' (was %c) to %s", value, rv, file);
+
+  if (value) {
+    olsr_syslog(OLSR_LOG_INFO, "Writing '%c' (was %c) to %s", value, rv, file);
+  }
   return 0;
 }
 
@@ -205,10 +208,22 @@ kernel_parse_error:
  */
 void
 net_os_set_global_ifoptions(void) {
-  if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, &orig_fwd_state, '1')) {
-    OLSR_PRINTF(1, "Warning, could not enable IP forwarding!\n"
-        "you should manually ensure that IP forwarding is enabled!\n\n");
-    olsr_startup_sleep(3);
+  if (olsr_cnf->set_ip_forward) {
+    if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, &orig_fwd_state, '1')) {
+      OLSR_PRINTF(1, "Warning, could not enable IP forwarding!\n"
+          "you should manually ensure that IP forwarding is enabled!\n\n");
+      olsr_startup_sleep(3);
+    }
+  }
+  else {
+    if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, &orig_fwd_state, 0)) {
+      OLSR_PRINTF(1, "Warning, could not enable IP forwarding!\n"
+          "you should manually ensure that IP forwarding is enabled!\n\n");
+      olsr_startup_sleep(3);
+    }
+    else if (orig_fwd_state != '1') {
+      olsr_exit("IP Forwarding not activated, shutting down.\n", 1);
+    }
   }
 
   if (olsr_cnf->smart_gw_active) {
@@ -305,8 +320,10 @@ net_os_restore_ifoptions(void)
   OLSR_PRINTF(1, "Restoring network state\n");
 
   /* Restore IP forwarding to "off" */
-  if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, NULL, orig_fwd_state)) {
-    OLSR_PRINTF(1, "Error, could not restore ip_forward settings\n");
+  if (olsr_cnf->set_ip_forward) {
+    if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, NULL, orig_fwd_state)) {
+      OLSR_PRINTF(1, "Error, could not restore ip_forward settings\n");
+    }
   }
 
   if (olsr_cnf->smart_gw_active && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)) {

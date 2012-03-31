@@ -770,6 +770,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->smart_gw_downlink = DEF_DOWNLINK_SPEED;
 
   cnf->use_src_ip_routes = DEF_USE_SRCIP_ROUTES;
+  cnf->set_ip_forward = true;
 
 #ifdef LINUX_NETLINK_ROUTING
   cnf->rtnl_s = 0;
@@ -835,7 +836,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   else
     printf("No interfaces    : NOT ALLOWED\n");
   printf("TOS              : 0x%02x\n", cnf->tos);
-  printf("OlsrPort          : 0x%03x\n", cnf->olsrport);
+  printf("OlsrPort          : %d\n", cnf->olsrport);
   printf("RtTable          : %u\n", cnf->rt_table);
   printf("RtTableDefault   : %u\n", cnf->rt_table_default);
   printf("RtTableTunnel    : %u\n", cnf->rt_table_tunnel);
