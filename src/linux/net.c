@@ -219,13 +219,14 @@ kernel_parse_error:
 void
 net_os_set_global_ifoptions(void) {
 
-  if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, &orig_fwd_state, OLSRD_FORWARD_VALUE)) {
+  if (writeToProc(olsr_cnf->ip_version == AF_INET ? PROC_IPFORWARD_V4 : PROC_IPFORWARD_V6, &orig_fwd_state,
+          olsr_cnf->set_ip_forward ? OLSRD_FORWARD_VALUE : 0 )) {
     OLSR_PRINTF(1, "Warning, could not enable IP forwarding!\n"
         "you should manually ensure that IP forwarding is enabled!\n\n");
     olsr_startup_sleep(3);
   }
   else if ((!olsr_cnf->set_ip_forward) && (orig_fwd_state != OLSRD_FORWARD_VALUE)) {
-    olsr_exit("IP Forwarding not activated, shutting down.\n", 1);
+    olsr_exit("IP forwarding not activated, shutting down.\n", 1);
   }
 
   if (olsr_cnf->smart_gw_active) {
