@@ -36,7 +36,7 @@
  */
 
 /* character-class table */
-static struct cclass {
+static const struct cclass {
 	char *name;
 	char *chars;
 	char *multis;

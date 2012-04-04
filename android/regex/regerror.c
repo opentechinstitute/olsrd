@@ -46,7 +46,7 @@
 
 static char *regatoi(const regex_t *, char *, int);
 
-static struct rerr {
+static const struct rerr {
 	int code;
 	char *name;
 	char *explain;
@@ -78,7 +78,7 @@ static struct rerr {
 size_t
 regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 {
-	struct rerr *r;
+	const struct rerr *r;
 	size_t len;
 	int target = errcode &~ REG_ITOA;
 	char *s;
@@ -90,7 +90,7 @@ regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 		for (r = rerrs; r->code != 0; r++)
 			if (r->code == target)
 				break;
-	
+
 		if (errcode&REG_ITOA) {
 			if (r->code != 0) {
 				assert(strlen(r->name) < sizeof(convbuf));
@@ -117,7 +117,7 @@ regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 static char *
 regatoi(const regex_t *preg, char *localbuf, int localbufsize)
 {
-	struct rerr *r;
+	const struct rerr *r;
 
 	for (r = rerrs; r->code != 0; r++)
 		if (strcmp(r->name, preg->re_endp) == 0)
