@@ -44,7 +44,6 @@ typedef enum _SubStateIndex {
  */
 
 void initState(void);
-void destroyState(void);
 MovementState getExternalState(void);
 MovementState getInternalState(SubStateIndex subStateIndex);
 void determineStateWithHysteresis(SubStateIndex subStateIndex, TristateBoolean movingNow, MovementState * externalState,

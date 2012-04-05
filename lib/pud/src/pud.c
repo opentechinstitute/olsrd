@@ -354,5 +354,4 @@ void closePud(void) {
 	closeNetworkInterfaces();
 	stopReceiver();
 	destroyDeDupList(&deDupList);
-	destroyState();
 }
