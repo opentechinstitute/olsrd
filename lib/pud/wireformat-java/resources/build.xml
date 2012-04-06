@@ -23,7 +23,7 @@
 	<property name="jar.file" value="${lib.dir}/${name}.jar" />
 
 	<property name="javadoc.dir" location="${basedir}/doc/javadoc" />
-	<property name="javac.bootclasspath" location="${basedir}/resources/jre/${source.version}/rt.jar" />
+	<property name="javac.bootclasspath" location="${basedir}/resources/ee.j2se/${source.version}/ee.j2se.jar" />
 
 	<!--
 
