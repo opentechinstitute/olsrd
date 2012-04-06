@@ -47,3 +47,4 @@ debian/olsrd.postinst.debhelper
 debian/olsrd.postrm.debhelper
 debian/olsrd.prerm.debhelper
 debian/olsrd.substvars
+lib/pud/src/version.h
