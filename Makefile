@@ -161,7 +161,7 @@ rpm:
 
 # This is quite ugly but at least it works
 ifeq ($(OS),linux)
-SUBDIRS = $(notdir $(shell find lib -maxdepth 2 -name Makefile -not -path lib/Makefile -printf "%h\n"|sort))
+SUBDIRS = arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo mdns mini nameservice p2pd pgraph quagga secure tas txtinfo watchdog
 else
 ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo mini pgraph secure txtinfo
