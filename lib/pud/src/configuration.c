@@ -6,9 +6,11 @@
 #include "netTools.h"
 
 /* OLSR includes */
+#include <olsr_protocol.h>
 
 /* System includes */
 #include <unistd.h>
+#include <errno.h>
 #include <arpa/inet.h>
 #include <nmea/util.h>
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
