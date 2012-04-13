@@ -13,6 +13,12 @@
 #include <OlsrdPudWireFormat/wireFormat.h>
 
 /*
+ * Utilities
+ */
+
+bool readDouble(const char * valueName, const char * value, double * valueNumber);
+
+/*
  * Global Parameters
  */
 
@@ -74,6 +80,12 @@ setRxMcAddr(const char *value, void *data, set_plugin_parameter_addon addon);
 unsigned short getRxMcPort(void);
 int
 setRxMcPort(const char *value, void *data, set_plugin_parameter_addon addon);
+
+/** The name of the positionFile plugin parameter */
+#define PUD_POSFILE_NAME						"positionFile"
+
+char * getPositionFile(void);
+int setPositionFile(const char *value, void *data, set_plugin_parameter_addon addon);
 
 /*
  * TX Parameters

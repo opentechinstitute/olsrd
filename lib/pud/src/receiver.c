@@ -9,6 +9,7 @@
 #include "networkInterfaces.h"
 #include "timers.h"
 #include "uplinkGateway.h"
+#include "posFile.h"
 
 /* OLSRD includes */
 #include "olsr_types.h"
@@ -747,13 +748,18 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
  */
 bool startReceiver(void) {
 	MovementState externalState;
+	char * positionFile = getPositionFile();
 
 	if (!nmea_parser_init(&nmeaParser)) {
 		pudError(false, "Could not initialise NMEA parser");
 		return false;
 	}
 
-	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
+	if (positionFile) {
+		readPositionFile(positionFile, &transmitGpsInformation.txPosition.nmeaInfo);
+	} else {
+		nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
+	}
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	transmitGpsInformation.positionUpdated = false;
 

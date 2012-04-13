@@ -14,6 +14,7 @@ CFLAGS += -Werror -D_GNU_SOURCE
 
 
 VERSION_FILE = ./src/version.h
+RESOURCESDIR = ./resources
 LIBRARY_INC = $(LIBRARY_PATH)/include
 LIBRARY_LIB = $(LIBRARY_PATH)/lib
 
@@ -51,13 +52,15 @@ $(VERSION_FILE): library scripts/makeVersionH
 install: all
 	@$(MAKE) -C $(LIBRARY_PATH) DESTDIR=$(DESTDIR) install
 	$(INSTALL_LIB)
+	mkdir -p "$(ETCDIR)"
+	cp "$(RESOURCESDIR)/olsrd.pud.position.conf" "$(ETCDIR)"
 	$(STRIP) "$(LIBDIR)/$(PLUGIN_FULLNAME)"
 
 uninstall:
 	@$(MAKE) -C $(LIBRARY_PATH) DESTDIR=$(DESTDIR) uninstall
-	rm -f "$(LIBDIR)/lib$(PLUGIN_NAME).so" "$(LIBDIR)/$(PLUGIN_NAME)"
+	rm -f "$(LIBDIR)/lib$(PLUGIN_NAME).so" "$(LIBDIR)/$(PLUGIN_NAME)" "$(ETCDIR)/olsrd.pud.position.conf"
 	$(UNINSTALL_LIB)
-	rmdir -v -p --ignore-fail-on-non-empty "$(LIBDIR)"
+	rmdir -v -p --ignore-fail-on-non-empty "$(LIBDIR)" "$(ETCDIR)"
 
 clean:
 	@echo "[$@]"

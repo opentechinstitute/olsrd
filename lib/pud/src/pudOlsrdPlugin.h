@@ -33,6 +33,7 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
 	{	.name = PUD_RX_ALLOWED_SOURCE_IP_NAME, .set_plugin_parameter = &addRxAllowedSourceIpAddress, .data = NULL},
 	{	.name = PUD_RX_MC_ADDR_NAME, .set_plugin_parameter = &setRxMcAddr, .data = NULL},
 	{	.name = PUD_RX_MC_PORT_NAME, .set_plugin_parameter = &setRxMcPort, .data = NULL},
+	{	.name = PUD_POSFILE_NAME, .set_plugin_parameter = &setPositionFile, .data = NULL},
 
 	/* TX */
 	{	.name = PUD_TX_NON_OLSR_IF_NAME, .set_plugin_parameter = &addTxNonOlsrInterface, .data = NULL},

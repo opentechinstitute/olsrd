@@ -516,6 +516,10 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     #
     #PlParam     "rxMcPort"                     "2240"
 
+    # positionFile is the file that contains the position information that the
+    #              plugin should use. When this parameter is set then the
+    #              file is read during olsrd startup.
+    #PlParam     "positionFile"                 "/etc/olsrd.pud.position.conf"
 
     #
     # TX Parameters

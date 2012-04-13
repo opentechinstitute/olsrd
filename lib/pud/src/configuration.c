@@ -4,6 +4,7 @@
 #include "pud.h"
 #include "networkInterfaces.h"
 #include "netTools.h"
+#include "posFile.h"
 
 /* OLSR includes */
 #include <olsr_protocol.h>
@@ -14,6 +15,7 @@
 #include <arpa/inet.h>
 #include <nmea/util.h>
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
+#include <limits.h>
 
 /*
  * Utility functions
@@ -108,8 +110,7 @@ static bool readULL(const char * valueName, const char * value,
  - true on success
  - false otherwise
  */
-static bool readDouble(const char * valueName, const char * value,
-		double * valueNumber) {
+bool readDouble(const char * valueName, const char * value, double * valueNumber) {
 	char * endPtr = NULL;
 	double valueNew;
 
@@ -747,6 +748,67 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 
 	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr, &port);
 	*port = htons((uint16_t) rxMcPortNew);
+
+	return false;
+}
+
+/*
+ * positionFile
+ */
+
+/** The positionFile buffer */
+static char positionFile[PATH_MAX + 1];
+
+/** True when the positionFile is set */
+static bool positionFileSet = false;
+
+/**
+ @return
+ The positionFile (NULL when not set)
+ */
+char * getPositionFile(void) {
+	if (!positionFileSet) {
+		return NULL;
+	}
+
+	return &positionFile[0];
+}
+
+/**
+ Set the positionFile.
+
+ @param value
+ The value of the positionFile to set (in string representation)
+ @param data
+ Unused
+ @param addon
+ Unused
+
+ @return
+ - true when an error is detected
+ - false otherwise
+ */
+int setPositionFile(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_POSFILE_NAME;
+	size_t valueLength;
+
+	assert(value != NULL);
+
+	if (!startPositionFile()) {
+		stopPositionFile();
+		return true;
+	}
+
+	valueLength = strlen(value);
+	if (valueLength > PATH_MAX) {
+		pudError(false, "Configured %s is too long, maximum length is"
+				" %u, current length is %lu", valueName, PATH_MAX, (unsigned long) valueLength);
+		return true;
+	}
+
+	strcpy((char *) &positionFile[0], value);
+	positionFileSet = true;
 
 	return false;
 }
