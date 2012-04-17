@@ -23,7 +23,7 @@ DebugLevel  0
 # IP version to use (4 or 6)
 # (Default is 4)
 
-# IpVersion 4
+IpVersion 4
 
 #################################
 ### OLSRd agent configuration ###
@@ -148,6 +148,14 @@ SmartGateway yes
 
 # SmartGatewayAllowNAT yes
 
+# When another gateway than the current one has a cost of less than the cost
+# of the current gateway multiplied by SmartGatewayThreshold then the smart
+# gateway is switched to the other gateway. The unit is percentage.
+# (defaults to 0)
+
+# SmartGatewayThreshold 0
+SmartGatewayThreshold   67
+
 # Defines what kind of Uplink this node will publish as a
 # smartgateway. The existence of the uplink is detected by
 # a route to 0.0.0.0/0, ::ffff:0:0/96 and/or 2000::/3.
@@ -166,7 +174,7 @@ SmartGateway yes
 # (default is 128/1024)
 
 # SmartGatewaySpeed 128 1024
-SmartGatewaySpeed 1024 8192
+SmartGatewaySpeed 128 1024
 
 # Specifies the EXTERNAL ipv6 prefix of the uplink. A prefix
 # length of more than 64 is not allowed.
@@ -256,6 +264,7 @@ Hna6
 # (default is 7)
 
 # MprCoverage 7
+MprCoverage	1
 
 ################################
 ### OLSR protocol extensions ###
@@ -295,6 +304,7 @@ LinkQualityAlgorithm    "etx_ffeth"
 # (default is 1)
 
 # LinkQualityFishEye  1
+LinkQualityFishEye	0
 
 #
 # NatThreshold 
@@ -352,17 +362,17 @@ IpcConnect
 LoadPlugin "./lib/httpinfo/olsrd_httpinfo.so.0.1"
 {
     # port number the httpinfo plugin will be listening, default 1978
-#   PlParam     "port"   "8000"
+    PlParam     "port"   "8000"
     
     # ip address that can access the plugin, use "0.0.0.0"
     # to allow everyone
-    PlParam     "Host"   "127.0.0.1"
+#    PlParam     "Host"   "127.0.0.1"
 #   PlParam     "Host"   "80.23.53.22"
     
     # networks that can access the plugin (ip/netmask)
     # careful with 0.0.0.0/0, makes (ddos) attacks poss.
-    PlParam     "Net"    "127.0.0.1 255.0.0.0"
-#    PlParam     "Net"    "0.0.0.0 0.0.0.0"
+#    PlParam     "Net"    "127.0.0.1 255.0.0.0"
+    PlParam     "Net"    "0.0.0.0 0.0.0.0"
 #    PlParam     "Net"    "104.0.0.0 255.255.0.0"
 #    PlParam     "Net"    "192.168.0.0 255.255.0.0"
 }
@@ -385,8 +395,8 @@ LoadPlugin "./lib/txtinfo/olsrd_txtinfo.so.0.1"
 #   PlParam     "Keyfile"   "/etc/olsr-keyfile.txt"
 #}
 
-#LoadPlugin "olsrd_dyn_gw.so.0.5"
-#{
+LoadPlugin "./lib/dyn_gw/olsrd_dyn_gw.so.0.5"
+{
     # The plugin check interval can be set here in milliseconds.
     # The default is 1000 ms (1 second).
 #    PlParam     "CheckInterval"  "5000"
@@ -428,11 +438,37 @@ LoadPlugin "./lib/txtinfo/olsrd_txtinfo.so.0.1"
 #    PlParam "HNA"    "192.168.200.0 255.255.255.0"
 #    PlParam "HNA"    "192.168.201.0 255.255.255.0"
 #    PlParam "HNA"    "192.168.202.0 255.255.255.0"
-#}
+
+PlParam "HNA"   "0.0.0.0 0.0.0.0"
+PlParam "HNA"   "0.0.0.0 128.0.0.0"
+PlParam "HNA"   "128.0.0.0 128.0.0.0"
+PlParam "HNA"   "0.0.0.0 192.0.0.0"
+PlParam "HNA"   "64.0.0.0 192.0.0.0"
+PlParam "HNA"   "128.0.0.0 192.0.0.0"
+PlParam "HNA"   "192.0.0.0 192.0.0.0"
+}
 
 #LoadPlugin "olsrd_dyn_gw_plain.so.0.4"
 #{
 #}
+
+LoadPlugin "./lib/p2pd/olsrd_p2pd.so.0.1.0"
+{
+  PlParam     "NonOlsrIf"    "lo"
+  PlParam     "P2pdTtl"      "5"
+  PlParam     "UdpDestPort"  "255.255.255.255 1211"
+}
+
+LoadPlugin "./lib/bmf/olsrd_bmf.so.1.7.0"
+{
+  PlParam     "NonOlsrIf"  "lo"
+}
+
+LoadPlugin "./lib/watchdog/olsrd_watchdog.so.0.1"
+{
+  PlParam "file" "/tmp/olsrd.watchdog"
+  PlParam "interval" "5"
+}
 
 LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
 {
@@ -833,6 +869,14 @@ Interface "em1"
     # MidValidityTime   300.0
     # HnaInterval         5.0
     # HnaValidityTime   300.0
+HelloInterval     2.00
+HelloValidityTime 20.00
+TcInterval        5.00
+TcValidityTime    30.00
+MidInterval       5.00
+MidValidityTime   50.00
+HnaInterval       5.00
+HnaValidityTime   15.00
     
     # When multiple links exist between hosts
     # the weight of interface is used to determine
