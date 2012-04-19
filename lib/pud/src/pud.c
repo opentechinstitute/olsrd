@@ -160,7 +160,7 @@ bool packetReceivedFromOlsr(union olsr_message *olsrMessage,
 static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused))) {
 	if (skfd >= 0) {
 		unsigned char rxBuffer[BUFFER_SIZE_RX_DOWNLINK];
-		ssize_t rxCount;
+		ssize_t rxCount = 0;
 		ssize_t rxIndex = 0;
 		struct sockaddr sender;
 		socklen_t senderSize = sizeof(sender);
@@ -187,8 +187,8 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			type = getUplinkMessageType(&msg->header);
 			if (type != POSITION) {
 				pudError(false, "Received wrong type (%d) in %s,"
-						" ignoring message.", type, __func__);
-				continue;
+						" ignoring the rest of the messages.", type, __func__);
+				return;
 			}
 
 			olsrMessageLength = getUplinkMessageLength(&msg->header);
@@ -198,8 +198,10 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 				pudError(false, "Received wrong length (%d) in %s,"
 						" ignoring the rest of the messages.", olsrMessageLength,
 						__func__);
-				break;
+				return;
 			}
+
+			rxIndex += uplinkMessageLength;
 
 			ipv6 = getUplinkMessageIPv6(&msg->header);
 			if (unlikely(ipv6 && (olsr_cnf->ip_version != AF_INET6))) {
@@ -212,7 +214,7 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			olsrMessage = &msg->msg.olsrMessage;
 
 			/* we now have a position update (olsrMessage) of a certain length
-			 * (length). this needs to be transmitted over OLSR and on the LAN */
+			 * (olsrMessageLength). this needs to be transmitted over OLSR and on the LAN */
 
 			if (likely(getUseDeDup()) && !isInDeDupList(&deDupList, olsrMessage)) {
 				addToDeDup(&deDupList, olsrMessage);
@@ -240,7 +242,6 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 				/* send out over tx interfaces */
 				(void) packetReceivedFromOlsr(olsrMessage, NULL, NULL);
 			}
-			rxIndex += uplinkMessageLength;
 		}
 	}
 }
