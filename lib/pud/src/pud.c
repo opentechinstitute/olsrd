@@ -191,14 +191,6 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 				continue;
 			}
 
-			ipv6 = getUplinkMessageIPv6(&msg->header);
-			if (unlikely(ipv6 && (olsr_cnf->ip_version != AF_INET6))) {
-				pudError(false, "Received wrong IPv6 status (%s) in %s,"
-						" ignoring message.", (ipv6 ? "true" : "false"),
-						__func__);
-				continue;
-			}
-
 			olsrMessageLength = getUplinkMessageLength(&msg->header);
 			uplinkMessageLength = olsrMessageLength + sizeof(UplinkHeader);
 
@@ -207,6 +199,14 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 						" ignoring the rest of the messages.", olsrMessageLength,
 						__func__);
 				break;
+			}
+
+			ipv6 = getUplinkMessageIPv6(&msg->header);
+			if (unlikely(ipv6 && (olsr_cnf->ip_version != AF_INET6))) {
+				pudError(false, "Received wrong IPv6 status (%s) in %s,"
+						" ignoring message.", (ipv6 ? "true" : "false"),
+						__func__);
+				continue;
 			}
 
 			olsrMessage = &msg->msg.olsrMessage;
