@@ -185,12 +185,6 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			union olsr_message * olsrMessage;
 
 			type = getUplinkMessageType(&msg->header);
-			if (type != POSITION) {
-				pudError(false, "Received wrong type (%d) in %s,"
-						" ignoring the rest of the messages.", type, __func__);
-				return;
-			}
-
 			olsrMessageLength = getUplinkMessageLength(&msg->header);
 			uplinkMessageLength = olsrMessageLength + sizeof(UplinkHeader);
 
@@ -202,6 +196,12 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			}
 
 			rxIndex += uplinkMessageLength;
+
+			if (type != POSITION) {
+				pudError(false, "Received wrong type (%d) in %s,"
+						" ignoring message.", type, __func__);
+				continue;
+			}
 
 			ipv6 = getUplinkMessageIPv6(&msg->header);
 			if (unlikely(ipv6 && (olsr_cnf->ip_version != AF_INET6))) {
