@@ -164,7 +164,6 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 		ssize_t rxIndex = 0;
 		struct sockaddr sender;
 		socklen_t senderSize = sizeof(sender);
-		bool addedToDedup = false;
 
 		/* Receive the captured Ethernet frame */
 		memset(&sender, 0, senderSize);
@@ -216,13 +215,8 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			/* we now have a position update (olsrMessage) of a certain length
 			 * (olsrMessageLength). this needs to be transmitted over OLSR and on the LAN */
 
-			if (likely(getUseDeDup()) && !isInDeDupList(&deDupList, olsrMessage)) {
-				addToDeDup(&deDupList, olsrMessage);
-				addedToDedup = true;
-			}
-
-			if (likely(addedToDedup) || unlikely(!getUseDeDup())) {
-				/* send out over OLSR interfaces */
+			/* send out over OLSR interfaces */
+			{
 				int r;
 				struct interface *ifn;
 				for (ifn = ifnet; ifn; ifn = ifn->int_next) {
@@ -238,10 +232,10 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 											"unknown reason"), olsrMessageLength, r);
 					}
 				}
-
-				/* send out over tx interfaces */
-				(void) packetReceivedFromOlsr(olsrMessage, NULL, NULL);
 			}
+
+			/* send out over tx interfaces */
+			(void) packetReceivedFromOlsr(olsrMessage, NULL, NULL);
 		}
 	}
 }
