@@ -2,7 +2,6 @@
 
 /* Plugin includes */
 #include "pud.h"
-#include "version.h"
 
 /* OLSRD includes */
 #include "olsr.h"

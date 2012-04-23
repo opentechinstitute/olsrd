@@ -1,5 +1,4 @@
 #include "library.h"
-#include "version.h"
 #include "wireFormat.h"
 #ifndef GIT_SHA
   #define GIT_SHA ""

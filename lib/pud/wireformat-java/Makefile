@@ -61,6 +61,8 @@ JAVA_PKG = org.olsr.plugin.pud
 JAVA_PKG_DIR = $(subst .,/,$(JAVA_PKG))
 JAVA_PKG_UNDER = $(subst .,_,$(JAVA_PKG))
 
+GIT_SHA = $(shell git describe)
+
 
 ifneq ($(OS),linux)
 
@@ -191,10 +193,9 @@ build.xml: $(RESOURCES_DIR)/build.xml
 $(JAVASRC)/$(JAVA_PKG_DIR)/WireFormatConstants.java: \
       $(RESOURCES_DIR)/WireFormatConstants.java.h \
       $(BUILD_DIR_JNI)/c/library.h \
-      $(BUILD_DIR_JNI)/c/version.h \
       $(BUILD_DIR_JNI)/c/wireFormat.h
 	@echo "[generate] $@"
-	@$(CPP) -I "$(BUILD_DIR_JNI)/c" "$<" | \
+	@$(CPP) -I "$(BUILD_DIR_JNI)/c" -DPLUGIN_VER=\"$(PLUGIN_VER)\" -DGIT_SHA=\"$(GIT_SHA)\" "$<" | \
 	  sed -r -e '/^[[:space:]]*#.*$$/ d' \
 	         -e '/^[[:space:]]*$$/ d' \
 	         > "$@"
@@ -207,10 +208,6 @@ $(JAVASRC)/$(JAVA_PKG_DIR)/WireFormatConstants.java: \
 $(BUILD_DIR_JNI)/c/library.h: Makefile.inc
 	@echo "[generate] $@"
 	@echo "#define PUD_WIRE_FORMAT_LIBRARYNAME \"$(PROJECT)\"" > "$@"
-
-$(BUILD_DIR_JNI)/c/version.h: ../scripts/makeVersionH
-	@echo "[generate] $@"
-	@"$<" "$@" "$(PLUGIN_VER)"
 
 $(BUILD_DIR_JNI)/c/wireFormat.h: $(INC_DIR_WIREFORMAT_FULL)/wireFormat.h
 	@echo "[generate] $@"

@@ -13,13 +13,15 @@ include $(TOPDIR)/Makefile.inc
 CFLAGS += -Werror -D_GNU_SOURCE
 
 
-VERSION_FILE = ./src/version.h
 RESOURCESDIR = ./resources
 LIBRARY_INC = $(LIBRARY_PATH)/include
 LIBRARY_LIB = $(LIBRARY_PATH)/lib
 
 CFLAGS += -I $(LIBRARY_INC)
 LIBS += -L $(LIBRARY_LIB) -lnmea -lm -l$(LIBRARY_NAME)
+
+GIT_SHA = $(shell git describe)
+CFLAGS += -DGIT_SHA=\"$(GIT_SHA)\" -DPLUGIN_VER=\"$(PLUGIN_VER)\"
 
 ifneq ($(OS),linux)
 
@@ -36,7 +38,7 @@ else
 
 all: default_target
 
-default_target: library $(VERSION_FILE) $(PLUGIN_FULLNAME)
+default_target: library $(PLUGIN_FULLNAME)
 
 # repeat from toplevel Makefile.inc, and adjust: we need the library includes
 %.d: %.c
@@ -45,9 +47,6 @@ default_target: library $(VERSION_FILE) $(PLUGIN_FULLNAME)
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
 	@echo "[LD] $@"
 	@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
-
-$(VERSION_FILE): library scripts/makeVersionH
-	@./scripts/makeVersionH "$(VERSION_FILE)" "$(PLUGIN_VER)"
 
 install: all
 	@$(MAKE) -C $(LIBRARY_PATH) DESTDIR=$(DESTDIR) install
