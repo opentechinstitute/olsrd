@@ -61,8 +61,6 @@ JAVA_PKG = org.olsr.plugin.pud
 JAVA_PKG_DIR = $(subst .,/,$(JAVA_PKG))
 JAVA_PKG_UNDER = $(subst .,_,$(JAVA_PKG))
 
-GIT_SHA = $(shell git describe)
-
 
 ifneq ($(OS),linux)
 
@@ -74,6 +72,8 @@ default_target install clean:
 	@echo "*** only supported on Linux"
 
 else
+
+GIT_SHA = $(shell git describe 2> /dev/null || echo "Unknown")
 
 .PHONY: all default_target java prepare clean doc doc-clean install uninstall
 

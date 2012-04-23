@@ -20,9 +20,6 @@ LIBRARY_LIB = $(LIBRARY_PATH)/lib
 CFLAGS += -I $(LIBRARY_INC)
 LIBS += -L $(LIBRARY_LIB) -lnmea -lm -l$(LIBRARY_NAME)
 
-GIT_SHA = $(shell git describe)
-CFLAGS += -DGIT_SHA=\"$(GIT_SHA)\" -DPLUGIN_VER=\"$(PLUGIN_VER)\"
-
 ifneq ($(OS),linux)
 
 .PHONY: all default_target install clean
@@ -33,6 +30,9 @@ default_target install clean:
 	@echo "*** $(PLUGIN_NAME) plugin only supported on Linux, sorry!"
 
 else
+
+GIT_SHA = $(shell git describe 2> /dev/null || echo "Unknown")
+CFLAGS += -DGIT_SHA=\"$(GIT_SHA)\" -DPLUGIN_VER=\"$(PLUGIN_VER)\"
 
 .PHONY: all default_target install uninstall clean doc doc-clean library java java-instal java-uninstall
 
