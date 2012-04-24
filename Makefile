@@ -316,16 +316,16 @@ pgraph_uninstall:
 		@$(MAKECMD) -C lib/pgraph DESTDIR=$(DESTDIR) uninstall
 
 pud:
-		$(MAKECMD) -C lib/pud
+		@$(MAKECMD) -C lib/pud
 
 pud_clean:
-		$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) clean
+		@$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) clean
 
 pud_install:
-		$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) install
+		@$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) install
 
 pud_uninstall:
-		$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) uninstall
+		@$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) uninstall
 
 quagga:
 		@$(MAKECMD) -C lib/quagga
