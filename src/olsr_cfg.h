@@ -113,6 +113,9 @@
 #define MAX_LQ_AGING         1.0
 #define MIN_LQ_AGING         0.01
 
+#define MIN_SMARTGW_THRES    10
+#define MAX_SMARTGW_THRES    100
+
 #define MIN_SMARTGW_SPEED    1
 #define MAX_SMARTGW_SPEED    320000000
 

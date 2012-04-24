@@ -549,8 +549,9 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	  fprintf(stderr, "Warning, you are using the min_tc_vtime hack. We hope you know what you are doing... contact olsr.org otherwise.\n");
   }
 
-  if (((cnf->smart_gw_thresh < 10) || (cnf->smart_gw_thresh > 100)) && (cnf->smart_gw_thresh != 0)) {
-    fprintf(stderr, "Smart gateway threshold %d is not allowed\n", cnf->smart_gw_thresh);
+  if (((cnf->smart_gw_thresh < MIN_SMARTGW_THRES) || (cnf->smart_gw_thresh > MAX_SMARTGW_THRES)) && (cnf->smart_gw_thresh != 0)) {
+    fprintf(stderr, "Smart gateway threshold %d is not allowed (should be %d-%d)\n", cnf->smart_gw_thresh,
+            MIN_SMARTGW_THRES, MAX_SMARTGW_THRES);
     return -1;
   }
 
