@@ -225,16 +225,17 @@ The smart gateway mechanism was written by Markus Kittenberger and
 Henning Rogge to allow an OLSR user to directly choose their default
 Internet gateway instead of relying on the hop by hop decisions on
 the way to the gateway. OLSRd 0.6.0 can create an IPIP tunnel
-to the gateways OLSRd address to side-step the same nasty effects
+to the gateway's OLSRd address to side-step the same nasty effects
 described in the NAT-Threshold section.
 
 The smart gateway code can be split into two sections, one is
 responsible for announcing the existence of a smart gateway uplink
 and one (on the client nodes) to choose an uplink and create the
-tunnel to the gateway. It uses a modified (but backward compatible)
-special HNA to signal the gateways to the clients. The clients can
-use a plugin (or the integrated default code) to choose one of the
-available gateways and change it if necessary.
+tunnel to the gateway. The announcing code uses a modified (but
+backward compatible) special HNA to signal the gateways to the
+clients. The clients can use a plugin (or the integrated default
+code) to choose one of the available gateways and change it if
+necessary.
 
 The smart gateway system is setup by several configuration parameters,
 most of them with a sane default setting. The whole system can be
@@ -245,11 +246,19 @@ SmartGateway <yes/no>
 All other parameters will be ignored if SmartGateway is set to "no"
 (the default is "no").
 
-On the client side there is a single additional parameter which
-controls if you want to allow the selection of an outgoing ipv4
-gateway with NAT (Network Address Translation).
+On the client side there are two additional parameters.
+The first parameter controls whether you want to allow the selection
+of an outgoing ipv4 gateway with NAT (Network Address Translation).
+The default setting is "yes".
 
 SmartGatewayAllowNAT <yes/no>
+
+The second parameter controls whether you want to allow re-selection
+of a new outgoing gateway if its routing cost is lower or equal to the
+configured percentage of the routing cost of the current gateway.
+The default setting is 0, which disables it.
+
+SmartGatewayThreshold <threshold>
 
 The uplink side of the smart gateway code has four parameters to
 set up the type of the uplink:
@@ -268,7 +277,6 @@ set up the type of the uplink:
    translation. The maximum prefix length is 64 bits,
    the default is ::/0 (no prefix).
 
-SmartGatewayThreshold <threshold>
 SmartGatewayUplink <none/ipv4/ipv6/both>
 SmartGatewayUplinkNAT <yes/no>
 SmartGatewaySpeed <uplink> <downlink>
