@@ -74,7 +74,6 @@
 #define MESSAGE_TYPE 129
 
 int olsrd_plugin_interface_version(void);
-int olsrd_plugin_register_param(char *name, char *value);
 int olsrd_plugin_init(void);
 
 static int ipAddrLen;
