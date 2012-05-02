@@ -194,6 +194,20 @@ SmartGatewaySpeed 128 1024
 
 # SmartGatewayPrefix 0::/0
 
+# Specifies the file to watch for (dynamic) values for SmartGatewaySpeed.
+# If not specified then no watching is performed.
+# (default is unspecified)
+
+# SmartGatewaySpeedFile ""
+
+# Specifies the period in milliseconds on which to read the
+# SmartGatewaySpeedFile (if it changed) and activate its new setting for
+# SmartGatewaySpeed. This setting is only relevant if SmartGatewaySpeedFile
+# has been configured.
+# (default is 10000 milliseconds)
+
+# SmartGatewaySpeedFilePeriod 10000
+
 ##############################
 ### OLSR protocol settings ###
 ##############################
