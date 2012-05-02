@@ -86,6 +86,7 @@
 #define DEF_GW_UPLINK_NAT    true
 #define DEF_UPLINK_SPEED     128
 #define DEF_DOWNLINK_SPEED   1024
+#define DEF_GW_FILE_PERIOD   10000
 #define DEF_USE_SRCIP_ROUTES false
 
 #define DEF_IF_MODE          IF_MODE_MESH
@@ -126,6 +127,9 @@
 
 #define MIN_SMARTGW_SPEED    1
 #define MAX_SMARTGW_SPEED    320000000
+
+#define MIN_SMARTGW_SPEED_FILE_PERIOD  1000
+#define MAX_SMARTGW_SPEED_FILE_PERIOD  320000000
 
 #ifndef IPV6_ADDR_SITELOCAL
 #define IPV6_ADDR_SITELOCAL    0x0040U
@@ -274,6 +278,8 @@ struct olsrd_config {
   uint8_t smart_gw_thresh;
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;
+  char * smart_gw_speed_file;
+  uint32_t smart_gw_speed_file_period;
   struct olsr_ip_prefix smart_gw_prefix;
 
   /* Main address of this node */
