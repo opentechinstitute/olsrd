@@ -78,6 +78,8 @@
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
+#define DEF_GW_PERIOD        10*1000
+#define DEF_GW_STABLE_COUNT  6
 #define DEF_GW_ALLOW_NAT     true
 #define DEF_GW_THRESH        0
 #define DEF_GW_TYPE          GW_UPLINK_IPV46

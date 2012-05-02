@@ -104,7 +104,7 @@ static void gw_default_timer(void *unused __attribute__ ((unused))) {
     gw_def_stablecount = 0;
   }
 
-  if (gw_def_stablecount >= GW_DEFAULT_STABLE_COUNT) {
+  if (gw_def_stablecount >= DEF_GW_STABLE_COUNT) {
     gw_default_choose_gateway();
   }
 }
@@ -126,7 +126,7 @@ static void gw_default_startup_handler(void) {
   gw_def_finished_ipv6 |= olsr_cnf->has_ipv6_gateway;
 
   /* start gateway selection timer */
-  olsr_set_timer(&gw_def_timer, GW_DEFAULT_TIMER_INTERVAL, 0, true, &gw_default_timer, NULL, 0);
+  olsr_set_timer(&gw_def_timer, DEF_GW_PERIOD, 0, true, &gw_default_timer, NULL, 0);
 }
 
 static void gw_default_update_handler(struct gateway_entry *gw) {
