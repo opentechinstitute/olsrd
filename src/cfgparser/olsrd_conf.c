@@ -106,7 +106,7 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  if ((cnf = olsrd_parse_cnf(argv[1])) != NULL) {
+  if ((cnf = olsrd_parse_cnf(argv[1])) == 0) {
     if ((argc > 2) && (!strcmp(argv[2], "-print"))) {
       olsrd_print_cnf(cnf);
       olsrd_write_cnf(cnf, "./out.conf");
