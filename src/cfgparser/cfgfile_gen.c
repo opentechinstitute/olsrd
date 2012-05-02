@@ -446,6 +446,24 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->smart_gw_allow_nat ? "yes" : "no");
   abuf_puts(out,
     "\n"
+    "# Determines the period (in milliseconds) on which a new smart gateway\n"
+    "# selection is performed.\n"
+    "# (default is 10000 milliseconds)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayPeriod %d\n",
+      cnf->smart_gw_period == DEF_GW_PERIOD ? "# " : "",
+      cnf->smart_gw_period);
+  abuf_puts(out,
+    "\n"
+    "# Determines the number of times the link state database must be stable\n"
+    "# before a new smart gateway is selected.\n"
+    "# (default is 6)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayStableCount %d\n",
+      cnf->smart_gw_stablecount == DEF_GW_STABLE_COUNT ? "# " : "",
+      cnf->smart_gw_stablecount);
+  abuf_puts(out,
+    "\n"
     "# When another gateway than the current one has a cost of less than the cost\n"
     "# of the current gateway multiplied by SmartGatewayThreshold then the smart\n"
     "# gateway is switched to the other gateway. The unit is percentage.\n"

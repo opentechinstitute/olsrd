@@ -549,6 +549,16 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	  fprintf(stderr, "Warning, you are using the min_tc_vtime hack. We hope you know what you are doing... contact olsr.org otherwise.\n");
   }
 
+  if (cnf->smart_gw_period < MIN_SMARTGW_PERIOD || cnf->smart_gw_period > MAX_SMARTGW_PERIOD) {
+    fprintf(stderr, "Error, bad gateway period: %d msec (should be %d-%d)\n",
+        cnf->smart_gw_period, MIN_SMARTGW_PERIOD, MAX_SMARTGW_PERIOD);
+    return -1;
+  }
+  if (cnf->smart_gw_stablecount < MIN_SMARTGW_STABLE || cnf->smart_gw_stablecount > MAX_SMARTGW_STABLE) {
+    fprintf(stderr, "Error, bad gateway stable count: %d (should be %d-%d)\n",
+        cnf->smart_gw_stablecount, MIN_SMARTGW_STABLE, MAX_SMARTGW_STABLE);
+    return -1;
+  }
   if (((cnf->smart_gw_thresh < MIN_SMARTGW_THRES) || (cnf->smart_gw_thresh > MAX_SMARTGW_THRES)) && (cnf->smart_gw_thresh != 0)) {
     fprintf(stderr, "Smart gateway threshold %d is not allowed (should be %d-%d)\n", cnf->smart_gw_thresh,
             MIN_SMARTGW_THRES, MAX_SMARTGW_THRES);
@@ -764,6 +774,8 @@ set_default_cnf(struct olsrd_config *cnf)
 
   cnf->smart_gw_active = DEF_SMART_GW;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
+  cnf->smart_gw_period = DEF_GW_PERIOD;
+  cnf->smart_gw_stablecount = DEF_GW_STABLE_COUNT;
   cnf->smart_gw_thresh = DEF_GW_THRESH;
   cnf->smart_gw_type = DEF_GW_TYPE;
   cnf->smart_gw_uplink = DEF_UPLINK_SPEED;
@@ -882,6 +894,10 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("Smart Gateway    : %s\n", cnf->smart_gw_active ? "yes" : "no");
 
   printf("SmGw. Allow NAT  : %s\n", cnf->smart_gw_allow_nat ? "yes" : "no");
+
+  printf("SmGw. period     : %d\n", cnf->smart_gw_period);
+
+  printf("SmGw. stablecount: %d\n", cnf->smart_gw_stablecount);
 
   printf("SmGw. threshold  : %d%%\n", cnf->smart_gw_thresh);
 

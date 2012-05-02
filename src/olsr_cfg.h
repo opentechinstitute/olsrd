@@ -115,6 +115,12 @@
 #define MAX_LQ_AGING         1.0
 #define MIN_LQ_AGING         0.01
 
+#define MIN_SMARTGW_PERIOD   1*1000
+#define MAX_SMARTGW_PERIOD   320000*1000
+
+#define MIN_SMARTGW_STABLE   1
+#define MAX_SMARTGW_STABLE   254
+
 #define MIN_SMARTGW_THRES    10
 #define MAX_SMARTGW_THRES    100
 
@@ -263,6 +269,8 @@ struct olsrd_config {
   bool use_niit;
 
   bool smart_gw_active, smart_gw_allow_nat, smart_gw_uplink_nat;
+  uint32_t smart_gw_period;
+  uint8_t smart_gw_stablecount;
   uint8_t smart_gw_thresh;
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;

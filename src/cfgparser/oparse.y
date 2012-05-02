@@ -216,6 +216,8 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
 %token TOK_SMART_GW_ALLOW_NAT
+%token TOK_SMART_GW_PERIOD
+%token TOK_SMART_GW_STABLECOUNT
 %token TOK_SMART_GW_THRESH
 %token TOK_SMART_GW_UPLINK
 %token TOK_SMART_GW_UPLINK_NAT
@@ -297,6 +299,8 @@ stmt:       idebug
           | suse_niit
           | bsmart_gw
           | bsmart_gw_allow_nat
+          | ismart_gw_period
+          | asmart_gw_stablecount
           | asmart_gw_thresh
           | ssmart_gw_uplink
           | bsmart_gw_uplink_nat
@@ -1287,6 +1291,22 @@ bsmart_gw_allow_nat: TOK_SMART_GW_ALLOW_NAT TOK_BOOLEAN
 	PARSER_DEBUG_PRINTF("Smart gateway allow client nat: %s\n", $2->boolean ? "yes" : "no");
 	olsr_cnf->smart_gw_allow_nat = $2->boolean;
 	free($2);
+}
+;
+
+ismart_gw_period: TOK_SMART_GW_PERIOD TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway period: %d\n", $2->integer);
+  olsr_cnf->smart_gw_period = $2->integer;
+  free($2);
+}
+;
+
+asmart_gw_stablecount: TOK_SMART_GW_STABLECOUNT TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway stablecount: %d\n", $2->integer);
+  olsr_cnf->smart_gw_stablecount = $2->integer;
+  free($2);
 }
 ;
 

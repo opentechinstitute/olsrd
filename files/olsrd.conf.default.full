@@ -149,6 +149,18 @@
 
 # SmartGatewayAllowNAT yes
 
+# Determines the period (in milliseconds) on which a new smart gateway
+# selection is performed.
+# (default is 10000 milliseconds)
+
+# SmartGatewayPeriod 10000
+
+# Determines the number of times the link state database must be stable
+# before a new smart gateway is selected.
+# (default is 6)
+
+# SmartGatewayStableCount 6
+
 # When another gateway than the current one has a cost of less than the cost
 # of the current gateway multiplied by SmartGatewayThreshold then the smart
 # gateway is switched to the other gateway. The unit is percentage.
