@@ -8,9 +8,11 @@ else
 BINNAME = olsr_switch
 endif
 
-default_target:	$(OBJS)
+default_target:	$(TOPDIR)/$(BINNAME)
+
+$(TOPDIR)/$(BINNAME):	$(OBJS)
 	@echo "[LD] $@"
-	@$(CC) $(LDFLAGS) -o $(TOPDIR)/$(BINNAME) $(OBJS) $(LIBS)
+	@$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 ohs_cmd.o: CFLAGS += -Wno-cast-qual
 
