@@ -300,7 +300,7 @@ struct olsrd_config {
   int rt_monitor_socket;
 #endif
 
-#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __MacOSX__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
   int rts;                             /* Socket used for route changes on BSDs */
 #endif
   float lq_nat_thresh;
