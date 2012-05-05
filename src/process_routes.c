@@ -178,7 +178,7 @@ olsr_delete_kernel_route(struct rt_entry *rt)
       olsr_syslog(OLSR_LOG_ERR, "Delete route %s: %s", routestr, err_msg);
       return -1;
     }
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
     /* call NIIT handler (always)*/
     if (olsr_cnf->use_niit) {
       olsr_niit_handle_route(rt, false);
@@ -219,7 +219,7 @@ olsr_add_kernel_route(struct rt_entry *rt)
       rt->rt_nexthop = rt->rt_best->rtp_nexthop;
       rt->rt_metric = rt->rt_best->rtp_metric;
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
       /* call NIIT handler */
       if (olsr_cnf->use_niit) {
         olsr_niit_handle_route(rt, true);
@@ -252,9 +252,9 @@ olsr_chg_kernel_routes(struct list_node *head_node)
   while (!list_is_empty(head_node)) {
     rt = changelist2rt(head_node->next);
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
     /*
-    *   actively deleting routes is not necesarry as we use (NLM_F_CREATE | NLM_F_REPLACE) with LINUX_NETLINK_ROUTING
+    *   actively deleting routes is not necessary as we use (NLM_F_CREATE | NLM_F_REPLACE) with linux
     *        (i.e. new routes simply overwrite the old ones in kernel)
     *   BUT: We still have to actively delete routes if fib_metric != FLAT or we run on ipv6.
     *        As NLM_F_REPLACE is not supported with IPv6, or simply of no use with varying route metrics.
@@ -269,7 +269,7 @@ olsr_chg_kernel_routes(struct list_node *head_node)
 #else
     /*no rtnetlink we have to delete routes*/
     if (rt->rt_nexthop.iif_index > -1) olsr_delete_kernel_route(rt);
-#endif /*LINUX_NETLINK_ROUTING*/
+#endif /* linux */
 
     olsr_add_kernel_route(rt);
 

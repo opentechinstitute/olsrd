@@ -61,7 +61,7 @@
 #include "gateway.h"
 #include "olsr_niit.h"
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include "kernel_routes.h"
@@ -241,7 +241,7 @@ int main(int argc, char *argv[]) {
   bool loadedConfig = false;
   int i;
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
   struct interface *ifn;
 #endif
 
@@ -421,7 +421,7 @@ int main(int argc, char *argv[]) {
 #endif
     olsr_exit(__func__, 0);
   }
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
   olsr_cnf->rtnl_s = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
   if (olsr_cnf->rtnl_s < 0) {
     olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
@@ -446,7 +446,7 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
   /* initialize gateway system */
   if (olsr_cnf->smart_gw_active) {
     if (olsr_init_gateways()) {
@@ -562,7 +562,7 @@ int main(int argc, char *argv[]) {
 
   OLSR_PRINTF(1, "Main address: %s\n\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
   /* create policy routing rules with priorities if necessary */
   if (DEF_RT_NONE != olsr_cnf->rt_table_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
@@ -745,7 +745,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 
   olsr_delete_all_mid_entries();
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
     olsr_cleanup_gateways();
@@ -776,7 +776,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
     close(ifn->olsr_socket);
     close(ifn->send_socket);
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
     if (DEF_RT_NONE != olsr_cnf->rt_table_defaultolsr_pri) {
       olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default,
           olsr_cnf->rt_table_defaultolsr_pri, ifn->int_name, false);
@@ -793,7 +793,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   /* ioctl socket */
   close(olsr_cnf->ioctl_s);
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
   if (DEF_RT_NONE != olsr_cnf->rt_table_pri) {
     olsr_os_policy_rule(olsr_cnf->ip_version,
         olsr_cnf->rt_table, olsr_cnf->rt_table_pri, NULL, false);

@@ -23,7 +23,7 @@
 #include <assert.h>
 #include <net/if.h>
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
 struct avl_tree gateway_tree;
 
 static struct olsr_cookie_info *gw_mem_cookie = NULL;

@@ -15,7 +15,7 @@
 
 #include "assert.h"
 
-#ifdef LINUX_NETLINK_ROUTING
+#ifdef linux
 static uint32_t gw_def_nodecount, gw_def_stablecount;
 static bool gw_def_finished_ipv4, gw_def_finished_ipv6;
 
