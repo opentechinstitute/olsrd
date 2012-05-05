@@ -96,7 +96,7 @@ clean:
 uberclean:	clean clean_libs
 	-rm -f $(TAGFILE)
 #	BSD-xargs has no "--no-run-if-empty" aka "-r"
-	find . \( -name '*.[od]' -o -name '*~' \) -not -path "*/.hg*" -print0 | xargs -0 rm -f
+	find . \( -name '*.[od]' -o -name '*~' \) -not -path "*/.hg*" -type f -print0 | xargs -0 rm -f
 	@$(MAKECMD) -C $(SWITCHDIR) clean
 	@$(MAKECMD) -C $(CFGDIR) clean
 
