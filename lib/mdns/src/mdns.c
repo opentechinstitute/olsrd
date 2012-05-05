@@ -112,10 +112,12 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
       if ((encapsulationUdpData[0] & 0xf0) == 0x40) {
         dest.sll_protocol = htons(ETH_P_IP);
 	stripped_len = ntohs(ipHeader->ip_len);
+	ipHeader->ip_ttl = (u_int8_t) 1; //setting up TTL to 1 to avoid mdns packets flood 
 	}
       if ((encapsulationUdpData[0] & 0xf0) == 0x60) {
         dest.sll_protocol = htons(ETH_P_IPV6);
         stripped_len = 40 + ntohs(ip6Header->ip6_plen); //IPv6 Header size (40) + payload_len 
+        ip6Header->ip6_hops = (uint8_t) 1; //setting up Hop Limit to 1 to avoid mdns packets flood
         }
       // Sven-Ola: Don't know how to handle the "stripped_len is uninitialized" condition, maybe exit(1) is better...?
       if (0 == stripped_len) return;
@@ -134,7 +136,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
        * seem to matter when the destination MAC address is set to all-ones
        * in that case. */
       memset(dest.sll_addr, 0xFF, IFHWADDRLEN);
-
+      
       nBytesWritten = sendto(walker->capturingSkfd, encapsulationUdpData, stripped_len, 0, (struct sockaddr *)&dest, sizeof(dest));
       if (nBytesWritten != stripped_len) {
         BmfPError("sendto() error forwarding unpacked encapsulated pkt on \"%s\"", walker->ifName);
@@ -359,6 +361,9 @@ BmfPacketCaptured(
     if (destPort != 5353) {
       return;
     }
+    if(((u_int8_t) ipHeader->ip_ttl) <= ((u_int8_t) 1))    // Discard mdns packet with TTL limit 1 or less
+      return;
+
   }                             //END IPV4
 
   else if ((encapsulationUdpData[0] & 0xf0) == 0x60) {  //IPv6
@@ -380,6 +385,9 @@ BmfPacketCaptured(
     if (destPort != 5353) {
       return;
     }
+    if(((uint8_t) ipHeader6->ip6_hops) <= ((uint8_t) 1))  // Discard mdns packet with hop limit 1 or less
+      return;
+
   }                             //END IPV6
   else
     return;                     //Is not IP packet
