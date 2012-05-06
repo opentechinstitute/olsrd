@@ -78,7 +78,7 @@ my_init(void)
   printf("%s\n", MOD_DESC);
 
   /* defaults for parameters */
-  ipc_port = 2006;
+  ipc_port = 9090;
   if (olsr_cnf->ip_version == AF_INET) {
     jsoninfo_accept_ip.v4.s_addr = htonl(INADDR_LOOPBACK);
     jsoninfo_listen_ip.v4.s_addr = htonl(INADDR_ANY);

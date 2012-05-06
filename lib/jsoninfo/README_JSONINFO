@@ -16,7 +16,7 @@ futher parameters.  Here's an example configuration for UNIX systems
 
 LoadPlugin "olsrd_jsoninfo.so.0.1"
 {
-    # the default port is 2006 but you can change it like this:
+    # the default port is 9090 but you can change it like this:
     #PlParam     "port"   "8080"
 
     # You can set a "accept" single address to allow to connect to
