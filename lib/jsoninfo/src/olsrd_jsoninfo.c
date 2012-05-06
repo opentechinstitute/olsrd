@@ -7,6 +7,7 @@
  *                     includes code by Sven-Ola Tuecke
  *                     includes code by Lorenz Schori
  *                     includes bugs by Markus Kittenberger
+ *                     includes bugs by Hans-Christoph Steiner
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -91,27 +92,16 @@ static int ipc_socket;
 
 /* IPC initialization function */
 static int plugin_ipc_init(void);
-
 static void send_info(unsigned int /*send_what*/, int /*socket*/);
-
 static void ipc_action(int, void *, unsigned int);
-
 static void ipc_print_neigh(struct autobuf *, bool);
-
 static void ipc_print_link(struct autobuf *);
-
 static void ipc_print_routes(struct autobuf *);
-
 static void ipc_print_topology(struct autobuf *);
-
 static void ipc_print_hna(struct autobuf *);
-
 static void ipc_print_mid(struct autobuf *);
-
 static void ipc_print_gateway(struct autobuf *);
-
 static void ipc_print_config(struct autobuf *);
-
 static void ipc_print_interface(struct autobuf *);
 
 #define TXT_IPC_BUFSIZE 256
@@ -336,18 +326,29 @@ ipc_print_neigh(struct autobuf *abuf, bool list_2hop)
   int thop_cnt;
 
   abuf_puts(abuf, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.");
-  if (list_2hop) abuf_puts(abuf,"\n\t2hop interface adrress\n");
-  else abuf_puts(abuf, "\t2 Hop Neighbors\n");
+  if (list_2hop)
+    abuf_puts(abuf,"\n\t2hop interface adrress\n");
+  else
+    abuf_puts(abuf, "\t2 Hop Neighbors\n");
 
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
-    abuf_appendf(abuf, "%s\t%s\t%s\t%s\t%d\t", olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr), (neigh->status == SYM) ? "YES" : "NO",
-              neigh->is_mpr ? "YES" : "NO", olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO", neigh->willingness);
+    abuf_appendf(abuf,
+                 "%s\t%s\t%s\t%s\t%d\t",
+                 olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
+                 (neigh->status == SYM) ? "YES" : "NO",
+                 neigh->is_mpr ? "YES" : "NO",
+                 olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
+                 neigh->willingness);
     thop_cnt = 0;
 
     for (list_2 = neigh->neighbor_2_list.next; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next) {
-      if (list_2hop) abuf_appendf(abuf, "\t%s\n", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
-      else thop_cnt++;
+      if (list_2hop)
+        abuf_appendf(abuf,
+                     "\t%s\n",
+                     olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
+      else
+        thop_cnt++;
     }
     if (!list_2hop) {
       abuf_appendf(abuf, "%d\n", thop_cnt);
@@ -376,18 +377,23 @@ ipc_print_link(struct autobuf *abuf)
 #ifdef ACTIVATE_VTIME_JSONINFO
     int diff = (unsigned int)(my_link->link_timer->timer_clock - now_times);
 
-    abuf_appendf(abuf, "%s\t%s\t%d.%03d\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
-              olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
-              diff/1000, abs(diff%1000),
-              get_link_entry_text(my_link, '\t', &lqbuffer1),
-              get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
+    abuf_appendf(abuf,
+                 "%s\t%s\t%d.%03d\t%s\t%s\t\n",
+                 olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
+                 olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
+                 diff/1000, abs(diff%1000),
+                 get_link_entry_text(my_link, '\t', &lqbuffer1),
+                 get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
 #else
-    abuf_appendf(abuf, "%s\t%s\t0.00\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
-              olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
-              get_link_entry_text(my_link, '\t', &lqbuffer1),
-              get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
+    abuf_appendf(abuf,
+                 "%s\t%s\t0.00\t%s\t%s\t\n",
+                 olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
+                 olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
+                 get_link_entry_text(my_link, '\t', &lqbuffer1),
+                 get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
 #endif
-  } OLSR_FOR_ALL_LINK_ENTRIES_END(my_link);
+  }
+  OLSR_FOR_ALL_LINK_ENTRIES_END(my_link);
 
   abuf_puts(abuf, "\n");
 }
@@ -403,11 +409,16 @@ ipc_print_routes(struct autobuf *abuf)
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
-    abuf_appendf(abuf, "%s/%d\t%s\t%d\t%s\t%s\t\n", olsr_ip_to_string(&buf1, &rt->rt_dst.prefix), rt->rt_dst.prefix_len,
-              olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway), rt->rt_best->rtp_metric.hops,
-              get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer),
-              if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
-  } OLSR_FOR_ALL_RT_ENTRIES_END(rt);
+    abuf_appendf(abuf,
+                 "%s/%d\t%s\t%d\t%s\t%s\t\n",
+                 olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
+                 rt->rt_dst.prefix_len,
+                 olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
+                 rt->rt_best->rtp_metric.hops,
+                 get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer),
+                 if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+  }
+  OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 
   abuf_puts(abuf, "\n");
 
@@ -435,17 +446,23 @@ ipc_print_topology(struct autobuf *abuf)
         uint32_t vt = tc->validity_timer != NULL ? (tc->validity_timer->timer_clock - now_times) : 0;
         int diff = (int)(vt);
         abuf_appendf(abuf, "%s\t%s\t%s\t%s\t%d.%03d\n", olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-            olsr_ip_to_string(&addrbuf, &tc->addr),
-            get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
-            get_linkcost_text(tc_edge->cost, false, &lqbuffer2),
-            diff/1000, diff%1000);
+                     olsr_ip_to_string(&addrbuf, &tc->addr),
+                     get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
+                     get_linkcost_text(tc_edge->cost, false, &lqbuffer2),
+                     diff/1000, diff%1000);
 #else
-        abuf_appendf(abuf, "%s\t%s\t%s\t%s\n", olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr), olsr_ip_to_string(&addrbuf, &tc->addr),
-                  get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1), get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
+        abuf_appendf(abuf,
+                     "%s\t%s\t%s\t%s\n",
+                     olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
+                     olsr_ip_to_string(&addrbuf, &tc->addr),
+                     get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
+                     get_linkcost_text(tc_edge->cost, false, &lqbuffer2));
 #endif
       }
-    } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
-  } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
+    }
+    OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
+  }
+  OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
   abuf_puts(abuf, "\n");
 }
@@ -467,13 +484,19 @@ ipc_print_hna(struct autobuf *abuf)
   /* Announced HNA entries */
   if (olsr_cnf->ip_version == AF_INET) {
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
-                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
+      abuf_appendf(abuf,
+                   "%s/%d\t%s\n",
+                   olsr_ip_to_string(&buf, &hna->net.prefix),
+                   hna->net.prefix_len,
+                   olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
     }
   } else {
     for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
-                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
+      abuf_appendf(abuf,
+                   "%s/%d\t%s\n",
+                   olsr_ip_to_string(&buf, &hna->net.prefix),
+                   hna->net.prefix_len,
+                   olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
     }
   }
 
@@ -485,12 +508,18 @@ ipc_print_hna(struct autobuf *abuf)
 #ifdef ACTIVATE_VTIME_JSONINFO
       uint32_t vt = tmp_net->hna_net_timer != NULL ? (tmp_net->hna_net_timer->timer_clock - now_times) : 0;
       int diff = (int)(vt);
-      abuf_appendf(abuf, "%s/%d\t%s\t\%d.%03d\n", olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix),
-          tmp_net->hna_prefix.prefix_len, olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr),
-          diff/1000, abs(diff%1000));
+      abuf_appendf(abuf,
+                   "%s/%d\t%s\t\%d.%03d\n",
+                   olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix),
+                   tmp_net->hna_prefix.prefix_len,
+                   olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr),
+                   diff/1000, abs(diff%1000));
 #else
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix),
-          tmp_net->hna_prefix.prefix_len, olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
+      abuf_appendf(abuf,
+                   "%s/%d\t%s\n",
+                   olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix),
+                   tmp_net->hna_prefix.prefix_len,
+                   olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
 #endif /*vtime jsoninfo*/
     }
   }
@@ -531,12 +560,15 @@ ipc_print_mid(struct autobuf *abuf)
         uint32_t vt = alias->vtime - now_times;
         int diff = (int)(vt);
 
-        abuf_appendf(abuf, "%s\t%s\t%d.%03d\n", 
-                     olsr_ip_to_string(&buf, &entry->main_addr), 
+        abuf_appendf(abuf, "%s\t%s\t%d.%03d\n",
+                     olsr_ip_to_string(&buf, &entry->main_addr),
                      olsr_ip_to_string(&buf2, &alias->alias),
                      diff/1000, abs(diff%1000));
 #else
-        abuf_appendf(abuf, "%s%s", (is_first ? "\t" : ";"), olsr_ip_to_string(&buf, &alias->alias));
+        abuf_appendf(abuf,
+                     "%s%s",
+                     (is_first ? "\t" : ";"),
+                     olsr_ip_to_string(&buf, &alias->alias));
 #endif /*vtime jsoninfo*/
         alias = alias->next_alias;
         is_first = 0;
@@ -579,16 +611,14 @@ ipc_print_gateway(struct autobuf *abuf)
 
     if (gw == olsr_get_ipv4_inet_gateway(&autoV4)) {
       v4 = autoV4 ? 'a' : 's';
-    }
-    else if (gw->ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)
-        && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat)) {
+    } else if (gw->ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)
+               && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat)) {
       v4 = 'u';
     }
 
     if (gw == olsr_get_ipv6_inet_gateway(&autoV6)) {
       v6 = autoV6 ? 'a' : 's';
-    }
-    else if (gw->ipv6 && olsr_cnf->ip_version == AF_INET6) {
+    } else if (gw->ipv6 && olsr_cnf->ip_version == AF_INET6) {
       v6 = 'u';
     }
 
@@ -600,11 +630,12 @@ ipc_print_gateway(struct autobuf *abuf)
     }
 
     abuf_appendf(abuf, "%c%c\t%s\t%s\t%d\t%u\t%u\t%s\t%s\t%s\n",
-        v4, v6, olsr_ip_to_string(&buf, &gw->originator),
-        get_linkcost_text(tc->path_cost, true, &lqbuf), tc->hops,
-        gw->uplink, gw->downlink, v4type, v6type,
-        gw->external_prefix.prefix_len == 0 ? NONE : olsr_ip_prefix_to_string(&gw->external_prefix));
-  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
+                 v4, v6, olsr_ip_to_string(&buf, &gw->originator),
+                 get_linkcost_text(tc->path_cost, true, &lqbuf), tc->hops,
+                 gw->uplink, gw->downlink, v4type, v6type,
+                 gw->external_prefix.prefix_len == 0 ? NONE : olsr_ip_prefix_to_string(&gw->external_prefix));
+  }
+  OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 #endif
 }
 
@@ -626,18 +657,22 @@ ipc_print_interface(struct autobuf *abuf)
       abuf_puts(abuf, "DOWN\n");
       continue;
     }
-    abuf_appendf(abuf, "UP\t%d\t%s\t",
-               rifs->int_mtu, rifs->is_wireless ? "Yes" : "No");
- 
+    abuf_appendf(abuf,
+                 "UP\t%d\t%s\t",
+                 rifs->int_mtu,
+                 rifs->is_wireless ? "Yes" : "No");
+
     if (olsr_cnf->ip_version == AF_INET) {
       struct ipaddr_str addrbuf, maskbuf, bcastbuf;
       abuf_appendf(abuf, "%s\t%s\t%s\n",
-                 ip4_to_string(&addrbuf, rifs->int_addr.sin_addr), ip4_to_string(&maskbuf, rifs->int_netmask.sin_addr),
-                 ip4_to_string(&bcastbuf, rifs->int_broadaddr.sin_addr));
+                   ip4_to_string(&addrbuf, rifs->int_addr.sin_addr),
+                   ip4_to_string(&maskbuf, rifs->int_netmask.sin_addr),
+                   ip4_to_string(&bcastbuf, rifs->int_broadaddr.sin_addr));
     } else {
-       struct ipaddr_str addrbuf, maskbuf;
+      struct ipaddr_str addrbuf, maskbuf;
       abuf_appendf(abuf, "%s\t\t%s\n",
-                 ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr), ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
+                   ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr),
+                   ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
     }
   }
   abuf_puts(abuf, "\n");
@@ -645,7 +680,8 @@ ipc_print_interface(struct autobuf *abuf)
 
 
 static void
-jsoninfo_write_data(void *foo __attribute__ ((unused))) {
+jsoninfo_write_data(void *foo __attribute__ ((unused)))
+{
   fd_set set;
   int result, i, j, max;
   struct timeval tv;
@@ -671,7 +707,10 @@ jsoninfo_write_data(void *foo __attribute__ ((unused))) {
 
   for (i=0; i<outbuffer_count; i++) {
     if (FD_ISSET(outbuffer_socket[i], &set)) {
-      result = send(outbuffer_socket[i], outbuffer[i] + outbuffer_written[i], outbuffer_size[i] - outbuffer_written[i], 0);
+      result = send(outbuffer_socket[i],
+                    outbuffer[i] + outbuffer_written[i],
+                    outbuffer_size[i] - outbuffer_written[i],
+                    0);
       if (result > 0) {
         outbuffer_written[i] += result;
       }
@@ -739,7 +778,12 @@ send_info(unsigned int send_what, int the_socket)
   outbuffer_count++;
 
   if (outbuffer_count == 1) {
-    writetimer_entry = olsr_start_timer(100, 0, OLSR_TIMER_PERIODIC, &jsoninfo_write_data, NULL, 0);
+    writetimer_entry = olsr_start_timer(100,
+                                        0,
+                                        OLSR_TIMER_PERIODIC,
+                                        &jsoninfo_write_data,
+                                        NULL,
+                                        0);
   }
 
   abuf_free(&abuf);
@@ -749,7 +793,7 @@ send_info(unsigned int send_what, int the_socket)
  * Local Variables:
  * mode: c
  * style: linux
- * c-basic-offset: 4
+ * c-basic-offset: 2
  * indent-tabs-mode: nil
  * End:
  */
