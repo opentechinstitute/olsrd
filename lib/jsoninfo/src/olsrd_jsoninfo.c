@@ -94,28 +94,28 @@ static int ipc_socket;
 static int plugin_ipc_init(void);
 static void send_info(unsigned int /*send_what*/, int /*socket*/);
 static void ipc_action(int, void *, unsigned int);
-static void ipc_print_neigh(struct autobuf *, bool);
-static void ipc_print_link(struct autobuf *);
+static void ipc_print_neighbors(struct autobuf *, bool);
+static void ipc_print_links(struct autobuf *);
 static void ipc_print_routes(struct autobuf *);
 static void ipc_print_topology(struct autobuf *);
 static void ipc_print_hna(struct autobuf *);
 static void ipc_print_mid(struct autobuf *);
-static void ipc_print_gateway(struct autobuf *);
+static void ipc_print_gateways(struct autobuf *);
 static void ipc_print_config(struct autobuf *);
-static void ipc_print_interface(struct autobuf *);
+static void ipc_print_interfaces(struct autobuf *);
 
 #define TXT_IPC_BUFSIZE 256
 
-#define SIW_NEIGH 0x0001
-#define SIW_LINK 0x0002
-#define SIW_ROUTE 0x0004
+#define SIW_NEIGHBORS 0x0001
+#define SIW_LINKS 0x0002
+#define SIW_ROUTES 0x0004
 #define SIW_HNA 0x0008
 #define SIW_MID 0x0010
-#define SIW_TOPO 0x0020
-#define SIW_GATEWAY 0x0040
-#define SIW_INTERFACE 0x0080
+#define SIW_TOPOLOGY 0x0020
+#define SIW_GATEWAYS 0x0040
+#define SIW_INTERFACES 0x0080
 #define SIW_CONFIG 0x0100
-#define SIW_2HOP 0x0200
+#define SIW_TWOHOP 0x0200
 
 /* ALL = neigh link route hna mid topo */
 #define SIW_ALL 0x003F
@@ -288,28 +288,21 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     ssize_t s = recv(ipc_connection, (void *)&requ, sizeof(requ), 0);   /* Win32 needs the cast here */
     if (0 < s) {
       requ[s] = 0;
-      /* To print out neighbours only on the Freifunk Status
-       * page the normal output is somewhat lengthy. The
-       * header parsing is sufficient for standard wget.
-       */
-      if (0 != strstr(requ, "/neighbours")) send_what = SIW_NEIGH | SIW_LINK;
-      else {
-        /* print out every combinations of requested tabled
-         * 3++ letter abbreviations are matched */
-        if (0 != strstr(requ, "/all")) send_what = SIW_ALL;
-        else { /*already included in /all*/
-          if (0 != strstr(requ, "/nei")) send_what |= SIW_NEIGH;
-          if (0 != strstr(requ, "/lin")) send_what |= SIW_LINK;
-          if (0 != strstr(requ, "/rou")) send_what |= SIW_ROUTE;
-          if (0 != strstr(requ, "/hna")) send_what |= SIW_HNA;
-          if (0 != strstr(requ, "/mid")) send_what |= SIW_MID;
-          if (0 != strstr(requ, "/top")) send_what |= SIW_TOPO;
-        }
-        if (0 != strstr(requ, "/gat")) send_what |= SIW_GATEWAY;
-        if (0 != strstr(requ, "/con")) send_what |= SIW_CONFIG;
-        if (0 != strstr(requ, "/int")) send_what |= SIW_INTERFACE;
-        if (0 != strstr(requ, "/2ho")) send_what |= SIW_2HOP;
+      /* print out every combinations of requested tabled
+       * 3++ letter abbreviations are matched */
+      if (0 != strstr(requ, "/all")) send_what = SIW_ALL;
+      else { /*already included in /all*/
+        if (0 != strstr(requ, "/neighbors")) send_what |= SIW_NEIGHBORS;
+        if (0 != strstr(requ, "/links")) send_what |= SIW_LINKS;
+        if (0 != strstr(requ, "/routes")) send_what |= SIW_ROUTES;
+        if (0 != strstr(requ, "/hna")) send_what |= SIW_HNA;
+        if (0 != strstr(requ, "/mid")) send_what |= SIW_MID;
+        if (0 != strstr(requ, "/topology")) send_what |= SIW_TOPOLOGY;
       }
+      if (0 != strstr(requ, "/gateways")) send_what |= SIW_GATEWAYS;
+      if (0 != strstr(requ, "/config")) send_what |= SIW_CONFIG;
+      if (0 != strstr(requ, "/interfaces")) send_what |= SIW_INTERFACES;
+      if (0 != strstr(requ, "/twohop")) send_what |= SIW_TWOHOP;
     }
     if ( send_what == 0 ) send_what = SIW_ALL;
   }
@@ -318,7 +311,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 }
 
 static void
-ipc_print_neigh(struct autobuf *abuf, bool list_2hop)
+ipc_print_neighbors(struct autobuf *abuf, bool list_2hop)
 {
   struct ipaddr_str buf1;
   struct neighbor_entry *neigh;
@@ -359,7 +352,7 @@ ipc_print_neigh(struct autobuf *abuf, bool list_2hop)
 }
 
 static void
-ipc_print_link(struct autobuf *abuf)
+ipc_print_links(struct autobuf *abuf)
 {
   struct ipaddr_str buf1, buf2;
   struct lqtextbuffer lqbuffer1, lqbuffer2;
@@ -583,7 +576,7 @@ ipc_print_mid(struct autobuf *abuf)
 }
 
 static void
-ipc_print_gateway(struct autobuf *abuf)
+ipc_print_gateways(struct autobuf *abuf)
 {
 #ifndef linux
   abuf_puts(abuf, "Gateway mode is only supported in linux\n");
@@ -646,7 +639,7 @@ ipc_print_config(struct autobuf *abuf)
 }
 
 static void
-ipc_print_interface(struct autobuf *abuf)
+ipc_print_interfaces(struct autobuf *abuf)
 {
   const struct olsr_if *ifs;
   abuf_puts(abuf, "Table: Interfaces\nName\tState\tMTU\tWLAN\tSrc-Adress\tMask\tDst-Adress\n");
@@ -748,26 +741,26 @@ send_info(unsigned int send_what, int the_socket)
 
   /* Print tables to IPC socket */
 
-  /* links */
-  if ((send_what & SIW_LINK) == SIW_LINK) ipc_print_link(&abuf);
-  /* neighbours */
-  if ((send_what & SIW_NEIGH) == SIW_NEIGH) ipc_print_neigh(&abuf,false);
-  /* topology */
-  if ((send_what & SIW_TOPO) == SIW_TOPO) ipc_print_topology(&abuf);
-  /* hna */
-  if ((send_what & SIW_HNA) == SIW_HNA) ipc_print_hna(&abuf);
-  /* mid */
-  if ((send_what & SIW_MID) == SIW_MID) ipc_print_mid(&abuf);
-  /* routes */
-  if ((send_what & SIW_ROUTE) == SIW_ROUTE) ipc_print_routes(&abuf);
-  /* gateways */
-  if ((send_what & SIW_GATEWAY) == SIW_GATEWAY) ipc_print_gateway(&abuf);
-  /* config */
-  if ((send_what & SIW_CONFIG) == SIW_CONFIG) ipc_print_config(&abuf);
-  /* interface */
-  if ((send_what & SIW_INTERFACE) == SIW_INTERFACE) ipc_print_interface(&abuf);
-  /* 2hop neighbour list */
-  if ((send_what & SIW_2HOP) == SIW_2HOP) ipc_print_neigh(&abuf,true);
+  if ((send_what & SIW_LINKS) == SIW_LINKS)
+    ipc_print_links(&abuf);
+  if ((send_what & SIW_NEIGHBORS) == SIW_NEIGHBORS)
+    ipc_print_neighbors(&abuf,false);
+  if ((send_what & SIW_TOPOLOGY) == SIW_TOPOLOGY)
+    ipc_print_topology(&abuf);
+  if ((send_what & SIW_HNA) == SIW_HNA)
+    ipc_print_hna(&abuf);
+  if ((send_what & SIW_MID) == SIW_MID)
+    ipc_print_mid(&abuf);
+  if ((send_what & SIW_ROUTES) == SIW_ROUTES)
+    ipc_print_routes(&abuf);
+  if ((send_what & SIW_GATEWAYS) == SIW_GATEWAYS)
+    ipc_print_gateways(&abuf);
+  if ((send_what & SIW_CONFIG) == SIW_CONFIG)
+    ipc_print_config(&abuf);
+  if ((send_what & SIW_INTERFACES) == SIW_INTERFACES)
+    ipc_print_interfaces(&abuf);
+  if ((send_what & SIW_TWOHOP) == SIW_TWOHOP)
+    ipc_print_neighbors(&abuf,true);
 
   outbuffer[outbuffer_count] = olsr_malloc(abuf.len, "txt output buffer");
   outbuffer_size[outbuffer_count] = abuf.len;
