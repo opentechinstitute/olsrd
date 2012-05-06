@@ -165,15 +165,15 @@ rpm:
 
 # This is quite ugly but at least it works
 ifeq ($(OS),linux)
-SUBDIRS = arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo mdns mini nameservice p2pd pgraph quagga secure tas txtinfo watchdog
+SUBDIRS = arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mdns mini nameservice p2pd pgraph quagga secure tas txtinfo watchdog
 else
 ifeq ($(OS),win32)
-SUBDIRS := dot_draw httpinfo mini pgraph secure txtinfo
+SUBDIRS := dot_draw httpinfo jsoninfo mini pgraph secure txtinfo
 else
 ifeq ($(OS),android)
-SUBDIRS := arprefresh bmf dot_draw dyn_gw_plain httpinfo mini nameservice pgraph secure tas txtinfo watchdog
+SUBDIRS := arprefresh bmf dot_draw dyn_gw_plain httpinfo jsoninfo mini nameservice pgraph secure tas txtinfo watchdog
 else
-SUBDIRS := dot_draw dyn_gw dyn_gw_plain httpinfo mini nameservice pgraph secure txtinfo watchdog
+SUBDIRS := dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mini nameservice pgraph secure txtinfo watchdog
 endif
 endif
 endif
@@ -267,6 +267,18 @@ httpinfo_install:
 
 httpinfo_uninstall:
 		@$(MAKECMD) -C lib/httpinfo DESTDIR=$(DESTDIR) uninstall
+
+jsoninfo:
+		@$(MAKECMD) -C lib/jsoninfo
+
+jsoninfo_clean:
+		@$(MAKECMD) -C lib/jsoninfo DESTDIR=$(DESTDIR) clean
+
+jsoninfo_install:
+		@$(MAKECMD) -C lib/jsoninfo DESTDIR=$(DESTDIR) install
+
+jsoninfo_uninstall:
+		@$(MAKECMD) -C lib/jsoninfo DESTDIR=$(DESTDIR) uninstall
 
 mdns:
 		@$(MAKECMD) -C lib/mdns
