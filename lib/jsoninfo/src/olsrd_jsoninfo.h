@@ -51,9 +51,6 @@
 #include "olsrd_plugin.h"
 #include "plugin_util.h"
 
-/* uncomment this to include VTime values into Link/Topology command */
-/* #define ACTIVATE_VTIME_JSONINFO */
-
 /* uncomment this to allow connections from 127.0.0.1 regardless of olsrd.conf (useful to allow externel ip/network + localhost) (ipv4 only)*/
 /* #define JSONINFO_ALLOW_LOCALHOST */
 
