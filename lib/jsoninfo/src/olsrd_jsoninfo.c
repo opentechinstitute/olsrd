@@ -95,6 +95,8 @@ static int plugin_ipc_init(void);
 
 static void abuf_json_open_array(struct autobuf *abuf, const char* header);
 static void abuf_json_close_array(struct autobuf *abuf);
+static void abuf_json_open_array_entry(struct autobuf *abuf);
+static void abuf_json_close_array_entry(struct autobuf *abuf);
 static void abuf_json_boolean(struct autobuf *abuf, const char* key, int value);
 static void abuf_json_key_string(struct autobuf *abuf, const char* key, const char* value);
 static void abuf_json_key_int(struct autobuf *abuf, const char* key, int value);
@@ -141,9 +143,17 @@ static struct timer_entry *writetimer_entry;
 
 /* JSON support functions */
 
+
+/* JSON does not tolerate commas dangling at the end of arrays, so we need to
+ * count which entry number we're at in order to make sure we don't tack a
+ * dangling comma on at the end */
+static int entrynumber = 0;
+static int arrayentrynumber = 0;
+
 static void
 abuf_json_open_array(struct autobuf *abuf, const char* header)
 {
+  arrayentrynumber = 0;
   abuf_appendf(abuf, "{\"%s\": [\n", header);
 }
 
@@ -154,27 +164,62 @@ abuf_json_close_array(struct autobuf *abuf)
 }
 
 static void
+abuf_json_open_array_entry(struct autobuf *abuf)
+{
+  entrynumber = 0;
+  if (arrayentrynumber)
+    abuf_appendf(abuf, ",\n{");
+  else
+    abuf_appendf(abuf, "{");
+  arrayentrynumber++;
+}
+
+static void
+abuf_json_close_array_entry(struct autobuf *abuf)
+{
+  abuf_appendf(abuf, "}");
+}
+
+static void
 abuf_json_boolean(struct autobuf *abuf, const char* key, int value)
 {
-  abuf_appendf(abuf, "\t\"%s\": %s,\n", key, value ? "true" : "false");
+  if (entrynumber)
+    abuf_appendf(abuf, ",\n");
+  else
+    abuf_appendf(abuf, "\n");
+  abuf_appendf(abuf, "\t\"%s\": %s", key, value ? "true" : "false");
+  entrynumber++;
 }
 
 static void
 abuf_json_key_string(struct autobuf *abuf, const char* key, const char* value)
 {
-  abuf_appendf(abuf, "\t\"%s\": \"%s\",\n", key, value);
+  if (entrynumber)
+    abuf_appendf(abuf, ",\n");
+  else
+    abuf_appendf(abuf, "\n");
+  abuf_appendf(abuf, "\t\"%s\": \"%s\"", key, value);
+  entrynumber++;
 }
 
 static void
 abuf_json_key_int(struct autobuf *abuf, const char* key, int value)
 {
-  abuf_appendf(abuf, "\t\"%s\": %i,\n", key, value);
+  if (entrynumber)
+    abuf_appendf(abuf, ",\n");
+  else
+    abuf_appendf(abuf, "\n");
+  abuf_appendf(abuf, "\t\"%s\": %i", key, value);
+  entrynumber++;
 }
 
 static void
 abuf_json_key_float(struct autobuf *abuf, const char* key, float value)
 {
+  if (entrynumber)
+    abuf_appendf(abuf, ",\n");
   abuf_appendf(abuf, "\t\"%s\": %g,\n", key, value);
+  entrynumber++;
 }
 
 
@@ -595,7 +640,7 @@ ipc_print_gateways(struct autobuf *abuf)
 
   // Status IP ETX Hopcount Uplink-Speed Downlink-Speed ipv4/ipv4-nat/- ipv6/- ipv6-prefix/-
   abuf_json_open_array(abuf, "gateways");
-  abuf_puts(abuf, "Table: Gateways\nStatus\tGateway IP\tETX\tHopcnt\tUplink\tDownlnk\tIPv4\tIPv6\tPrefix\n");
+  //abuf_puts(abuf, "Table: Gateways\nStatus\tGateway IP\tETX\tHopcnt\tUplink\tDownlnk\tIPv4\tIPv6\tPrefix\n");
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
     char v4 = '-', v6 = '-';
     bool autoV4 = false, autoV6 = false;
@@ -633,6 +678,7 @@ ipc_print_gateways(struct autobuf *abuf)
                  gw->external_prefix.prefix_len == 0 ? NONE : olsr_ip_prefix_to_string(&gw->external_prefix));
   }
   OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
+  abuf_json_close_array(abuf);
 #endif
 }
 
@@ -650,29 +696,34 @@ ipc_print_interfaces(struct autobuf *abuf)
   //abuf_puts(abuf, "Table: Interfaces\nName\tState\tMTU\tWLAN\tSrc-Adress\tMask\tDst-Adress\n");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
     const struct interface *const rifs = ifs->interf;
+    abuf_json_open_array_entry(abuf);
     abuf_json_key_string(abuf, "name", ifs->name);
     if (!rifs) {
       abuf_json_key_string(abuf, "state", "down");
-      continue;
-    }
-    abuf_json_key_string(abuf, "state", "up");
-    abuf_json_key_int(abuf, "mtu", rifs->int_mtu);
-    abuf_json_boolean(abuf, "wireless", rifs->is_wireless);
-
-    if (olsr_cnf->ip_version == AF_INET) {
-      struct ipaddr_str addrbuf, maskbuf, bcastbuf;
-      abuf_appendf(abuf, "%s\t%s\t%s\n",
-                   ip4_to_string(&addrbuf, rifs->int_addr.sin_addr),
-                   ip4_to_string(&maskbuf, rifs->int_netmask.sin_addr),
-                   ip4_to_string(&bcastbuf, rifs->int_broadaddr.sin_addr));
     } else {
-      struct ipaddr_str addrbuf, maskbuf;
-      abuf_appendf(abuf, "%s\t\t%s\n",
-                   ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr),
-                   ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
+      abuf_json_key_string(abuf, "state", "up");
+      abuf_json_key_int(abuf, "mtu", rifs->int_mtu);
+      abuf_json_boolean(abuf, "wireless", rifs->is_wireless);
+
+      if (olsr_cnf->ip_version == AF_INET) {
+        struct ipaddr_str addrbuf, maskbuf, bcastbuf;
+        abuf_json_key_string(abuf, "ipv4Address",
+                             ip4_to_string(&addrbuf, rifs->int_addr.sin_addr));
+        abuf_json_key_string(abuf, "netmask",
+                             ip4_to_string(&maskbuf, rifs->int_netmask.sin_addr));
+        abuf_json_key_string(abuf, "broadcast",
+                             ip4_to_string(&bcastbuf, rifs->int_broadaddr.sin_addr));
+      } else {
+        struct ipaddr_str addrbuf, maskbuf;
+        abuf_json_key_string(abuf, "ipv6Address",
+                             ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr));
+        abuf_json_key_string(abuf, "multicast",
+                             ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
+      }
     }
+    abuf_json_close_array_entry(abuf);
   }
-  abuf_puts(abuf, "}\n");
+  abuf_json_close_array(abuf);
 }
 
 
