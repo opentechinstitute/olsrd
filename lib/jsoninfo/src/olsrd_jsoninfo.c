@@ -92,6 +92,14 @@ static int ipc_socket;
 
 /* IPC initialization function */
 static int plugin_ipc_init(void);
+
+static void abuf_json_open_array(struct autobuf *abuf, const char* header);
+static void abuf_json_close_array(struct autobuf *abuf);
+static void abuf_json_boolean(struct autobuf *abuf, const char* key, int value);
+static void abuf_json_key_string(struct autobuf *abuf, const char* key, const char* value);
+static void abuf_json_key_int(struct autobuf *abuf, const char* key, int value);
+static void abuf_json_key_float(struct autobuf *abuf, const char* key, float value);
+
 static void send_info(unsigned int /*send_what*/, int /*socket*/);
 static void ipc_action(int, void *, unsigned int);
 static void ipc_print_neighbors(struct autobuf *, bool);
@@ -129,6 +137,46 @@ static int outbuffer_socket[MAX_CLIENTS];
 static int outbuffer_count;
 
 static struct timer_entry *writetimer_entry;
+
+
+/* JSON support functions */
+
+static void
+abuf_json_open_array(struct autobuf *abuf, const char* header)
+{
+  abuf_appendf(abuf, "{\"%s\": [\n", header);
+}
+
+static void
+abuf_json_close_array(struct autobuf *abuf)
+{
+  abuf_appendf(abuf, "]}\n");
+}
+
+static void
+abuf_json_boolean(struct autobuf *abuf, const char* key, int value)
+{
+  abuf_appendf(abuf, "\t\"%s\": %s,\n", key, value ? "true" : "false");
+}
+
+static void
+abuf_json_key_string(struct autobuf *abuf, const char* key, const char* value)
+{
+  abuf_appendf(abuf, "\t\"%s\": \"%s\",\n", key, value);
+}
+
+static void
+abuf_json_key_int(struct autobuf *abuf, const char* key, int value)
+{
+  abuf_appendf(abuf, "\t\"%s\": %i,\n", key, value);
+}
+
+static void
+abuf_json_key_float(struct autobuf *abuf, const char* key, float value)
+{
+  abuf_appendf(abuf, "\t\"%s\": %g,\n", key, value);
+}
+
 
 /**
  *Do initialization here
@@ -318,11 +366,17 @@ ipc_print_neighbors(struct autobuf *abuf, bool list_2hop)
   struct neighbor_2_list_entry *list_2;
   int thop_cnt;
 
-  abuf_puts(abuf, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.");
+  //abuf_puts(abuf, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.");
+/*
   if (list_2hop)
     abuf_puts(abuf,"\n\t2hop interface adrress\n");
   else
     abuf_puts(abuf, "\t2 Hop Neighbors\n");
+*/
+  if (list_2hop)
+    abuf_json_open_array(abuf, "twohop");
+  else
+    abuf_json_open_array(abuf, "neighbors");
 
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
@@ -348,7 +402,7 @@ ipc_print_neighbors(struct autobuf *abuf, bool list_2hop)
     }
   }
   OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
-  abuf_puts(abuf, "\n");
+  abuf_json_close_array(abuf);
 }
 
 static void
@@ -360,9 +414,11 @@ ipc_print_links(struct autobuf *abuf)
   struct link_entry *my_link = NULL;
 
 #ifdef ACTIVATE_VTIME_JSONINFO
-  abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tVTime\tLQ\tNLQ\tCost\n");
+  abuf_json_open_array(abuf, "links");
+  //abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tVTime\tLQ\tNLQ\tCost\n");
 #else
-  abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tHyst.\tLQ\tNLQ\tCost\n");
+  abuf_json_open_array(abuf, "links");
+  //abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tHyst.\tLQ\tNLQ\tCost\n");
 #endif
 
   /* Link set */
@@ -388,7 +444,7 @@ ipc_print_links(struct autobuf *abuf)
   }
   OLSR_FOR_ALL_LINK_ENTRIES_END(my_link);
 
-  abuf_puts(abuf, "\n");
+  abuf_json_close_array(abuf);
 }
 
 static void
@@ -398,7 +454,8 @@ ipc_print_routes(struct autobuf *abuf)
   struct rt_entry *rt;
   struct lqtextbuffer lqbuffer;
 
-  abuf_puts(abuf, "Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n");
+  //abuf_puts(abuf, "Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n");
+  abuf_json_open_array(abuf, "routes");
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
@@ -413,7 +470,7 @@ ipc_print_routes(struct autobuf *abuf)
   }
   OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 
-  abuf_puts(abuf, "\n");
+  abuf_json_close_array(abuf);
 
 }
 
@@ -422,10 +479,11 @@ ipc_print_topology(struct autobuf *abuf)
 {
   struct tc_entry *tc;
 
+  abuf_json_open_array(abuf, "topology");
 #ifdef ACTIVATE_VTIME_JSONINFO
-  abuf_puts(abuf, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\tVTime\n");
+  //abuf_puts(abuf, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\tVTime\n");
 #else
-  abuf_puts(abuf, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\n");
+  //abuf_puts(abuf, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\n");
 #endif
 
   /* Topology */
@@ -457,7 +515,7 @@ ipc_print_topology(struct autobuf *abuf)
   }
   OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
-  abuf_puts(abuf, "\n");
+  abuf_json_close_array(abuf);
 }
 
 static void
@@ -468,10 +526,11 @@ ipc_print_hna(struct autobuf *abuf)
   struct hna_net *tmp_net;
   struct ipaddr_str buf, mainaddrbuf;
 
+  abuf_json_open_array(abuf, "hna");
 #ifdef ACTIVATE_VTIME_JSONINFO
-  abuf_puts(abuf, "Table: HNA\nDestination\tGateway\tVTime\n");
+  //abuf_puts(abuf, "Table: HNA\nDestination\tGateway\tVTime\n");
 #else
-  abuf_puts(abuf, "Table: HNA\nDestination\tGateway\n");
+  //abuf_puts(abuf, "Table: HNA\nDestination\tGateway\n");
 #endif /*vtime jsoninfo*/
 
   /* Announced HNA entries */
@@ -518,7 +577,7 @@ ipc_print_hna(struct autobuf *abuf)
   }
   OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);
 
-  abuf_puts(abuf, "\n");
+  abuf_json_close_array(abuf);
 }
 
 static void
@@ -528,10 +587,12 @@ ipc_print_mid(struct autobuf *abuf)
   unsigned short is_first;
   struct mid_entry *entry;
   struct mid_address *alias;
+
+  abuf_json_open_array(abuf, "mid");
 #ifdef ACTIVATE_VTIME_JSONINFO
-  abuf_puts(abuf, "Table: MID\nIP address\tAlias\tVTime\n");
+  //abuf_puts(abuf, "Table: MID\nIP address\tAlias\tVTime\n");
 #else
-  abuf_puts(abuf, "Table: MID\nIP address\tAliases\n");
+  //abuf_puts(abuf, "Table: MID\nIP address\tAliases\n");
 #endif /*vtime jsoninfo*/
 
   /* MID */
@@ -572,7 +633,7 @@ ipc_print_mid(struct autobuf *abuf)
 #endif /*vtime jsoninfo*/
     }
   }
-  abuf_puts(abuf, "\n");
+  abuf_json_close_array(abuf);
 }
 
 static void
@@ -591,6 +652,7 @@ ipc_print_gateways(struct autobuf *abuf)
   struct lqtextbuffer lqbuf;
 
   // Status IP ETX Hopcount Uplink-Speed Downlink-Speed ipv4/ipv4-nat/- ipv6/- ipv6-prefix/-
+  abuf_json_open_array(abuf, "gateways");
   abuf_puts(abuf, "Table: Gateways\nStatus\tGateway IP\tETX\tHopcnt\tUplink\tDownlnk\tIPv4\tIPv6\tPrefix\n");
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
     char v4 = '-', v6 = '-';
@@ -642,18 +704,18 @@ static void
 ipc_print_interfaces(struct autobuf *abuf)
 {
   const struct olsr_if *ifs;
-  abuf_puts(abuf, "Table: Interfaces\nName\tState\tMTU\tWLAN\tSrc-Adress\tMask\tDst-Adress\n");
+  abuf_json_open_array(abuf, "interfaces");
+  //abuf_puts(abuf, "Table: Interfaces\nName\tState\tMTU\tWLAN\tSrc-Adress\tMask\tDst-Adress\n");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
     const struct interface *const rifs = ifs->interf;
-    abuf_appendf(abuf, "%s\t", ifs->name);
+    abuf_json_key_string(abuf, "name", ifs->name);
     if (!rifs) {
-      abuf_puts(abuf, "DOWN\n");
+      abuf_json_key_string(abuf, "state", "down");
       continue;
     }
-    abuf_appendf(abuf,
-                 "UP\t%d\t%s\t",
-                 rifs->int_mtu,
-                 rifs->is_wireless ? "Yes" : "No");
+    abuf_json_key_string(abuf, "state", "up");
+    abuf_json_key_int(abuf, "mtu", rifs->int_mtu);
+    abuf_json_boolean(abuf, "wireless", rifs->is_wireless);
 
     if (olsr_cnf->ip_version == AF_INET) {
       struct ipaddr_str addrbuf, maskbuf, bcastbuf;
@@ -668,7 +730,7 @@ ipc_print_interfaces(struct autobuf *abuf)
                    ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
     }
   }
-  abuf_puts(abuf, "\n");
+  abuf_puts(abuf, "}\n");
 }
 
 
