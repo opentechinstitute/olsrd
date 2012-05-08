@@ -127,8 +127,8 @@ static void ipc_print_interfaces(struct autobuf *);
 #define SIW_CONFIG 0x0100
 #define SIW_TWOHOP 0x0200
 
-/* ALL = neigh link route hna mid topo */
-#define SIW_ALL 0x003F
+/* ALL = neighbors links routes hna mid topology gateways interfaces */
+#define SIW_ALL 0x02FF
 
 #define MAX_CLIENTS 3
 
@@ -381,21 +381,20 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     ssize_t s = recv(ipc_connection, (void *)&requ, sizeof(requ), 0);   /* Win32 needs the cast here */
     if (0 < s) {
       requ[s] = 0;
-      /* print out every combinations of requested tabled
-       * 3++ letter abbreviations are matched */
-      if (0 != strstr(requ, "/all")) send_what = SIW_ALL;
-      else { /*already included in /all*/
+      /* print out the requested tables */
+      if (0 != strstr(requ, "/status")) send_what = SIW_ALL;
+      else { /* included in /status */
         if (0 != strstr(requ, "/neighbors")) send_what |= SIW_NEIGHBORS;
         if (0 != strstr(requ, "/links")) send_what |= SIW_LINKS;
         if (0 != strstr(requ, "/routes")) send_what |= SIW_ROUTES;
         if (0 != strstr(requ, "/hna")) send_what |= SIW_HNA;
         if (0 != strstr(requ, "/mid")) send_what |= SIW_MID;
         if (0 != strstr(requ, "/topology")) send_what |= SIW_TOPOLOGY;
+        if (0 != strstr(requ, "/gateways")) send_what |= SIW_GATEWAYS;
+        if (0 != strstr(requ, "/interfaces")) send_what |= SIW_INTERFACES;
+        if (0 != strstr(requ, "/twohop")) send_what |= SIW_TWOHOP;
       }
-      if (0 != strstr(requ, "/gateways")) send_what |= SIW_GATEWAYS;
       if (0 != strstr(requ, "/config")) send_what |= SIW_CONFIG;
-      if (0 != strstr(requ, "/interfaces")) send_what |= SIW_INTERFACES;
-      if (0 != strstr(requ, "/twohop")) send_what |= SIW_TWOHOP;
     }
     if ( send_what == 0 ) send_what = SIW_ALL;
   }
