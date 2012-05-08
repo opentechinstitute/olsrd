@@ -217,7 +217,9 @@ abuf_json_float(struct autobuf *abuf, const char* key, float value)
 {
   if (entrynumber)
     abuf_appendf(abuf, ",\n");
-  abuf_appendf(abuf, "\t\"%s\": %g,\n", key, value);
+  else
+    abuf_appendf(abuf, "\n");
+  abuf_appendf(abuf, "\t\"%s\": %.03f", key, value);
   entrynumber++;
 }
 
@@ -451,22 +453,24 @@ ipc_print_links(struct autobuf *abuf)
   struct link_entry *my_link = NULL;
 
   abuf_json_open_array(abuf, "links");
-  //abuf_puts(abuf, "Table: Links\nLocal IP\tRemote IP\tVTime\tLQ\tNLQ\tCost\n");
-
-  /* Link set */
   OLSR_FOR_ALL_LINK_ENTRIES(my_link) {
+    const char* lqs;
     int diff = (unsigned int)(my_link->link_timer->timer_clock - now_times);
 
-    abuf_appendf(abuf,
-                 "%s\t%s\t%d.%03d\t%s\t%s\t\n",
-                 olsr_ip_to_string(&buf1, &my_link->local_iface_addr),
-                 olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr),
-                 diff/1000, abs(diff%1000),
-                 get_link_entry_text(my_link, '\t', &lqbuffer1),
-                 get_linkcost_text(my_link->linkcost, false, &lqbuffer2));
+    abuf_json_open_array_entry(abuf);
+    abuf_json_string(abuf, "localIP",
+                     olsr_ip_to_string(&buf1, &my_link->local_iface_addr));
+    abuf_json_string(abuf, "remoteIP",
+                     olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr));
+    abuf_json_int(abuf, "msValid", diff);
+    lqs = get_link_entry_text(my_link, '\t', &lqbuffer1);
+    abuf_json_float(abuf, "linkQuality", atof(lqs));
+    abuf_json_float(abuf, "neighborLinkQuality", atof(strrchr(lqs, '\t')));
+    abuf_json_float(abuf, "linkCost",
+                    atof(get_linkcost_text(my_link->linkcost, false, &lqbuffer2)));
+    abuf_json_close_array_entry(abuf);
   }
   OLSR_FOR_ALL_LINK_ENTRIES_END(my_link);
-
   abuf_json_close_array(abuf);
 }
 
