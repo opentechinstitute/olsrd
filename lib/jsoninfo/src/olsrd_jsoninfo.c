@@ -98,9 +98,9 @@ static void abuf_json_close_array(struct autobuf *abuf);
 static void abuf_json_open_array_entry(struct autobuf *abuf);
 static void abuf_json_close_array_entry(struct autobuf *abuf);
 static void abuf_json_boolean(struct autobuf *abuf, const char* key, int value);
-static void abuf_json_key_string(struct autobuf *abuf, const char* key, const char* value);
-static void abuf_json_key_int(struct autobuf *abuf, const char* key, int value);
-static void abuf_json_key_float(struct autobuf *abuf, const char* key, float value);
+static void abuf_json_string(struct autobuf *abuf, const char* key, const char* value);
+static void abuf_json_int(struct autobuf *abuf, const char* key, int value);
+static void abuf_json_float(struct autobuf *abuf, const char* key, float value);
 
 static void send_info(unsigned int /*send_what*/, int /*socket*/);
 static void ipc_action(int, void *, unsigned int);
@@ -192,7 +192,7 @@ abuf_json_boolean(struct autobuf *abuf, const char* key, int value)
 }
 
 static void
-abuf_json_key_string(struct autobuf *abuf, const char* key, const char* value)
+abuf_json_string(struct autobuf *abuf, const char* key, const char* value)
 {
   if (entrynumber)
     abuf_appendf(abuf, ",\n");
@@ -203,7 +203,7 @@ abuf_json_key_string(struct autobuf *abuf, const char* key, const char* value)
 }
 
 static void
-abuf_json_key_int(struct autobuf *abuf, const char* key, int value)
+abuf_json_int(struct autobuf *abuf, const char* key, int value)
 {
   if (entrynumber)
     abuf_appendf(abuf, ",\n");
@@ -214,7 +214,7 @@ abuf_json_key_int(struct autobuf *abuf, const char* key, int value)
 }
 
 static void
-abuf_json_key_float(struct autobuf *abuf, const char* key, float value)
+abuf_json_float(struct autobuf *abuf, const char* key, float value)
 {
   if (entrynumber)
     abuf_appendf(abuf, ",\n");
@@ -626,7 +626,7 @@ static void
 ipc_print_gateways(struct autobuf *abuf)
 {
 #ifndef linux
-  abuf_json_key_string(abuf, "error", "Gateway mode is only supported in Linux");
+  abuf_json_string(abuf, "error", "Gateway mode is only supported in Linux");
 #else
   static const char IPV4[] = "ipv4";
   static const char IPV4_NAT[] = "ipv4(n)";
@@ -696,27 +696,27 @@ ipc_print_interfaces(struct autobuf *abuf)
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
     const struct interface *const rifs = ifs->interf;
     abuf_json_open_array_entry(abuf);
-    abuf_json_key_string(abuf, "name", ifs->name);
+    abuf_json_string(abuf, "name", ifs->name);
     if (!rifs) {
-      abuf_json_key_string(abuf, "state", "down");
+      abuf_json_string(abuf, "state", "down");
     } else {
-      abuf_json_key_string(abuf, "state", "up");
-      abuf_json_key_int(abuf, "mtu", rifs->int_mtu);
+      abuf_json_string(abuf, "state", "up");
+      abuf_json_int(abuf, "mtu", rifs->int_mtu);
       abuf_json_boolean(abuf, "wireless", rifs->is_wireless);
 
       if (olsr_cnf->ip_version == AF_INET) {
         struct ipaddr_str addrbuf, maskbuf, bcastbuf;
-        abuf_json_key_string(abuf, "ipv4Address",
+        abuf_json_string(abuf, "ipv4Address",
                              ip4_to_string(&addrbuf, rifs->int_addr.sin_addr));
-        abuf_json_key_string(abuf, "netmask",
+        abuf_json_string(abuf, "netmask",
                              ip4_to_string(&maskbuf, rifs->int_netmask.sin_addr));
-        abuf_json_key_string(abuf, "broadcast",
+        abuf_json_string(abuf, "broadcast",
                              ip4_to_string(&bcastbuf, rifs->int_broadaddr.sin_addr));
       } else {
         struct ipaddr_str addrbuf, maskbuf;
-        abuf_json_key_string(abuf, "ipv6Address",
+        abuf_json_string(abuf, "ipv6Address",
                              ip6_to_string(&addrbuf, &rifs->int6_addr.sin6_addr));
-        abuf_json_key_string(abuf, "multicast",
+        abuf_json_string(abuf, "multicast",
                              ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
       }
     }
