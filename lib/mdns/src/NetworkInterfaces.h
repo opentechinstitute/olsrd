@@ -145,6 +145,7 @@ int CreateBmfNetworkInterfaces(struct interface *skipThisIntf);
 void AddInterface(struct interface *newIntf);
 void CloseBmfNetworkInterfaces(void);
 int AddNonOlsrBmfIf(const char *ifName, void *data, set_plugin_parameter_addon addon);
+int AddFilteredHost(const char *host, void *data, set_plugin_parameter_addon addon);
 int set_MDNS_TTL(const char *MDNS_TTL, void *data, set_plugin_parameter_addon addon);
 int IsNonOlsrBmfIf(const char *ifName);
 void CheckAndUpdateLocalBroadcast(unsigned char *ipPacket, union olsr_ip_addr *broadAddr);

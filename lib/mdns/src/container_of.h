@@ -1,6 +1,6 @@
 /*
- * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * PacketBB handler library (see RFC 5444)
+ * Copyright (c) 2010 Henning Rogge <henning.rogge@fkie.fraunhofer.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,34 +30,28 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Visit http://www.olsr.org for more information.
+ * Visit http://www.olsr.org/git for more information.
  *
  * If you find this software useful feel free to make a donation
  * to the project. For more information see the website or contact
  * the copyright holders.
- *
  */
 
+#ifndef CONTAINER_OF_H_
+#define CONTAINER_OF_H_
 
-#ifndef _MDNS_ADDRESS_H
-#define _MDNS_ADDRESS_H
+#include "stddef.h"
 
-#include "olsr_types.h"         /* olsr_ip_addr */
-#include "olsrd_plugin.h"             /* union set_plugin_parameter_addon */
-#include "interfaces.h"         /* struct interface */
+#ifndef container_of
 
-#include "list_backport.h"
+/**
+ * casts an embedded node of a list/tree into the surrounding struct
+ * @param ptr pointer to node
+ * @param type data type of surrounding struct
+ * @param member name of node inside struct
+ * @return pointer to surrounding struct
+ */
+#define container_of(ptr, type, member) ((type *)( (char *)(ptr) - offsetof(type,member) ))
+#endif
 
-struct TBmfInterface;
-
-int IsMulticast(union olsr_ip_addr *ipAddress);
-
-struct FilteredHosts {
-
-	union olsr_ip_addr ipaddr;
-	struct list_entity list;
-
-};
-
-
-#endif /* _MDNS_ADDRESS_H */
+#endif /* CONTAINER_OF_H_ */
