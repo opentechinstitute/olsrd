@@ -104,7 +104,7 @@ static void abuf_json_float(struct autobuf *abuf, const char* key, float value);
 
 static void send_info(unsigned int /*send_what*/, int /*socket*/);
 static void ipc_action(int, void *, unsigned int);
-static void ipc_print_neighbors(struct autobuf *, bool);
+static void ipc_print_neighbors(struct autobuf *);
 static void ipc_print_links(struct autobuf *);
 static void ipc_print_routes(struct autobuf *);
 static void ipc_print_topology(struct autobuf *);
@@ -125,10 +125,9 @@ static void ipc_print_interfaces(struct autobuf *);
 #define SIW_GATEWAYS 0x0040
 #define SIW_INTERFACES 0x0080
 #define SIW_CONFIG 0x0100
-#define SIW_TWOHOP 0x0200
 
 /* ALL = neighbors links routes hna mid topology gateways interfaces */
-#define SIW_ALL 0x02FF
+#define SIW_ALL 0x00FF
 
 #define MAX_CLIENTS 3
 
@@ -392,7 +391,6 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         if (0 != strstr(requ, "/topology")) send_what |= SIW_TOPOLOGY;
         if (0 != strstr(requ, "/gateways")) send_what |= SIW_GATEWAYS;
         if (0 != strstr(requ, "/interfaces")) send_what |= SIW_INTERFACES;
-        if (0 != strstr(requ, "/twohop")) send_what |= SIW_TWOHOP;
       }
       if (0 != strstr(requ, "/config")) send_what |= SIW_CONFIG;
     }
@@ -403,47 +401,42 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 }
 
 static void
-ipc_print_neighbors(struct autobuf *abuf, bool list_2hop)
+ipc_print_neighbors(struct autobuf *abuf)
 {
   struct ipaddr_str buf1;
   struct neighbor_entry *neigh;
   struct neighbor_2_list_entry *list_2;
   int thop_cnt;
 
-  //abuf_puts(abuf, "Table: Neighbors\nIP address\tSYM\tMPR\tMPRS\tWill.");
-/*
-  if (list_2hop)
-    abuf_puts(abuf,"\n\t2hop interface adrress\n");
-  else
-    abuf_puts(abuf, "\t2 Hop Neighbors\n");
-*/
-  if (list_2hop)
-    abuf_json_open_array(abuf, "twohop");
-  else
-    abuf_json_open_array(abuf, "neighbors");
+  abuf_json_open_array(abuf, "neighbors");
 
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh) {
-    abuf_appendf(abuf,
-                 "%s\t%s\t%s\t%s\t%d\t",
-                 olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr),
-                 (neigh->status == SYM) ? "YES" : "NO",
-                 neigh->is_mpr ? "YES" : "NO",
-                 olsr_lookup_mprs_set(&neigh->neighbor_main_addr) ? "YES" : "NO",
-                 neigh->willingness);
-    thop_cnt = 0;
+    abuf_json_open_array_entry(abuf);
+    abuf_json_string(abuf, "ipv4Address",
+                     olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr));
+    abuf_json_boolean(abuf, "symmetric", (neigh->status == SYM));
+    abuf_json_boolean(abuf, "multiPointRelay", neigh->is_mpr);
+    abuf_json_boolean(abuf, "multiPointRelaySelector",
+                      olsr_lookup_mprs_set(&neigh->neighbor_main_addr) != NULL);
+    abuf_json_int(abuf, "willingness", neigh->willingness);
+    abuf_appendf(abuf, ",\n");
 
-    for (list_2 = neigh->neighbor_2_list.next; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next) {
-      if (list_2hop)
+    thop_cnt = 0;
+    if (neigh->neighbor_2_list.next) {
+      abuf_appendf(abuf, "\t\"twoHopNeighbors\": [");
+      for (list_2 = neigh->neighbor_2_list.next; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next) {
+        if (thop_cnt)
+          abuf_appendf(abuf, ", ");
         abuf_appendf(abuf,
-                     "\t%s\n",
+                     "\"%s\"",
                      olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
-      else
         thop_cnt++;
+      }
     }
-    if (!list_2hop) {
-      abuf_appendf(abuf, "%d\n", thop_cnt);
-    }
+    abuf_appendf(abuf, "]");
+    abuf_json_int(abuf, "twoHopNeighborCount", thop_cnt);
+    abuf_json_close_array_entry(abuf);
   }
   OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
   abuf_json_close_array(abuf);
@@ -798,7 +791,7 @@ send_info(unsigned int send_what, int the_socket)
   if ((send_what & SIW_LINKS) == SIW_LINKS)
     ipc_print_links(&abuf);
   if ((send_what & SIW_NEIGHBORS) == SIW_NEIGHBORS)
-    ipc_print_neighbors(&abuf,false);
+    ipc_print_neighbors(&abuf);
   if ((send_what & SIW_TOPOLOGY) == SIW_TOPOLOGY)
     ipc_print_topology(&abuf);
   if ((send_what & SIW_HNA) == SIW_HNA)
@@ -813,8 +806,6 @@ send_info(unsigned int send_what, int the_socket)
     ipc_print_config(&abuf);
   if ((send_what & SIW_INTERFACES) == SIW_INTERFACES)
     ipc_print_interfaces(&abuf);
-  if ((send_what & SIW_TWOHOP) == SIW_TWOHOP)
-    ipc_print_neighbors(&abuf,true);
 
   outbuffer[outbuffer_count] = olsr_malloc(abuf.len, "txt output buffer");
   outbuffer_size[outbuffer_count] = abuf.len;
