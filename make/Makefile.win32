@@ -28,8 +28,28 @@ OS_LIB_PTHREAD =
 OS_CFLAG_PTHREAD =
 OS_LIB_DYNLOAD =
 
-# Notes for compiling olsrd under Windows
-# ---------------------------------------
+
+# Notes for compiling olsrd.exe under Windows using MinGW
+# ----------------------------------------------------
+# You can build olsrd.exe using MinGW on either Windows or GNU/Linux.
+# For MinGW on Windows, run this in the msys shell:
+#
+#   cd olsrd
+#   make clean_all
+#   make build_all OS=win32
+#
+# MinGW also runs on GNU/Linux so you can build Windows binaries on
+# any GNU/Linux machine.  It is especially easy on a
+# Debian/Ubuntu/Mint system:
+#
+#   sudo apt-get install mingw32 flex bison make
+#   cd olsrd
+#   make clean_all
+#   CC=i586-mingw32msvc-gcc make build_all OS=win32
+
+
+# Notes for compiling olsrd.exe under Windows using Cygwin
+# ----------------------------------------------------
 # You need at least Cygwin installed. Start the Cygwin setup and select
 # flex,bison,make,mingw-core. Then run "make all libs" to compile olsrd.exe
 # and the plugin DLLs. To compile the GUI, you need MSVC6, PlatformSDK and
