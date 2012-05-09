@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <regex.h>
+#include <sys/stat.h>
 
 #define LINE_LENGTH 256
 
@@ -21,6 +22,13 @@ static const size_t regexNameValuematchCount = 3;
 static regex_t regexComment;
 static regex_t regexNameValue;
 static bool started = false;
+
+typedef struct _CachedStat {
+	struct timespec st_mtim; /* Time of last modification.  */
+} CachedStat;
+
+static CachedStat cachedStat;
+
 
 bool startPositionFile(void) {
 	if (started) {
@@ -36,6 +44,9 @@ bool startPositionFile(void) {
 		pudError(false, "Could not compile regex \"%s\"", regexNameValueString);
 		return false;
 	}
+
+	cachedStat.st_mtim.tv_sec = -1;
+	cachedStat.st_mtim.tv_nsec = -1;
 
 	started = true;
 	return true;
@@ -74,9 +85,20 @@ static char value[LINE_LENGTH];
 
 bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	bool retval = false;
+	struct stat statBuf;
 	nmeaINFO result;
 	FILE * fd = NULL;
 	unsigned int lineNumber = 0;
+
+	if (stat(fileName, &statBuf)) {
+		/* could not access the file */
+		goto out;
+	}
+
+	if (!memcmp(&cachedStat.st_mtim, &statBuf.st_mtim, sizeof(cachedStat.st_mtim))) {
+		/* file did not change since last read */
+		goto out;
+	}
 
 	nmea_zero_INFO(&result);
 	result.sig = POSFILE_DEFAULT_SIG;
@@ -210,6 +232,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 		result.smask = POSFILE_DEFAULT_SMASK;
 	}
 
+	memcpy(&cachedStat.st_mtim, &statBuf.st_mtim, sizeof(cachedStat.st_mtim));
 	memcpy(nmeaInfo, &result, sizeof(result));
 	retval = true;
 
