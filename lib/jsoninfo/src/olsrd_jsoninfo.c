@@ -607,7 +607,6 @@ ipc_print_mid(struct autobuf *abuf)
   struct mid_address *alias;
 
   abuf_json_open_array(abuf, "mid");
-  //abuf_puts(abuf, "Table: MID\nIP address\tAlias\tVTime\n");
 
   /* MID */
   for (idx = 0; idx < HASHSIZE; idx++) {
@@ -622,10 +621,14 @@ ipc_print_mid(struct autobuf *abuf)
         uint32_t vt = alias->vtime - now_times;
         int diff = (int)(vt);
 
-        abuf_appendf(abuf, "%s\t%s\t%d.%03d\n",
-                     olsr_ip_to_string(&buf, &entry->main_addr),
-                     olsr_ip_to_string(&buf2, &alias->alias),
-                     diff/1000, abs(diff%1000));
+        abuf_json_open_array_entry(abuf);
+        abuf_json_string(abuf, "ipv4Address",
+                         olsr_ip_to_string(&buf, &entry->main_addr));
+        abuf_json_string(abuf, "alias",
+                         olsr_ip_to_string(&buf2, &alias->alias));
+        abuf_json_open_array_entry(abuf);
+        abuf_json_int(abuf, "msValid", diff);
+        abuf_json_close_array_entry(abuf);
         alias = alias->next_alias;
         is_first = 0;
       }
