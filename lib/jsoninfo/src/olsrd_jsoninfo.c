@@ -602,7 +602,6 @@ static void
 ipc_print_mid(struct autobuf *abuf)
 {
   int idx;
-  unsigned short is_first;
   struct mid_entry *entry;
   struct mid_address *alias;
 
@@ -615,7 +614,6 @@ ipc_print_mid(struct autobuf *abuf)
     while (entry != &mid_set[idx]) {
       struct ipaddr_str buf, buf2;
       alias = entry->aliases;
-      is_first = 1;
 
       while (alias) {
         uint32_t vt = alias->vtime - now_times;
@@ -630,7 +628,6 @@ ipc_print_mid(struct autobuf *abuf)
         abuf_json_int(abuf, "msValid", diff);
         abuf_json_close_array_entry(abuf);
         alias = alias->next_alias;
-        is_first = 0;
       }
       entry = entry->next;
     }
