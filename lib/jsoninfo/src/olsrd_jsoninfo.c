@@ -486,19 +486,22 @@ ipc_print_routes(struct autobuf *abuf)
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt) {
-    abuf_appendf(abuf,
-                 "%s/%d\t%s\t%d\t%s\t%s\t\n",
-                 olsr_ip_to_string(&buf1, &rt->rt_dst.prefix),
-                 rt->rt_dst.prefix_len,
-                 olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway),
-                 rt->rt_best->rtp_metric.hops,
-                 get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer),
-                 if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+    abuf_json_open_array_entry(abuf);
+    abuf_json_string(abuf, "destination",
+                     olsr_ip_to_string(&buf1, &rt->rt_dst.prefix));
+    abuf_json_int(abuf, "genmask", rt->rt_dst.prefix_len);
+    abuf_json_string(abuf, "gateway",
+                     olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway));
+    abuf_json_int(abuf, "metric", rt->rt_best->rtp_metric.hops);
+    abuf_json_float(abuf, "expectedTransmissionCount",
+                    atof(get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer)));
+    abuf_json_string(abuf, "interface",
+                     if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
+    abuf_json_close_array_entry(abuf);
   }
   OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 
   abuf_json_close_array(abuf);
-
 }
 
 static void
