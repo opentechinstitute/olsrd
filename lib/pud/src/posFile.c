@@ -100,6 +100,11 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 		goto out;
 	}
 
+	fd = fopen(fileName, "r");
+	if (!fd) {
+		goto out;
+	}
+
 	nmea_zero_INFO(&result);
 	result.sig = POSFILE_DEFAULT_SIG;
 	result.fix = POSFILE_DEFAULT_FIX;
@@ -112,10 +117,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	result.speed = POSFILE_DEFAULT_SPEED;
 	result.direction = POSFILE_DEFAULT_DIRECTION;
 
-	fd = fopen(fileName, "r");
-	if (!fd) {
-		goto out;
-	}
+	memcpy(&cachedStat.st_mtim, &statBuf.st_mtim, sizeof(cachedStat.st_mtim));
 
 	while (fgets(line, LINE_LENGTH, fd)) {
 		regmatch_t pmatch[regexNameValuematchCount];
@@ -232,7 +234,6 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 		result.smask = POSFILE_DEFAULT_SMASK;
 	}
 
-	memcpy(&cachedStat.st_mtim, &statBuf.st_mtim, sizeof(cachedStat.st_mtim));
 	memcpy(nmeaInfo, &result, sizeof(result));
 	retval = true;
 
