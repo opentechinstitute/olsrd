@@ -521,11 +521,19 @@ ipc_print_topology(struct autobuf *abuf)
         struct lqtextbuffer lqbuffer1, lqbuffer2;
         uint32_t vt = tc->validity_timer != NULL ? (tc->validity_timer->timer_clock - now_times) : 0;
         int diff = (int)(vt);
-        abuf_appendf(abuf, "%s\t%s\t%s\t%s\t%d.%03d\n", olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr),
-                     olsr_ip_to_string(&addrbuf, &tc->addr),
-                     get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1),
-                     get_linkcost_text(tc_edge->cost, false, &lqbuffer2),
-                     diff/1000, diff%1000);
+        const char* lqs;
+        abuf_json_open_array_entry(abuf);
+        abuf_json_string(abuf, "destinationIP",
+                         olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr));
+        abuf_json_string(abuf, "lastHopIP",
+                         olsr_ip_to_string(&addrbuf, &tc->addr));
+        lqs = get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1);
+        abuf_json_float(abuf, "linkQuality", atof(lqs));
+        abuf_json_float(abuf, "neighborLinkQuality", atof(strrchr(lqs, '\t')));
+        abuf_json_float(abuf, "cost", 
+                        atof(get_linkcost_text(tc_edge->cost, false, &lqbuffer2)));
+        abuf_json_int(abuf, "msValid", diff);
+        abuf_json_close_array_entry(abuf);
       }
     }
     OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
