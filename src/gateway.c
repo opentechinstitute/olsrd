@@ -19,6 +19,7 @@
 #include "log.h"
 #include "gateway_default_handler.h"
 #include "gateway.h"
+#include "gatewaySpeedFile.h"
 
 #include <assert.h>
 #include <net/if.h>
@@ -87,6 +88,14 @@ static void smartgw_tunnel_monitor (int if_index __attribute__ ((unused)),
 }
 
 /**
+ * Timer callback that reads the smart gateway speed file
+ */
+static void smartgw_read_speed_file(void *context __attribute__ ((unused))) {
+	readGatewaySpeedFile(olsr_cnf->smart_gw_speed_file);
+	return;
+}
+
+/**
  * Initialize gateway system
  */
 int
@@ -105,6 +114,10 @@ olsr_init_gateways(void) {
 
   if (olsr_os_init_iptunnel()) {
     return 1;
+  }
+
+  if (!startGatewaySpeedFile()) {
+	  return 1;
   }
 
   olsr_add_ifchange_handler(smartgw_tunnel_monitor);
@@ -140,10 +153,26 @@ void refresh_smartgw_netmask(void) {
   }
 }
 
+/** The timer cookie, used to trace back the originator in debug */
+static struct olsr_cookie_info *smartgw_speed_file_timer_cookie = NULL;
+
+/** The timer */
+static struct timer_entry * smartgw_speed_file_timer = NULL;
+
 /**
  * Cleanup gateway tunnel system
  */
 void olsr_cleanup_gateways(void) {
+  if (smartgw_speed_file_timer != NULL) {
+	olsr_stop_timer(smartgw_speed_file_timer);
+	smartgw_speed_file_timer = NULL;
+  }
+  if (smartgw_speed_file_timer_cookie != NULL) {
+	olsr_free_cookie(smartgw_speed_file_timer_cookie);
+	smartgw_speed_file_timer_cookie = NULL;
+  }
+  stopGatewaySpeedFile();
+
   if (current_ipv4_gw) {
     olsr_os_del_ipip_tunnel(v4gw_tunnel);
   }
@@ -161,7 +190,28 @@ void olsr_cleanup_gateways(void) {
  */
 void
 olsr_trigger_inetgw_startup(void) {
-  gw_handler->handle_startup();
+	if (olsr_cnf->smart_gw_speed_file) {
+		smartgw_read_speed_file(NULL);
+
+		if (smartgw_speed_file_timer_cookie == NULL) {
+			smartgw_speed_file_timer_cookie = olsr_alloc_cookie("smartgw speed file", OLSR_COOKIE_TYPE_TIMER);
+			if (smartgw_speed_file_timer_cookie == NULL) {
+				olsr_syslog(OLSR_LOG_ERR,
+						"Could not allocate smart gateway speed file cookie, will not read the file.\n");
+				return;
+			}
+		}
+		if (smartgw_speed_file_timer == NULL) {
+			smartgw_speed_file_timer = olsr_start_timer(olsr_cnf->smart_gw_speed_file_period, 0, OLSR_TIMER_PERIODIC,
+					&smartgw_read_speed_file, NULL, smartgw_speed_file_timer_cookie);
+			if (smartgw_speed_file_timer == NULL) {
+				olsr_syslog(OLSR_LOG_ERR, "Could not start smart gateway speed file timer, will not read the file.\n");
+				return;
+			}
+		}
+	}
+
+	gw_handler->handle_startup();
 }
 
 /**
