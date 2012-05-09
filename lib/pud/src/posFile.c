@@ -80,8 +80,6 @@ static bool regexMatch(regex_t * regex, char * line, size_t nmatch, regmatch_t p
 }
 
 static char line[LINE_LENGTH];
-static char name[LINE_LENGTH];
-static char value[LINE_LENGTH];
 
 bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	bool retval = false;
@@ -89,6 +87,8 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	nmeaINFO result;
 	FILE * fd = NULL;
 	unsigned int lineNumber = 0;
+	char * name = NULL;
+	char * value = NULL;
 
 	if (stat(fileName, &statBuf)) {
 		/* could not access the file */
@@ -121,7 +121,6 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 
 	while (fgets(line, LINE_LENGTH, fd)) {
 		regmatch_t pmatch[regexNameValuematchCount];
-		int matchLen;
 
 		lineNumber++;
 
@@ -135,21 +134,19 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 		}
 
 		/* copy name/value */
-		matchLen = pmatch[1].rm_eo - pmatch[1].rm_so;
-		memcpy(name, &line[pmatch[1].rm_so], matchLen);
-		name[matchLen] = '\0';
-		matchLen = pmatch[2].rm_eo - pmatch[2].rm_so;
-		memcpy(value, &line[pmatch[2].rm_so], matchLen);
-		value[matchLen] = '\0';
+		name = &line[pmatch[1].rm_so];
+		line[pmatch[1].rm_eo] = '\0';
+		value = &line[pmatch[2].rm_so];
+		line[pmatch[2].rm_eo] = '\0';
 
-		if (!strncasecmp(POSFILE_NAME_SIG, name, sizeof(name))) {
-			if (!strncasecmp(POSFILE_VALUE_SIG_BAD, value, sizeof(value))) {
+		if (!strncasecmp(POSFILE_NAME_SIG, name, sizeof(line))) {
+			if (!strncasecmp(POSFILE_VALUE_SIG_BAD, value, sizeof(line))) {
 				result.sig = NMEA_SIG_BAD;
-			} else if (!strncasecmp(POSFILE_VALUE_SIG_LOW, value, sizeof(value))) {
+			} else if (!strncasecmp(POSFILE_VALUE_SIG_LOW, value, sizeof(line))) {
 				result.sig = NMEA_SIG_LOW;
-			} else if (!strncasecmp(POSFILE_VALUE_SIG_MID, value, sizeof(value))) {
+			} else if (!strncasecmp(POSFILE_VALUE_SIG_MID, value, sizeof(line))) {
 				result.sig = NMEA_SIG_MID;
-			} else if (!strncasecmp(POSFILE_VALUE_SIG_HIGH, value, sizeof(value))) {
+			} else if (!strncasecmp(POSFILE_VALUE_SIG_HIGH, value, sizeof(line))) {
 				result.sig = NMEA_SIG_HIGH;
 			} else {
 				pudError(false, "Position file \"%s\", line %d uses an invalid value for \"%s\","
@@ -157,12 +154,12 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 						POSFILE_VALUE_SIG_BAD, POSFILE_VALUE_SIG_LOW, POSFILE_VALUE_SIG_MID, POSFILE_VALUE_SIG_HIGH);
 				goto out;
 			}
-		} else if (!strncasecmp(POSFILE_NAME_FIX, name, sizeof(name))) {
-			if (!strncasecmp(POSFILE_VALUE_FIX_BAD, value, sizeof(value))) {
+		} else if (!strncasecmp(POSFILE_NAME_FIX, name, sizeof(line))) {
+			if (!strncasecmp(POSFILE_VALUE_FIX_BAD, value, sizeof(line))) {
 				result.fix = NMEA_FIX_BAD;
-			} else if (!strncasecmp(POSFILE_VALUE_FIX_2D, value, sizeof(value))) {
+			} else if (!strncasecmp(POSFILE_VALUE_FIX_2D, value, sizeof(line))) {
 				result.fix = NMEA_FIX_2D;
-			} else if (!strncasecmp(POSFILE_VALUE_FIX_3D, value, sizeof(value))) {
+			} else if (!strncasecmp(POSFILE_VALUE_FIX_3D, value, sizeof(line))) {
 				result.fix = NMEA_FIX_3D;
 			} else {
 				pudError(false, "Position file \"%s\", line %d uses an invalid value for \"%s\","
@@ -170,7 +167,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 						POSFILE_VALUE_FIX_2D, POSFILE_VALUE_FIX_3D);
 				goto out;
 			}
-		} else if (!strncasecmp(POSFILE_NAME_HDOP, name, sizeof(name))) {
+		} else if (!strncasecmp(POSFILE_NAME_HDOP, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_HDOP, value, &val)) {
 				goto out;
@@ -179,35 +176,35 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 			result.HDOP = val;
 			result.VDOP = POSFILE_CALCULATED_VDOP(result.HDOP);
 			result.PDOP = POSFILE_CALCULATED_PDOP(result.HDOP);
-		} else if (!strncasecmp(POSFILE_NAME_LAT, name, sizeof(name))) {
+		} else if (!strncasecmp(POSFILE_NAME_LAT, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_LAT, value, &val)) {
 				goto out;
 			}
 
 			result.lat = val;
-		} else if (!strncasecmp(POSFILE_NAME_LON, name, sizeof(name))) {
+		} else if (!strncasecmp(POSFILE_NAME_LON, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_LON, value, &val)) {
 				goto out;
 			}
 
 			result.lon = val;
-		} else if (!strncasecmp(POSFILE_NAME_ELV, name, sizeof(name))) {
+		} else if (!strncasecmp(POSFILE_NAME_ELV, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_ELV, value, &val)) {
 				goto out;
 			}
 
 			result.elv = val;
-		} else if (!strncasecmp(POSFILE_NAME_SPEED, name, sizeof(name))) {
+		} else if (!strncasecmp(POSFILE_NAME_SPEED, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_SPEED, value, &val)) {
 				goto out;
 			}
 
 			result.speed = val;
-		} else if (!strncasecmp(POSFILE_NAME_DIRECTION, name, sizeof(name))) {
+		} else if (!strncasecmp(POSFILE_NAME_DIRECTION, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_DIRECTION, value, &val)) {
 				goto out;
