@@ -488,7 +488,7 @@ ipc_print_links(struct autobuf *abuf)
                      olsr_ip_to_string(&buf1, &my_link->local_iface_addr));
     abuf_json_string(abuf, "remoteIP",
                      olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr));
-    abuf_json_int(abuf, "msValid", diff);
+    abuf_json_int(abuf, "validityTime", diff);
     lqs = get_link_entry_text(my_link, '\t', &lqbuffer1);
     abuf_json_float(abuf, "linkQuality", atof(lqs));
     abuf_json_float(abuf, "neighborLinkQuality", atof(strrchr(lqs, '\t')));
@@ -558,7 +558,7 @@ ipc_print_topology(struct autobuf *abuf)
         abuf_json_float(abuf, "neighborLinkQuality", atof(strrchr(lqs, '\t')));
         abuf_json_float(abuf, "cost", 
                         atof(get_linkcost_text(tc_edge->cost, false, &lqbuffer2)));
-        abuf_json_int(abuf, "msValid", diff);
+        abuf_json_int(abuf, "validityTime", diff);
         abuf_json_close_array_entry(abuf);
       }
     }
@@ -615,7 +615,7 @@ ipc_print_hna(struct autobuf *abuf)
       abuf_json_int(abuf, "genmask", tmp_net->hna_prefix.prefix_len);
       abuf_json_string(abuf, "gateway",
                        olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
-      abuf_json_int(abuf, "msValid", diff);
+      abuf_json_int(abuf, "validityTime", diff);
       abuf_json_close_array_entry(abuf);
     }
   }
@@ -651,7 +651,7 @@ ipc_print_mid(struct autobuf *abuf)
         abuf_json_string(abuf, "alias",
                          olsr_ip_to_string(&buf2, &alias->alias));
         abuf_json_open_array_entry(abuf);
-        abuf_json_int(abuf, "msValid", diff);
+        abuf_json_int(abuf, "validityTime", diff);
         abuf_json_close_array_entry(abuf);
         alias = alias->next_alias;
       }
