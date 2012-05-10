@@ -1,6 +1,6 @@
 /*
  * PacketBB handler library (see RFC 5444)
- * Copyright (c) 2010 Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+ * Copyright (c) 2010 Henning Rogge <hrogge@googlemail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,18 +40,39 @@
 #ifndef CONTAINER_OF_H_
 #define CONTAINER_OF_H_
 
-#include "stddef.h"
+#include <stddef.h>
 
-#ifndef container_of
+/* allow compilation with c99 mode */
+#ifndef typeof
+#define typeof(x) __typeof__(x)
+#endif
 
 /**
  * casts an embedded node of a list/tree into the surrounding struct
+ * this macro returns bad results if ptr is NULL
  * @param ptr pointer to node
  * @param type data type of surrounding struct
  * @param member name of node inside struct
  * @return pointer to surrounding struct
  */
 #define container_of(ptr, type, member) ((type *)( (char *)(ptr) - offsetof(type,member) ))
-#endif
+
+/**
+ * Helper function for NULL safe container_of macro
+ */
+static inline void *
+__container_of_if_notnull(void *ptr, size_t offset) {
+  return ptr == NULL ? NULL : (((char *)ptr) - offset);
+}
+
+/**
+ * casts an embedded node of a list/tree into the surrounding struct
+ * this macro returns bad results if ptr is NULL
+ * @param ptr pointer to node
+ * @param type data type of surrounding struct
+ * @param member name of node inside struct
+ * @return pointer to surrounding struct
+ */
+#define container_of_if_notnull(ptr, type, member) ((type *)__container_of_if_notnull(ptr, offsetof(type, member)))
 
 #endif /* CONTAINER_OF_H_ */
