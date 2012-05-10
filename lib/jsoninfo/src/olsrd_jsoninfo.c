@@ -93,6 +93,8 @@ static int ipc_socket;
 /* IPC initialization function */
 static int plugin_ipc_init(void);
 
+static void abuf_json_open_object(struct autobuf *abuf, const char* header);
+static void abuf_json_close_object(struct autobuf *abuf);
 static void abuf_json_open_array(struct autobuf *abuf, const char* header);
 static void abuf_json_close_array(struct autobuf *abuf);
 static void abuf_json_open_array_entry(struct autobuf *abuf);
@@ -113,6 +115,7 @@ static void ipc_print_mid(struct autobuf *);
 static void ipc_print_gateways(struct autobuf *);
 static void ipc_print_config(struct autobuf *);
 static void ipc_print_interfaces(struct autobuf *);
+static void ipc_print_plugins(struct autobuf *);
 static void ipc_print_olsrd_conf(struct autobuf *abuf);
 
 #define TXT_IPC_BUFSIZE 256
@@ -129,6 +132,7 @@ static void ipc_print_olsrd_conf(struct autobuf *abuf);
 #define SIW_ALL 0x00FF
 
 /* these don't change at runtime, so they are not part of ALL/status */
+#define SIW_PLUGINS 0x0200
 #define SIW_OLSRD_CONF 0x0400
 
 #define MAX_CLIENTS 3
@@ -139,6 +143,7 @@ static size_t outbuffer_written[MAX_CLIENTS];
 static int outbuffer_socket[MAX_CLIENTS];
 static int outbuffer_count;
 
+static struct timeval start_time;
 static struct timer_entry *writetimer_entry;
 
 
@@ -150,6 +155,19 @@ static struct timer_entry *writetimer_entry;
  * dangling comma on at the end */
 static int entrynumber = 0;
 static int arrayentrynumber = 0;
+
+static void
+abuf_json_open_object(struct autobuf *abuf, const char* header)
+{
+  entrynumber = 0;
+  abuf_appendf(abuf, "{\"%s\": {", header);
+}
+
+static void
+abuf_json_close_object(struct autobuf *abuf)
+{
+  abuf_appendf(abuf, "\t}\n}\n");
+}
 
 static void
 abuf_json_open_array(struct autobuf *abuf, const char* header)
@@ -237,6 +255,9 @@ olsrd_plugin_init(void)
 {
   /* Initial IPC value */
   ipc_socket = -1;
+
+  /* Get start time */
+  gettimeofday(&start_time, NULL);
 
   plugin_ipc_init();
   return 1;
@@ -398,6 +419,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
       }
       /* these don't change during runtime, so leave them out of ALL */
       if (0 != strstr(requ, "/config")) send_what |= SIW_CONFIG;
+      if (0 != strstr(requ, "/plugins")) send_what |= SIW_PLUGINS;
       if (0 != strstr(requ, "/olsrd.conf")) send_what |= SIW_OLSRD_CONF;
     }
     if ( send_what == 0 ) send_what = SIW_ALL;
@@ -698,10 +720,164 @@ ipc_print_gateways(struct autobuf *abuf)
 #endif
 }
 
+
+static void
+ipc_print_plugins(struct autobuf *abuf)
+{
+  struct plugin_entry *pentry;
+  struct plugin_param *pparam;
+  abuf_json_open_array(abuf, "plugins");
+  if (olsr_cnf->plugins)
+    for (pentry = olsr_cnf->plugins; pentry; pentry = pentry->next) {
+      abuf_json_open_array_entry(abuf);
+      abuf_json_string(abuf, "plugin", pentry->name);
+      for (pparam = pentry->params; pparam; pparam = pparam->next) {
+       abuf_json_string(abuf, pparam->key, pparam->value);
+      }
+      abuf_json_close_array_entry(abuf);
+    }
+  abuf_json_close_array(abuf);
+}
+
+
 static void
 ipc_print_config(struct autobuf *abuf)
 {
-  olsrd_write_cnf_autobuf(abuf, olsr_cnf);
+  struct ipaddr_str mainaddrbuf;
+  struct ip_prefix_list *ipcn;
+
+  abuf_json_open_object(abuf, "config");
+
+  abuf_json_int(abuf, "olsrPort", olsr_cnf->olsrport);
+  abuf_json_int(abuf, "debugLevel", olsr_cnf->debug_level);
+  abuf_json_int(abuf, "noFork", olsr_cnf->no_fork);
+  abuf_json_boolean(abuf, "hostEmulation", olsr_cnf->host_emul);
+  abuf_json_int(abuf, "ipVersion", olsr_cnf->ip_version);
+  abuf_json_boolean(abuf, "allowNoInterfaces", olsr_cnf->allow_no_interfaces);
+  abuf_json_int(abuf, "typeOfService", olsr_cnf->tos);
+  abuf_json_int(abuf, "rtProto", olsr_cnf->rt_proto);
+  abuf_json_int(abuf, "rtTable", olsr_cnf->rt_table);
+  abuf_json_int(abuf, "rtTableDefault", olsr_cnf->rt_table_default);
+  abuf_json_int(abuf, "rtTableTunnel", olsr_cnf->rt_table_tunnel);
+  abuf_json_int(abuf, "rtTablePriority", olsr_cnf->rt_table_pri);
+  abuf_json_int(abuf, "rtTableTunnelPriority", olsr_cnf->rt_table_tunnel_pri);
+  abuf_json_int(abuf, "rtTableDefauiltOlsrPriority", olsr_cnf->rt_table_defaultolsr_pri);
+  abuf_json_int(abuf, "rtTableDefaultPriority", olsr_cnf->rt_table_default_pri);
+  abuf_json_int(abuf, "willingness", olsr_cnf->willingness);
+  abuf_json_boolean(abuf, "willingnessAuto", olsr_cnf->willingness_auto);
+
+  abuf_json_string(abuf, "fibMetrics", FIB_METRIC_TXT[olsr_cnf->fib_metric]);
+  /*
+  struct if_config_options *interface_defaults;
+  */
+  abuf_json_int(abuf, "ipcConnections", olsr_cnf->ipc_connections);
+  if (olsr_cnf->ipc_connections)
+    for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
+      abuf_json_string(abuf, "ipcAllowedAddress",
+                       olsr_ip_to_string(&mainaddrbuf, &ipcn->net.prefix));
+      abuf_json_int(abuf, "ipcAllowedAddressMask", ipcn->net.prefix_len);
+    }
+
+  // keep all time in ms, so convert these two, which are in seconds
+  abuf_json_int(abuf, "pollRate", olsr_cnf->pollrate * 1000);
+  abuf_json_int(abuf, "nicChangePollInterval", olsr_cnf->nic_chgs_pollrate * 1000);
+  abuf_json_boolean(abuf, "clearScreen", olsr_cnf->clear_screen);
+  abuf_json_int(abuf, "tcRedundancy", olsr_cnf->tc_redundancy);
+  abuf_json_int(abuf, "mprCoverage", olsr_cnf->mpr_coverage);
+
+  if (olsr_cnf->lq_level == 0) {
+    abuf_json_boolean(abuf, "useHysteresis", olsr_cnf->use_hysteresis);
+    if (olsr_cnf->use_hysteresis) {
+      abuf_json_float(abuf, "hysteresisScaling", olsr_cnf->hysteresis_param.scaling);
+      abuf_json_float(abuf, "hysteresisLowThreshold", olsr_cnf->hysteresis_param.thr_low);
+      abuf_json_float(abuf, "hysteresisHighThreshold", olsr_cnf->hysteresis_param.thr_high);
+    }
+  }
+  abuf_json_int(abuf, "linkQualityLevel", olsr_cnf->lq_level);
+  abuf_json_int(abuf, "linkQualityFisheye", olsr_cnf->lq_fish);
+  abuf_json_float(abuf, "linkQualityAging", olsr_cnf->lq_aging);
+  abuf_json_string(abuf, "linkQualityAlgorithm", olsr_cnf->lq_algorithm);
+  // keep all time in ms, so convert this from seconds
+  abuf_json_int(abuf, "minTcValidTime", olsr_cnf->min_tc_vtime * 1000);
+  abuf_json_boolean(abuf, "setIpForward", olsr_cnf->set_ip_forward);
+  abuf_json_string(abuf, "lockFile", olsr_cnf->lock_file);
+  abuf_json_boolean(abuf, "useNiit", olsr_cnf->use_niit);
+
+  abuf_json_boolean(abuf, "smartGateway", olsr_cnf->smart_gw_active);
+  if (olsr_cnf->smart_gw_active) {
+    abuf_json_boolean(abuf, "smartGatewayAllowNat", olsr_cnf->smart_gw_allow_nat);
+    abuf_json_boolean(abuf, "smartGatewayUplinkNat", olsr_cnf->smart_gw_uplink_nat);
+    abuf_json_int(abuf, "smartGatewayPeriod", olsr_cnf->smart_gw_period);
+    abuf_json_int(abuf, "smartGatewayStableCount", olsr_cnf->smart_gw_stablecount);
+    abuf_json_int(abuf, "smartGatewayThreshold", olsr_cnf->smart_gw_thresh);
+    abuf_json_int(abuf, "smartGatewayUplink", olsr_cnf->smart_gw_uplink);
+    abuf_json_int(abuf, "smartGatewayDownlink", olsr_cnf->smart_gw_downlink);
+    abuf_json_int(abuf, "smartGatewayType", olsr_cnf->smart_gw_type);
+    abuf_json_string(abuf, "smartGatewayPrefix",
+                     olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->smart_gw_prefix.prefix));
+    abuf_json_int(abuf, "smartGatewayPrefixLength", olsr_cnf->smart_gw_prefix.prefix_len);
+  }
+
+  abuf_json_string(abuf, "mainIpAddress",
+                   olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
+  abuf_json_string(abuf, "unicastSourceIpAddress",
+                   olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->unicast_src_ip));
+
+  abuf_json_boolean(abuf, "useSourceIpRoutes", olsr_cnf->use_src_ip_routes);
+
+  abuf_json_int(abuf, "maxPrefixLength", olsr_cnf->maxplen);
+  abuf_json_int(abuf, "ipSize", olsr_cnf->ipsize);
+  abuf_json_boolean(abuf, "deleteInternetGatewaysAtStartup", olsr_cnf->del_gws);
+  // keep all time in ms, so convert this from seconds
+  abuf_json_int(abuf, "willingnessUpdateInterval", olsr_cnf->will_int * 1000);
+  abuf_json_float(abuf, "maxSendMessageJitter", olsr_cnf->max_jitter);
+  abuf_json_int(abuf, "exitValue", olsr_cnf->exit_value);
+  // keep all time in ms, so convert this from seconds
+  abuf_json_int(abuf, "maxTcValidTime", olsr_cnf->max_tc_vtime * 1000);
+
+  abuf_json_int(abuf, "niit4to6InterfaceIndex", olsr_cnf->niit4to6_if_index);
+  abuf_json_int(abuf, "niit6to4InterfaceIndex", olsr_cnf->niit6to4_if_index);
+
+  abuf_json_boolean(abuf, "hasIpv4Gateway", olsr_cnf->has_ipv4_gateway);
+  abuf_json_boolean(abuf, "hasIpv6Gateway", olsr_cnf->has_ipv6_gateway);
+
+  abuf_json_int(abuf, "ioctlSocket", olsr_cnf->ioctl_s);
+#ifdef __linux__
+  abuf_json_int(abuf, "routeNetlinkSocket", olsr_cnf->rtnl_s);
+  abuf_json_int(abuf, "routeMonitorSocket", olsr_cnf->rt_monitor_socket);
+#endif
+
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
+  abuf_json_int(abuf, "routeChangeSocket", olsr_cnf->rts);
+#endif
+  abuf_json_float(abuf, "linkQualityNatThreshold", olsr_cnf->lq_nat_thresh);
+
+  abuf_json_string(abuf, "olsrdVersion", olsrd_version);
+  abuf_json_string(abuf, "olsrdBuildDate", build_date);
+  abuf_json_string(abuf, "olsrdBuildHost", build_host);
+
+#if defined _WIN32 || defined _WIN64
+  abuf_json_string(abuf, "os", "Windows");
+#elif defined __gnu_linux__
+  abuf_json_string(abuf, "os", "GNU/Linux");
+#elif defined __ANDROID__
+  abuf_json_string(abuf, "os", "Android");
+#elif defined __APPLE__
+  abuf_json_string(abuf, "os", "Mac OS X");
+#elif defined __NetBSD__
+  abuf_json_string(abuf, "os", "NetBSD");
+#elif defined __OpenBSD__
+  abuf_json_string(abuf, "os", "OpenBSD");
+#elif defined __FreeBSD__ || defined __FreeBSD_kernel__
+  abuf_json_string(abuf, "os", "FreeBSD");
+#else
+  abuf_json_string(abuf, "os", "Undefined");
+#endif
+
+  abuf_json_int(abuf, "systemTime", time(NULL));
+  abuf_json_int(abuf, "startTime", start_time.tv_sec);
+
+  abuf_json_close_object(abuf);
 }
 
 static void
@@ -847,12 +1023,16 @@ send_info(unsigned int send_what, int the_socket)
     ipc_print_gateways(&abuf);
     if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
   }
+  if ((send_what & SIW_INTERFACES) == SIW_INTERFACES) {
+    ipc_print_interfaces(&abuf);
+    if (send_what != SIW_INTERFACES) abuf_puts(&abuf, ",");
+  }
   if ((send_what & SIW_CONFIG) == SIW_CONFIG) {
     ipc_print_config(&abuf);
     if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
   }
-  if ((send_what & SIW_INTERFACES) == SIW_INTERFACES) {
-    ipc_print_interfaces(&abuf);
+  if ((send_what & SIW_PLUGINS) == SIW_PLUGINS) {
+    ipc_print_plugins(&abuf);
   }
 
   /* end of JSON array for status */
