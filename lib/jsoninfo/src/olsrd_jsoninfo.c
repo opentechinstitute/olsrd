@@ -99,7 +99,7 @@ static void abuf_json_open_array_entry(struct autobuf *abuf);
 static void abuf_json_close_array_entry(struct autobuf *abuf);
 static void abuf_json_boolean(struct autobuf *abuf, const char* key, int value);
 static void abuf_json_string(struct autobuf *abuf, const char* key, const char* value);
-static void abuf_json_int(struct autobuf *abuf, const char* key, int value);
+static void abuf_json_int(struct autobuf *abuf, const char* key, long value);
 static void abuf_json_float(struct autobuf *abuf, const char* key, float value);
 
 static void send_info(unsigned int /*send_what*/, int /*socket*/);
@@ -202,13 +202,13 @@ abuf_json_string(struct autobuf *abuf, const char* key, const char* value)
 }
 
 static void
-abuf_json_int(struct autobuf *abuf, const char* key, int value)
+abuf_json_int(struct autobuf *abuf, const char* key, long value)
 {
   if (entrynumber)
     abuf_appendf(abuf, ",\n");
   else
     abuf_appendf(abuf, "\n");
-  abuf_appendf(abuf, "\t\"%s\": %i", key, value);
+  abuf_appendf(abuf, "\t\"%s\": %li", key, value);
   entrynumber++;
 }
 
