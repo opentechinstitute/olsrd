@@ -9,9 +9,8 @@ SRCS +=		$(wildcard src/win32/*.c)
 HDRS +=		$(wildcard src/win32/*.h)
 
 CPPFLAGS +=	-DWIN32 -D_WIN32_WINNT=0x0600
-LIBS +=		-mno-cygwin -lws2_32 -liphlpapi
+LIBS +=		-lws2_32 -liphlpapi
 CPPFLAGS += 	-I$(TOPDIR)/src/win32
-CFLAGS +=	-mno-cygwin
 
 PLUGIN_SONAME ?= $(PLUGIN_NAME)
 PLUGIN_FULLNAME ?= $(PLUGIN_NAME).dll
