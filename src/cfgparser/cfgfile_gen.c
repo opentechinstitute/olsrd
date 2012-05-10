@@ -511,26 +511,6 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       olsr_ip_prefix_to_string(&cnf->smart_gw_prefix));
   abuf_puts(out,
     "\n"
-    "# Specifies the file to watch for (dynamic) values for SmartGatewaySpeed.\n"
-    "# If not specified then no watching is performed.\n"
-    "# (default is unspecified)\n"
-    "\n");
-  abuf_appendf(out, "%sSmartGatewaySpeedFile \"%s\"\n",
-      !cnf->smart_gw_speed_file ? "# " : "",
-      !cnf->smart_gw_speed_file ? "" : cnf->smart_gw_speed_file);
-  abuf_puts(out,
-    "\n"
-    "# Specifies the period in milliseconds on which to read the\n"
-    "# SmartGatewaySpeedFile (if it changed) and activate its new setting for\n"
-    "# SmartGatewaySpeed. This setting is only relevant if SmartGatewaySpeedFile\n"
-    "# has been configured.\n"
-    "# (default is 10000 milliseconds)\n"
-    "\n");
-  abuf_appendf(out, "%sSmartGatewaySpeedFilePeriod %d\n",
-      cnf->smart_gw_speed_file_period == DEF_GW_FILE_PERIOD ? "# " : "",
-      cnf->smart_gw_speed_file_period);
-  abuf_puts(out,
-    "\n"
     "##############################\n"
     "### OLSR protocol settings ###\n"
     "##############################\n"

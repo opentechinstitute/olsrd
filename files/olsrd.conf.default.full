@@ -193,20 +193,6 @@
 
 # SmartGatewayPrefix 0::/0
 
-# Specifies the file to watch for (dynamic) values for SmartGatewaySpeed.
-# If not specified then no watching is performed.
-# (default is unspecified)
-
-# SmartGatewaySpeedFile ""
-
-# Specifies the period in milliseconds on which to read the
-# SmartGatewaySpeedFile (if it changed) and activate its new setting for
-# SmartGatewaySpeed. This setting is only relevant if SmartGatewaySpeedFile
-# has been configured.
-# (default is 10000 milliseconds)
-
-# SmartGatewaySpeedFilePeriod 10000
-
 # Set to yes will make OLSRd to set the file 
 # /proc/sys/net/ipv4/ip_forward to 1 during startup. It will be
 # restored to the original value during shutdown

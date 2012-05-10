@@ -222,8 +222,6 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_SMART_GW_UPLINK
 %token TOK_SMART_GW_UPLINK_NAT
 %token TOK_SMART_GW_SPEED
-%token TOK_SMART_GW_SPEED_FILE
-%token TOK_SMART_GW_SPEED_FILE_PERIOD
 %token TOK_SMART_GW_PREFIX
 %token TOK_SRC_IP_ROUTES
 %token TOK_MAIN_IP
@@ -307,8 +305,6 @@ stmt:       idebug
           | ssmart_gw_uplink
           | bsmart_gw_uplink_nat
           | ismart_gw_speed
-          | ssmart_gw_speed_file
-          | ismart_gw_speed_file_period
           | ismart_gw_prefix
           | bsrc_ip_routes
           | amain_ip
@@ -1352,22 +1348,6 @@ ismart_gw_speed: TOK_SMART_GW_SPEED TOK_INTEGER TOK_INTEGER
 	olsr_cnf->smart_gw_downlink = $3->integer;
 	free($2);
 	free($3);
-}
-;
-
-ssmart_gw_speed_file: TOK_SMART_GW_SPEED_FILE TOK_STRING
-{
-	PARSER_DEBUG_PRINTF("Smart gateway speed file: %s\n", $2->string);
-	olsr_cnf->smart_gw_speed_file = $2->string;
-	free($2);
-}
-;
-
-ismart_gw_speed_file_period: TOK_SMART_GW_SPEED_FILE_PERIOD TOK_INTEGER
-{
-	PARSER_DEBUG_PRINTF("Smart gateway speed file interval: %u\n", $2->integer);
-	olsr_cnf->smart_gw_speed_file_period = $2->integer;
-	free($2);
 }
 ;
 

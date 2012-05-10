@@ -579,15 +579,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
         cnf->smart_gw_uplink, MIN_SMARTGW_SPEED, MAX_SMARTGW_SPEED);
     return -1;
   }
-  if (cnf->smart_gw_speed_file && (strlen(cnf->smart_gw_speed_file) == 0)) {
-	  cnf->smart_gw_speed_file = NULL;
-  }
-  if (cnf->smart_gw_speed_file_period < MIN_SMARTGW_SPEED_FILE_PERIOD ||
-      cnf->smart_gw_speed_file_period > MAX_SMARTGW_SPEED_FILE_PERIOD) {
-    fprintf(stderr, "Error, bad gateway speed file interval: %d seconds (should be %d-%d)\n",
-            cnf->smart_gw_speed_file_period, MIN_SMARTGW_SPEED_FILE_PERIOD, MAX_SMARTGW_SPEED_FILE_PERIOD);
-    return -1;
-  }
 
   if (cnf->interface_defaults == NULL) {
     /* get a default configuration if the user did not specify one */
@@ -790,8 +781,6 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->smart_gw_uplink = DEF_UPLINK_SPEED;
   cnf->smart_gw_uplink_nat = DEF_GW_UPLINK_NAT;
   cnf->smart_gw_downlink = DEF_DOWNLINK_SPEED;
-  cnf->smart_gw_speed_file = NULL;
-  cnf->smart_gw_speed_file_period = DEF_GW_FILE_PERIOD;
 
   cnf->use_src_ip_routes = DEF_USE_SRCIP_ROUTES;
   cnf->set_ip_forward = true;
@@ -918,10 +907,6 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   printf("Smart Gw. speed  : %d kbit/s up, %d kbit/s down\n",
       cnf->smart_gw_uplink, cnf->smart_gw_downlink);
-
-  printf("Smart Gw spd file: %s\n", !cnf->smart_gw_speed_file ? "" : cnf->smart_gw_speed_file);
-
-  printf("Smart Gw spd intv: %d\n", cnf->smart_gw_speed_file_period);
 
   if (olsr_cnf->smart_gw_prefix.prefix_len == 0) {
     printf("# Smart Gw. prefix : ::/0\n");
