@@ -20,6 +20,7 @@ lib/*/*so.*.*
 *.lib
 *.dll
 olsrd.exe
+olsr_switch.exe
 olsr-setup.exe
 *.opt
 *.ncb
