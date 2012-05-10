@@ -13,10 +13,12 @@ include $(TOPDIR)/Makefile.inc
 ######################
 
 MACHINE=$(shell uname -m)
-ifeq ($(strip $(MACHINE)),x86_64)
-LIBDIR_INSTALL = usr/lib64
-else
 LIBDIR_INSTALL = usr/lib
+ifeq ($(strip $(MACHINE)),x86_64)
+  LIB64DIR := $(shell test -d "/usr/lib64" && echo "YES")
+  ifeq ($(strip $(LIB64DIR)),YES)
+    LIBDIR_INSTALL = usr/lib64
+  endif
 endif
 
 

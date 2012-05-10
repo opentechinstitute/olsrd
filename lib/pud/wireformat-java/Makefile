@@ -22,12 +22,14 @@ DEBUGBOOLEAN = false
 endif
 
 MACHINE=$(shell uname -m)
-ifeq ($(strip $(MACHINE)),x86_64)
-LIBDIR_INSTALL = usr/lib64
-ARCH=.$(MACHINE)
-else
 LIBDIR_INSTALL = usr/lib
 ARCH=
+ifeq ($(strip $(MACHINE)),x86_64)
+  LIB64DIR := $(shell test -d "/usr/lib64" && echo "YES")
+  ifeq ($(strip $(LIB64DIR)),YES)
+    LIBDIR_INSTALL = usr/lib64
+    ARCH=.$(MACHINE)
+  endif
 endif
 
 
