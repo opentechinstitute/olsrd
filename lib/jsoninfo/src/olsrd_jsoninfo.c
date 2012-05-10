@@ -667,22 +667,16 @@ ipc_print_gateways(struct autobuf *abuf)
 #ifndef linux
   abuf_json_string(abuf, "error", "Gateway mode is only supported in Linux");
 #else
-  static const char IPV4[] = "ipv4";
-  static const char IPV4_NAT[] = "ipv4(n)";
-  static const char IPV6[] = "ipv6";
-  static const char NONE[] = "-";
 
   struct ipaddr_str buf;
   struct gateway_entry *gw;
   struct lqtextbuffer lqbuf;
 
-  // Status IP ETX Hopcount Uplink-Speed Downlink-Speed ipv4/ipv4-nat/- ipv6/- ipv6-prefix/-
   abuf_json_open_array(abuf, "gateways");
-  //abuf_puts(abuf, "Table: Gateways\nStatus\tGateway IP\tETX\tHopcnt\tUplink\tDownlnk\tIPv4\tIPv6\tPrefix\n");
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    char v4 = '-', v6 = '-';
+    const char *v4 = "", *v6 = "";
     bool autoV4 = false, autoV6 = false;
-    const char *v4type = NONE, *v6type = NONE;
+    const char *ipType = "";
     struct tc_entry *tc;
 
     if ((tc = olsr_lookup_tc_entry(&gw->originator)) == NULL) {
@@ -690,30 +684,43 @@ ipc_print_gateways(struct autobuf *abuf)
     }
 
     if (gw == olsr_get_ipv4_inet_gateway(&autoV4)) {
-      v4 = autoV4 ? 'a' : 's';
+      v4 = autoV4 ? "auto" : "s";
     } else if (gw->ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)
                && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat)) {
-      v4 = 'u';
+      v4 = "u";
     }
 
     if (gw == olsr_get_ipv6_inet_gateway(&autoV6)) {
-      v6 = autoV6 ? 'a' : 's';
+      v6 = autoV6 ? "auto" : "s";
     } else if (gw->ipv6 && olsr_cnf->ip_version == AF_INET6) {
-      v6 = 'u';
+      v6 = "u";
     }
 
+    abuf_json_open_array_entry(abuf);
     if (gw->ipv4) {
-      v4type = gw->ipv4nat ? IPV4_NAT : IPV4;
+      ipType = "ipv4";
+      abuf_json_string(abuf, "ipv4Status", v4);
+    } else if (gw->ipv6) {
+      ipType = "ipv6";
+      abuf_json_string(abuf, "ipv6Status", v6);
     }
-    if (gw->ipv6) {
-      v6type = IPV6;
-    }
-
-    abuf_appendf(abuf, "%c%c\t%s\t%s\t%d\t%u\t%u\t%s\t%s\t%s\n",
-                 v4, v6, olsr_ip_to_string(&buf, &gw->originator),
-                 get_linkcost_text(tc->path_cost, true, &lqbuf), tc->hops,
-                 gw->uplink, gw->downlink, v4type, v6type,
-                 gw->external_prefix.prefix_len == 0 ? NONE : olsr_ip_prefix_to_string(&gw->external_prefix));
+    abuf_json_string(abuf, "ipType", ipType);
+    abuf_json_boolean(abuf, "ipv4", gw->ipv4);
+    abuf_json_boolean(abuf, "ipv4Nat", gw->ipv4nat);
+    abuf_json_boolean(abuf, "ipv6", gw->ipv6);
+    abuf_json_boolean(abuf, "autoIpv4", autoV4);
+    abuf_json_boolean(abuf, "autoIpv6", autoV6);
+    abuf_json_string(abuf, "ipAddress",
+                     olsr_ip_to_string(&buf, &gw->originator));
+    abuf_json_float(abuf, "expectedTransmissionCount",
+                    atof(get_linkcost_text(tc->path_cost, true, &lqbuf)));
+    abuf_json_int(abuf, "hopCount", tc->hops);
+    abuf_json_int(abuf, "uplinkSpeed", gw->uplink);
+    abuf_json_int(abuf, "downlinkSpeed", gw->downlink);
+    if(gw->external_prefix.prefix_len == 0)
+      abuf_json_string(abuf, "externalPrefix",
+                       olsr_ip_prefix_to_string(&gw->external_prefix));
+    abuf_json_close_array_entry(abuf);
   }
   OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
   abuf_json_close_array(abuf);
