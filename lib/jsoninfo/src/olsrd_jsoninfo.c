@@ -987,41 +987,41 @@ send_info(unsigned int send_what, int the_socket)
 {
   struct autobuf abuf;
 
-  abuf_init(&abuf, 4096);
+  abuf_init(&abuf, 32768);
 
-  /* if sending all, then wrap in a JSON array */
-  if (send_what == SIW_ALL)
-    abuf_appendf(&abuf, "[\n");
+  /* wrap everything in a JSON array to handle multiple elements*/
+  abuf_puts(&abuf, "\n[\n");
 
   /* Print tables to IPC socket */
 
   if ((send_what & SIW_LINKS) == SIW_LINKS) {
     ipc_print_links(&abuf);
-    if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
+    // if this is being output with others, then include commas
+    if (send_what != SIW_LINKS) abuf_puts(&abuf, ",");
   }
   if ((send_what & SIW_NEIGHBORS) == SIW_NEIGHBORS) {
     ipc_print_neighbors(&abuf);
-    if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
+    if (send_what != SIW_NEIGHBORS) abuf_puts(&abuf, ",");
   }
   if ((send_what & SIW_TOPOLOGY) == SIW_TOPOLOGY) {
     ipc_print_topology(&abuf);
-    if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
+    if (send_what != SIW_TOPOLOGY) abuf_puts(&abuf, ",");
   }
   if ((send_what & SIW_HNA) == SIW_HNA) {
     ipc_print_hna(&abuf);
-    if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
+    if (send_what != SIW_HNA) abuf_puts(&abuf, ",");
   }
   if ((send_what & SIW_MID) == SIW_MID) {
     ipc_print_mid(&abuf);
-    if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
+    if (send_what != SIW_MID) abuf_puts(&abuf, ",");
   }
   if ((send_what & SIW_ROUTES) == SIW_ROUTES) {
     ipc_print_routes(&abuf);
-    if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
+    if (send_what != SIW_ROUTES) abuf_puts(&abuf, ",");
   }
   if ((send_what & SIW_GATEWAYS) == SIW_GATEWAYS) {
     ipc_print_gateways(&abuf);
-    if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
+    if (send_what != SIW_GATEWAYS) abuf_puts(&abuf, ",");
   }
   if ((send_what & SIW_INTERFACES) == SIW_INTERFACES) {
     ipc_print_interfaces(&abuf);
@@ -1029,15 +1029,14 @@ send_info(unsigned int send_what, int the_socket)
   }
   if ((send_what & SIW_CONFIG) == SIW_CONFIG) {
     ipc_print_config(&abuf);
-    if (send_what == SIW_ALL) abuf_appendf(&abuf, ",");
+    if (send_what != SIW_CONFIG) abuf_puts(&abuf, ",");
   }
   if ((send_what & SIW_PLUGINS) == SIW_PLUGINS) {
     ipc_print_plugins(&abuf);
   }
 
   /* end of JSON array for status */
-  if (send_what == SIW_ALL)
-    abuf_appendf(&abuf, "]\n");
+  abuf_puts(&abuf, "]\n");
 
   /* this outputs the olsrd.conf text directly, not JSON */
   if ((send_what & SIW_OLSRD_CONF) == SIW_OLSRD_CONF) {
