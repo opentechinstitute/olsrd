@@ -53,7 +53,7 @@ default_target install clean:
 
 else
 
-.PHONY: all default_target prepare clean doc doc-clean install uninstall
+.PHONY: all default_target prepare clean doc doc-clean install install-headers uninstall uninstall-headers
 
 #
 # Targets
@@ -96,20 +96,26 @@ doc-clean:
 	@$(MAKE) -C doc clean
 
 install: all
-	rm -fr "$(DESTDIR)/$(INC_DIR_INSTALL)"
-	mkdir -v -p "$(DESTDIR)/$(LIBDIR_INSTALL)" "$(DESTDIR)/$(INC_DIR_INSTALL)"
+	mkdir -v -p "$(DESTDIR)/$(LIBDIR_INSTALL)"
 	cp "$(LIBDIR_BUILD)/$(SONAME)" "$(DESTDIR)/$(LIBDIR_INSTALL)/$(SONAME).$(PLUGIN_VER)"
 	$(STRIP) "$(DESTDIR)/$(LIBDIR_INSTALL)/$(SONAME).$(PLUGIN_VER)"
 	ldconfig -n "$(DESTDIR)/$(LIBDIR_INSTALL)"
+
+install-headers:
+	rm -fr "$(DESTDIR)/$(INC_DIR_INSTALL)"
+	mkdir -v -p "$(DESTDIR)/$(INC_DIR_INSTALL)"
 	cp -t "$(DESTDIR)/$(INC_DIR_INSTALL)" $(INC_DIR_C)/*.h
 
 uninstall:
-	rm -fr "$(DESTDIR)/$(INC_DIR_INSTALL)/"*.h
 	rm -f "$(DESTDIR)/$(LIBDIR_INSTALL)/$(SONAME)" \
 	      "$(DESTDIR)/$(LIBDIR_INSTALL)/$(SONAME).$(PLUGIN_VER)"
 	ldconfig -n "$(DESTDIR)/$(LIBDIR_INSTALL)"
 	rmdir -v -p --ignore-fail-on-non-empty \
-	  "$(DESTDIR)/$(LIBDIR_INSTALL)" \
+	  "$(DESTDIR)/$(LIBDIR_INSTALL)"
+
+uninstall-headers:
+	rm -fr "$(DESTDIR)/$(INC_DIR_INSTALL)/"*.h
+	rmdir -v -p --ignore-fail-on-non-empty \
 	  "$(DESTDIR)/$(INC_DIR_INSTALL)"
 
 endif
