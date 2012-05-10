@@ -129,7 +129,7 @@ struct olsr_cookie_info *def_timer_ci = NULL;
 static int olsr_create_lock_file(bool noExitOnFail) {
 #ifdef WIN32
     bool success;
-    HANDLE lck, lock;
+    HANDLE lck;
 
     lck = CreateFile(lock_file_name,
             GENERIC_READ | GENERIC_WRITE,
@@ -139,7 +139,7 @@ static int olsr_create_lock_file(bool noExitOnFail) {
             FILE_ATTRIBUTE_NORMAL |
             FILE_FLAG_DELETE_ON_CLOSE,
             NULL);
-  lock = CreateEvent(NULL, TRUE, FALSE, lock_file_name);
+  CreateEvent(NULL, TRUE, FALSE, lock_file_name);
   if (INVALID_HANDLE_VALUE == lck || ERROR_ALREADY_EXISTS == GetLastError()) {
     if (noExitOnFail) {
       return -1;
