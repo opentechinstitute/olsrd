@@ -113,6 +113,7 @@ static void ipc_print_mid(struct autobuf *);
 static void ipc_print_gateways(struct autobuf *);
 static void ipc_print_config(struct autobuf *);
 static void ipc_print_interfaces(struct autobuf *);
+static void ipc_print_olsrd_conf(struct autobuf *abuf);
 
 #define TXT_IPC_BUFSIZE 256
 
@@ -125,9 +126,10 @@ static void ipc_print_interfaces(struct autobuf *);
 #define SIW_GATEWAYS 0x0040
 #define SIW_INTERFACES 0x0080
 #define SIW_CONFIG 0x0100
-
-/* ALL = neighbors links routes hna mid topology gateways interfaces */
 #define SIW_ALL 0x00FF
+
+/* these don't change at runtime, so they are not part of ALL/status */
+#define SIW_OLSRD_CONF 0x0400
 
 #define MAX_CLIENTS 3
 
@@ -394,7 +396,9 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         if (0 != strstr(requ, "/gateways")) send_what |= SIW_GATEWAYS;
         if (0 != strstr(requ, "/interfaces")) send_what |= SIW_INTERFACES;
       }
+      /* these don't change during runtime, so leave them out of ALL */
       if (0 != strstr(requ, "/config")) send_what |= SIW_CONFIG;
+      if (0 != strstr(requ, "/olsrd.conf")) send_what |= SIW_OLSRD_CONF;
     }
     if ( send_what == 0 ) send_what = SIW_ALL;
   }
@@ -740,6 +744,13 @@ ipc_print_interfaces(struct autobuf *abuf)
 
 
 static void
+ipc_print_olsrd_conf(struct autobuf *abuf)
+{
+  olsrd_write_cnf_autobuf(abuf, olsr_cnf);
+}
+
+
+static void
 jsoninfo_write_data(void *foo __attribute__ ((unused)))
 {
   fd_set set;
@@ -847,6 +858,11 @@ send_info(unsigned int send_what, int the_socket)
   /* end of JSON array for status */
   if (send_what == SIW_ALL)
     abuf_appendf(&abuf, "]\n");
+
+  /* this outputs the olsrd.conf text directly, not JSON */
+  if ((send_what & SIW_OLSRD_CONF) == SIW_OLSRD_CONF) {
+    ipc_print_olsrd_conf(&abuf);
+  }
 
   outbuffer[outbuffer_count] = olsr_malloc(abuf.len, "txt output buffer");
   outbuffer_size[outbuffer_count] = abuf.len;
