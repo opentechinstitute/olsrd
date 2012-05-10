@@ -129,6 +129,7 @@ install_olsrd:	install_bin
 		@echo ==========================================================
 		mkdir -p $(ETCDIR)
 		-cp -i files/olsrd.conf.default.lq $(CFGFILE)
+		-cp -i files/olsrd.sgw.speed.conf $(ETCDIR)/
 		@echo -------------------------------------------
 		@echo Edit $(CFGFILE) before running olsrd!!
 		@echo -------------------------------------------
@@ -147,7 +148,7 @@ ifneq ($(MANDIR),)
 		rm -f $(MANDIR)/man8/$(EXENAME).8.gz
 		rmdir -p --ignore-fail-on-non-empty $(MANDIR)/man8/
 endif
-		rm -f $(CFGFILE)
+		rm -f $(CFGFILE) $(ETCDIR)/olsrd.sgw.speed.conf
 		rmdir -p --ignore-fail-on-non-empty $(ETCDIR)
 
 tags:
