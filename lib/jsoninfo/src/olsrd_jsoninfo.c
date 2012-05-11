@@ -474,7 +474,7 @@ static void
 ipc_print_links(struct autobuf *abuf)
 {
   struct ipaddr_str buf1, buf2;
-  struct lqtextbuffer lqbuffer1, lqbuffer2;
+  struct lqtextbuffer lqbuffer1;
 
   struct link_entry *my_link = NULL;
 
@@ -492,8 +492,10 @@ ipc_print_links(struct autobuf *abuf)
     lqs = get_link_entry_text(my_link, '\t', &lqbuffer1);
     abuf_json_float(abuf, "linkQuality", atof(lqs));
     abuf_json_float(abuf, "neighborLinkQuality", atof(strrchr(lqs, '\t')));
-    abuf_json_float(abuf, "linkCost",
-                    atof(get_linkcost_text(my_link->linkcost, false, &lqbuffer2)));
+    if (my_link->linkcost >= LINK_COST_BROKEN)
+      abuf_json_int(abuf, "linkCost", LINK_COST_BROKEN);
+    else
+      abuf_json_int(abuf, "linkCost", my_link->linkcost);
     abuf_json_close_array_entry(abuf);
   }
   OLSR_FOR_ALL_LINK_ENTRIES_END(my_link);
@@ -505,7 +507,6 @@ ipc_print_routes(struct autobuf *abuf)
 {
   struct ipaddr_str buf1, buf2;
   struct rt_entry *rt;
-  struct lqtextbuffer lqbuffer;
 
   //abuf_puts(abuf, "Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n");
   abuf_json_open_array(abuf, "routes");
@@ -519,8 +520,10 @@ ipc_print_routes(struct autobuf *abuf)
     abuf_json_string(abuf, "gateway",
                      olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway));
     abuf_json_int(abuf, "metric", rt->rt_best->rtp_metric.hops);
-    abuf_json_float(abuf, "expectedTransmissionCount",
-                    atof(get_linkcost_text(rt->rt_best->rtp_metric.cost, true, &lqbuffer)));
+    if (rt->rt_best->rtp_metric.cost >= ROUTE_COST_BROKEN)
+      abuf_json_int(abuf, "rtpMetricCost", ROUTE_COST_BROKEN);
+    else
+      abuf_json_int(abuf, "rtpMetricCost", rt->rt_best->rtp_metric.cost);
     abuf_json_string(abuf, "interface",
                      if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
     abuf_json_close_array_entry(abuf);
@@ -544,7 +547,7 @@ ipc_print_topology(struct autobuf *abuf)
     OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
       if (tc_edge->edge_inv) {
         struct ipaddr_str dstbuf, addrbuf;
-        struct lqtextbuffer lqbuffer1, lqbuffer2;
+        struct lqtextbuffer lqbuffer1;
         uint32_t vt = tc->validity_timer != NULL ? (tc->validity_timer->timer_clock - now_times) : 0;
         int diff = (int)(vt);
         const char* lqs;
@@ -556,8 +559,10 @@ ipc_print_topology(struct autobuf *abuf)
         lqs = get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1);
         abuf_json_float(abuf, "linkQuality", atof(lqs));
         abuf_json_float(abuf, "neighborLinkQuality", atof(strrchr(lqs, '\t')));
-        abuf_json_float(abuf, "cost", 
-                        atof(get_linkcost_text(tc_edge->cost, false, &lqbuffer2)));
+        if (tc_edge->cost >= LINK_COST_BROKEN)
+          abuf_json_int(abuf, "tcEdgeCost", LINK_COST_BROKEN);
+        else
+          abuf_json_int(abuf, "tcEdgeCost", tc_edge->cost);
         abuf_json_int(abuf, "validityTime", diff);
         abuf_json_close_array_entry(abuf);
       }
@@ -712,8 +717,10 @@ ipc_print_gateways(struct autobuf *abuf)
     abuf_json_boolean(abuf, "autoIpv6", autoV6);
     abuf_json_string(abuf, "ipAddress",
                      olsr_ip_to_string(&buf, &gw->originator));
-    abuf_json_float(abuf, "expectedTransmissionCount",
-                    atof(get_linkcost_text(tc->path_cost, true, &lqbuf)));
+    if (tc->path_cost >= ROUTE_COST_BROKEN)
+      abuf_json_int(abuf, "tcPathCost", ROUTE_COST_BROKEN);
+    else
+      abuf_json_int(abuf, "tcPathCost", tc->path_cost);
     abuf_json_int(abuf, "hopCount", tc->hops);
     abuf_json_int(abuf, "uplinkSpeed", gw->uplink);
     abuf_json_int(abuf, "downlinkSpeed", gw->downlink);
@@ -772,6 +779,9 @@ ipc_print_config(struct autobuf *abuf)
   abuf_json_int(abuf, "rtTableDefaultPriority", olsr_cnf->rt_table_default_pri);
   abuf_json_int(abuf, "willingness", olsr_cnf->willingness);
   abuf_json_boolean(abuf, "willingnessAuto", olsr_cnf->willingness_auto);
+
+  abuf_json_int(abuf, "brokenLinkCost", LINK_COST_BROKEN);
+  abuf_json_int(abuf, "brokenRouteCost", ROUTE_COST_BROKEN);
 
   abuf_json_string(abuf, "fibMetrics", FIB_METRIC_TXT[olsr_cnf->fib_metric]);
   /*
