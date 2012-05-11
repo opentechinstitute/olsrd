@@ -24,7 +24,7 @@ GITVERSION = $(shell git describe --dirty='-dirty')
 
 # we expect the version to be like 'v0.5.3-27-g0c2727a' and then strip the 'v',
 # and the '-27-g0c2727a' parts
-VERSION=0.6.7
+VERSION=0.6.8
 
 # protect against no version number
 ifeq ($(strip $(VERSION)),)

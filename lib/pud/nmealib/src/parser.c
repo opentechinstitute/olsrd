@@ -197,6 +197,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPGGA *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
@@ -209,6 +210,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPGSA *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
@@ -221,6 +223,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPGSV *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
@@ -233,6 +236,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPRMC *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
@@ -245,6 +249,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPVTG *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
