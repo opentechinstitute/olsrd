@@ -5,12 +5,6 @@
 ARCH := $(shell uname -m)
 DESTDIR ?=
 LIBDIR =	$(DESTDIR)/usr/lib
-ifeq ($(strip $(ARCH)),x86_64)
-  LIB64DIR := $(shell test -d "/usr/lib64" && echo "YES")
-  ifeq ($(strip $(LIB64DIR)),YES)
-    LIBDIR = $(DESTDIR)/usr/lib64
-  endif
-endif
 
 SRCS += 	$(wildcard src/linux/*.c src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h src/unix/*.h)
