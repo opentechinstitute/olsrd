@@ -7,6 +7,32 @@ make
 make install
 
 
+There are a number of commands for getting information from this
+plugin.  They are designed to be tacked onto a URL, but can also be
+sent directly via a network socket. The commands are similar to the
+txtinfo plugin, but not exactly the same.
+
+If there is no command or no recognized command, then it sends the
+/status output, which is the combination of /neighbors, /links,
+/routes, /hna, /mid, /topology, /gateways, and /interfaces.
+
+runtime information:
+* /neighbors (including 2-hop)
+* /links
+* /routes
+* /hna
+* /mid
+* /topology
+* /gateways
+* /interfaces
+* /status - data that changes during runtime (all above commands combined)
+
+static information:
+* /config - the current configuration, i.e. what was loaded from the olsrd.conf
+* /plugins - currently loaded plugins and their config parameters
+* /olsrd.conf - the current config, formatted for writing directly to /etc/olsrd.conf
+
+
    PLUGIN CONFIGURATION
 ==========================
 
