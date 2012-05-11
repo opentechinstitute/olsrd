@@ -25,11 +25,7 @@ MACHINE=$(shell uname -m)
 LIBDIR_INSTALL = usr/lib
 ARCH=
 ifeq ($(strip $(MACHINE)),x86_64)
-  LIB64DIR := $(shell test -d "/usr/lib64" && echo "YES")
-  ifeq ($(strip $(LIB64DIR)),YES)
-    LIBDIR_INSTALL = usr/lib64
-    ARCH=.$(MACHINE)
-  endif
+  ARCH=.$(MACHINE)
 endif
 
 
