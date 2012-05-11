@@ -675,7 +675,6 @@ ipc_print_gateways(struct autobuf *abuf)
 
   struct ipaddr_str buf;
   struct gateway_entry *gw;
-  struct lqtextbuffer lqbuf;
 
   abuf_json_open_array(abuf, "gateways");
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
