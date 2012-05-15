@@ -815,6 +815,22 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     PlParam     "useLoopback"                  "1"
 }
 
+LoadPlugin "./lib/sgwdynspeed/olsrd_sgwdynspeed.so.1.0.0"
+{
+  # Specifies the file to watch for (dynamic) values for SmartGatewaySpeed.
+  # If not specified then no watching is performed.
+  # (default is unspecified)
+
+  PlParam "speedFile" "./lib/sgwdynspeed/resources/olsrd.sgw.speed.conf"
+
+  # Specifies the period in milliseconds on which to read the speedFile
+  # (if it changed) and activate its new setting for SmartGatewaySpeed.
+  # This setting is only relevant if speedFile has been configured.
+  # (default is 10000 milliseconds)
+
+  PlParam "speedFilePeriod" "2000"
+}
+
 #############################################
 ### OLSRD default interface configuration ###
 #############################################
