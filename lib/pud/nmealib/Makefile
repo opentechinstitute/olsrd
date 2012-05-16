@@ -1,3 +1,10 @@
+include ../Makefile.inc
+OLSRD_PLUGIN = false
+
+TOPDIR = ../../..
+include $(TOPDIR)/Makefile.inc
+
+
 include Makefile.inc
 
 #
