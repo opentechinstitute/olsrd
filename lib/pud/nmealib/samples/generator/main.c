@@ -23,8 +23,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int main()
-{
+int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
     nmeaGENERATOR *gen;
     nmeaINFO info;
     char buff[2048];

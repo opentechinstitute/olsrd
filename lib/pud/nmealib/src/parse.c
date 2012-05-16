@@ -75,7 +75,7 @@
 
 #define NMEA_TIMEPARSE_BUF  (256)
 
-int _nmea_parse_time(const char *buff, int buff_sz, nmeaTIME *res)
+static int _nmea_parse_time(const char *buff, int buff_sz, nmeaTIME *res)
 {
     int success = 0;
 

@@ -15,42 +15,44 @@ INCLUDEDIR = usr/include
 MODULES = context generate generator gmath info parse parser sentence time tok util
 OBJ = $(MODULES:%=build/%.o)
 
-LIBS = -lm
-INCS = -I ./include
+LIBRARIES = -lm
+INCLUDES = -I ./include
 
 
 #
 # Targets
 #
 
-all: all-before lib/$(LIBNAME)
+all: default_target
+
+default_target: all-before lib/$(LIBNAME)
 
 remake: clean all
 
 lib/$(LIBNAME): $(OBJ)
 	@echo "[LD] $@"
-	@$(CC) -shared -Wl,-soname=$(LIBNAME) -o lib/$(LIBNAME) $(OBJ) -lc
+	@$(CC) -shared -Wl,-soname=$(LIBNAME) -o "$@" $(LIBRARIES) $(OBJ)
 
 build/%.o: src/%.c Makefile Makefile.inc
 	@echo "[CC] $<"
-	@$(CC) $(CCFLAGS) $(INCS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 samples: all
-	$(MAKE) -C samples all
+	@$(MAKE) -C samples all
 
 
 #
 # Phony Targets
 #
 
-.PHONY: all-before clean doc install install-headers uninstall uninstall-headers
+.PHONY: all default_target all-before clean doc install install-headers uninstall uninstall-headers
 
 all-before:
 	@mkdir -p build lib
 
 clean:
-	$(MAKE) -C doc clean
-	$(MAKE) -C samples clean
+	@$(MAKE) -C doc clean
+	@$(MAKE) -C samples clean
 	rm -fr build lib
 
 doc:

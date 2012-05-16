@@ -116,7 +116,7 @@ void nmea_info2GPGSA(const nmeaINFO *info, nmeaGPGSA *pack)
 
 int nmea_gsv_npack(int sat_count)
 {
-    int pack_count = (int)ceil(((double)sat_count) / NMEA_SATINPACK);
+    int pack_count = lrint(ceil(((double)sat_count) / (double)NMEA_SATINPACK));
 
     if(0 == pack_count)
         pack_count = 1;

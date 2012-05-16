@@ -23,8 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int main()
-{
+int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
     const char *buff[] = {
         "$GPRMC,173843,A,3349.896,N,11808.521,W,000.0,360.0,230108,013.4,E*69\r\n",
         "$GPGGA,111609.14,5001.27,N,3613.06,E,3,08,0.0,10.2,M,0.0,M,0.0,0000*70\r\n",

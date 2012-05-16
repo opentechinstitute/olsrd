@@ -25,8 +25,7 @@
 
 #define NUM_POINTS 4
 
-int main()
-{
+int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused))) {
     const char *buff[] = {
         "$GPRMC,213916.199,A,4221.0377,N,07102.9778,W,0.00,,010207,,,A*6A\r\n",
         "$GPRMC,213917.199,A,4221.0510,N,07102.9549,W,0.23,175.43,010207,,,A*77\r\n",

@@ -40,9 +40,9 @@ typedef struct _nmeaPROPERTY {
 
 nmeaPROPERTY * nmea_property(void);
 
-void nmea_trace(const char *str, ...);
+void nmea_trace(const char *str, ...) __attribute__ ((format(printf, 1, 2)));
 void nmea_trace_buff(const char *buff, int buff_size);
-void nmea_error(const char *str, ...);
+void nmea_error(const char *str, ...) __attribute__ ((format(printf, 1, 2)));
 
 #ifdef  __cplusplus
 }

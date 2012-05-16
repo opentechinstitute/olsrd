@@ -8,8 +8,8 @@ SAMPLES = generate generator math parse parse_file
 SMPLS = $(SAMPLES:%=../build/samples/%)
 SMPLOBJ = $(SAMPLES:%=%/main.o)
 
-LIBS = -lm -L../lib -lnmea
-INCS = -I ../include
+LIBRARIES = -lm -L../lib -lnmea
+INCLUDES = -I ../include
 
 
 #
@@ -24,18 +24,18 @@ samples: $(SMPLS)
 
 ../build/samples/%: %/main.o
 	@echo "[LD] $@"
-	@$(CC) $(CCFLAGS) $< $(LIBS) -o $@
+	@$(CC) $(CFLAGS) $< $(LIBRARIES) -o $@
 
 %/main.o: %/main.c Makefile ../Makefile.inc
 	@echo "[CC] $<"
-	@$(CC) $(CCFLAGS) $(INCS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 
 #
 # Phony Targets
 #
 
-.PHONY: all-before clean
+.PHONY: all all-before clean samples
 
 all-before:
 	@mkdir -p ../build/samples
