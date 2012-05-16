@@ -714,7 +714,8 @@ update_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *rem
     /* L_time = L_SYM_time + NEIGHB_HOLD_TIME */
     olsr_set_link_timer(entry, message->vtime + NEIGHB_HOLD_TIME * MSEC_PER_SEC);
     break;
-  default:;
+  default:
+    break;
   }
 
   /* L_time = max(L_time, L_ASYM_time) */
