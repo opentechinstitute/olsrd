@@ -10,7 +10,6 @@
 TAGS
 olsrd
 olsr_switch
-netsimpcap
 src/builddata.c
 src/cfgparser/oparse.c
 src/cfgparser/oparse.h
