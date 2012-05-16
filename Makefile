@@ -372,6 +372,18 @@ secure_install:
 secure_uninstall:
 		@$(MAKECMD) -C lib/secure DESTDIR=$(DESTDIR) uninstall
 
+sgwdynspeed:
+		@$(MAKECMD) -C lib/sgwdynspeed
+
+sgwdynspeed_clean:
+		@$(MAKECMD) -C lib/sgwdynspeed DESTDIR=$(DESTDIR) clean
+
+sgwdynspeed_install:
+		@$(MAKECMD) -C lib/sgwdynspeed DESTDIR=$(DESTDIR) install
+
+sgwdynspeed_uninstall:
+		@$(MAKECMD) -C lib/sgwdynspeed DESTDIR=$(DESTDIR) uninstall
+
 tas:
 		@$(MAKECMD) -C lib/tas
 
