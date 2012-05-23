@@ -792,6 +792,10 @@ set_default_cnf(struct olsrd_config *cnf)
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
   cnf->rts = 0;
 #endif
+
+#ifdef HTTPINFO_PUD
+  cnf->pud_position = NULL;
+#endif
 }
 
 struct if_config_options *

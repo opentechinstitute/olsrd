@@ -44,6 +44,9 @@
 
 #include "olsr_types.h"
 #include "common/autobuf.h"
+#ifdef HTTPINFO_PUD
+#include "pud/src/receiver.h"
+#endif
 
 /* set to 1 to collect all startup sleep into one sleep
  * (just as long as the longest sleep)
@@ -304,6 +307,10 @@ struct olsrd_config {
   int rts;                             /* Socket used for route changes on BSDs */
 #endif
   float lq_nat_thresh;
+
+#ifdef HTTPINFO_PUD
+  TransmitGpsInformation * pud_position;
+#endif
 };
 
 #if defined __cplusplus

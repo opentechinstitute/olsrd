@@ -3,7 +3,6 @@
 /* Plugin includes */
 #include "pud.h"
 #include "state.h"
-#include "posAvg.h"
 #include "configuration.h"
 #include "gpsConversion.h"
 #include "networkInterfaces.h"
@@ -12,7 +11,6 @@
 #include "posFile.h"
 
 /* OLSRD includes */
-#include "olsr_types.h"
 #include "net_olsr.h"
 
 /* System includes */
@@ -65,13 +63,6 @@ typedef enum _TimedTxInterface {
 	TX_INTERFACE_OLSR = 1,
 	TX_INTERFACE_UPLINK = 2
 } TimedTxInterface;
-
-/** Structure of the latest GPS information that is transmitted */
-typedef struct _TransmitGpsInformation {
-	bool positionUpdated; /**< true when the position information was updated */
-	PositionUpdateEntry txPosition; /**< The last transmitted position */
-	union olsr_ip_addr txGateway; /**< the best gateway */
-} TransmitGpsInformation;
 
 /** The latest position information that is transmitted */
 static TransmitGpsInformation transmitGpsInformation;
@@ -762,7 +753,13 @@ bool startReceiver(void) {
 	}
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	transmitGpsInformation.positionUpdated = false;
+	transmitGpsInformation.nodeId = getNodeId();
 
+#ifdef HTTPINFO_PUD
+	olsr_cnf->pud_position = &transmitGpsInformation;
+#else
+	olsr_cnf->pud_position = NULL;
+#endif
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
 	if (!initOlsrTxTimer()) {
