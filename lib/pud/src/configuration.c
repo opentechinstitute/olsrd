@@ -344,7 +344,7 @@ static bool intSetupNodeIdBinaryString(void) {
 	invalidChars = nmea_string_has_invalid_chars(nodeid,
 			PUD_NODE_ID_NAME, &report[0], sizeof(report));
 	if (invalidChars) {
-		pudError(false, &report[0]);
+		pudError(false, "%s", &report[0]);
 		return false;
 	}
 
@@ -1345,7 +1345,7 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 	invalidChars = nmea_string_has_invalid_chars(value, valueName, &report[0],
 			sizeof(report));
 	if (invalidChars) {
-		pudError(false, &report[0]);
+		pudError(false, "%s", &report[0]);
 		return true;
 	}
 
