@@ -1174,13 +1174,15 @@ static bool nmea_INFO_has_field_local(int smask, nmeaINFO_FIELD fieldName) {
 
 static void build_pud_body(struct autobuf *abuf) {
 	TransmitGpsInformation * txGpsInfo = olsr_cnf->pud_position;
-	char * nodeId = (char *) txGpsInfo->nodeId;
+	char * nodeId;
 	char nodeIdString[1024];
 
 	if (!txGpsInfo) {
 		abuf_puts(abuf, "<h2>" PUD_PLUGIN_ABBR " plugin not loaded</h2>\n");
 		return;
 	}
+
+	nodeId = (char *) txGpsInfo->nodeId;
 
 	if (!txGpsInfo->nodeId || !strlen((char *) txGpsInfo->nodeId)) {
 		inet_ntop(olsr_cnf->ip_version, &olsr_cnf->main_addr, &nodeIdString[0], sizeof(nodeIdString));
