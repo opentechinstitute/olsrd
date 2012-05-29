@@ -431,7 +431,8 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
     case (SCHEME):
       goto one_checksum_SHA;    /* Ahhh... fix this */
       break;
-
+    default:
+    	break;
     }
     break;
 

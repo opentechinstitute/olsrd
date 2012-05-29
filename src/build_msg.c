@@ -135,10 +135,11 @@ queue_hello(struct hello_message * message, struct interface * ifp)
 #endif
 
   switch (olsr_cnf->ip_version) {
-  case (AF_INET):
-    return serialize_hello4(message, ifp);
   case (AF_INET6):
     return serialize_hello6(message, ifp);
+  case (AF_INET):
+  default:
+    return serialize_hello4(message, ifp);
   }
   return false;
 }
@@ -164,10 +165,11 @@ queue_tc(struct tc_message * message, struct interface * ifp)
 #endif
 
   switch (olsr_cnf->ip_version) {
-  case (AF_INET):
-    return serialize_tc4(message, ifp);
   case (AF_INET6):
     return serialize_tc6(message, ifp);
+  case (AF_INET):
+  default:
+    return serialize_tc4(message, ifp);
   }
   return false;
 }
@@ -188,10 +190,11 @@ queue_mid(struct interface * ifp)
 #endif
 
   switch (olsr_cnf->ip_version) {
-  case (AF_INET):
-    return serialize_mid4(ifp);
   case (AF_INET6):
     return serialize_mid6(ifp);
+  case (AF_INET):
+  default:
+    return serialize_mid4(ifp);
   }
   return false;
 }
@@ -211,10 +214,11 @@ queue_hna(struct interface * ifp)
 #endif
 
   switch (olsr_cnf->ip_version) {
-  case (AF_INET):
-    return serialize_hna4(ifp);
   case (AF_INET6):
     return serialize_hna6(ifp);
+  case (AF_INET):
+  default:
+    return serialize_hna4(ifp);
   }
   return false;
 }

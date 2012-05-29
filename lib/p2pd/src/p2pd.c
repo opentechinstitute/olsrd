@@ -906,17 +906,18 @@ AddUdpDestPort(const char *value,
   // IPv4 broadcast or IPv6 multicast.
 
   switch (ip_version) {
-  case AF_INET:
-    res = inet_pton(AF_INET, destAddr, &addr4.sin_addr);
-    if (!is_broadcast(addr4) && !is_multicast(addr4)) {
-      OLSR_PRINTF(1,"WARNING: IPv4 address must be multicast or broadcast... ");
-    }
-    break;
   case AF_INET6:
     res = inet_pton(AF_INET6, destAddr, &addr6.sin6_addr);
     if (addr6.sin6_addr.s6_addr[0] != 0xFF) {
       OLSR_PRINTF(1,"WARNING: IPv6 address must be multicast... ");
       return -1;
+    }
+    break;
+  case AF_INET:
+  default:
+    res = inet_pton(AF_INET, destAddr, &addr4.sin_addr);
+    if (!is_broadcast(addr4) && !is_multicast(addr4)) {
+      OLSR_PRINTF(1,"WARNING: IPv4 address must be multicast or broadcast... ");
     }
     break;
   }
@@ -935,13 +936,14 @@ AddUdpDestPort(const char *value,
 
   new->ip_version = ip_version;
   switch (ip_version) {
-  case AF_INET:
-    new->address.v4.s_addr = addr4.sin_addr.s_addr;
-    break;
   case AF_INET6:
     memcpy(&new->address.v6.s6_addr,
            &addr6.sin6_addr.s6_addr,
            sizeof(addr6.sin6_addr.s6_addr));
+    break;
+  default:
+  case AF_INET:
+    new->address.v4.s_addr = addr4.sin_addr.s_addr;
     break;
   }
   new->port = destPort;

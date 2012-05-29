@@ -125,7 +125,10 @@ jenkins_hash(const uint8_t * k, uint32_t length)
     /* no break */
   case 1:
     a += k[0];
-    /* no break */
+    break;
+
+  default:
+	  break;
   }
   __jhash_mix(a, b, c);
 

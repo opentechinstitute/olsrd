@@ -448,6 +448,9 @@ remove_nonvalid_names_from_list(struct name_entry *my_list, int type)
   case NAME_LATLON:
     valid = is_latlon_wellformed(my_list->name);
     break;
+  default:
+	valid = false;
+	break;
   }
 
   if (!valid) {
