@@ -92,6 +92,7 @@ WARNINGS +=	-Wcast-align
 WARNINGS +=	-Wdouble-promotion
 WARNINGS +=	-Wformat-security
 WARNINGS +=	-Wformat-y2k
+WARNINGS +=	-Winit-self
 # the following 2 do not work yet and need more work on it
 #WARNINGS +=	-Wconversion
 #WARNINGS +=	-Wredundant-decls
