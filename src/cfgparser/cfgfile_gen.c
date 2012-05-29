@@ -162,28 +162,28 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
     "    \n");
   if_appendf(out, comments, "    %sHelloInterval       %3.1f\n",
       cnfi->hello_params.emission_interval == HELLO_INTERVAL ? "# " : "",
-      cnfi->hello_params.emission_interval);
+      (double)cnfi->hello_params.emission_interval);
   if_appendf(out, comments, "    %sHelloValidityTime   %3.1f\n",
       cnfi->hello_params.validity_time == NEIGHB_HOLD_TIME ? "# " : "",
-      cnfi->hello_params.validity_time);
+      (double)cnfi->hello_params.validity_time);
   if_appendf(out, comments, "    %sTcInterval          %3.1f\n",
       cnfi->tc_params.emission_interval == TC_INTERVAL ? "# " : "",
-      cnfi->tc_params.emission_interval);
+      (double)cnfi->tc_params.emission_interval);
   if_appendf(out, comments, "    %sTcValidityTime      %3.1f\n",
       cnfi->tc_params.validity_time == TOP_HOLD_TIME ? "# " : "",
-      cnfi->tc_params.validity_time);
+      (double)cnfi->tc_params.validity_time);
   if_appendf(out, comments, "    %sMidInterval         %3.1f\n",
       cnfi->mid_params.emission_interval == MID_INTERVAL ? "# " : "",
-      cnfi->mid_params.emission_interval);
+      (double)cnfi->mid_params.emission_interval);
   if_appendf(out, comments, "    %sMidValidityTime     %3.1f\n",
       cnfi->mid_params.validity_time == MID_HOLD_TIME ? "# " : "",
-      cnfi->mid_params.validity_time);
+      (double)cnfi->mid_params.validity_time);
   if_appendf(out, comments, "    %sHnaInterval         %3.1f\n",
       cnfi->hna_params.emission_interval == HNA_INTERVAL ? "# " : "",
-      cnfi->hna_params.emission_interval);
+      (double)cnfi->hna_params.emission_interval);
   if_appendf(out, comments, "    %sHnaValidityTime     %3.1f\n",
       cnfi->hna_params.validity_time == HNA_HOLD_TIME ? "# " : "",
-      cnfi->hna_params.validity_time);
+      (double)cnfi->hna_params.validity_time);
   if (comments) abuf_puts(out,
     "    \n"
     "    # When multiple links exist between hosts\n"
@@ -222,7 +222,7 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
     while (mult != NULL) {
       if_appendf(out, comments, "    LinkQualityMult    %s %0.2f\n",
           olsr_ip_to_string(&ipbuf, &mult->addr),
-          (float)(mult->value) / 65536.0);
+          (double)((float)(mult->value) / 65536.0f));
       mult = mult->next;
     }
   }
@@ -317,8 +317,8 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# (Default is 0.05)\n"
     "\n");
   abuf_appendf(out, "%sPollrate  %.2f\n",
-      cnf->pollrate == DEF_POLLRATE ? "# " : "",
-      cnf->pollrate);
+      cnf->pollrate == (float)DEF_POLLRATE ? "# " : "",
+      (double)cnf->pollrate);
   abuf_puts(out,
     "\n"
     "# Interval to poll network interfaces for configuration changes (in seconds).\n"
@@ -326,8 +326,8 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# (Defaults is 2.5)\n"
     "\n");
   abuf_appendf(out, "%sNicChgsPollInt  %.1f\n",
-      cnf->nic_chgs_pollrate == DEF_NICCHGPOLLRT ? "# " : "",
-      cnf->nic_chgs_pollrate);
+      cnf->nic_chgs_pollrate == (float)DEF_NICCHGPOLLRT ? "# " : "",
+      (double)cnf->nic_chgs_pollrate);
   abuf_puts(out,
     "\n"
     "# TOS(type of service) value for the IP header of control traffic.\n"
@@ -580,14 +580,14 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# (default is 0.5/0.8/0.3)\n"
     "\n");
   abuf_appendf(out, "%sHystScaling  %.2f\n",
-      cnf->hysteresis_param.scaling == HYST_SCALING ? "# " : "",
-      cnf->hysteresis_param.scaling);
+      cnf->hysteresis_param.scaling == (float)HYST_SCALING ? "# " : "",
+      (double)cnf->hysteresis_param.scaling);
   abuf_appendf(out, "%sHystThrHigh  %.2f\n",
-      cnf->hysteresis_param.thr_high == HYST_THRESHOLD_HIGH ? "# " : "",
-      cnf->hysteresis_param.thr_high);
+      cnf->hysteresis_param.thr_high == (float)HYST_THRESHOLD_HIGH ? "# " : "",
+      (double)cnf->hysteresis_param.thr_high);
   abuf_appendf(out, "%sHystThrLow  %.2f\n",
-      cnf->hysteresis_param.thr_low == HYST_THRESHOLD_LOW ? "# " : "",
-      cnf->hysteresis_param.thr_low);
+      cnf->hysteresis_param.thr_low == (float)HYST_THRESHOLD_LOW ? "# " : "",
+      (double)cnf->hysteresis_param.thr_low);
   abuf_puts(out,
     "\n"
     "# TC redundancy\n"
@@ -652,8 +652,8 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# (default is 0.05)\n"
     "\n");
   abuf_appendf(out, "%sLinkQualityAging %.2f\n",
-      cnf->lq_aging == DEF_LQ_AGING ? "# " : "",
-      cnf->lq_aging);
+      cnf->lq_aging == (float)DEF_LQ_AGING ? "# " : "",
+      (double)cnf->lq_aging);
   abuf_puts(out,
     "\n"
     "# Fisheye mechanism for TCs (0 meansoff, 1 means on)\n"
@@ -679,8 +679,8 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# (defaults to 1.0)\n"
     "\n");
   abuf_appendf(out, "%sNatThreshold  %.1f\n",
-      cnf->lq_nat_thresh == DEF_LQ_NAT_THRESH ? "# " : "",
-      cnf->lq_nat_thresh);
+      cnf->lq_nat_thresh == (float)DEF_LQ_NAT_THRESH ? "# " : "",
+      (double)cnf->lq_nat_thresh);
 
   abuf_puts(out,
     "\n"

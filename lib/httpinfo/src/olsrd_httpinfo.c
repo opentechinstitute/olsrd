@@ -865,10 +865,10 @@ build_config_body(struct autobuf *abuf)
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 
-  abuf_appendf(abuf, "<td>Pollrate: %0.2f</td>\n", olsr_cnf->pollrate);
+  abuf_appendf(abuf, "<td>Pollrate: %0.2f</td>\n", (double)olsr_cnf->pollrate);
   abuf_appendf(abuf, "<td>TC redundancy: %d</td>\n", olsr_cnf->tc_redundancy);
   abuf_appendf(abuf, "<td>MPR coverage: %d</td>\n", olsr_cnf->mpr_coverage);
-  abuf_appendf(abuf, "<td>NAT threshold: %f</td>\n", olsr_cnf->lq_nat_thresh);
+  abuf_appendf(abuf, "<td>NAT threshold: %f</td>\n", (double)olsr_cnf->lq_nat_thresh);
 
   abuf_puts(abuf, "</tr>\n<tr>\n");
 
@@ -886,9 +886,9 @@ build_config_body(struct autobuf *abuf)
     abuf_appendf(abuf, "</tr>\n<tr>\n" "<td>Hysteresis: %s</td>\n",
                olsr_cnf->use_hysteresis ? "Enabled" : "Disabled");
     if (olsr_cnf->use_hysteresis) {
-      abuf_appendf(abuf, "<td>Hyst scaling: %0.2f</td>\n", olsr_cnf->hysteresis_param.scaling);
-      abuf_appendf(abuf, "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", olsr_cnf->hysteresis_param.thr_low,
-                 olsr_cnf->hysteresis_param.thr_high);
+      abuf_appendf(abuf, "<td>Hyst scaling: %0.2f</td>\n", (double)olsr_cnf->hysteresis_param.scaling);
+      abuf_appendf(abuf, "<td>Hyst lower/upper: %0.2f/%0.2f</td>\n", (double)olsr_cnf->hysteresis_param.thr_low,
+    		  (double)olsr_cnf->hysteresis_param.thr_high);
     }
   }
 
@@ -896,7 +896,7 @@ build_config_body(struct autobuf *abuf)
              olsr_cnf->lq_level ? "Enabled" : "Disabled");
   if (olsr_cnf->lq_level) {
     abuf_appendf(abuf, "<td>LQ level: %d</td>\n" "<td>LQ aging: %f</td>\n", olsr_cnf->lq_level,
-               olsr_cnf->lq_aging);
+    		(double)olsr_cnf->lq_aging);
   }
   abuf_puts(abuf, "</tr></table>\n");
 
@@ -978,7 +978,7 @@ build_neigh_body(struct autobuf *abuf)
     abuf_puts(abuf, "<tr>");
     build_ipaddr_with_link(abuf, &the_link->local_iface_addr, -1);
     build_ipaddr_with_link(abuf, &the_link->neighbor_iface_addr, -1);
-    abuf_appendf(abuf, "<td>%0.2f</td>", the_link->L_link_quality);
+    abuf_appendf(abuf, "<td>%0.2f</td>", (double)the_link->L_link_quality);
     if (olsr_cnf->lq_level > 0) {
       struct lqtextbuffer lqbuffer1, lqbuffer2;
       abuf_appendf(abuf, "<td>(%s) %s</td>", get_link_entry_text(the_link, '/', &lqbuffer1),

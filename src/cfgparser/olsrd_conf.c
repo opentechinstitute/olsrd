@@ -192,19 +192,19 @@ olsrd_print_interface_cnf(struct if_config_options *cnf, struct if_config_option
 
   printf("\tIPv6 multicast           : %s%s\n", inet_ntop(AF_INET6, &cnf->ipv6_multicast.v6, ipv6_buf, sizeof(ipv6_buf)),DEFAULT_STR(ipv6_multicast.v6));
 
-  printf("\tHELLO emission/validity  : %0.2f%s/%0.2f%s\n", cnf->hello_params.emission_interval, DEFAULT_STR(hello_params.emission_interval),
-         cnf->hello_params.validity_time,DEFAULT_STR(hello_params.validity_time));
-  printf("\tTC emission/validity     : %0.2f%s/%0.2f%s\n", cnf->tc_params.emission_interval, DEFAULT_STR(tc_params.emission_interval),
-         cnf->tc_params.validity_time,DEFAULT_STR(tc_params.validity_time));
-  printf("\tMID emission/validity    : %0.2f%s/%0.2f%s\n", cnf->mid_params.emission_interval, DEFAULT_STR(mid_params.emission_interval),
-         cnf->mid_params.validity_time,DEFAULT_STR(mid_params.validity_time));
-  printf("\tHNA emission/validity    : %0.2f%s/%0.2f%s\n", cnf->hna_params.emission_interval, DEFAULT_STR(hna_params.emission_interval),
-         cnf->hna_params.validity_time,DEFAULT_STR(hna_params.validity_time));
+  printf("\tHELLO emission/validity  : %0.2f%s/%0.2f%s\n", (double)cnf->hello_params.emission_interval, DEFAULT_STR(hello_params.emission_interval),
+		  (double)cnf->hello_params.validity_time,DEFAULT_STR(hello_params.validity_time));
+  printf("\tTC emission/validity     : %0.2f%s/%0.2f%s\n", (double)cnf->tc_params.emission_interval, DEFAULT_STR(tc_params.emission_interval),
+		  (double)cnf->tc_params.validity_time,DEFAULT_STR(tc_params.validity_time));
+  printf("\tMID emission/validity    : %0.2f%s/%0.2f%s\n", (double)cnf->mid_params.emission_interval, DEFAULT_STR(mid_params.emission_interval),
+		  (double)cnf->mid_params.validity_time,DEFAULT_STR(mid_params.validity_time));
+  printf("\tHNA emission/validity    : %0.2f%s/%0.2f%s\n", (double)cnf->hna_params.emission_interval, DEFAULT_STR(hna_params.emission_interval),
+		  (double)cnf->hna_params.validity_time,DEFAULT_STR(hna_params.validity_time));
 
   for (mult = cnf->lq_mult; mult != NULL; mult = mult->next) {
     lq_mult_cnt++;
     printf("\tLinkQualityMult          : %s %0.2f %s\n", inet_ntop(olsr_cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)),
-      (float)(mult->value) / 65536.0, ((lq_mult_cnt > cnf->orig_lq_mult_cnt)?" (d)":""));
+      (double)(mult->value) / (double)65536.0, ((lq_mult_cnt > cnf->orig_lq_mult_cnt)?" (d)":""));
   }
 
   printf("\tAutodetect changes       : %s%s\n", cnf->autodetect_chg ? "yes" : "no",DEFAULT_STR(autodetect_chg));
@@ -355,7 +355,7 @@ int olsrd_sanity_check_interface_cnf(struct if_config_options * io, struct olsrd
 
   /* HELLO interval */
 
-  if (io->hello_params.validity_time < 0.0) {
+  if (io->hello_params.validity_time < 0.0f) {
     if (cnf->lq_level == 0)
       io->hello_params.validity_time = NEIGHB_HOLD_TIME;
 
@@ -364,33 +364,33 @@ int olsrd_sanity_check_interface_cnf(struct if_config_options * io, struct olsrd
   }
 
   if (io->hello_params.emission_interval < cnf->pollrate || io->hello_params.emission_interval > io->hello_params.validity_time) {
-    fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->hello_params.emission_interval,
-            io->hello_params.validity_time, name);
+    fprintf(stderr, "Bad HELLO parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", (double)io->hello_params.emission_interval,
+    		(double)io->hello_params.validity_time, name);
     return -1;
   }
 
   /* TC interval */
   if (io->tc_params.emission_interval < cnf->pollrate || io->tc_params.emission_interval > io->tc_params.validity_time) {
-    fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->tc_params.emission_interval,
-        io->tc_params.validity_time, name);
+    fprintf(stderr, "Bad TC parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", (double)io->tc_params.emission_interval,
+    		(double)io->tc_params.validity_time, name);
     return -1;
   }
 
-  if (cnf->min_tc_vtime > 0.0 && (io->tc_params.validity_time / io->tc_params.emission_interval) < 128) {
+  if (cnf->min_tc_vtime > 0.0f && (io->tc_params.validity_time / io->tc_params.emission_interval) < 128.0f) {
     fprintf(stderr, "Please use a tc vtime at least 128 times the emission interval while using the min_tc_vtime hack.\n");
     return -1;
   }
   /* MID interval */
   if (io->mid_params.emission_interval < cnf->pollrate || io->mid_params.emission_interval > io->mid_params.validity_time) {
-    fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->mid_params.emission_interval,
-            io->mid_params.validity_time, name);
+    fprintf(stderr, "Bad MID parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", (double)io->mid_params.emission_interval,
+    		(double)io->mid_params.validity_time, name);
     return -1;
   }
 
   /* HNA interval */
   if (io->hna_params.emission_interval < cnf->pollrate || io->hna_params.emission_interval > io->hna_params.validity_time) {
-    fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", io->hna_params.emission_interval,
-            io->hna_params.validity_time, name);
+    fprintf(stderr, "Bad HNA parameters! (em: %0.2f, vt: %0.2f) for dev %s\n", (double)io->hna_params.emission_interval,
+    		(double)io->hna_params.validity_time, name);
     return -1;
   }
 
@@ -399,7 +399,7 @@ int olsrd_sanity_check_interface_cnf(struct if_config_options * io, struct olsrd
       struct ipaddr_str buf;
 
       fprintf(stderr, "Bad Linkquality multiplier ('%s' on IP %s: %0.2f)\n",
-          name, olsr_ip_to_string(&buf, &mult->addr), (float)mult->value / (float)LINK_LOSS_MULTIPLIER);
+          name, olsr_ip_to_string(&buf, &mult->addr), (double)mult->value / (double)LINK_LOSS_MULTIPLIER);
       return -1;
     }
   }
@@ -444,38 +444,38 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 
   /* Hysteresis */
   if (cnf->use_hysteresis == true) {
-    if (cnf->hysteresis_param.scaling < MIN_HYST_PARAM || cnf->hysteresis_param.scaling > MAX_HYST_PARAM) {
-      fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", cnf->hysteresis_param.scaling);
+    if (cnf->hysteresis_param.scaling < (float)MIN_HYST_PARAM || cnf->hysteresis_param.scaling > (float)MAX_HYST_PARAM) {
+      fprintf(stderr, "Hyst scaling %0.2f is not allowed\n", (double)cnf->hysteresis_param.scaling);
       return -1;
     }
 
     if (cnf->hysteresis_param.thr_high <= cnf->hysteresis_param.thr_low) {
-      fprintf(stderr, "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n", cnf->hysteresis_param.thr_high,
-              cnf->hysteresis_param.thr_low);
+      fprintf(stderr, "Hyst upper(%0.2f) thr must be bigger than lower(%0.2f) threshold!\n", (double)cnf->hysteresis_param.thr_high,
+    		  (double)cnf->hysteresis_param.thr_low);
       return -1;
     }
 
-    if (cnf->hysteresis_param.thr_high < MIN_HYST_PARAM || cnf->hysteresis_param.thr_high > MAX_HYST_PARAM) {
-      fprintf(stderr, "Hyst upper thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_high);
+    if (cnf->hysteresis_param.thr_high < (float)MIN_HYST_PARAM || cnf->hysteresis_param.thr_high > (float)MAX_HYST_PARAM) {
+      fprintf(stderr, "Hyst upper thr %0.2f is not allowed\n", (double)cnf->hysteresis_param.thr_high);
       return -1;
     }
 
-    if (cnf->hysteresis_param.thr_low < MIN_HYST_PARAM || cnf->hysteresis_param.thr_low > MAX_HYST_PARAM) {
-      fprintf(stderr, "Hyst lower thr %0.2f is not allowed\n", cnf->hysteresis_param.thr_low);
+    if (cnf->hysteresis_param.thr_low < (float)MIN_HYST_PARAM || cnf->hysteresis_param.thr_low > (float)MAX_HYST_PARAM) {
+      fprintf(stderr, "Hyst lower thr %0.2f is not allowed\n", (double)cnf->hysteresis_param.thr_low);
       return -1;
     }
   }
 
   /* Pollrate */
-  if (cnf->pollrate < MIN_POLLRATE || cnf->pollrate > MAX_POLLRATE) {
-    fprintf(stderr, "Pollrate %0.2f is not allowed\n", cnf->pollrate);
+  if (cnf->pollrate < (float)MIN_POLLRATE || cnf->pollrate > (float)MAX_POLLRATE) {
+    fprintf(stderr, "Pollrate %0.2f is not allowed\n", (double)cnf->pollrate);
     return -1;
   }
 
   /* NIC Changes Pollrate */
 
-  if (cnf->nic_chgs_pollrate < MIN_NICCHGPOLLRT || cnf->nic_chgs_pollrate > MAX_NICCHGPOLLRT) {
-    fprintf(stderr, "NIC Changes Pollrate %0.2f is not allowed\n", cnf->nic_chgs_pollrate);
+  if (cnf->nic_chgs_pollrate < (float)MIN_NICCHGPOLLRT || cnf->nic_chgs_pollrate > (float)MAX_NICCHGPOLLRT) {
+    fprintf(stderr, "NIC Changes Pollrate %0.2f is not allowed\n", (double)cnf->nic_chgs_pollrate);
     return -1;
   }
 
@@ -510,14 +510,14 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
   /* Link quality window size */
-  if (cnf->lq_level && (cnf->lq_aging < MIN_LQ_AGING || cnf->lq_aging > MAX_LQ_AGING)) {
-    fprintf(stderr, "LQ aging factor %f is not allowed\n", cnf->lq_aging);
+  if (cnf->lq_level && (cnf->lq_aging < (float)MIN_LQ_AGING || cnf->lq_aging > (float)MAX_LQ_AGING)) {
+    fprintf(stderr, "LQ aging factor %f is not allowed\n", (double)cnf->lq_aging);
     return -1;
   }
 
   /* NAT threshold value */
-  if (cnf->lq_level && (cnf->lq_nat_thresh < 0.1 || cnf->lq_nat_thresh > 1.0)) {
-    fprintf(stderr, "NAT threshold %f is not allowed\n", cnf->lq_nat_thresh);
+  if (cnf->lq_level && (cnf->lq_nat_thresh < 0.1f || cnf->lq_nat_thresh > 1.0f)) {
+    fprintf(stderr, "NAT threshold %f is not allowed\n", (double)cnf->lq_nat_thresh);
     return -1;
   }
 
@@ -541,11 +541,11 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
-  if (cnf->min_tc_vtime < 0.0) {
+  if (cnf->min_tc_vtime < 0.0f) {
     fprintf(stderr, "Error, negative minimal tc time not allowed.\n");
     return -1;
   }
-  if (cnf->min_tc_vtime > 0.0) {
+  if (cnf->min_tc_vtime > 0.0f) {
 	  fprintf(stderr, "Warning, you are using the min_tc_vtime hack. We hope you know what you are doing... contact olsr.org otherwise.\n");
   }
 
@@ -873,9 +873,9 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     ie = ie->next;
   }
 
-  printf("Pollrate         : %0.2f\n", cnf->pollrate);
+  printf("Pollrate         : %0.2f\n", (double)cnf->pollrate);
 
-  printf("NIC ChangPollrate: %0.2f\n", cnf->nic_chgs_pollrate);
+  printf("NIC ChangPollrate: %0.2f\n", (double)cnf->nic_chgs_pollrate);
 
   printf("TC redundancy    : %d\n", cnf->tc_redundancy);
 
@@ -885,11 +885,11 @@ olsrd_print_cnf(struct olsrd_config *cnf)
 
   printf("LQ fish eye      : %d\n", cnf->lq_fish);
 
-  printf("LQ aging factor  : %f\n", cnf->lq_aging);
+  printf("LQ aging factor  : %f\n", (double)cnf->lq_aging);
 
   printf("LQ algorithm name: %s\n", cnf->lq_algorithm ? cnf->lq_algorithm : "default");
 
-  printf("NAT threshold    : %f\n", cnf->lq_nat_thresh);
+  printf("NAT threshold    : %f\n", (double)cnf->lq_nat_thresh);
 
   printf("Clear screen     : %s\n", cnf->clear_screen ? "yes" : "no");
 
@@ -950,8 +950,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   /* Hysteresis */
   if (cnf->use_hysteresis) {
     printf("Using hysteresis:\n");
-    printf("\tScaling      : %0.2f\n", cnf->hysteresis_param.scaling);
-    printf("\tThr high/low : %0.2f/%0.2f\n", cnf->hysteresis_param.thr_high, cnf->hysteresis_param.thr_low);
+    printf("\tScaling      : %0.2f\n", (double)cnf->hysteresis_param.scaling);
+    printf("\tThr high/low : %0.2f/%0.2f\n", (double)cnf->hysteresis_param.thr_high, (double)cnf->hysteresis_param.thr_low);
   } else {
     printf("Not using hysteresis\n");
   }

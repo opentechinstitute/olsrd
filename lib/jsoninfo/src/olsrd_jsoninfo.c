@@ -239,7 +239,7 @@ abuf_json_float(struct autobuf *abuf, const char* key, float value)
     abuf_appendf(abuf, ",\n");
   else
     abuf_appendf(abuf, "\n");
-  abuf_appendf(abuf, "\t\"%s\": %.03f", key, value);
+  abuf_appendf(abuf, "\t\"%s\": %.03f", key, (double)value);
   entrynumber++;
 }
 

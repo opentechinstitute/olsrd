@@ -465,7 +465,7 @@ olsr_expire_link_hello_timer(void *context)
 
   link->L_link_quality = olsr_hyst_calc_instability(link->L_link_quality);
 
-  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %f\n", olsr_ip_to_string(&buf, &link->neighbor_iface_addr), link->L_link_quality);
+  OLSR_PRINTF(1, "HYST[%s] HELLO timeout %f\n", olsr_ip_to_string(&buf, &link->neighbor_iface_addr), (double)link->L_link_quality);
 
   /* Update hello_timeout - NO SLACK THIS TIME */
   olsr_change_timer(link->link_hello_timer, link->last_htime, OLSR_LINK_JITTER, OLSR_TIMER_PERIODIC);
@@ -814,7 +814,7 @@ olsr_print_link_set(void)
     struct ipaddr_str buf;
     struct lqtextbuffer lqbuffer1, lqbuffer2;
     OLSR_PRINTF(1, "%-*s  %5.3f  %-14s %s\n", addrsize, olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-                walker->L_link_quality, get_link_entry_text(walker, '/', &lqbuffer1), get_linkcost_text(walker->linkcost,
+    		(double)walker->L_link_quality, get_link_entry_text(walker, '/', &lqbuffer1), get_linkcost_text(walker->linkcost,
                                                                                                         false, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
 #endif

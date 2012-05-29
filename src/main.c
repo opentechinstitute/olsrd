@@ -495,7 +495,7 @@ int main(int argc, char *argv[]) {
     } else {
       olsr_cnf->willingness = olsr_calculate_willingness();
 
-      OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, olsr_cnf->will_int);
+      OLSR_PRINTF(1, "Willingness set to %d - next update in %.1f secs\n", olsr_cnf->willingness, (double)olsr_cnf->will_int);
     }
   }
 
@@ -954,9 +954,9 @@ static int olsr_process_arguments(int argc, char *argv[],
 
       sscanf(*argv, "%f", &tmp_lq_aging);
 
-      if (tmp_lq_aging < MIN_LQ_AGING || tmp_lq_aging > MAX_LQ_AGING) {
-        printf("LQ aging factor %f not allowed. Range [%f-%f]\n", tmp_lq_aging,
-            MIN_LQ_AGING, MAX_LQ_AGING);
+      if (tmp_lq_aging < (float)MIN_LQ_AGING || tmp_lq_aging > (float)MAX_LQ_AGING) {
+        printf("LQ aging factor %f not allowed. Range [%f-%f]\n", (double)tmp_lq_aging,
+        		(double)MIN_LQ_AGING, (double)MAX_LQ_AGING);
         olsr_exit(__func__, EXIT_FAILURE);
       }
       olsr_cnf->lq_aging = tmp_lq_aging;
@@ -973,9 +973,9 @@ static int olsr_process_arguments(int argc, char *argv[],
 
       sscanf(*argv, "%f", &tmp_lq_nat_thresh);
 
-      if (tmp_lq_nat_thresh < 0.1 || tmp_lq_nat_thresh > 1.0) {
+      if (tmp_lq_nat_thresh < 0.1f || tmp_lq_nat_thresh > 1.0f) {
         printf("NAT threshold %f not allowed. Range [%f-%f]\n",
-            tmp_lq_nat_thresh, 0.1, 1.0);
+        		(double)tmp_lq_nat_thresh, (double)0.1, (double)1.0);
         olsr_exit(__func__, EXIT_FAILURE);
       }
       olsr_cnf->lq_nat_thresh = tmp_lq_nat_thresh;

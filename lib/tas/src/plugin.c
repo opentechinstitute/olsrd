@@ -116,7 +116,7 @@ iterLinkTabNext(char *buff, int len)
   snprintf(buff, len, "local~%s~remote~%s~main~%s~hysteresis~%f~cost~%s~",
            rawIpAddrToString(&iterLinkTab->local_iface_addr, ipAddrLen), rawIpAddrToString(&iterLinkTab->neighbor_iface_addr,
                                                                                            ipAddrLen),
-           rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen), iterLinkTab->L_link_quality,
+           rawIpAddrToString(&iterLinkTab->neighbor->neighbor_main_addr, ipAddrLen), (double)iterLinkTab->L_link_quality,
            get_linkcost_text(iterLinkTab->linkcost, false, &lqbuffer));
 
   link_node = iterLinkTab->link_list.next;
@@ -434,7 +434,7 @@ serviceFunc(void *context __attribute__ ((unused)))
   }
 
   if (up != 0)
-    httpService((int)(1.0 / config->pollrate));
+    httpService((int)(1.0f / config->pollrate));
 }
 
 int

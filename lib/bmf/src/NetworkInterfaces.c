@@ -804,7 +804,7 @@ void FindNeighbors(
         "%s: ----> forwarding pkt to %s will cost ETX %5.2f\n",
         PLUGIN_NAME_SHORT,
         olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-        currEtx);
+        (double)currEtx);
 
       /* If the candidate neighbor is best reached via another interface, then skip 
        * the candidate neighbor; the candidate neighbor has been / will be selected via that
