@@ -522,11 +522,15 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
 #if defined linux
+#if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
+#error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
+#else
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
   if (cnf->ip_version == AF_INET6 && cnf->smart_gw_active) {
-    fprintf(stderr, "Smart gateways are not supported for linux kernel 2.4 and ipv6\n");
+    fprintf(stderr, "Smart gateways are not supported for linux kernel < 2.6.24 and ipv6\n");
     return -1;
   }
+#endif
 #endif
 
   /* this rtpolicy settings are also currently only used in Linux */

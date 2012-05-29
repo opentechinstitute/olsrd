@@ -59,7 +59,7 @@
 
 #define PARSER_DEBUG 1
 
-#if PARSER_DEBUG
+#if defined PARSER_DEBUG && PARSER_DEBUG
 #define PARSER_DEBUG_PRINTF(x, args...)   printf(x, ##args)
 #else
 #define PARSER_DEBUG_PRINTF(x, args...)   do { } while (0)
@@ -87,7 +87,7 @@ static int lq_mult_helper(YYSTYPE ip_addr_arg, YYSTYPE mult_arg)
   int i;
   struct olsr_if *walker;
 
-#if PARSER_DEBUG > 0
+#if defined PARSER_DEBUG && PARSER_DEBUG > 0
   printf("\tLinkQualityMult %s %0.2f\n",
          (ip_addr_arg != NULL) ? ip_addr_arg->string : "any",
          (double)mult_arg->floating);

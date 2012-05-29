@@ -82,7 +82,7 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 
 #if defined __ANDROID__
 #define DEFAULT_LOCKFILE_PREFIX "/data/local/olsrd"
-#elif defined linux || __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
+#elif defined linux || defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
 #define DEFAULT_LOCKFILE_PREFIX "/var/run/olsrd"
 #elif defined WIN32
 #define DEFAULT_LOCKFILE_PREFIX "C:\\olsrd"
@@ -438,7 +438,7 @@ int main(int argc, char *argv[]) {
   /*
    * create routing socket
    */
-#if defined __FreeBSD__ || __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
   olsr_cnf->rts = socket(PF_ROUTE, SOCK_RAW, 0);
   if (olsr_cnf->rts < 0) {
     olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");

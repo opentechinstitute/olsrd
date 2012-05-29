@@ -419,7 +419,7 @@ olsr_update_kernel_routes(void)
   /* route changes */
   olsr_chg_kernel_routes(&chg_kernel_list);
 
-#if DEBUG
+#if defined DEBUG && DEBUG
   olsr_print_routing_table(&routingtree);
 #endif
 }

@@ -63,7 +63,7 @@ olsr_openlog(const char *ident)
   return;
 }
 
-#if SYSLOG_NUMBERING
+#if defined SYSLOG_NUMBERING && SYSLOG_NUMBERING
 
 unsigned int olsr_syslog_ctr = 0;
 

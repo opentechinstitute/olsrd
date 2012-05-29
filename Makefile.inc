@@ -95,6 +95,7 @@ WARNINGS +=	-Wformat-y2k
 WARNINGS +=	-Winit-self
 WARNINGS +=	-Wswitch-default
 WARNINGS +=	-Wsync-nand
+WARNINGS +=	-Wundef
 # the following 2 do not work yet and need more work on it
 #WARNINGS +=	-Wconversion
 #WARNINGS +=	-Wredundant-decls

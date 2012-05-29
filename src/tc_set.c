@@ -667,7 +667,7 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn, const unsigned char **cu
     if (olsr_calc_tc_edge_entry_etx(tc_edge)) {
       edge_change = 1;
     }
-#if DEBUG
+#if defined DEBUG && DEBUG
     if (edge_change) {
       OLSR_PRINTF(1, "TC:   chg edge entry %s\n", olsr_tc_edge_to_string(tc_edge));
     }

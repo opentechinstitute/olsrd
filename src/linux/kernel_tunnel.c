@@ -57,8 +57,14 @@
 #include <linux/ip.h>
 #include <linux/if_tunnel.h>
 #include <linux/version.h>
+#if defined linux
+#if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
+#error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
+#else
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
 #include <linux/ip6_tunnel.h>
+#endif
+#endif
 #endif
 
 //ifup includes

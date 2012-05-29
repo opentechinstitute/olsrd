@@ -97,7 +97,7 @@
 #include <net80211/ieee80211_ioctl.h>
 #endif
 
-#if defined __FreeBSD__ || __FreeBSD_kernel__
+#if defined __FreeBSD__ || defined __FreeBSD_kernel__
 #include <net/if_var.h>
 #include <net/ethernet.h>
 #include <netinet/in_var.h>
