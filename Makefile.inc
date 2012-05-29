@@ -97,6 +97,7 @@ WARNINGS +=	-Wswitch-default
 WARNINGS +=	-Wsync-nand
 WARNINGS +=	-Wundef
 WARNINGS +=	-Wlogical-op
+WARNINGS +=	-Wjump-misses-init
 # the following 2 do not work yet and need more work on it
 #WARNINGS +=	-Wconversion
 #WARNINGS +=	-Wredundant-decls
