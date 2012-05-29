@@ -90,6 +90,7 @@ WARNINGS +=	-Wformat
 WARNINGS +=	-Wsequence-point
 WARNINGS +=	-Wcast-align
 WARNINGS +=	-Wdouble-promotion
+WARNINGS +=	-Wformat-security
 # the following 2 do not work yet and need more work on it
 #WARNINGS +=	-Wconversion
 #WARNINGS +=	-Wredundant-decls
