@@ -14,7 +14,7 @@ $(TOPDIR)/$(BINNAME):	$(OBJS)
 	@echo "[LD] $@"
 	@$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-ohs_cmd.o: CFLAGS += -Wno-cast-qual
+ohs_cmd.o: CFLAGS += -Wno-cast-qual -DNO_OLDNAMES
 
 clean:
 	rm -f *.[od]
