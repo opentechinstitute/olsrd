@@ -14,7 +14,7 @@ NDK: http://developer.android.com/sdk/ndk/index.html
 
 Once you have that installed, run this in your terminal:
 
-  make OS=android NDK=/path/to/your/android-ndk-r7b build_all
+  make OS=android NDK_BASE=/path/to/your/android-ndk-r7b build_all
 
 Then you can find olsrd in the root, and the plugin files in lib/*/*.so*
 
