@@ -2,7 +2,7 @@
  * OLSRd Quagga plugin
  *
  * Copyright (C) 2006-2008 Immo 'FaUl' Wehrenberg <immo@chaostreff-dortmund.de>
- * Copyright (C) 2007-2011 Vasilis Tsiligiannis <acinonyxs@yahoo.gr>
+ * Copyright (C) 2007-2012 Vasilis Tsiligiannis <acinonyxs@yahoo.gr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -63,6 +63,7 @@ zebra_addroute(const struct rt_entry *r)
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
+  route.safi = SAFI_UNICAST;
   route.prefixlen = r->rt_dst.prefix_len;
   if (olsr_cnf->ip_version == AF_INET)
     route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;
@@ -112,6 +113,7 @@ zebra_delroute(const struct rt_entry *r)
   route.type = ZEBRA_ROUTE_OLSR;
   route.flags = zebra.flags;
   route.message = ZAPI_MESSAGE_NEXTHOP | ZAPI_MESSAGE_METRIC;
+  route.safi = SAFI_UNICAST;
   route.prefixlen = r->rt_dst.prefix_len;
   if (olsr_cnf->ip_version == AF_INET)
     route.prefix.v4.s_addr = r->rt_dst.prefix.v4.s_addr;

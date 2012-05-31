@@ -2,7 +2,7 @@
  * OLSRd Quagga plugin
  *
  * Copyright (C) 2006-2008 Immo 'FaUl' Wehrenberg <immo@chaostreff-dortmund.de>
- * Copyright (C) 2007-2010 Vasilis Tsiligiannis <acinonyxs@yahoo.gr>
+ * Copyright (C) 2007-2012 Vasilis Tsiligiannis <acinonyxs@yahoo.gr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -28,24 +28,43 @@ unsigned char
 {
   int count;
   uint8_t len;
-  uint16_t size;
+  uint16_t size, safi;
   uint32_t ind, metric;
   unsigned char *cmdopt, *t;
 
   cmdopt = olsr_malloc(ZEBRA_MAX_PACKET_SIZ, "QUAGGA: New route packet");
 
   t = &cmdopt[2];
-  if (zebra.version) {
-    *t++ = ZEBRA_HEADER_MARKER;
-    *t++ = zebra.version;
-    cmd = htons(cmd);
-    memcpy(t, &cmd, sizeof cmd);
-    t += sizeof cmd;
-  } else
+  switch (zebra.version) {
+    case 0:
       *t++ = (unsigned char) cmd;
+      break;
+    case 1:
+    case 2:
+      *t++ = ZEBRA_HEADER_MARKER;
+      *t++ = zebra.version;
+      cmd = htons(cmd);
+      memcpy(t, &cmd, sizeof cmd);
+      t += sizeof cmd;
+      break;
+    default:
+      break;
+  }
   *t++ = r->type;
   *t++ = r->flags;
   *t++ = r->message;
+  switch (zebra.version) {
+    case 0:
+    case 1:
+      break;
+    case 2:
+      safi = htons(r->safi);
+      memcpy(t, &safi, sizeof safi);
+      t += sizeof safi;
+      break;
+    default:
+      break;
+  }
   *t++ = r->prefixlen;
   len = (r->prefixlen + 7) / 8;
   if (olsr_cnf->ip_version == AF_INET)
@@ -97,14 +116,21 @@ unsigned char
   data = olsr_malloc(ZEBRA_MAX_PACKET_SIZ , "QUAGGA: New redistribute packet");
 
   pnt = &data[2];
-  if (zebra.version) {
-    *pnt++ = ZEBRA_HEADER_MARKER;
-    *pnt++ = zebra.version;
-    cmd = htons(cmd);
-    memcpy(pnt, &cmd, sizeof cmd);
-    pnt += sizeof cmd;
-  } else
+  switch (zebra.version) {
+    case 0:
       *pnt++ = (unsigned char) cmd;
+      break;
+    case 1:
+    case 2:
+      *pnt++ = ZEBRA_HEADER_MARKER;
+      *pnt++ = zebra.version;
+      cmd = htons(cmd);
+      memcpy(pnt, &cmd, sizeof cmd);
+      pnt += sizeof cmd;
+      break;
+    default:
+      break;
+  }
   *pnt++ = type;
   size = htons(pnt - data);
   memcpy(data, &size, sizeof size);

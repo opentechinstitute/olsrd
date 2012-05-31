@@ -2,7 +2,7 @@
  * OLSRd Quagga plugin
  *
  * Copyright (C) 2006-2008 Immo 'FaUl' Wehrenberg <immo@chaostreff-dortmund.de>
- * Copyright (C) 2007-2010 Vasilis Tsiligiannis <acinonyxs@yahoo.gr>
+ * Copyright (C) 2007-2012 Vasilis Tsiligiannis <acinonyxs@yahoo.gr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -52,7 +52,17 @@ static struct zroute
   length = ntohs (length);
 
   r = olsr_malloc(sizeof *r, "QUAGGA: New zebra route");
-  pnt = (zebra.version ? &opt[6] : &opt[3]);
+  switch (zebra.version) {
+    case 0:
+      pnt = &opt[3];
+      break;
+    case 1:
+    case 2:
+      pnt = &opt[6];
+      break;
+    default:
+      break;
+  }
   r->type = *pnt++;
   r->flags = *pnt++;
   r->message = *pnt++;
@@ -68,6 +78,7 @@ static struct zroute
   switch (zebra.version) {
     case 0:
     case 1:
+    case 2:
       if (r->message & ZAPI_MESSAGE_NEXTHOP) {
         r->nexthop_num = *pnt++;
         r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "QUAGGA: New zebra route nexthop");
@@ -137,13 +148,20 @@ zparse(void *foo __attribute__ ((unused)))
       length = ntohs (length);
       if (!length) // something weired happened
         olsr_exit("(QUAGGA) Zero message length!", EXIT_FAILURE);
-      if (zebra.version) {
-        if ((f[2] != ZEBRA_HEADER_MARKER) || (f[3] != zebra.version))
-          olsr_exit("(QUAGGA) Invalid zebra header received!", EXIT_FAILURE);
-        memcpy(&command, &f[4], sizeof command);
-        command = ntohs (command);
-      } else
+      switch (zebra.version) {
+        case 0:
           command = f[2];
+          break;
+        case 1:
+        case 2:
+          if ((f[2] != ZEBRA_HEADER_MARKER) || (f[3] != zebra.version))
+            olsr_exit("(QUAGGA) Invalid zebra header received!", EXIT_FAILURE);
+          memcpy(&command, &f[4], sizeof command);
+          command = ntohs (command);
+          break;
+        default:
+          break;
+      }
       if (olsr_cnf->ip_version == AF_INET) {
         switch (command) {
           case ZEBRA_IPV4_ROUTE_ADD:
