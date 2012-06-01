@@ -166,6 +166,15 @@ zebra_redistribute(uint16_t cmd)
 
 }
 
+void
+zebra_hello(uint16_t cmd)
+{
+
+  if (zclient_write(zpacket_redistribute(cmd, ZEBRA_ROUTE_OLSR)) < 0)
+    olsr_exit("(QUAGGA) Could not write hello packet!", EXIT_FAILURE);
+
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2
