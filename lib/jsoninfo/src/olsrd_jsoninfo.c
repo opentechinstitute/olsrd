@@ -120,6 +120,7 @@ static void ipc_print_olsrd_conf(struct autobuf *abuf);
 
 #define TXT_IPC_BUFSIZE 256
 
+/* these provide all of the runtime status info */
 #define SIW_NEIGHBORS 0x0001
 #define SIW_LINKS 0x0002
 #define SIW_ROUTES 0x0004
@@ -128,12 +129,18 @@ static void ipc_print_olsrd_conf(struct autobuf *abuf);
 #define SIW_TOPOLOGY 0x0020
 #define SIW_GATEWAYS 0x0040
 #define SIW_INTERFACES 0x0080
-#define SIW_CONFIG 0x0100
-#define SIW_ALL 0x00FF
+#define SIW_RUNTIME_ALL 0x00FF
 
-/* these don't change at runtime, so they are not part of ALL/status */
+/* these only change at olsrd startup */
+#define SIW_CONFIG 0x0100
 #define SIW_PLUGINS 0x0200
-#define SIW_OLSRD_CONF 0x0400
+#define SIW_STARTUP_ALL 0x0F00
+
+/* this is everything in JSON format */
+#define SIW_ALL 0x0FFF
+
+/* this data is not JSON format but olsrd.conf format */
+#define SIW_OLSRD_CONF 0x1000
 
 #define MAX_CLIENTS 3
 
@@ -406,8 +413,15 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     if (0 < s) {
       requ[s] = 0;
       /* print out the requested tables */
-      if (0 != strstr(requ, "/status")) send_what = SIW_ALL;
-      else { /* included in /status */
+      if (0 != strstr(requ, "/olsrd.conf"))
+        send_what |= SIW_OLSRD_CONF;
+      else if (0 != strstr(requ, "/all"))
+        send_what = SIW_ALL;
+      else {
+        // these are the two overarching categories
+        if (0 != strstr(requ, "/runtime")) send_what |= SIW_RUNTIME_ALL;
+        if (0 != strstr(requ, "/startup")) send_what |= SIW_STARTUP_ALL;
+        // these are the individual sections
         if (0 != strstr(requ, "/neighbors")) send_what |= SIW_NEIGHBORS;
         if (0 != strstr(requ, "/links")) send_what |= SIW_LINKS;
         if (0 != strstr(requ, "/routes")) send_what |= SIW_ROUTES;
@@ -416,11 +430,9 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         if (0 != strstr(requ, "/topology")) send_what |= SIW_TOPOLOGY;
         if (0 != strstr(requ, "/gateways")) send_what |= SIW_GATEWAYS;
         if (0 != strstr(requ, "/interfaces")) send_what |= SIW_INTERFACES;
+        if (0 != strstr(requ, "/config")) send_what |= SIW_CONFIG;
+        if (0 != strstr(requ, "/plugins")) send_what |= SIW_PLUGINS;
       }
-      /* these don't change during runtime, so leave them out of ALL */
-      if (0 != strstr(requ, "/config")) send_what |= SIW_CONFIG;
-      if (0 != strstr(requ, "/plugins")) send_what |= SIW_PLUGINS;
-      if (0 != strstr(requ, "/olsrd.conf")) send_what |= SIW_OLSRD_CONF;
     }
     if ( send_what == 0 ) send_what = SIW_ALL;
   }
@@ -890,7 +902,6 @@ ipc_print_config(struct autobuf *abuf)
   abuf_json_string(abuf, "os", "Undefined");
 #endif
 
-  abuf_json_int(abuf, "systemTime", time(NULL));
   abuf_json_int(abuf, "startTime", start_time.tv_sec);
 
   abuf_json_close_object(abuf);
@@ -1005,10 +1016,13 @@ send_info(unsigned int send_what, int the_socket)
 
   abuf_init(&abuf, 32768);
 
-  /* wrap everything in a JSON array to handle multiple elements*/
-  abuf_puts(&abuf, "\n[\n");
+  if (send_what & SIW_ALL) { // only add if outputing JSON
+    abuf_puts(&abuf, "{\n");
+  }
 
-  /* Print tables to IPC socket */
+  /* wrap everything in a JSON array to handle multiple elements */
+  if(send_what & SIW_ALL) // array for any and all of the status
+    abuf_appendf(&abuf, "\"data\": [");
 
   if ((send_what & SIW_LINKS) == SIW_LINKS) {
     ipc_print_links(&abuf);
@@ -1041,8 +1055,12 @@ send_info(unsigned int send_what, int the_socket)
   }
   if ((send_what & SIW_INTERFACES) == SIW_INTERFACES) {
     ipc_print_interfaces(&abuf);
-    if (send_what != SIW_INTERFACES) abuf_puts(&abuf, ",");
   }
+
+  /* if we have printed any of the above, we need a comma to separate */
+  if(send_what & SIW_RUNTIME_ALL && send_what & SIW_STARTUP_ALL)
+    abuf_puts(&abuf, ",");
+
   if ((send_what & SIW_CONFIG) == SIW_CONFIG) {
     ipc_print_config(&abuf);
     if (send_what != SIW_CONFIG) abuf_puts(&abuf, ",");
@@ -1050,9 +1068,15 @@ send_info(unsigned int send_what, int the_socket)
   if ((send_what & SIW_PLUGINS) == SIW_PLUGINS) {
     ipc_print_plugins(&abuf);
   }
+  /* end of JSON data block in an array */
+  if(send_what & SIW_RUNTIME_ALL || send_what & SIW_STARTUP_ALL)
+    abuf_puts(&abuf, "]\n");
 
-  /* end of JSON array for status */
-  abuf_puts(&abuf, "]\n");
+  /* output overarching meta data last so we can use abuf_json_* functions, they add a comma at the beginning */
+  if (send_what & SIW_ALL) {
+    abuf_json_int(&abuf, "systemTime", time(NULL));
+    abuf_puts(&abuf, "}\n");
+  }
 
   /* this outputs the olsrd.conf text directly, not JSON */
   if ((send_what & SIW_OLSRD_CONF) == SIW_OLSRD_CONF) {
