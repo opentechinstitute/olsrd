@@ -113,20 +113,6 @@ index 8e76606..016c4bb 100644
    {0, 0, NULL}
  };
  
-diff --git a/zebra/client_main.c b/zebra/client_main.c
-index 8b95907..b1016b4 100644
---- a/zebra/client_main.c
-+++ b/zebra/client_main.c
-@@ -119,6 +119,9 @@ struct zebra_info
-   { "ospf",   ZEBRA_ROUTE_OSPF },
-   { "ospf6",  ZEBRA_ROUTE_OSPF6 },
-   { "bgp",    ZEBRA_ROUTE_BGP },
-+  { "hsls",   ZEBRA_ROUTE_HSLS },
-+  { "olsr",   ZEBRA_ROUTE_OLSR },
-+  { "batman", ZEBRA_ROUTE_BATMAN },
-   { NULL,     0 }
- };
- 
 diff --git a/zebra/rt_netlink.c b/zebra/rt_netlink.c
 index 5909131..92288bd 100644
 --- a/zebra/rt_netlink.c
