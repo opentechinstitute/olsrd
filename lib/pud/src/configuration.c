@@ -594,6 +594,12 @@ int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((un
 
 	assert (value != NULL);
 
+	if (rxAllowedSourceIpAddressesCount >= PUD_RX_ALLOWED_SOURCE_IP_MAX) {
+		pudError(false, "Can't configure more than %u allowed source IP"
+			" addresses", PUD_RX_ALLOWED_SOURCE_IP_MAX);
+		return true;
+	}
+
 	memset(&addr, 0, sizeof(addr));
 
 	addr.sa_family = olsr_cnf->ip_version;
@@ -606,12 +612,6 @@ int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((un
 	}
 
 	if ((rxAllowedSourceIpAddressesCount == 0) || !isRxAllowedSourceIpAddress(&addr)) {
-		if (rxAllowedSourceIpAddressesCount >= PUD_RX_ALLOWED_SOURCE_IP_MAX) {
-			pudError(false, "Can't configure more than %u allowed source IP"
-				" addresses", PUD_RX_ALLOWED_SOURCE_IP_MAX);
-			return true;
-		}
-
 		rxAllowedSourceIpAddresses[rxAllowedSourceIpAddressesCount] = addr;
 		rxAllowedSourceIpAddressesCount++;
 	}
