@@ -522,7 +522,7 @@ int addRxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 #define PUD_RX_ALLOWED_SOURCE_IP_MAX 32
 
 /** Array with RX allowed source IP addresses */
-static struct sockaddr rxAllowedSourceIpAddresses[PUD_RX_ALLOWED_SOURCE_IP_MAX];
+static union olsr_sockaddr rxAllowedSourceIpAddresses[PUD_RX_ALLOWED_SOURCE_IP_MAX];
 
 /** The number of RX allowed source IP addresses in the array */
 static unsigned int rxAllowedSourceIpAddressesCount = 0;
@@ -539,9 +539,7 @@ static unsigned int rxAllowedSourceIpAddressesCount = 0;
  address
  - false otherwise
  */
-bool isRxAllowedSourceIpAddress(struct sockaddr * sender) {
-	void * addr;
-	unsigned int addrSize;
+bool isRxAllowedSourceIpAddress(union olsr_sockaddr * sender) {
 	unsigned int i;
 
 	if (rxAllowedSourceIpAddressesCount == 0) {
@@ -552,19 +550,21 @@ bool isRxAllowedSourceIpAddress(struct sockaddr * sender) {
 		return false;
 	}
 
-	if (sender->sa_family == AF_INET) {
-		addr = (void *) (&((struct sockaddr_in *) sender)->sin_addr);
-		addrSize = sizeof(struct in_addr);
-	} else {
-		addr = (void *) (&((struct sockaddr_in6 *) sender)->sin6_addr);
-		addrSize = sizeof(struct in6_addr);
-	}
-
 	for (i = 0; i < rxAllowedSourceIpAddressesCount; i++) {
-		if ((rxAllowedSourceIpAddresses[i].sa_family == sender->sa_family)
-				&& (memcmp(&rxAllowedSourceIpAddresses[i].sa_data, addr,
-						addrSize) == 0)) {
-			return true;
+		if (sender->in.sa_family != rxAllowedSourceIpAddresses[i].in.sa_family) {
+			continue;
+		}
+
+		if (sender->in.sa_family == AF_INET) {
+			if (memcmp(&rxAllowedSourceIpAddresses[i].in4.sin_addr, &sender->in4.sin_addr, sizeof(struct in_addr))
+					== 0) {
+				return true;
+			}
+		} else {
+			if (memcmp(&rxAllowedSourceIpAddresses[i].in6.sin6_addr, &sender->in6.sin6_addr, sizeof(struct in6_addr))
+					== 0) {
+				return true;
+			}
 		}
 	}
 
@@ -588,9 +588,8 @@ bool isRxAllowedSourceIpAddress(struct sockaddr * sender) {
 int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_ALLOWED_SOURCE_IP_NAME;
-	const char * valueInternal = value;
 	int conversion;
-	struct sockaddr addr;
+	union olsr_sockaddr addr;
 
 	assert (value != NULL);
 
@@ -600,18 +599,26 @@ int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((un
 		return true;
 	}
 
+	/* try IPv4 first */
 	memset(&addr, 0, sizeof(addr));
+	addr.in4.sin_family = AF_INET;
+	conversion = inet_pton(AF_INET, value, &addr.in4.sin_addr);
 
-	addr.sa_family = olsr_cnf->ip_version;
-	conversion = inet_pton(olsr_cnf->ip_version, valueInternal, &addr.sa_data);
+	/* now try IPv6 if IPv4 conversion was not successful */
+	if (conversion != 1) {
+		memset(&addr, 0, sizeof(addr));
+		addr.in6.sin6_family = AF_INET6;
+		conversion = inet_pton(AF_INET6, value, &addr.in6.sin6_addr);
+	}
+
 	if (conversion != 1) {
 		pudError((conversion == -1) ? true : false,
 				"Configured %s (%s) is not an IP address", valueName,
-				valueInternal);
+				value);
 		return true;
 	}
 
-	if ((rxAllowedSourceIpAddressesCount == 0) || !isRxAllowedSourceIpAddress(&addr)) {
+	if (!isRxAllowedSourceIpAddress(&addr)) {
 		rxAllowedSourceIpAddresses[rxAllowedSourceIpAddressesCount] = addr;
 		rxAllowedSourceIpAddressesCount++;
 	}

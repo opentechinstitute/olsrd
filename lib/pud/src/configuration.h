@@ -54,7 +54,7 @@ int addRxNonOlsrInterface(const char *value, void *data,
 /** The name of the allowed source IP address plugin parameter */
 #define PUD_RX_ALLOWED_SOURCE_IP_NAME			"rxAllowedSourceIpAddress"
 
-bool isRxAllowedSourceIpAddress(struct sockaddr * sender);
+bool isRxAllowedSourceIpAddress(union olsr_sockaddr * sender);
 int addRxAllowedSourceIpAddress(const char *value, void *data,
 		set_plugin_parameter_addon addon);
 

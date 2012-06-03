@@ -256,7 +256,7 @@ static void packetReceivedForOlsr(int skfd, void *data __attribute__ ((unused)),
 	if (skfd >= 0) {
 		unsigned char rxBuffer[BUFFER_SIZE_RX_NMEA];
 		ssize_t rxCount;
-		struct sockaddr sender;
+		union olsr_sockaddr sender;
 		socklen_t senderSize = sizeof(sender);
 
 		assert(data != NULL);
@@ -265,7 +265,7 @@ static void packetReceivedForOlsr(int skfd, void *data __attribute__ ((unused)),
 		memset(&sender, 0, senderSize);
 		errno = 0;
 		rxCount = recvfrom(skfd, &rxBuffer[0], (sizeof(rxBuffer) - 1), 0,
-				&sender, &senderSize);
+				(struct sockaddr *)&sender, &senderSize);
 		if (rxCount < 0) {
 			pudError(true, "Receive error in %s, ignoring message.", __func__);
 			return;
