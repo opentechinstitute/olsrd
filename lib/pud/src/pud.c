@@ -162,14 +162,10 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 		unsigned char rxBuffer[BUFFER_SIZE_RX_DOWNLINK];
 		ssize_t rxCount = 0;
 		ssize_t rxIndex = 0;
-		struct sockaddr sender;
-		socklen_t senderSize = sizeof(sender);
 
 		/* Receive the captured Ethernet frame */
-		memset(&sender, 0, senderSize);
 		errno = 0;
-		rxCount = recvfrom(skfd, &rxBuffer[0], (sizeof(rxBuffer) - 1), 0,
-				&sender, &senderSize);
+		rxCount = recvfrom(skfd, &rxBuffer[0], (sizeof(rxBuffer) - 1), 0, NULL, NULL);
 		if (rxCount < 0) {
 			pudError(true, "Receive error in %s, ignoring message.", __func__);
 			return;
