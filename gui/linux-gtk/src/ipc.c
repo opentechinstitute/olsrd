@@ -252,10 +252,10 @@ ipc_evaluate_message(union olsr_message *olsr_in)
       packet_list_add("MID", ip_to_string(originator), itoa_buf);
     if (ipversion == AF_INET) {
       process_mid(msgsize, vtime, originator, (union mid_message *)&olsr_in->v4.message.mid);
-      //printf("Receied MID packet from %s\n", ip_to_string(&m->olsr_mid->mid_origaddr));
+      //printf("Received MID packet from %s\n", ip_to_string(&m->olsr_mid->mid_origaddr));
     } else {
       process_mid(msgsize, vtime, originator, (union mid_message *)&olsr_in->v6.message.mid);
-      //printf("Receied MID packet from %s\n", ip_to_string(&m->olsr_mid->mid_origaddr));
+      //printf("Received MID packet from %s\n", ip_to_string(&m->olsr_mid->mid_origaddr));
     }
 
     break;
@@ -266,21 +266,21 @@ ipc_evaluate_message(union olsr_message *olsr_in)
       packet_list_add("HNA", ip_to_string(originator), itoa_buf);
     if (ipversion == AF_INET) {
       process_hna(msgsize, vtime, originator, (union hna_message *)&olsr_in->v4.message.hna);
-      //printf("Receied HNA packet\n");
+      //printf("Received HNA packet\n");
     } else {
       process_hna(msgsize, vtime, originator, (union hna_message *)&olsr_in->v6.message.hna);
-      //printf("Receied HNA packet\n");
+      //printf("Received HNA packet\n");
     }
 
     break;
 
   case IPC_MESSAGE:
-    //printf("Receied IPC packet\n");
+    //printf("Received IPC packet\n");
     ipc_pack = 1;               /* Don't add to buffer */
     ipc_eval_route_packet((struct routemsg *)olsr_in);
     break;
   case IPC_NET:
-    //printf("Receied IPC packet\n");
+    //printf("Received IPC packet\n");
     ipc_pack = 1;               /* Don't add to buffer */
     ipc_eval_net_info((struct netmsg *)olsr_in);
     break;
