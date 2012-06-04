@@ -82,16 +82,24 @@ void pudError(bool useErrno, const char *format, ...) {
  */
 static void sendToAllTxInterfaces(unsigned char *buffer,
 		unsigned int bufferLength) {
-	union olsr_sockaddr * txAddress;
+	union olsr_sockaddr * txAddress = getTxMcAddr();
+	struct sockaddr * addr;
+	socklen_t addrSize;
 	TRxTxNetworkInterface *txNetworkInterfaces = getTxNetworkInterfaces();
+
+	if (txAddress->in.sa_family == AF_INET) {
+		addr = (struct sockaddr *)&txAddress->in4;
+		addrSize = sizeof(struct sockaddr_in);
+	} else {
+		addr = (struct sockaddr *)&txAddress->in6;
+		addrSize = sizeof(struct sockaddr_in6);
+	}
+
 	while (txNetworkInterfaces != NULL) {
 		TRxTxNetworkInterface *networkInterface = txNetworkInterfaces;
 		errno = 0;
-		txAddress = getTxMcAddr();
-		if (sendto(networkInterface->socketFd, buffer, bufferLength, 0,
-				(struct sockaddr *) &txAddress->in, sizeof(txAddress->in)) < 0) {
-			pudError(true, "Transmit error on interface %s",
-					(char *) &networkInterface->name);
+		if (sendto(networkInterface->socketFd, buffer, bufferLength, 0, addr, addrSize) < 0) {
+			pudError(true, "Transmit error on interface %s", (char *) &networkInterface->name);
 		}
 		txNetworkInterfaces = networkInterface->next;
 	}
