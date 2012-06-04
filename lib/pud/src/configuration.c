@@ -673,7 +673,7 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 		*port = htons(PUD_RX_MC_PORT_DEFAULT);
 	}
 
-	if (!isMulticast(addr.in.sa_family, &addr)) {
+	if (!isMulticast(&addr)) {
 		pudError(false, "Configured %s (%s) is not a multicast address",
 				valueName, value);
 		return true;
@@ -953,7 +953,7 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 		*port = htons(PUD_TX_MC_PORT_DEFAULT);
 	}
 
-	if (!isMulticast(addr.in.sa_family, &addr)) {
+	if (!isMulticast(&addr)) {
 		pudError(false, "Configured %s (%s) is not a multicast address",
 				valueName, value);
 		return true;
