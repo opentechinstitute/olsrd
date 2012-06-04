@@ -795,9 +795,9 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     #          performed. When 0 then no such detection is performed, when 1
     #          then the detection is performed 
     #
-    # Default: 1
+    # Default: true
     #
-    #PlParam     "useDeDup"                     "1"
+    #PlParam     "useDeDup"                     "true"
 
     # deDupDepth the number of messages that are tracked to detect duplucates
     #            messages received from the OLSR network
@@ -812,9 +812,9 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
     #             the OLSR network. When 0 then no loopback is performed, when
     #             1 then the loopback is performed
     #
-    # Default: 0
+    # Default: false
     #
-    PlParam     "useLoopback"                  "1"
+    PlParam     "useLoopback"                  "true"
 }
 
 LoadPlugin "./lib/sgwdynspeed/olsrd_sgwdynspeed.so.1.0.0"

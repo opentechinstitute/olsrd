@@ -1941,24 +1941,7 @@ bool getUseDeDup(void) {
  */
 int setUseDeDup(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_USE_DEDUP_NAME;
-	unsigned long long useDeDupNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &useDeDupNew)) {
-		return true;
-	}
-
-	if ((useDeDupNew != 0) && (useDeDupNew != 1)) {
-		pudError(false, "Configured %s must be 0 (false) or 1 (true)",
-				valueName);
-		return true;
-	}
-
-	useDeDup = (useDeDupNew == 1);
-
-	return false;
+	return !readBool(PUD_USE_DEDUP_NAME, value, &useDeDup);
 }
 
 /*
@@ -2037,24 +2020,7 @@ bool getUseLoopback(void) {
  */
 int setUseLoopback(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_USE_LOOPBACK_NAME;
-	unsigned long long useLoopbackNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &useLoopbackNew)) {
-		return true;
-	}
-
-	if ((useLoopbackNew != 0) && (useLoopbackNew != 1)) {
-		pudError(false, "Configured %s must be 0 (false) or 1 (true)",
-				valueName);
-		return true;
-	}
-
-	useLoopback = (useLoopbackNew == 1);
-
-	return false;
+	return !readBool(PUD_USE_LOOPBACK_NAME, value, &useLoopback);
 }
 
 /*
