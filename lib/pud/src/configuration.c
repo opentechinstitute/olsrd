@@ -24,16 +24,13 @@
 /**
  Determine the address of the port in an OLSR socket address
 
- @param ipVersion
- The IP version (AF_INET or AF_INET6)
  @param addr
  A pointer to OLSR socket address
  @param port
  A pointer to the location where the pointer to the port will be stored
  */
-static void getOlsrSockaddrPortAddress(int ipVersion,
-		union olsr_sockaddr * addr, in_port_t ** port) {
-	if (ipVersion == AF_INET) {
+static inline void getOlsrSockaddrPortAddress(union olsr_sockaddr * addr, in_port_t ** port) {
+	if (addr->in.sa_family == AF_INET) {
 		*port = &addr->in4.sin_port;
 	} else {
 		*port = &addr->in6.sin6_port;
@@ -672,7 +669,7 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 	if (!rxMcAddrSet) {
 		in_port_t * port;
 
-		getOlsrSockaddrPortAddress(addr.in.sa_family, &addr, &port);
+		getOlsrSockaddrPortAddress(&addr, &port);
 		*port = htons(PUD_RX_MC_PORT_DEFAULT);
 	}
 
@@ -698,7 +695,7 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 unsigned short getRxMcPort(void) {
 	in_port_t * port;
 	union olsr_sockaddr * sock = getRxMcAddr();
-	getOlsrSockaddrPortAddress(sock->in.sa_family, sock, &port);
+	getOlsrSockaddrPortAddress(sock, &port);
 	return *port;
 }
 
@@ -734,7 +731,7 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(addr->in.sa_family, addr, &port);
+	getOlsrSockaddrPortAddress(addr, &port);
 	*port = htons((uint16_t) rxMcPortNew);
 
 	return false;
@@ -952,7 +949,7 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 	if (!txMcAddrSet) {
 		in_port_t * port;
 
-		getOlsrSockaddrPortAddress(addr.in.sa_family, &addr, &port);
+		getOlsrSockaddrPortAddress(&addr, &port);
 		*port = htons(PUD_TX_MC_PORT_DEFAULT);
 	}
 
@@ -978,7 +975,7 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 unsigned short getTxMcPort(void) {
 	in_port_t * port;
 	union olsr_sockaddr * sock = getTxMcAddr();
-	getOlsrSockaddrPortAddress(sock->in.sa_family, sock, &port);
+	getOlsrSockaddrPortAddress(sock, &port);
 	return *port;
 }
 
@@ -1014,7 +1011,7 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(addr->in.sa_family, addr, &port);
+	getOlsrSockaddrPortAddress(addr, &port);
 	*port = htons((uint16_t) txMcPortNew);
 
 	return false;
@@ -1097,7 +1094,7 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
 	if (!uplinkAddrSet) {
 		in_port_t * port;
 
-		getOlsrSockaddrPortAddress(addr.in.sa_family, &addr, &port);
+		getOlsrSockaddrPortAddress(&addr, &port);
 		*port = htons(PUD_UPLINK_PORT_DEFAULT);
 	}
 
@@ -1117,7 +1114,7 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
 unsigned short getUplinkPort(void) {
 	in_port_t * port;
 	union olsr_sockaddr * addr = getUplinkAddr();
-	getOlsrSockaddrPortAddress(addr->in.sa_family, addr, &port);
+	getOlsrSockaddrPortAddress(addr, &port);
 	return *port;
 }
 
@@ -1153,7 +1150,7 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(addr->in.sa_family, addr, &port);
+	getOlsrSockaddrPortAddress(addr, &port);
 	*port = htons((uint16_t) uplinkPortNew);
 
 	return false;
