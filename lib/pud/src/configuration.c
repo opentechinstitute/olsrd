@@ -923,7 +923,8 @@ static bool txMcAddrSet = false;
  */
 union olsr_sockaddr * getTxMcAddr(void) {
 	if (!txMcAddrSet) {
-		setTxMcAddr(NULL, NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
+		setTxMcAddr((olsr_cnf->ip_version == AF_INET) ? PUD_TX_MC_ADDR_4_DEFAULT : PUD_TX_MC_ADDR_6_DEFAULT,
+				NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
 	}
 	return &txMcAddr;
 }
@@ -946,43 +947,44 @@ union olsr_sockaddr * getTxMcAddr(void) {
  */
 int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_MC_ADDR_NAME;
-	void * ipAddress;
-	in_port_t * port;
-	const char * valueInternal = value;
+	union olsr_sockaddr addr;
 	int conversion;
 
-	getOlsrSockAddrAndPortAddresses(olsr_cnf->ip_version, &txMcAddr, &ipAddress,
-			&port);
-	if (olsr_cnf->ip_version == AF_INET) {
-		txMcAddr.in4.sin_family = olsr_cnf->ip_version;
-		if (valueInternal == NULL) {
-			valueInternal = PUD_TX_MC_ADDR_4_DEFAULT;
-		}
-	} else {
-		txMcAddr.in6.sin6_family = olsr_cnf->ip_version;
-		if (valueInternal == NULL) {
-			valueInternal = PUD_TX_MC_ADDR_6_DEFAULT;
-		}
+	assert (value != NULL);
+
+	/* try IPv4 first */
+	memset(&addr, 0, sizeof(addr));
+	addr.in4.sin_family = AF_INET;
+	conversion = inet_pton(AF_INET, value, &addr.in4.sin_addr);
+
+	/* now try IPv6 if IPv4 conversion was not successful */
+	if (conversion != 1) {
+		memset(&addr, 0, sizeof(addr));
+		addr.in6.sin6_family = AF_INET6;
+		conversion = inet_pton(AF_INET6, value, &addr.in6.sin6_addr);
 	}
 
-	if (!txMcAddrSet) {
-		*port = htons(PUD_TX_MC_PORT_DEFAULT);
-	}
-
-	conversion = inet_pton(olsr_cnf->ip_version, valueInternal, ipAddress);
 	if (conversion != 1) {
 		pudError((conversion == -1) ? true : false,
 				"Configured %s (%s) is not an IP address", valueName,
-				valueInternal);
+				value);
 		return true;
 	}
 
-	if (!isMulticast(olsr_cnf->ip_version, &txMcAddr)) {
+	if (!txMcAddrSet) {
+		in_port_t * port;
+
+		getOlsrSockaddrPortAddress(addr.in.sa_family, &addr, &port);
+		*port = htons(PUD_TX_MC_PORT_DEFAULT);
+	}
+
+	if (!isMulticast(addr.in.sa_family, &addr)) {
 		pudError(false, "Configured %s (%s) is not a multicast address",
-				valueName, valueInternal);
+				valueName, value);
 		return true;
 	}
 
+	txMcAddr = addr;
 	txMcAddrSet = true;
 	return false;
 }
@@ -997,7 +999,8 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  */
 unsigned short getTxMcPort(void) {
 	in_port_t * port;
-	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, getTxMcAddr(), &port);
+	union olsr_sockaddr * sock = getTxMcAddr();
+	getOlsrSockaddrPortAddress(sock->in.sa_family, sock, &port);
 	return *port;
 }
 
@@ -1033,7 +1036,7 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr, &port);
+	getOlsrSockaddrPortAddress(addr->in.sa_family, addr, &port);
 	*port = htons((uint16_t) txMcPortNew);
 
 	return false;
