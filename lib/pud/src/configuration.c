@@ -689,116 +689,6 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 }
 
 /*
- * uplinkAddr + uplinkPort
- */
-
-/** The uplink address */
-static union olsr_sockaddr uplinkAddr;
-
-/** True when the uplink address is set */
-static bool uplinkAddrSet = false;
-
-/**
- @return
- - true when the uplink address is set
- - false otherwise
- */
-bool isUplinkAddrSet(void) {
-	return uplinkAddrSet;
-}
-
-/**
- @return
- The uplink address (in network byte order). Sets both the address
- and the port to their default values when the address was not yet set.
- */
-union olsr_sockaddr * getUplinkAddr(void) {
-	if (!uplinkAddrSet) {
-		setUplinkAddr((olsr_cnf->ip_version == AF_INET) ? PUD_UPLINK_ADDR_4_DEFAULT : PUD_UPLINK_ADDR_6_DEFAULT,
-				NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
-	}
-	return &uplinkAddr;
-}
-
-int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readIPAddress(PUD_UPLINK_ADDR_NAME, value, PUD_UPLINK_PORT_DEFAULT, &uplinkAddr, &uplinkAddrSet);
-}
-
-/**
- @return
- The uplink port (in network byte order)
- */
-unsigned short getUplinkPort(void) {
-	in_port_t * port;
-	getOlsrSockaddrPortAddress(getUplinkAddr(), &port);
-	return *port;
-}
-
-int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_UPLINK_PORT_NAME;
-	unsigned short uplinkPortNew;
-	in_port_t * port;
-
-	if (!readUS(valueName, value, &uplinkPortNew)) {
-		return true;
-	}
-
-	if (uplinkPortNew < 1) {
-		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-65535", valueName, uplinkPortNew);
-		return true;
-	}
-
-	getOlsrSockaddrPortAddress(getUplinkAddr(), &port);
-	*port = htons((uint16_t) uplinkPortNew);
-
-	return false;
-}
-
-
-/*
- * downlinkPort
- */
-
-/** the downlink port */
-unsigned short downlinkPort = 0;
-
-/** true when the downlinkPort is set */
-bool downlinkPortSet = false;
-
-/**
- @return
- The downlink port (in network byte order)
- */
-unsigned short getDownlinkPort(void) {
-	if (!downlinkPortSet) {
-		downlinkPort = htons(PUD_DOWNLINK_PORT_DEFAULT);
-		downlinkPortSet = true;
-	}
-
-	return downlinkPort;
-}
-
-int setDownlinkPort(const char *value, void *data __attribute__ ((unused)),
-		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_DOWNLINK_PORT_NAME;
-	unsigned short downlinkPortNew;
-
-	if (!readUS(valueName, value, &downlinkPortNew)) {
-		return true;
-	}
-
-	if (downlinkPortNew < 1) {
-		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-65535", valueName, downlinkPortNew);
-		return true;
-	}
-
-	downlinkPort = htons(downlinkPortNew);
-	downlinkPortSet = true;
-
-	return false;
-}
-
-/*
  * txTtl
  */
 
@@ -882,6 +772,115 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 
 	strcpy((char *) &txNmeaMessagePrefix[0], value);
 	txNmeaMessagePrefixSet = true;
+	return false;
+}
+
+/*
+ * uplinkAddr + uplinkPort
+ */
+
+/** The uplink address */
+static union olsr_sockaddr uplinkAddr;
+
+/** True when the uplink address is set */
+static bool uplinkAddrSet = false;
+
+/**
+ @return
+ - true when the uplink address is set
+ - false otherwise
+ */
+bool isUplinkAddrSet(void) {
+	return uplinkAddrSet;
+}
+
+/**
+ @return
+ The uplink address (in network byte order). Sets both the address
+ and the port to their default values when the address was not yet set.
+ */
+union olsr_sockaddr * getUplinkAddr(void) {
+	if (!uplinkAddrSet) {
+		setUplinkAddr((olsr_cnf->ip_version == AF_INET) ? PUD_UPLINK_ADDR_4_DEFAULT : PUD_UPLINK_ADDR_6_DEFAULT,
+				NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
+	}
+	return &uplinkAddr;
+}
+
+int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	return !readIPAddress(PUD_UPLINK_ADDR_NAME, value, PUD_UPLINK_PORT_DEFAULT, &uplinkAddr, &uplinkAddrSet);
+}
+
+/**
+ @return
+ The uplink port (in network byte order)
+ */
+unsigned short getUplinkPort(void) {
+	in_port_t * port;
+	getOlsrSockaddrPortAddress(getUplinkAddr(), &port);
+	return *port;
+}
+
+int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_UPLINK_PORT_NAME;
+	unsigned short uplinkPortNew;
+	in_port_t * port;
+
+	if (!readUS(valueName, value, &uplinkPortNew)) {
+		return true;
+	}
+
+	if (uplinkPortNew < 1) {
+		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-65535", valueName, uplinkPortNew);
+		return true;
+	}
+
+	getOlsrSockaddrPortAddress(getUplinkAddr(), &port);
+	*port = htons((uint16_t) uplinkPortNew);
+
+	return false;
+}
+
+/*
+ * downlinkPort
+ */
+
+/** the downlink port */
+unsigned short downlinkPort = 0;
+
+/** true when the downlinkPort is set */
+bool downlinkPortSet = false;
+
+/**
+ @return
+ The downlink port (in network byte order)
+ */
+unsigned short getDownlinkPort(void) {
+	if (!downlinkPortSet) {
+		downlinkPort = htons(PUD_DOWNLINK_PORT_DEFAULT);
+		downlinkPortSet = true;
+	}
+
+	return downlinkPort;
+}
+
+int setDownlinkPort(const char *value, void *data __attribute__ ((unused)),
+		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	static const char * valueName = PUD_DOWNLINK_PORT_NAME;
+	unsigned short downlinkPortNew;
+
+	if (!readUS(valueName, value, &downlinkPortNew)) {
+		return true;
+	}
+
+	if (downlinkPortNew < 1) {
+		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-65535", valueName, downlinkPortNew);
+		return true;
+	}
+
+	downlinkPort = htons(downlinkPortNew);
+	downlinkPortSet = true;
+
 	return false;
 }
 
