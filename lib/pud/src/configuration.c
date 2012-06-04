@@ -586,19 +586,18 @@ unsigned short getRxMcPort(void) {
  */
 int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_MC_PORT_NAME;
-	unsigned long long rxMcPortNew;
+	unsigned short rxMcPortNew;
 	in_port_t * port;
 	union olsr_sockaddr * addr = getRxMcAddr();
 
 	assert (value != NULL);
 
-	if (!readULL(valueName, value, &rxMcPortNew)) {
+	if (!readUS(valueName, value, &rxMcPortNew)) {
 		return true;
 	}
 
-	if ((rxMcPortNew < 1) || (rxMcPortNew > 65535)) {
-		pudError(false, "Configured %s (%llu) is outside of"
-			" valid range 1-65535", valueName, rxMcPortNew);
+	if (rxMcPortNew < 1) {
+		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-65535", valueName, rxMcPortNew);
 		return true;
 	}
 
@@ -840,19 +839,18 @@ unsigned short getTxMcPort(void) {
  */
 int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_MC_PORT_NAME;
-	unsigned long long txMcPortNew;
+	unsigned short txMcPortNew;
 	in_port_t * port;
 	union olsr_sockaddr * addr = getTxMcAddr();
 
 	assert (value != NULL);
 
-	if (!readULL(valueName, value, &txMcPortNew)) {
+	if (!readUS(valueName, value, &txMcPortNew)) {
 		return true;
 	}
 
-	if ((txMcPortNew < 1) || (txMcPortNew > 65535)) {
-		pudError(false, "Configured %s (%llu) is outside of"
-			" valid range 1-65535", valueName, txMcPortNew);
+	if (txMcPortNew < 1) {
+		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-65535", valueName, txMcPortNew);
 		return true;
 	}
 
@@ -953,19 +951,18 @@ unsigned short getUplinkPort(void) {
  */
 int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_PORT_NAME;
-	unsigned long long uplinkPortNew;
+	unsigned short uplinkPortNew;
 	in_port_t * port;
 	union olsr_sockaddr * addr = getUplinkAddr();
 
 	assert (value != NULL);
 
-	if (!readULL(valueName, value, &uplinkPortNew)) {
+	if (!readUS(valueName, value, &uplinkPortNew)) {
 		return true;
 	}
 
-	if ((uplinkPortNew < 1) || (uplinkPortNew > 65535)) {
-		pudError(false, "Configured %s (%llu) is outside of"
-			" valid range 1-65535", valueName, uplinkPortNew);
+	if (uplinkPortNew < 1) {
+		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-65535", valueName, uplinkPortNew);
 		return true;
 	}
 
@@ -1016,17 +1013,16 @@ unsigned short getDownlinkPort(void) {
 int setDownlinkPort(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_DOWNLINK_PORT_NAME;
-	unsigned long long downlinkPortNew;
+	unsigned short downlinkPortNew;
 
 	assert(value != NULL);
 
-	if (!readULL(valueName, value, &downlinkPortNew)) {
+	if (!readUS(valueName, value, &downlinkPortNew)) {
 		return true;
 	}
 
-	if ((downlinkPortNew < 1) || (downlinkPortNew > 65535)) {
-		pudError(false, "Configured %s (%llu) is outside of"
-				" valid range 1-65535", valueName, downlinkPortNew);
+	if (downlinkPortNew < 1) {
+		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-65535", valueName, downlinkPortNew);
 		return true;
 	}
 
