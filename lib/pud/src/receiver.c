@@ -183,11 +183,14 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 		int fd = getDownlinkSocketFd();
 		if (fd != -1) {
 			union olsr_sockaddr * uplink_addr = getUplinkAddr();
+			struct sockaddr * addr;
+			socklen_t addrSize;
 
 			UplinkMessage * cl_uplink = (UplinkMessage *) &txBuffer[txBufferBytesUsed];
 			UplinkClusterLeader * cl = &cl_uplink->msg.clusterLeader;
 			union olsr_ip_addr * cl_originator = getClusterLeaderOriginator(olsr_cnf->ip_version, cl);
 			union olsr_ip_addr * cl_clusterLeader = getClusterLeaderClusterLeader(olsr_cnf->ip_version, cl);
+
 			unsigned int cl_size =
 					sizeof(UplinkClusterLeader) - sizeof(cl->leader)
 							+ ((olsr_cnf->ip_version == AF_INET) ? sizeof(cl->leader.v4) :
@@ -195,6 +198,14 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 
 			unsigned long long uplinkUpdateInterval =
 					(externalState == MOVEMENT_STATE_STATIONARY) ? getUplinkUpdateIntervalStationary() : getUplinkUpdateIntervalMoving();
+
+			if (uplink_addr->in.sa_family == AF_INET) {
+				addr = (struct sockaddr *)&uplink_addr->in4;
+				addrSize = sizeof(struct sockaddr_in);
+			} else {
+				addr = (struct sockaddr *)&uplink_addr->in6;
+				addrSize = sizeof(struct sockaddr_in6);
+			}
 
 			/*
 			 * position update message (pu)
@@ -236,8 +247,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 			txBufferBytesUsed += cl_size;
 
 			errno = 0;
-			if (sendto(fd, &txBuffer, txBufferBytesUsed, 0, (struct sockaddr *) &uplink_addr->in,
-					sizeof(uplink_addr->in)) < 0) {
+			if (sendto(fd, &txBuffer, txBufferBytesUsed, 0, addr, addrSize) < 0) {
 				pudError(true, "Could not send to uplink (size=%u)", txBufferBytesUsed);
 			}
 		}
