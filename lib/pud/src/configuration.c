@@ -643,7 +643,8 @@ static bool rxMcAddrSet = false;
  */
 union olsr_sockaddr * getRxMcAddr(void) {
 	if (!rxMcAddrSet) {
-		setRxMcAddr(NULL, NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
+		setRxMcAddr((olsr_cnf->ip_version == AF_INET) ? PUD_RX_MC_ADDR_4_DEFAULT : PUD_RX_MC_ADDR_6_DEFAULT,
+				NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
 	}
 	return &rxMcAddr;
 }
@@ -666,43 +667,44 @@ union olsr_sockaddr * getRxMcAddr(void) {
  */
 int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_MC_ADDR_NAME;
-	void * ipAddress;
-	in_port_t * port;
-	const char * valueInternal = value;
+	union olsr_sockaddr addr;
 	int conversion;
 
-	getOlsrSockAddrAndPortAddresses(olsr_cnf->ip_version, &rxMcAddr, &ipAddress,
-			&port);
-	if (olsr_cnf->ip_version == AF_INET) {
-		rxMcAddr.in4.sin_family = olsr_cnf->ip_version;
-		if (valueInternal == NULL) {
-			valueInternal = PUD_RX_MC_ADDR_4_DEFAULT;
-		}
-	} else {
-		rxMcAddr.in6.sin6_family = olsr_cnf->ip_version;
-		if (valueInternal == NULL) {
-			valueInternal = PUD_RX_MC_ADDR_6_DEFAULT;
-		}
+	assert(value != NULL);
+
+	/* try IPv4 first */
+	memset(&addr, 0, sizeof(addr));
+	addr.in4.sin_family = AF_INET;
+	conversion = inet_pton(AF_INET, value, &addr.in4.sin_addr);
+
+	/* now try IPv6 if IPv4 conversion was not successful */
+	if (conversion != 1) {
+		memset(&addr, 0, sizeof(addr));
+		addr.in6.sin6_family = AF_INET6;
+		conversion = inet_pton(AF_INET6, value, &addr.in6.sin6_addr);
 	}
 
-	if (!rxMcAddrSet) {
-		*port = htons(PUD_RX_MC_PORT_DEFAULT);
-	}
-
-	conversion = inet_pton(olsr_cnf->ip_version, valueInternal, ipAddress);
 	if (conversion != 1) {
 		pudError((conversion == -1) ? true : false,
 				"Configured %s (%s) is not an IP address", valueName,
-				valueInternal);
+				value);
 		return true;
 	}
 
-	if (!isMulticast(olsr_cnf->ip_version, &rxMcAddr)) {
+	if (!rxMcAddrSet) {
+		in_port_t * port;
+
+		getOlsrSockaddrPortAddress(addr.in.sa_family, &addr, &port);
+		*port = htons(PUD_RX_MC_PORT_DEFAULT);
+	}
+
+	if (!isMulticast(addr.in.sa_family, &addr)) {
 		pudError(false, "Configured %s (%s) is not a multicast address",
-				valueName, valueInternal);
+				valueName, value);
 		return true;
 	}
 
+	rxMcAddr = addr;
 	rxMcAddrSet = true;
 	return false;
 }
@@ -717,7 +719,8 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  */
 unsigned short getRxMcPort(void) {
 	in_port_t * port;
-	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, getRxMcAddr(), &port);
+	union olsr_sockaddr * sock = getRxMcAddr();
+	getOlsrSockaddrPortAddress(sock->in.sa_family, sock, &port);
 	return *port;
 }
 
@@ -753,7 +756,7 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr, &port);
+	getOlsrSockaddrPortAddress(addr->in.sa_family, addr, &port);
 	*port = htons((uint16_t) rxMcPortNew);
 
 	return false;
