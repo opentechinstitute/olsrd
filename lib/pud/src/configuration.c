@@ -48,7 +48,7 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 	}
 
 	if (!isValidNodeIdType(nodeIdTypeNew)) {
-		pudError(false, "Configured %s (%llu) is reserved", valueName,
+		pudError(false, "Value of parameter %s (%llu) is reserved", valueName,
 				nodeIdTypeNew);
 		return true;
 	}
@@ -126,7 +126,7 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
 
 	valueLength = strlen(value);
 	if (valueLength > PUD_TX_NODEID_BUFFERSIZE) {
-		pudError(false, "Configured %s is too long, maximum length is"
+		pudError(false, "Value of parameter %s is too long, maximum length is"
 			" %u, current length is %lu", valueName, PUD_TX_NODEID_BUFFERSIZE,
 				(unsigned long) valueLength);
 		return true;
@@ -343,7 +343,7 @@ int addRxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 
 	valueLength = strlen(value);
 	if (valueLength > IFNAMSIZ) {
-		pudError(false, "Configured %s (%s) is too long,"
+		pudError(false, "Value of parameter %s (%s) is too long,"
 			" maximum length is %u, current length is %lu",
 				PUD_RX_NON_OLSR_IF_NAME, value, IFNAMSIZ, valueLength);
 		return true;
@@ -562,7 +562,7 @@ int setPositionFile(const char *value, void *data __attribute__ ((unused)),
 
 	valueLength = strlen(value);
 	if (valueLength > PATH_MAX) {
-		pudError(false, "Configured %s is too long, maximum length is"
+		pudError(false, "Value of parameter %s is too long, maximum length is"
 				" %u, current length is %lu", valueName, PATH_MAX, (unsigned long) valueLength);
 		return true;
 	}
@@ -621,7 +621,7 @@ int addTxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 
 	valueLength = strlen(value);
 	if (valueLength > IFNAMSIZ) {
-		pudError(false, "Configured %s (%s) is too long,"
+		pudError(false, "Value of parameter %s (%s) is too long,"
 			" maximum length is %u, current length is %lu",
 				PUD_TX_NON_OLSR_IF_NAME, value, IFNAMSIZ, valueLength);
 		return true;
@@ -875,7 +875,7 @@ int setTxTtl(const char *value, void *data __attribute__ ((unused)), set_plugin_
 	}
 
 	if ((txTtlNew < 1) || (txTtlNew > MAX_TTL)) {
-		pudError(false, "Configured %s (%llu) is outside of"
+		pudError(false, "Value of parameter %s (%llu) is outside of"
 			" valid range 1-%u", valueName, txTtlNew, MAX_TTL);
 		return true;
 	}
@@ -921,7 +921,7 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 
 	valueLength = strlen(value);
 	if (valueLength != PUD_TXNMEAMESSAGEPREFIXLENGTH) {
-		pudError(false, "Configured %s (%s) must be %u exactly characters",
+		pudError(false, "Value of parameter %s (%s) must be %u exactly characters",
 				valueName, value, PUD_TXNMEAMESSAGEPREFIXLENGTH);
 		return true;
 	}
@@ -934,7 +934,7 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 	}
 
 	if ((strchr(value, ' ') != NULL) || (strchr(value, '\t') != NULL)) {
-		pudError(false, "Configured %s (%s) can not contain whitespace",
+		pudError(false, "Value of parameter %s (%s) can not contain whitespace",
 				valueName, value);
 		return true;
 	}
@@ -970,7 +970,7 @@ int setOlsrTtl(const char *value, void *data __attribute__ ((unused)), set_plugi
 	}
 
 	if ((olsrTtlNew < 1) || (olsrTtlNew > MAX_TTL)) {
-		pudError(false, "Configured %s (%llu) is outside of valid range 1-%u",
+		pudError(false, "Value of parameter %s (%llu) is outside of valid range 1-%u",
 				valueName, olsrTtlNew, MAX_TTL);
 		return true;
 	}
@@ -1007,7 +1007,7 @@ int setUpdateIntervalStationary(const char *value, void *data __attribute__ ((un
 	}
 
 	if (updateIntervalStationaryNew < 1) {
-		pudError(false, "Configured %s must be at least 1", valueName);
+		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
 
@@ -1043,7 +1043,7 @@ int setUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused
 	}
 
 	if (updateIntervalMovingNew < 1) {
-		pudError(false, "Configured %s must be at least 1", valueName);
+		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
 
@@ -1079,7 +1079,7 @@ int setUplinkUpdateIntervalStationary(const char *value, void *data __attribute_
 	}
 
 	if (uplinkUpdateIntervalStationaryNew < 1) {
-		pudError(false, "Configured %s must be at least 1", valueName);
+		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
 
@@ -1115,7 +1115,7 @@ int setUplinkUpdateIntervalMoving(const char *value, void *data __attribute__ ((
 	}
 
 	if (uplinkUpdateIntervalMovingNew < 1) {
-		pudError(false, "Configured %s must be at least 1", valueName);
+		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
 
@@ -1151,7 +1151,7 @@ int setGatewayDeterminationInterval(const char *value, void *data __attribute__ 
 	}
 
 	if (gatewayDeterminationIntervalNew < 1) {
-		pudError(false, "Configured %s must be at least 1", valueName);
+		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
 
@@ -1342,7 +1342,7 @@ int setAverageDepth(const char *value, void *data __attribute__ ((unused)),
 	}
 
 	if (averageDepthNew < 1) {
-		pudError(false, "Configured %s must be at least 1", valueName);
+		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
 
