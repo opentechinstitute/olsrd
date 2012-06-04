@@ -41,8 +41,6 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 	static const char * valueName = PUD_NODE_ID_TYPE_NAME;
 	unsigned long long nodeIdTypeNew;
 
-	assert (value != NULL);
-
 	if (!readULL(valueName, value, &nodeIdTypeNew)) {
 		return true;
 	}
@@ -119,7 +117,6 @@ nodeIdBinaryType * getNodeIdBinary(void) {
 }
 
 int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_NODE_ID_NAME;
 	size_t valueLength;
 
 	assert (value != NULL);
@@ -127,7 +124,7 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
 	valueLength = strlen(value);
 	if (valueLength > PUD_TX_NODEID_BUFFERSIZE) {
 		pudError(false, "Value of parameter %s is too long, maximum length is"
-			" %u, current length is %lu", valueName, PUD_TX_NODEID_BUFFERSIZE,
+			" %u, current length is %lu", PUD_NODE_ID_NAME, PUD_TX_NODEID_BUFFERSIZE,
 				(unsigned long) valueLength);
 		return true;
 	}
@@ -200,20 +197,17 @@ static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
  - false on failure
  */
 static bool intSetupNodeIdBinaryString(void) {
-	bool invalidChars;
 	char report[256];
 	size_t nodeidlength;
 	char * nodeid = (char *)getNodeIdWithLength(&nodeidlength);
 
-	invalidChars = nmea_string_has_invalid_chars(nodeid,
-			PUD_NODE_ID_NAME, &report[0], sizeof(report));
-	if (invalidChars) {
+	if (nmea_string_has_invalid_chars(nodeid, PUD_NODE_ID_NAME, &report[0], sizeof(report))) {
 		pudError(false, "%s", &report[0]);
 		return false;
 	}
 
 	if (nodeidlength > PUD_TX_NODEID_BUFFERSIZE) {
-		pudError(false, "%s value \"%s\" is too long", PUD_NODE_ID_NAME, &nodeid[0]);
+		pudError(false, "Length of parameter %s (%s) is too great", PUD_NODE_ID_NAME, &nodeid[0]);
 		return false;
 	}
 
@@ -244,7 +238,7 @@ static bool intSetupNodeIdBinaryIp(void) {
 
 /**
  Validate whether the configured nodeId is valid w.r.t. the configured
- nodeIdType
+ nodeIdType and setup the binary value
 
  @return
  - true when ok
@@ -337,7 +331,13 @@ bool isRxNonOlsrInterface(const char *ifName) {
 
 int addRxNonOlsrInterface(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	unsigned long valueLength;
+	size_t valueLength;
+
+	if (rxNonOlsrInterfaceCount >= PUD_RX_NON_OLSR_IF_MAX) {
+		pudError(false, "Can't configure more than %u receive interfaces",
+				PUD_RX_NON_OLSR_IF_MAX);
+		return true;
+	}
 
 	assert (value != NULL);
 
@@ -350,12 +350,6 @@ int addRxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 	}
 
 	if (!isRxNonOlsrInterface(value)) {
-		if (rxNonOlsrInterfaceCount >= PUD_RX_NON_OLSR_IF_MAX) {
-			pudError(false, "Can't configure more than %u receive interfaces",
-					PUD_RX_NON_OLSR_IF_MAX);
-			return true;
-		}
-
 		strcpy((char *) &rxNonOlsrInterfaceNames[rxNonOlsrInterfaceCount][0],
 				value);
 		rxNonOlsrInterfaceCount++;
@@ -427,8 +421,6 @@ int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((un
 	union olsr_sockaddr addr;
 	bool addrSet = false;
 
-	assert (value != NULL);
-
 	if (rxAllowedSourceIpAddressesCount >= PUD_RX_ALLOWED_SOURCE_IP_MAX) {
 		pudError(false, "Can't configure more than %u allowed source IP"
 			" addresses", PUD_RX_ALLOWED_SOURCE_IP_MAX);
@@ -448,7 +440,7 @@ int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((un
 }
 
 /*
- * rxMcAddr
+ * rxMcAddr + rxMcPort
  */
 
 /** The rx multicast address */
@@ -473,8 +465,6 @@ union olsr_sockaddr * getRxMcAddr(void) {
 int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_MC_ADDR_NAME;
 
-	assert(value != NULL);
-
 	if (!readIPAddress(valueName, value, PUD_RX_MC_PORT_DEFAULT, &rxMcAddr, &rxMcAddrSet)) {
 			return true;
 	}
@@ -488,18 +478,13 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 	return false;
 }
 
-/*
- * rxMcPort
- */
-
 /**
  @return
  The receive multicast port (in network byte order)
  */
 unsigned short getRxMcPort(void) {
 	in_port_t * port;
-	union olsr_sockaddr * sock = getRxMcAddr();
-	getOlsrSockaddrPortAddress(sock, &port);
+	getOlsrSockaddrPortAddress(getRxMcAddr(), &port);
 	return *port;
 }
 
@@ -507,9 +492,6 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 	static const char * valueName = PUD_RX_MC_PORT_NAME;
 	unsigned short rxMcPortNew;
 	in_port_t * port;
-	union olsr_sockaddr * addr = getRxMcAddr();
-
-	assert (value != NULL);
 
 	if (!readUS(valueName, value, &rxMcPortNew)) {
 		return true;
@@ -520,7 +502,7 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(addr, &port);
+	getOlsrSockaddrPortAddress(getRxMcAddr(), &port);
 	*port = htons((uint16_t) rxMcPortNew);
 
 	return false;
@@ -550,7 +532,6 @@ char * getPositionFile(void) {
 
 int setPositionFile(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_POSFILE_NAME;
 	size_t valueLength;
 
 	assert(value != NULL);
@@ -563,7 +544,7 @@ int setPositionFile(const char *value, void *data __attribute__ ((unused)),
 	valueLength = strlen(value);
 	if (valueLength > PATH_MAX) {
 		pudError(false, "Value of parameter %s is too long, maximum length is"
-				" %u, current length is %lu", valueName, PATH_MAX, (unsigned long) valueLength);
+				" %u, current length is %lu", PUD_POSFILE_NAME, PATH_MAX, (unsigned long) valueLength);
 		return true;
 	}
 
@@ -604,8 +585,7 @@ bool isTxNonOlsrInterface(const char *ifName) {
 	assert (ifName != NULL);
 
 	for (i = 0; i < txNonOlsrInterfaceCount; i++) {
-		if (strncmp((char *) &txNonOlsrInterfaceNames[i][0], ifName, IFNAMSIZ
-				+ 1) == 0) {
+		if (strncmp((char *) &txNonOlsrInterfaceNames[i][0], ifName, IFNAMSIZ + 1) == 0) {
 			return true;
 		}
 	}
@@ -615,27 +595,24 @@ bool isTxNonOlsrInterface(const char *ifName) {
 
 int addTxNonOlsrInterface(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	unsigned long valueLength;
+	size_t valueLength;
 
 	assert (value != NULL);
 
+	if (txNonOlsrInterfaceCount >= PUD_TX_NON_OLSR_IF_MAX) {
+		pudError(false, "Can not configure more than %u transmit interfaces", PUD_TX_NON_OLSR_IF_MAX);
+		return true;
+	}
+
 	valueLength = strlen(value);
 	if (valueLength > IFNAMSIZ) {
-		pudError(false, "Value of parameter %s (%s) is too long,"
-			" maximum length is %u, current length is %lu",
+		pudError(false, "Value of parameter %s (%s) is too long, maximum length is %u, current length is %lu",
 				PUD_TX_NON_OLSR_IF_NAME, value, IFNAMSIZ, valueLength);
 		return true;
 	}
 
 	if (!isTxNonOlsrInterface(value)) {
-		if (txNonOlsrInterfaceCount >= PUD_TX_NON_OLSR_IF_MAX) {
-			pudError(false, "Can not configure more than %u transmit"
-				" interfaces", PUD_TX_NON_OLSR_IF_MAX);
-			return true;
-		}
-
-		strcpy((char *) &txNonOlsrInterfaceNames[txNonOlsrInterfaceCount][0],
-				value);
+		strcpy((char *) &txNonOlsrInterfaceNames[txNonOlsrInterfaceCount][0], value);
 		txNonOlsrInterfaceCount++;
 	}
 
@@ -643,7 +620,7 @@ int addTxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 }
 
 /*
- * txMcAddr
+ * txMcAddr + txMcPort
  */
 
 /** The tx multicast address */
@@ -668,8 +645,6 @@ union olsr_sockaddr * getTxMcAddr(void) {
 int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_MC_ADDR_NAME;
 
-	assert (value != NULL);
-
 	if (!readIPAddress(valueName, value, PUD_TX_MC_PORT_DEFAULT, &txMcAddr, &txMcAddrSet)) {
 			return true;
 	}
@@ -683,18 +658,13 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
 	return false;
 }
 
-/*
- * txMcPort
- */
-
 /**
  @return
  The transmit multicast port (in network byte order)
  */
 unsigned short getTxMcPort(void) {
 	in_port_t * port;
-	union olsr_sockaddr * sock = getTxMcAddr();
-	getOlsrSockaddrPortAddress(sock, &port);
+	getOlsrSockaddrPortAddress(getTxMcAddr(), &port);
 	return *port;
 }
 
@@ -702,9 +672,6 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 	static const char * valueName = PUD_TX_MC_PORT_NAME;
 	unsigned short txMcPortNew;
 	in_port_t * port;
-	union olsr_sockaddr * addr = getTxMcAddr();
-
-	assert (value != NULL);
 
 	if (!readUS(valueName, value, &txMcPortNew)) {
 		return true;
@@ -715,14 +682,14 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(addr, &port);
+	getOlsrSockaddrPortAddress(getTxMcAddr(), &port);
 	*port = htons((uint16_t) txMcPortNew);
 
 	return false;
 }
 
 /*
- * uplinkAddr
+ * uplinkAddr + uplinkPort
  */
 
 /** The uplink address */
@@ -754,20 +721,8 @@ union olsr_sockaddr * getUplinkAddr(void) {
 }
 
 int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_UPLINK_ADDR_NAME;
-
-	assert (value != NULL);
-
-	if (!readIPAddress(valueName, value, PUD_UPLINK_PORT_DEFAULT, &uplinkAddr, &uplinkAddrSet)) {
-			return true;
-	}
-
-	return false;
+	return !readIPAddress(PUD_UPLINK_ADDR_NAME, value, PUD_UPLINK_PORT_DEFAULT, &uplinkAddr, &uplinkAddrSet);
 }
-
-/*
- * uplinkPort
- */
 
 /**
  @return
@@ -775,8 +730,7 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
  */
 unsigned short getUplinkPort(void) {
 	in_port_t * port;
-	union olsr_sockaddr * addr = getUplinkAddr();
-	getOlsrSockaddrPortAddress(addr, &port);
+	getOlsrSockaddrPortAddress(getUplinkAddr(), &port);
 	return *port;
 }
 
@@ -784,9 +738,6 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 	static const char * valueName = PUD_UPLINK_PORT_NAME;
 	unsigned short uplinkPortNew;
 	in_port_t * port;
-	union olsr_sockaddr * addr = getUplinkAddr();
-
-	assert (value != NULL);
 
 	if (!readUS(valueName, value, &uplinkPortNew)) {
 		return true;
@@ -797,7 +748,7 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(addr, &port);
+	getOlsrSockaddrPortAddress(getUplinkAddr(), &port);
 	*port = htons((uint16_t) uplinkPortNew);
 
 	return false;
@@ -832,8 +783,6 @@ int setDownlinkPort(const char *value, void *data __attribute__ ((unused)),
 	static const char * valueName = PUD_DOWNLINK_PORT_NAME;
 	unsigned short downlinkPortNew;
 
-	assert(value != NULL);
-
 	if (!readUS(valueName, value, &downlinkPortNew)) {
 		return true;
 	}
@@ -866,21 +815,16 @@ unsigned char getTxTtl(void) {
 
 int setTxTtl(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_TTL_NAME;
-	unsigned long long txTtlNew;
 
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &txTtlNew)) {
+	if (!readUC(valueName, value, &txTtl)) {
 		return true;
 	}
 
-	if ((txTtlNew < 1) || (txTtlNew > MAX_TTL)) {
-		pudError(false, "Value of parameter %s (%llu) is outside of"
-			" valid range 1-%u", valueName, txTtlNew, MAX_TTL);
+	if ((txTtl < 1) /* || (txTtl > MAX_TTL) */) {
+		pudError(false, "Value of parameter %s (%u) is outside of"
+			" valid range 1-%u", valueName, txTtl, MAX_TTL);
 		return true;
 	}
-
-	txTtl = txTtlNew;
 
 	return false;
 }
@@ -914,21 +858,18 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_NMEAMESSAGEPREFIX_NAME;
 	size_t valueLength;
-	bool invalidChars;
 	char report[256];
 
 	assert (value != NULL);
 
 	valueLength = strlen(value);
 	if (valueLength != PUD_TXNMEAMESSAGEPREFIXLENGTH) {
-		pudError(false, "Value of parameter %s (%s) must be %u exactly characters",
+		pudError(false, "Length of parameter %s (%s) must be exactly %u characters",
 				valueName, value, PUD_TXNMEAMESSAGEPREFIXLENGTH);
 		return true;
 	}
 
-	invalidChars = nmea_string_has_invalid_chars(value, valueName, &report[0],
-			sizeof(report));
-	if (invalidChars) {
+	if (nmea_string_has_invalid_chars(value, valueName, &report[0], sizeof(report))) {
 		pudError(false, "%s", &report[0]);
 		return true;
 	}
@@ -961,21 +902,16 @@ unsigned char getOlsrTtl(void) {
 
 int setOlsrTtl(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_OLSR_TTL_NAME;
-	unsigned long long olsrTtlNew;
 
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &olsrTtlNew)) {
+	if (!readUC(valueName, value, &olsrTtl)) {
 		return true;
 	}
 
-	if ((olsrTtlNew < 1) || (olsrTtlNew > MAX_TTL)) {
-		pudError(false, "Value of parameter %s (%llu) is outside of valid range 1-%u",
-				valueName, olsrTtlNew, MAX_TTL);
+	if ((olsrTtl < 1) /* || (olsrTtl > MAX_TTL) */) {
+		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-%u",
+				valueName, olsrTtl, MAX_TTL);
 		return true;
 	}
-
-	olsrTtl = olsrTtlNew;
 
 	return false;
 }
@@ -998,20 +934,15 @@ unsigned long long getUpdateIntervalStationary(void) {
 int setUpdateIntervalStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPDATE_INTERVAL_STATIONARY_NAME;
-	unsigned long long updateIntervalStationaryNew;
 
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &updateIntervalStationaryNew)) {
+	if (!readULL(valueName, value, &updateIntervalStationary)) {
 		return true;
 	}
 
-	if (updateIntervalStationaryNew < 1) {
+	if (updateIntervalStationary < 1) {
 		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
-
-	updateIntervalStationary = updateIntervalStationaryNew;
 
 	return false;
 }
@@ -1034,20 +965,15 @@ unsigned long long getUpdateIntervalMoving(void) {
 int setUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPDATE_INTERVAL_MOVING_NAME;
-	unsigned long long updateIntervalMovingNew;
 
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &updateIntervalMovingNew)) {
+	if (!readULL(valueName, value, &updateIntervalMoving)) {
 		return true;
 	}
 
-	if (updateIntervalMovingNew < 1) {
+	if (updateIntervalMoving < 1) {
 		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
-
-	updateIntervalMoving = updateIntervalMovingNew;
 
 	return false;
 }
@@ -1070,20 +996,15 @@ unsigned long long getUplinkUpdateIntervalStationary(void) {
 int setUplinkUpdateIntervalStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_UPDATE_INTERVAL_STATIONARY_NAME;
-	unsigned long long uplinkUpdateIntervalStationaryNew;
 
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &uplinkUpdateIntervalStationaryNew)) {
+	if (!readULL(valueName, value, &uplinkUpdateIntervalStationary)) {
 		return true;
 	}
 
-	if (uplinkUpdateIntervalStationaryNew < 1) {
+	if (uplinkUpdateIntervalStationary < 1) {
 		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
-
-	uplinkUpdateIntervalStationary = uplinkUpdateIntervalStationaryNew;
 
 	return false;
 }
@@ -1106,20 +1027,15 @@ unsigned long long getUplinkUpdateIntervalMoving(void) {
 int setUplinkUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_UPDATE_INTERVAL_MOVING_NAME;
-	unsigned long long uplinkUpdateIntervalMovingNew;
 
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &uplinkUpdateIntervalMovingNew)) {
+	if (!readULL(valueName, value, &uplinkUpdateIntervalMoving)) {
 		return true;
 	}
 
-	if (uplinkUpdateIntervalMovingNew < 1) {
+	if (uplinkUpdateIntervalMoving < 1) {
 		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
-
-	uplinkUpdateIntervalMoving = uplinkUpdateIntervalMovingNew;
 
 	return false;
 }
@@ -1142,20 +1058,15 @@ unsigned long long getGatewayDeterminationInterval(void) {
 int setGatewayDeterminationInterval(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_GATEWAY_DETERMINATION_INTERVAL_NAME;
-	unsigned long long gatewayDeterminationIntervalNew;
 
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &gatewayDeterminationIntervalNew)) {
+	if (!readULL(valueName, value, &gatewayDeterminationInterval)) {
 		return true;
 	}
 
-	if (gatewayDeterminationIntervalNew < 1) {
+	if (gatewayDeterminationInterval < 1) {
 		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
-
-	gatewayDeterminationInterval = gatewayDeterminationIntervalNew;
 
 	return false;
 }
@@ -1177,18 +1088,7 @@ unsigned long long getMovingSpeedThreshold(void) {
 
 int setMovingSpeedThreshold(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_MOVING_SPEED_THRESHOLD_NAME;
-	unsigned long long movingSpeedThresholdNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &movingSpeedThresholdNew)) {
-		return true;
-	}
-
-	movingSpeedThreshold = movingSpeedThresholdNew;
-
-	return false;
+	return !readULL(PUD_MOVING_SPEED_THRESHOLD_NAME, value, &movingSpeedThreshold);
 }
 
 /*
@@ -1208,25 +1108,14 @@ unsigned long long getMovingDistanceThreshold(void) {
 
 int setMovingDistanceThreshold(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_MOVING_DISTANCE_THRESHOLD_NAME;
-	unsigned long long movingDistanceThresholdNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &movingDistanceThresholdNew)) {
-		return true;
-	}
-
-	movingDistanceThreshold = movingDistanceThresholdNew;
-
-	return false;
+	return !readULL(PUD_MOVING_DISTANCE_THRESHOLD_NAME, value, &movingDistanceThreshold);
 }
 
 /*
  * dopMultiplier
  */
 
-/* The DOP multiplier plugin parameter */
+/** The DOP multiplier plugin parameter */
 static double dopMultiplier = PUD_DOP_MULTIPLIER_DEFAULT;
 
 /**
@@ -1239,18 +1128,7 @@ double getDopMultiplier(void) {
 
 int setDopMultiplier(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_DOP_MULTIPLIER_NAME;
-	double dopMultiplierNew;
-
-	assert (value != NULL);
-
-	if (!readDouble(valueName, value, &dopMultiplierNew)) {
-		return true;
-	}
-
-	dopMultiplier = dopMultiplierNew;
-
-	return false;
+	return !readDouble(PUD_DOP_MULTIPLIER_NAME, value, &dopMultiplier);
 }
 
 /*
@@ -1270,18 +1148,7 @@ unsigned long long getDefaultHdop(void) {
 
 int setDefaultHdop(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_MOVING_DISTANCE_THRESHOLD_NAME;
-	unsigned long long defaultHdopNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &defaultHdopNew)) {
-		return true;
-	}
-
-	defaultHdop = defaultHdopNew;
-
-	return false;
+	return !readULL(PUD_DEFAULT_HDOP_NAME, value, &defaultHdop);
 }
 
 /*
@@ -1301,18 +1168,7 @@ unsigned long long getDefaultVdop(void) {
 
 int setDefaultVdop(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_MOVING_DISTANCE_THRESHOLD_NAME;
-	unsigned long long defaultVdopNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &defaultVdopNew)) {
-		return true;
-	}
-
-	defaultVdop = defaultVdopNew;
-
-	return false;
+	return !readULL(PUD_DEFAULT_VDOP_NAME, value, &defaultVdop);
 }
 
 /*
@@ -1333,20 +1189,15 @@ unsigned long long getAverageDepth(void) {
 int setAverageDepth(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_AVERAGE_DEPTH_NAME;
-	unsigned long long averageDepthNew;
 
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &averageDepthNew)) {
+	if (!readULL(valueName, value, &averageDepth)) {
 		return true;
 	}
 
-	if (averageDepthNew < 1) {
+	if (averageDepth < 1) {
 		pudError(false, "Value of parameter %s must be at least 1", valueName);
 		return true;
 	}
-
-	averageDepth = averageDepthNew;
 
 	return false;
 }
@@ -1368,18 +1219,7 @@ unsigned long long getHysteresisCountToStationary(void) {
 
 int setHysteresisCountToStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_HYSTERESIS_COUNT_2STAT_NAME;
-	unsigned long long hysteresisCountNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &hysteresisCountNew)) {
-		return true;
-	}
-
-	hysteresisCountToStationary = hysteresisCountNew;
-
-	return false;
+	return !readULL(PUD_HYSTERESIS_COUNT_2STAT_NAME, value, &hysteresisCountToStationary);
 }
 
 /*
@@ -1399,18 +1239,7 @@ unsigned long long getHysteresisCountToMoving(void) {
 
 int setHysteresisCountToMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_HYSTERESIS_COUNT_2MOV_NAME;
-	unsigned long long hysteresisCountNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &hysteresisCountNew)) {
-		return true;
-	}
-
-	hysteresisCountToMoving = hysteresisCountNew;
-
-	return false;
+	return !readULL(PUD_HYSTERESIS_COUNT_2MOV_NAME, value, &hysteresisCountToMoving);
 }
 
 /*
@@ -1430,18 +1259,7 @@ unsigned long long getGatewayHysteresisCountToStationary(void) {
 
 int setGatewayHysteresisCountToStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_GAT_HYSTERESIS_COUNT_2STAT_NAME;
-	unsigned long long hysteresisCountNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &hysteresisCountNew)) {
-		return true;
-	}
-
-	gatewayHysteresisCountToStationary = hysteresisCountNew;
-
-	return false;
+	return !readULL(PUD_GAT_HYSTERESIS_COUNT_2STAT_NAME, value, &gatewayHysteresisCountToStationary);
 }
 
 /*
@@ -1461,25 +1279,14 @@ unsigned long long getGatewayHysteresisCountToMoving(void) {
 
 int setGatewayHysteresisCountToMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_GAT_HYSTERESIS_COUNT_2MOV_NAME;
-	unsigned long long hysteresisCountNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &hysteresisCountNew)) {
-		return true;
-	}
-
-	gatewayHysteresisCountToMoving = hysteresisCountNew;
-
-	return false;
+	return !readULL(PUD_GAT_HYSTERESIS_COUNT_2MOV_NAME, value, &gatewayHysteresisCountToMoving);
 }
 
 /*
  * useDeDup
  */
 
-/* when true then duplicate message detection is performed */
+/** when true then duplicate message detection is performed */
 static bool useDeDup = PUD_USE_DEDUP_DEFAULT;
 
 /**
@@ -1499,12 +1306,12 @@ int setUseDeDup(const char *value, void *data __attribute__ ((unused)),
  * deDupDepth
  */
 
-/** The hysteresis count for changing state from stationary to moving */
+/** The deduplication depth */
 static unsigned long long deDupDepth = PUD_DEDUP_DEPTH_DEFAULT;
 
 /**
  @return
- The hysteresis count for changing state from stationary to moving
+ The deduplication depth
  */
 unsigned long long getDeDupDepth(void) {
 	return deDupDepth;
@@ -1512,25 +1319,14 @@ unsigned long long getDeDupDepth(void) {
 
 int setDeDupDepth(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_DEDUP_DEPTH_NAME;
-	unsigned long long deDupDepthNew;
-
-	assert (value != NULL);
-
-	if (!readULL(valueName, value, &deDupDepthNew)) {
-		return true;
-	}
-
-	deDupDepth = deDupDepthNew;
-
-	return false;
+	return !readULL(PUD_DEDUP_DEPTH_NAME, value, &deDupDepth);
 }
 
 /*
  * useLoopback
  */
 
-/* when true then loopback is performed */
+/** when true then loopback is performed */
 static bool useLoopback = PUD_USE_LOOPBACK_DEFAULT;
 
 /**
@@ -1611,7 +1407,7 @@ unsigned int checkConfig(void) {
 		retval = false;
 	}
 
-	if (getUplinkPort() == getDownlinkPort()) {
+	if (isUplinkAddrSet() && (getUplinkPort() == getDownlinkPort())) {
 		pudError(false, "The uplink port and the downlink port must not be the same");
 		retval = false;
 	}
