@@ -12,8 +12,6 @@
 
 /* System includes */
 #include <unistd.h>
-#include <errno.h>
-#include <arpa/inet.h>
 #include <nmea/util.h>
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
 #include <limits.h>
@@ -477,8 +475,8 @@ bool isRxAllowedSourceIpAddress(union olsr_sockaddr * sender) {
 int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_ALLOWED_SOURCE_IP_NAME;
-	int conversion;
 	union olsr_sockaddr addr;
+	bool addrSet = false;
 
 	assert (value != NULL);
 
@@ -488,22 +486,7 @@ int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((un
 		return true;
 	}
 
-	/* try IPv4 first */
-	memset(&addr, 0, sizeof(addr));
-	addr.in4.sin_family = AF_INET;
-	conversion = inet_pton(AF_INET, value, &addr.in4.sin_addr);
-
-	/* now try IPv6 if IPv4 conversion was not successful */
-	if (conversion != 1) {
-		memset(&addr, 0, sizeof(addr));
-		addr.in6.sin6_family = AF_INET6;
-		conversion = inet_pton(AF_INET6, value, &addr.in6.sin6_addr);
-	}
-
-	if (conversion != 1) {
-		pudError((conversion == -1) ? true : false,
-				"Configured %s (%s) is not an IP address", valueName,
-				value);
+	if (!readIPAddress(valueName, value, 0, &addr, &addrSet)) {
 		return true;
 	}
 
@@ -556,45 +539,19 @@ union olsr_sockaddr * getRxMcAddr(void) {
  */
 int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_MC_ADDR_NAME;
-	union olsr_sockaddr addr;
-	int conversion;
 
 	assert(value != NULL);
 
-	/* try IPv4 first */
-	memset(&addr, 0, sizeof(addr));
-	addr.in4.sin_family = AF_INET;
-	conversion = inet_pton(AF_INET, value, &addr.in4.sin_addr);
-
-	/* now try IPv6 if IPv4 conversion was not successful */
-	if (conversion != 1) {
-		memset(&addr, 0, sizeof(addr));
-		addr.in6.sin6_family = AF_INET6;
-		conversion = inet_pton(AF_INET6, value, &addr.in6.sin6_addr);
+	if (!readIPAddress(valueName, value, PUD_RX_MC_PORT_DEFAULT, &rxMcAddr, &rxMcAddrSet)) {
+			return true;
 	}
 
-	if (conversion != 1) {
-		pudError((conversion == -1) ? true : false,
-				"Configured %s (%s) is not an IP address", valueName,
-				value);
-		return true;
-	}
-
-	if (!rxMcAddrSet) {
-		in_port_t * port;
-
-		getOlsrSockaddrPortAddress(&addr, &port);
-		*port = htons(PUD_RX_MC_PORT_DEFAULT);
-	}
-
-	if (!isMulticast(&addr)) {
-		pudError(false, "Configured %s (%s) is not a multicast address",
+	if (!isMulticast(&rxMcAddr)) {
+		pudError(false, "Value of parameter %s (%s) is not a multicast address",
 				valueName, value);
 		return true;
 	}
 
-	rxMcAddr = addr;
-	rxMcAddrSet = true;
 	return false;
 }
 
@@ -836,45 +793,19 @@ union olsr_sockaddr * getTxMcAddr(void) {
  */
 int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_MC_ADDR_NAME;
-	union olsr_sockaddr addr;
-	int conversion;
 
 	assert (value != NULL);
 
-	/* try IPv4 first */
-	memset(&addr, 0, sizeof(addr));
-	addr.in4.sin_family = AF_INET;
-	conversion = inet_pton(AF_INET, value, &addr.in4.sin_addr);
-
-	/* now try IPv6 if IPv4 conversion was not successful */
-	if (conversion != 1) {
-		memset(&addr, 0, sizeof(addr));
-		addr.in6.sin6_family = AF_INET6;
-		conversion = inet_pton(AF_INET6, value, &addr.in6.sin6_addr);
+	if (!readIPAddress(valueName, value, PUD_TX_MC_PORT_DEFAULT, &txMcAddr, &txMcAddrSet)) {
+			return true;
 	}
 
-	if (conversion != 1) {
-		pudError((conversion == -1) ? true : false,
-				"Configured %s (%s) is not an IP address", valueName,
-				value);
-		return true;
-	}
-
-	if (!txMcAddrSet) {
-		in_port_t * port;
-
-		getOlsrSockaddrPortAddress(&addr, &port);
-		*port = htons(PUD_TX_MC_PORT_DEFAULT);
-	}
-
-	if (!isMulticast(&addr)) {
-		pudError(false, "Configured %s (%s) is not a multicast address",
+	if (!isMulticast(&txMcAddr)) {
+		pudError(false, "Value of parameter %s (%s) is not a multicast address",
 				valueName, value);
 		return true;
 	}
 
-	txMcAddr = addr;
-	txMcAddrSet = true;
 	return false;
 }
 
@@ -981,39 +912,13 @@ union olsr_sockaddr * getUplinkAddr(void) {
  */
 int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_ADDR_NAME;
-	union olsr_sockaddr addr;
-	int conversion;
 
 	assert (value != NULL);
 
-	/* try IPv4 first */
-	memset(&addr, 0, sizeof(addr));
-	addr.in4.sin_family = AF_INET;
-	conversion = inet_pton(AF_INET, value, &addr.in4.sin_addr);
-
-	/* now try IPv6 if IPv4 conversion was not successful */
-	if (conversion != 1) {
-		memset(&addr, 0, sizeof(addr));
-		addr.in6.sin6_family = AF_INET6;
-		conversion = inet_pton(AF_INET6, value, &addr.in6.sin6_addr);
+	if (!readIPAddress(valueName, value, PUD_UPLINK_PORT_DEFAULT, &uplinkAddr, &uplinkAddrSet)) {
+			return true;
 	}
 
-	if (conversion != 1) {
-		pudError((conversion == -1) ? true : false,
-				"Configured %s (%s) is not an IP address", valueName,
-				value);
-		return true;
-	}
-
-	if (!uplinkAddrSet) {
-		in_port_t * port;
-
-		getOlsrSockaddrPortAddress(&addr, &port);
-		*port = htons(PUD_UPLINK_PORT_DEFAULT);
-	}
-
-	uplinkAddr = addr;
-	uplinkAddrSet = true;
 	return false;
 }
 
