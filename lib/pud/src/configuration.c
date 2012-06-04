@@ -1052,9 +1052,6 @@ static union olsr_sockaddr uplinkAddr;
 /** True when the uplink address is set */
 static bool uplinkAddrSet = false;
 
-/** True when the uplink address is set */
-static bool uplinkPortSet = false;
-
 /**
  @return
  - true when the uplink address is set
@@ -1071,7 +1068,8 @@ bool isUplinkAddrSet(void) {
  */
 union olsr_sockaddr * getUplinkAddr(void) {
 	if (!uplinkAddrSet) {
-		setUplinkAddr(NULL, NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
+		setUplinkAddr((olsr_cnf->ip_version == AF_INET) ? PUD_UPLINK_ADDR_4_DEFAULT : PUD_UPLINK_ADDR_6_DEFAULT,
+				NULL, ((set_plugin_parameter_addon) {.pc = NULL}));
 	}
 	return &uplinkAddr;
 }
@@ -1094,45 +1092,39 @@ union olsr_sockaddr * getUplinkAddr(void) {
  */
 int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_ADDR_NAME;
-	void * ipAddress;
-	in_port_t * port;
-	const char * valueInternal = value;
+	union olsr_sockaddr addr;
 	int conversion;
-	bool defaultValue = false;
 
-	getOlsrSockAddrAndPortAddresses(olsr_cnf->ip_version, &uplinkAddr,
-			&ipAddress, &port);
-	if (olsr_cnf->ip_version == AF_INET) {
-		uplinkAddr.in4.sin_family = olsr_cnf->ip_version;
-		if (valueInternal == NULL) {
-			valueInternal = PUD_UPLINK_ADDR_4_DEFAULT;
-			defaultValue = true;
-		}
-	} else {
-		uplinkAddr.in6.sin6_family = olsr_cnf->ip_version;
-		if (valueInternal == NULL) {
-			valueInternal = PUD_UPLINK_ADDR_6_DEFAULT;
-			defaultValue = true;
-		}
+	assert (value != NULL);
+
+	/* try IPv4 first */
+	memset(&addr, 0, sizeof(addr));
+	addr.in4.sin_family = AF_INET;
+	conversion = inet_pton(AF_INET, value, &addr.in4.sin_addr);
+
+	/* now try IPv6 if IPv4 conversion was not successful */
+	if (conversion != 1) {
+		memset(&addr, 0, sizeof(addr));
+		addr.in6.sin6_family = AF_INET6;
+		conversion = inet_pton(AF_INET6, value, &addr.in6.sin6_addr);
 	}
 
-	if (!uplinkPortSet) {
-		*port = htons(PUD_UPLINK_PORT_DEFAULT);
-		uplinkPortSet = true;
-	}
-
-	conversion = inet_pton(olsr_cnf->ip_version, valueInternal, ipAddress);
 	if (conversion != 1) {
 		pudError((conversion == -1) ? true : false,
 				"Configured %s (%s) is not an IP address", valueName,
-				valueInternal);
+				value);
 		return true;
 	}
 
-	if (!defaultValue) {
-		uplinkAddrSet = true;
+	if (!uplinkAddrSet) {
+		in_port_t * port;
+
+		getOlsrSockaddrPortAddress(addr.in.sa_family, &addr, &port);
+		*port = htons(PUD_UPLINK_PORT_DEFAULT);
 	}
 
+	uplinkAddr = addr;
+	uplinkAddrSet = true;
 	return false;
 }
 
@@ -1146,7 +1138,8 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
  */
 unsigned short getUplinkPort(void) {
 	in_port_t * port;
-	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, getUplinkAddr(), &port);
+	union olsr_sockaddr * addr = getUplinkAddr();
+	getOlsrSockaddrPortAddress(addr->in.sa_family, addr, &port);
 	return *port;
 }
 
@@ -1182,9 +1175,8 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(olsr_cnf->ip_version, addr, &port);
+	getOlsrSockaddrPortAddress(addr->in.sa_family, addr, &port);
 	*port = htons((uint16_t) uplinkPortNew);
-	uplinkPortSet = true;
 
 	return false;
 }
