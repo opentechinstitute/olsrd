@@ -17,6 +17,11 @@
 #include <limits.h>
 
 /*
+ * Note:
+ * Setters must return true when an error is detected, false otherwise
+ */
+
+/*
  * nodeIdType
  */
 
@@ -31,20 +36,6 @@ NodeIdType getNodeIdTypeNumber(void) {
 	return nodeIdType;
 }
 
-/**
- Set the node ID type.
-
- @param value
- The value of the node ID type to set (a number in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_NODE_ID_TYPE_NAME;
@@ -127,20 +118,6 @@ nodeIdBinaryType * getNodeIdBinary(void) {
 	return &nodeIdBinary;
 }
 
-/**
- Set the node ID.
-
- @param value
- The value of the node ID to set (in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_NODE_ID_NAME;
 	size_t valueLength;
@@ -358,20 +335,6 @@ bool isRxNonOlsrInterface(const char *ifName) {
 	return false;
 }
 
-/**
- Add a receive non-OLSR interface
-
- @param value
- The name of the non-OLSR interface to add
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int addRxNonOlsrInterface(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	unsigned long valueLength;
@@ -458,20 +421,6 @@ bool isRxAllowedSourceIpAddress(union olsr_sockaddr * sender) {
 	return false;
 }
 
-/**
- Set the RX allowed source IP addresses.
-
- @param value
- The RX allowed source IP address (in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int addRxAllowedSourceIpAddress(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_ALLOWED_SOURCE_IP_NAME;
@@ -521,22 +470,6 @@ union olsr_sockaddr * getRxMcAddr(void) {
 	return &rxMcAddr;
 }
 
-/**
- Set the receive multicast address. Sets the address to its default value when
- the value is NULL. Also sets the port to its default value when the address
- was not yet set.
-
- @param value
- The receive multicast address (in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_MC_ADDR_NAME;
 
@@ -570,20 +503,6 @@ unsigned short getRxMcPort(void) {
 	return *port;
 }
 
-/**
- Set the receive multicast port
-
- @param value
- The receive multicast port (a number in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_MC_PORT_NAME;
 	unsigned short rxMcPortNew;
@@ -629,20 +548,6 @@ char * getPositionFile(void) {
 	return &positionFile[0];
 }
 
-/**
- Set the positionFile.
-
- @param value
- The value of the positionFile to set (in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setPositionFile(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_POSFILE_NAME;
@@ -708,20 +613,6 @@ bool isTxNonOlsrInterface(const char *ifName) {
 	return false;
 }
 
-/**
- Add a transmit non-OLSR interface
-
- @param value
- The name of the non-OLSR interface to add
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int addTxNonOlsrInterface(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	unsigned long valueLength;
@@ -774,22 +665,6 @@ union olsr_sockaddr * getTxMcAddr(void) {
 	return &txMcAddr;
 }
 
-/**
- Set the transmit multicast address. Sets the address to its default value when
- the value is NULL. Also sets the port to its default value when the address
- was not yet set.
-
- @param value
- The transmit multicast address (in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_MC_ADDR_NAME;
 
@@ -823,20 +698,6 @@ unsigned short getTxMcPort(void) {
 	return *port;
 }
 
-/**
- Set the transmit multicast port
-
- @param value
- The transmit multicast port (a number in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_MC_PORT_NAME;
 	unsigned short txMcPortNew;
@@ -892,22 +753,6 @@ union olsr_sockaddr * getUplinkAddr(void) {
 	return &uplinkAddr;
 }
 
-/**
- Set the uplink address. Sets the address to its default value when
- the value is NULL. Also sets the port to its default value when the address
- was not yet set.
-
- @param value
- The uplink address (in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_ADDR_NAME;
 
@@ -935,20 +780,6 @@ unsigned short getUplinkPort(void) {
 	return *port;
 }
 
-/**
- Set the uplink port
-
- @param value
- The uplink port (a number in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_PORT_NAME;
 	unsigned short uplinkPortNew;
@@ -996,20 +827,6 @@ unsigned short getDownlinkPort(void) {
 	return downlinkPort;
 }
 
-/**
- Set the downlink port
-
- @param value
- The downlink port (a number in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setDownlinkPort(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_DOWNLINK_PORT_NAME;
@@ -1047,20 +864,6 @@ unsigned char getTxTtl(void) {
 	return txTtl;
 }
 
-/**
- Set the transmit multicast IP packet time-to-live
-
- @param value
- The transmit multicast IP packet time-to-live (a number in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setTxTtl(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_TTL_NAME;
 	unsigned long long txTtlNew;
@@ -1107,20 +910,6 @@ unsigned char * getTxNmeaMessagePrefix(void) {
 	return &txNmeaMessagePrefix[0];
 }
 
-/**
- Set the transmit multicast NMEA message prefix
-
- @param value
- The transmit multicast NMEA message prefix (in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_NMEAMESSAGEPREFIX_NAME;
@@ -1170,20 +959,6 @@ unsigned char getOlsrTtl(void) {
 	return olsrTtl;
 }
 
-/**
- Set the OLSR multicast IP packet time-to-live
-
- @param value
- The OLSR multicast IP packet time-to-live (a number in string representation)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setOlsrTtl(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_OLSR_TTL_NAME;
 	unsigned long long olsrTtlNew;
@@ -1220,20 +995,6 @@ unsigned long long getUpdateIntervalStationary(void) {
 	return updateIntervalStationary;
 }
 
-/**
- Set stationary interval update plugin parameter
-
- @param value
- The stationary interval update plugin parameter (in seconds)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setUpdateIntervalStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPDATE_INTERVAL_STATIONARY_NAME;
@@ -1270,20 +1031,6 @@ unsigned long long getUpdateIntervalMoving(void) {
 	return updateIntervalMoving;
 }
 
-/**
- Set moving interval update plugin parameter
-
- @param value
- The moving interval update plugin parameter (in seconds)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPDATE_INTERVAL_MOVING_NAME;
@@ -1320,20 +1067,6 @@ unsigned long long getUplinkUpdateIntervalStationary(void) {
 	return uplinkUpdateIntervalStationary;
 }
 
-/**
- Set uplink stationary interval update plugin parameter
-
- @param value
- The uplink stationary interval update plugin parameter (in seconds)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setUplinkUpdateIntervalStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_UPDATE_INTERVAL_STATIONARY_NAME;
@@ -1370,20 +1103,6 @@ unsigned long long getUplinkUpdateIntervalMoving(void) {
 	return uplinkUpdateIntervalMoving;
 }
 
-/**
- Set uplink moving interval update plugin parameter
-
- @param value
- The uplink moving interval update plugin parameter (in seconds)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setUplinkUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_UPDATE_INTERVAL_MOVING_NAME;
@@ -1420,20 +1139,6 @@ unsigned long long getGatewayDeterminationInterval(void) {
 	return gatewayDeterminationInterval;
 }
 
-/**
- Set gateway determination interval plugin parameter
-
- @param value
- The gateway determination interval plugin parameter (in seconds)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setGatewayDeterminationInterval(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_GATEWAY_DETERMINATION_INTERVAL_NAME;
@@ -1470,20 +1175,6 @@ unsigned long long getMovingSpeedThreshold(void) {
 	return movingSpeedThreshold;
 }
 
-/**
- Set moving speed threshold plugin parameter
-
- @param value
- The moving speed threshold plugin parameter (in kph)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setMovingSpeedThreshold(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_MOVING_SPEED_THRESHOLD_NAME;
@@ -1515,20 +1206,6 @@ unsigned long long getMovingDistanceThreshold(void) {
 	return movingDistanceThreshold;
 }
 
-/**
- Set moving distance threshold plugin parameter
-
- @param value
- The moving distance threshold plugin parameter (in meter)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setMovingDistanceThreshold(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_MOVING_DISTANCE_THRESHOLD_NAME;
@@ -1560,20 +1237,6 @@ double getDopMultiplier(void) {
 	return dopMultiplier;
 }
 
-/**
- Set DOP multiplier plugin parameter
-
- @param value
- The DOP multiplier plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setDopMultiplier(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_DOP_MULTIPLIER_NAME;
@@ -1605,20 +1268,6 @@ unsigned long long getDefaultHdop(void) {
 	return defaultHdop;
 }
 
-/**
- Set default HDOP plugin parameter
-
- @param value
- The default HDOP plugin parameter (in meters)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setDefaultHdop(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_MOVING_DISTANCE_THRESHOLD_NAME;
@@ -1650,20 +1299,6 @@ unsigned long long getDefaultVdop(void) {
 	return defaultVdop;
 }
 
-/**
- Set default VDOP plugin parameter
-
- @param value
- The default VDOP plugin parameter (in meters)
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setDefaultVdop(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_MOVING_DISTANCE_THRESHOLD_NAME;
@@ -1695,20 +1330,6 @@ unsigned long long getAverageDepth(void) {
 	return averageDepth;
 }
 
-/**
- Set average depth plugin parameter
-
- @param value
- The average depth plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setAverageDepth(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_AVERAGE_DEPTH_NAME;
@@ -1745,20 +1366,6 @@ unsigned long long getHysteresisCountToStationary(void) {
 	return hysteresisCountToStationary;
 }
 
-/**
- Set hysteresis count plugin parameter
-
- @param value
- The hysteresis count plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setHysteresisCountToStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_HYSTERESIS_COUNT_2STAT_NAME;
@@ -1790,20 +1397,6 @@ unsigned long long getHysteresisCountToMoving(void) {
 	return hysteresisCountToMoving;
 }
 
-/**
- Set hysteresis count plugin parameter
-
- @param value
- The hysteresis count plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setHysteresisCountToMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_HYSTERESIS_COUNT_2MOV_NAME;
@@ -1835,20 +1428,6 @@ unsigned long long getGatewayHysteresisCountToStationary(void) {
 	return gatewayHysteresisCountToStationary;
 }
 
-/**
- Set hysteresis count plugin parameter
-
- @param value
- The hysteresis count plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setGatewayHysteresisCountToStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_GAT_HYSTERESIS_COUNT_2STAT_NAME;
@@ -1880,20 +1459,6 @@ unsigned long long getGatewayHysteresisCountToMoving(void) {
 	return gatewayHysteresisCountToMoving;
 }
 
-/**
- Set hysteresis count plugin parameter
-
- @param value
- The hysteresis count plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setGatewayHysteresisCountToMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_GAT_HYSTERESIS_COUNT_2MOV_NAME;
@@ -1925,20 +1490,6 @@ bool getUseDeDup(void) {
 	return useDeDup;
 }
 
-/**
- Set duplicate message detection setting plugin parameter
-
- @param value
- The duplicate message detection setting plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setUseDeDup(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	return !readBool(PUD_USE_DEDUP_NAME, value, &useDeDup);
@@ -1959,20 +1510,6 @@ unsigned long long getDeDupDepth(void) {
 	return deDupDepth;
 }
 
-/**
- Set de-duplication depth plugin parameter
-
- @param value
- The de-duplication depth plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setDeDupDepth(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_DEDUP_DEPTH_NAME;
@@ -2004,20 +1541,6 @@ bool getUseLoopback(void) {
 	return useLoopback;
 }
 
-/**
- Set loopback usage plugin parameter
-
- @param value
- The loopback usage plugin parameter
- @param data
- Unused
- @param addon
- Unused
-
- @return
- - true when an error is detected
- - false otherwise
- */
 int setUseLoopback(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	return !readBool(PUD_USE_LOOPBACK_NAME, value, &useLoopback);
