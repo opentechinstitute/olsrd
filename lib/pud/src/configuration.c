@@ -19,26 +19,6 @@
 #include <limits.h>
 
 /*
- * Utility functions
- */
-
-/**
- Determine the address of the port in an OLSR socket address
-
- @param addr
- A pointer to OLSR socket address
- @param port
- A pointer to the location where the pointer to the port will be stored
- */
-static inline void getOlsrSockaddrPortAddress(union olsr_sockaddr * addr, in_port_t ** port) {
-	if (addr->in.sa_family == AF_INET) {
-		*port = &addr->in4.sin_port;
-	} else {
-		*port = &addr->in6.sin6_port;
-	}
-}
-
-/*
  * nodeIdType
  */
 
