@@ -89,6 +89,8 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	int socketReuseFlagValue = 1;
 	int mcLoopValue = 1;
 	union olsr_sockaddr address;
+	struct sockaddr * addr;
+	size_t addrSize;
 	int rxSocket = -1;
 
 	assert(networkInterface != NULL);
@@ -108,6 +110,8 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 		address.in4.sin_family = ipFamilySetting;
 		address.in4.sin_addr.s_addr = INADDR_ANY;
 		address.in4.sin_port = getRxMcPort();
+		addr = (struct sockaddr *)&address.in4;
+		addrSize = sizeof(struct sockaddr_in);
 	} else {
 		assert(networkInterface->ipAddress.in6.sin6_addr.s6_addr != in6addr_any.s6_addr);
 
@@ -119,6 +123,8 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 		address.in6.sin6_family = ipFamilySetting;
 		address.in6.sin6_addr = in6addr_any;
 		address.in6.sin6_port = getRxMcPort();
+		addr = (struct sockaddr *)&address.in6;
+		addrSize = sizeof(struct sockaddr_in6);
 	}
 
 	/* Create a datagram socket on which to receive. */
@@ -143,7 +149,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	/* Bind to the proper port number with the IP address INADDR_ANY
 	 * (INADDR_ANY is really required here, do not change it) */
 	errno = 0;
-	if (bind(rxSocket, (struct sockaddr *) &address, sizeof(address)) < 0) {
+	if (bind(rxSocket, addr, addrSize) < 0) {
 		pudError(true, "Could not bind the receive socket for interface"
 			" %s to port %u", networkInterface->name, ntohs(getRxMcPort()));
 		goto bail;
@@ -473,16 +479,22 @@ static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
 	int downlinkSocket = -1;
 	int socketReuseFlagValue = 1;
 	union olsr_sockaddr address;
+	struct sockaddr * addr;
+	size_t addrSize;
 
 	memset(&address, 0, sizeof(address));
 	if (olsr_cnf->ip_version == AF_INET) {
 		address.in4.sin_family = AF_INET;
 		address.in4.sin_addr.s_addr = INADDR_ANY;
 		address.in4.sin_port = getDownlinkPort();
+		addr = (struct sockaddr *)&address.in4;
+		addrSize = sizeof(struct sockaddr_in);
 	} else {
 		address.in6.sin6_family = AF_INET6;
 		address.in6.sin6_addr = in6addr_any;
 		address.in6.sin6_port = getDownlinkPort();
+		addr = (struct sockaddr *)&address.in6;
+		addrSize = sizeof(struct sockaddr_in6);
 	}
 
 	/*  Create a datagram socket on which to receive */
@@ -505,7 +517,7 @@ static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
 	/* Bind to the proper port number with the IP address INADDR_ANY
 	 * (INADDR_ANY is really required here, do not change it) */
 	errno = 0;
-	if (bind(downlinkSocket, (struct sockaddr *) &address, sizeof(address))) {
+	if (bind(downlinkSocket, addr, addrSize)) {
 		pudError(true, "Could not bind downlink socket to port %d",
 				getDownlinkPort());
 		goto bail;
