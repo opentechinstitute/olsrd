@@ -558,7 +558,7 @@ int setPositionFile(const char *value, void *data __attribute__ ((unused)),
  * txNonOlsrIf
  */
 
-/** The maximum number of rx non-olsr interfaces */
+/** The maximum number of tx non-olsr interfaces */
 #define PUD_TX_NON_OLSR_IF_MAX 32
 
 /** Array with tx non-olsr interface names */
