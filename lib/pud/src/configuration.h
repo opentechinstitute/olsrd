@@ -13,12 +13,6 @@
 #include <OlsrdPudWireFormat/wireFormat.h>
 
 /*
- * Utilities
- */
-
-bool readDouble(const char * valueName, const char * value, double * valueNumber);
-
-/*
  * Global Parameters
  */
 

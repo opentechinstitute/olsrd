@@ -2,7 +2,7 @@
 
 /* Plugin includes */
 #include "pud.h"
-#include "configuration.h"
+#include "configTools.h"
 
 /* OLSR includes */
 
