@@ -41,28 +41,6 @@ static void getOlsrSockaddrPortAddress(int ipVersion,
 }
 
 /**
- Get pointers to the IP address and port in an OLSR socket address
- @param ipVersion
- The IP version (AF_INET or AF_INET6)
- @param addr
- A pointer to OLSR socket address
- @param ipAddress
- A pointer to the location where the pointer to the IP address will be stored
- @param port
- A pointer to the location where the pointer to the port will be stored
- */
-static void getOlsrSockAddrAndPortAddresses(int ipVersion,
-		union olsr_sockaddr * addr, void ** ipAddress, in_port_t ** port) {
-	if (ipVersion == AF_INET) {
-		*ipAddress = (void *) &addr->in4.sin_addr;
-		*port = (void *) &addr->in4.sin_port;
-	} else {
-		*ipAddress = (void *) &addr->in6.sin6_addr;
-		*port = (void *) &addr->in6.sin6_port;
-	}
-}
-
-/**
  Read an unsigned long long number from a value string
 
  @param valueName
