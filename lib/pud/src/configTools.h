@@ -8,8 +8,8 @@
 /* System includes */
 #include <stdbool.h>
 
-bool readULL(const char * valueName, const char * value, unsigned long long * valueNumber);
+bool readULL(const char * parameterName, const char * str, unsigned long long * dst);
 
-bool readDouble(const char * valueName, const char * value, double * valueNumber);
+bool readDouble(const char * parameterName, const char * str, double * dst);
 
 #endif /* PUD_CONFIGTOOLS_H_ */
