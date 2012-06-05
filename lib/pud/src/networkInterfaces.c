@@ -310,6 +310,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 	int ipProtoSetting;
 	int ipMcLoopSetting;
 	int ipMcIfSetting;
+	int ipTtlSetting;
 
 	union olsr_sockaddr address;
 
@@ -330,6 +331,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		ipProtoSetting = IPPROTO_IP;
 		ipMcLoopSetting = IP_MULTICAST_LOOP;
 		ipMcIfSetting = IP_MULTICAST_IF;
+		ipTtlSetting = IP_MULTICAST_TTL;
 
 		address.in4.sin_family = ipFamilySetting;
 		address.in4.sin_addr = networkInterface->ipAddress.in4.sin_addr;
@@ -341,6 +343,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		ipProtoSetting = IPPROTO_IPV6;
 		ipMcLoopSetting = IPV6_MULTICAST_LOOP;
 		ipMcIfSetting = IPV6_MULTICAST_IF;
+		ipTtlSetting = IPV6_MULTICAST_HOPS;
 
 		address.in6.sin6_family = ipFamilySetting;
 		address.in6.sin6_addr = networkInterface->ipAddress.in6.sin6_addr;
@@ -377,7 +380,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 
 	/* Set the TTL on the socket */
 	errno = 0;
-	if (setsockopt(txSocket, ipProtoSetting, IP_MULTICAST_TTL, &txTtl,
+	if (setsockopt(txSocket, ipProtoSetting, ipTtlSetting, &txTtl,
 			sizeof(txTtl)) < 0) {
 		pudError(true, "Could not set TTL on the transmit socket"
 			" for interface %s", networkInterface->name);
