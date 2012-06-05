@@ -37,7 +37,7 @@ unsigned char * getMainIpMacAddress(void) {
 			pudError(true, "Could not get the main interface");
 			return NULL;
 		}
-		macInIfr = getHardwareAddress(mainInterface->int_name,olsr_cnf->ip_version,&ifr);
+		macInIfr = getHardwareAddress(mainInterface->int_name, olsr_cnf->ip_version, &ifr);
 		if (!macInIfr) {
 			pudError(true, "Could not get the MAC address of the main interface");
 			return NULL;
@@ -86,12 +86,15 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	int ipProtoSetting;
 	int ipMcLoopSetting;
 	int ipAddMembershipSetting;
-	int socketReuseFlagValue = 1;
-	int mcLoopValue = 1;
+
 	union olsr_sockaddr address;
 	struct sockaddr * addr;
 	size_t addrSize;
+
 	int rxSocket = -1;
+
+	int socketReuseFlagValue = 1;
+	int mcLoopValue = 1;
 
 	assert(networkInterface != NULL);
 	assert(rxSocketHandlerFunction != NULL);
@@ -302,10 +305,13 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 	int ipProtoSetting;
 	int ipMcLoopSetting;
 	int ipMcIfSetting;
+
+	union olsr_sockaddr address;
+
+	int txSocket = -1;
+
 	int mcLoopValue = 0;
 	unsigned char txTtl = getTxTtl();
-	union olsr_sockaddr address;
-	int txSocket = -1;
 
 	assert(networkInterface != NULL);
 	assert(strncmp((char *) &networkInterface->name[0], "",
@@ -476,11 +482,13 @@ int getDownlinkSocketFd(void) {
  - -1 if an error occurred
  */
 static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
-	int downlinkSocket = -1;
-	int socketReuseFlagValue = 1;
 	union olsr_sockaddr address;
 	struct sockaddr * addr;
 	size_t addrSize;
+
+	int downlinkSocket = -1;
+
+	int socketReuseFlagValue = 1;
 
 	memset(&address, 0, sizeof(address));
 	if (olsr_cnf->ip_version == AF_INET) {
