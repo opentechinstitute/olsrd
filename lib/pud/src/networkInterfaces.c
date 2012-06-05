@@ -311,8 +311,11 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 	int ipMcLoopSetting;
 	int ipMcIfSetting;
 	int ipTtlSetting;
+	unsigned int index;
 
 	union olsr_sockaddr address;
+	void * addr;
+	size_t addrSize;
 
 	int txSocket = -1;
 
@@ -332,10 +335,13 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		ipMcLoopSetting = IP_MULTICAST_LOOP;
 		ipMcIfSetting = IP_MULTICAST_IF;
 		ipTtlSetting = IP_MULTICAST_TTL;
+		index = 0;
 
 		address.in4.sin_family = ipFamilySetting;
 		address.in4.sin_addr = networkInterface->ipAddress.in4.sin_addr;
 		address.in4.sin_port = getTxMcPort();
+		addr = &address.in4;
+		addrSize = sizeof(struct sockaddr_in);
 	} else {
 		assert(networkInterface->ipAddress.in6.sin6_addr.s6_addr != in6addr_any.s6_addr);
 
@@ -344,10 +350,13 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		ipMcLoopSetting = IPV6_MULTICAST_LOOP;
 		ipMcIfSetting = IPV6_MULTICAST_IF;
 		ipTtlSetting = IPV6_MULTICAST_HOPS;
+		index = if_nametoindex((char *)networkInterface->name);
 
 		address.in6.sin6_family = ipFamilySetting;
 		address.in6.sin6_addr = networkInterface->ipAddress.in6.sin6_addr;
 		address.in6.sin6_port = getTxMcPort();
+		addr = &index;
+		addrSize = sizeof(index);
 	}
 
 	/*  Create a datagram socket on which to transmit */
@@ -359,10 +368,9 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		goto bail;
 	}
 
-	/* Bind the socket to the desired interface and port */
+	/* Bind the socket to the desired interface */
 	errno = 0;
-	if (setsockopt(txSocket, ipProtoSetting, ipMcIfSetting, &address,
-			sizeof(address)) < 0) {
+	if (setsockopt(txSocket, ipProtoSetting, ipMcIfSetting, addr, addrSize) < 0) {
 		pudError(true, "Could not set the multicast interface on the"
 			" transmit socket to interface %s", networkInterface->name);
 		goto bail;
