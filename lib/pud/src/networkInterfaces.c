@@ -656,9 +656,7 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 	/* loop over all interfaces */
 	for (ifAddr = ifAddrs; ifAddr != NULL; ifAddr = ifAddr->ifa_next) {
 		union olsr_sockaddr * addr = (union olsr_sockaddr *)ifAddr->ifa_addr;
-		if (addr != NULL) {
-			int addrFamily = addr->in.sa_family;
-			if (addrFamily == olsr_cnf->ip_version) {
+		if ((addr != NULL) && ((addr->in.sa_family == AF_INET) || (addr->in.sa_family == AF_INET6))) {
 				char * ifName = ifAddr->ifa_name;
 
 				struct interface * olsrIntf = ((addr->in.sa_family != olsr_cnf->ip_version) ?
@@ -700,7 +698,6 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 					/* creating a transmit interface failed */
 					goto end;
 				}
-			}
 		}
 	}
 
