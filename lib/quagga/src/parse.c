@@ -54,15 +54,15 @@ static struct zroute
   r = olsr_malloc(sizeof *r, "QUAGGA: New zebra route");
   pnt = &opt[3];
   switch (zebra.version) {
-    case 0:
-      break;
-    case 1:
-    case 2:
-      pnt = &opt[6];
-      break;
-    default:
-      olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
-      break;
+  case 0:
+    break;
+  case 1:
+  case 2:
+    pnt = &opt[6];
+    break;
+  default:
+    olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
+    break;
   }
   r->type = *pnt++;
   r->flags = *pnt++;
@@ -100,13 +100,13 @@ static struct zroute
     }
   }
   switch (zebra.version) {
-    case 0:
-    case 1:
-    case 2:
-      break;
-    default:
-      olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
-      break;
+  case 0:
+  case 1:
+  case 2:
+    break;
+  default:
+    olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
+    break;
   }
 
   if (r->message & ZAPI_MESSAGE_DISTANCE) {
@@ -151,52 +151,52 @@ zparse(void *foo __attribute__ ((unused)))
         olsr_exit("(QUAGGA) Zero message length!", EXIT_FAILURE);
       command = f[2];
       switch (zebra.version) {
-        case 0:
-          break;
-        case 1:
-        case 2:
-          if ((f[2] != ZEBRA_HEADER_MARKER) || (f[3] != zebra.version))
-            olsr_exit("(QUAGGA) Invalid zebra header received!", EXIT_FAILURE);
-          memcpy(&command, &f[4], sizeof command);
-          command = ntohs (command);
-          break;
-        default:
-          olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
-          break;
+      case 0:
+        break;
+      case 1:
+      case 2:
+        if ((f[2] != ZEBRA_HEADER_MARKER) || (f[3] != zebra.version))
+          olsr_exit("(QUAGGA) Invalid zebra header received!", EXIT_FAILURE);
+        memcpy(&command, &f[4], sizeof command);
+        command = ntohs (command);
+        break;
+      default:
+        olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
+        break;
       }
       if (olsr_cnf->ip_version == AF_INET) {
         switch (command) {
-          case ZEBRA_IPV4_ROUTE_ADD:
-            route = zparse_route(f);
-            ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_zroute(route);
-            free(route);
-            break;
-          case ZEBRA_IPV4_ROUTE_DELETE:
-            route = zparse_route(f);
-            ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_zroute(route);
-            free(route);
-            break;
-          default:
-            break;
+        case ZEBRA_IPV4_ROUTE_ADD:
+          route = zparse_route(f);
+          ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+          free_zroute(route);
+          free(route);
+          break;
+        case ZEBRA_IPV4_ROUTE_DELETE:
+          route = zparse_route(f);
+          ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+          free_zroute(route);
+          free(route);
+          break;
+        default:
+          break;
         }
       } else {
         switch (command) {
-          case ZEBRA_IPV6_ROUTE_ADD:
-            route = zparse_route(f);
-            ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_zroute(route);
-            free(route);
-            break;
-          case ZEBRA_IPV6_ROUTE_DELETE:
-            route = zparse_route(f);
-            ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
-            free_zroute(route);
-            free(route);
-            break;
-          default:
-            break;
+        case ZEBRA_IPV6_ROUTE_ADD:
+          route = zparse_route(f);
+          ip_prefix_list_add(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+          free_zroute(route);
+          free(route);
+          break;
+        case ZEBRA_IPV6_ROUTE_DELETE:
+          route = zparse_route(f);
+          ip_prefix_list_remove(&olsr_cnf->hna_entries, &route->prefix, route->prefixlen);
+          free_zroute(route);
+          free(route);
+          break;
+        default:
+          break;
         }
       }
 

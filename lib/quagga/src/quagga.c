@@ -75,10 +75,10 @@ zebra_addroute(const struct rt_entry *r)
   route.nexthop = NULL;
 
   if ((olsr_cnf->ip_version == AF_INET && r->rt_best->rtp_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr &&
-        route.prefixlen == 32) ||
+       route.prefixlen == 32) ||
       (olsr_cnf->ip_version == AF_INET6 &&
-        !memcmp(r->rt_best->rtp_nexthop.gateway.v6.s6_addr, r->rt_dst.prefix.v6.s6_addr, sizeof r->rt_best->rtp_nexthop.gateway.v6.s6_addr) &&
-        route.prefixlen == 128)) {
+       !memcmp(r->rt_best->rtp_nexthop.gateway.v6.s6_addr, r->rt_dst.prefix.v6.s6_addr, sizeof r->rt_best->rtp_nexthop.gateway.v6.s6_addr) &&
+       route.prefixlen == 128)) {
     route.ifindex_num++;
     route.ifindex = olsr_malloc(sizeof *route.ifindex, "QUAGGA: New zebra route ifindex");
     *route.ifindex = r->rt_best->rtp_nexthop.iif_index;
@@ -125,10 +125,10 @@ zebra_delroute(const struct rt_entry *r)
   route.nexthop = NULL;
 
   if ((olsr_cnf->ip_version == AF_INET && r->rt_nexthop.gateway.v4.s_addr == r->rt_dst.prefix.v4.s_addr &&
-        route.prefixlen == 32) ||
-       (olsr_cnf->ip_version == AF_INET6 &&
-        !memcmp(r->rt_nexthop.gateway.v6.s6_addr, r->rt_dst.prefix.v6.s6_addr, sizeof r->rt_nexthop.gateway.v6.s6_addr) &&
-        route.prefixlen == 128)) {
+       route.prefixlen == 32) ||
+      (olsr_cnf->ip_version == AF_INET6 &&
+       !memcmp(r->rt_nexthop.gateway.v6.s6_addr, r->rt_dst.prefix.v6.s6_addr, sizeof r->rt_nexthop.gateway.v6.s6_addr) &&
+       route.prefixlen == 128)) {
     route.ifindex_num++;
     route.ifindex = olsr_malloc(sizeof *route.ifindex, "QUAGGA: New zebra route ifindex");
     *route.ifindex = r->rt_nexthop.iif_index;
