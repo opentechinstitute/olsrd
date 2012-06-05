@@ -97,6 +97,8 @@ static int ipc_socket;
 /* IPC initialization function */
 static int plugin_ipc_init(void);
 
+static int read_uuid_from_file(const char *file);
+
 static void abuf_json_open_object(struct autobuf *abuf, const char* header);
 static void abuf_json_close_object(struct autobuf *abuf);
 static void abuf_json_open_array(struct autobuf *abuf, const char* header);
@@ -153,6 +155,9 @@ static size_t outbuffer_size[MAX_CLIENTS];
 static size_t outbuffer_written[MAX_CLIENTS];
 static int outbuffer_socket[MAX_CLIENTS];
 static int outbuffer_count;
+
+char uuid[UUIDLEN];
+char uuidfile[FILENAME_MAX];
 
 static struct timeval start_time;
 static struct timer_entry *writetimer_entry;
@@ -314,6 +319,10 @@ olsrd_plugin_init(void)
   /* Get start time */
   gettimeofday(&start_time, NULL);
 
+  if (!strlen(uuidfile))
+    strscpy(uuidfile, "uuid.txt", sizeof(uuidfile));
+  read_uuid_from_file(uuidfile);
+
   plugin_ipc_init();
   return 1;
 }
@@ -399,6 +408,38 @@ plugin_ipc_init(void)
     olsr_printf(2, "(JSONINFO) listening on port %d\n", ipc_port);
 #endif
   }
+  return 1;
+}
+
+static int
+read_uuid_from_file(const char *file)
+{
+  FILE *f;
+  char* end;
+
+  *uuid = 0;
+
+  f = fopen(file, "r");
+  olsr_printf(1, "[jsoninfo] Reading UUID from '%s'\n", file);
+  if (f == NULL ) {
+    olsr_printf(1, "[jsoninfo] Could not open '%s': %s\n",
+                file, strerror(errno));
+    return -1;
+  }
+  if (fread(uuid, 1, UUIDLEN, f) > 0) {
+    fclose(f);
+    /* we only use the first line of the file */
+    end = strchr(uuid, '\n');
+    if(end)
+      *end = 0;
+    return 0;
+  } else {
+    olsr_printf(1, "[jsoninfo] Could not read UUID from '%s': %s\n",
+                file, strerror(errno));
+    return -1;
+  }
+
+  fclose(f);
   return 1;
 }
 
@@ -1158,6 +1199,8 @@ send_info(unsigned int send_what, int the_socket)
   /* output overarching meta data last so we can use abuf_json_* functions, they add a comma at the beginning */
   if (send_what & SIW_ALL) {
     abuf_json_int(&abuf, "systemTime", time(NULL));
+    if(*uuid != 0)
+      abuf_json_string(&abuf, "uuid", uuid);
     abuf_puts(&abuf, "}\n");
   }
 

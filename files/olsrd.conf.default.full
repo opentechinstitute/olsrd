@@ -426,6 +426,9 @@ LoadPlugin "olsrd_jsoninfo.so.0.0"
     #PlParam      "accept" "172.29.44.23"
     # if you set it to 0.0.0.0, it will accept all connections
     #PlParam      "accept" "0.0.0.0"
+
+    # specify a UUID for this node to track it for debugging
+    #PlParam      "UUIDFile" "/etc/olsrd/olsrd.uuid"
 }
 
 #LoadPlugin "olsrd_secure.so.0.3"
