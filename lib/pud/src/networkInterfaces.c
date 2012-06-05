@@ -105,7 +105,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	assert(networkInterface->ipAddress.in.sa_family == rxMcAddr->in.sa_family);
 
 	memset(&address, 0, sizeof(address));
-	if (olsr_cnf->ip_version == AF_INET) {
+	if (networkInterface->ipAddress.in.sa_family == AF_INET) {
 		assert(networkInterface->ipAddress.in4.sin_addr.s_addr != INADDR_ANY);
 
 		ipFamilySetting = AF_INET;
@@ -323,7 +323,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 					sizeof(networkInterface->name)) != 0);
 
 	memset(&address, 0, sizeof(address));
-	if (olsr_cnf->ip_version == AF_INET) {
+	if (networkInterface->ipAddress.in.sa_family == AF_INET) {
 		assert(networkInterface->ipAddress.in4.sin_addr.s_addr != INADDR_ANY);
 
 		ipFamilySetting = AF_INET;
@@ -645,6 +645,7 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 	struct ifaddrs *ifAddrs = NULL;
 	struct ifaddrs *ifAddr = NULL;
 	union olsr_sockaddr * rxMcAddr = getRxMcAddr();
+	union olsr_sockaddr * txMcAddr = getTxMcAddr();
 
 	errno = 0;
 	if (getifaddrs(&ifAddrs) != 0) {
@@ -669,8 +670,9 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 
 				/* determine whether the iterated interface is configured as a
 				 * non-OLSR interface in the plugin parameter list */
-				bool isRxNonOlsrIf = isRxNonOlsrInterface(ifName);
-				bool isTxNonOlsrIf = isTxNonOlsrInterface(ifName);
+				bool isRxNonOlsrIf = isRxNonOlsrInterface(ifName) && (addr->in.sa_family == rxMcAddr->in.sa_family);
+				bool isTxNonOlsrIf = isTxNonOlsrInterface(ifName) && (addr->in.sa_family == txMcAddr->in.sa_family);
+
 				bool isNonOlsrIf = isRxNonOlsrIf || isTxNonOlsrIf;
 
 				if (!isOlsrIf && !isNonOlsrIf) {
