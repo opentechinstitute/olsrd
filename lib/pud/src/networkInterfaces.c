@@ -190,7 +190,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 		struct ipv6_mreq mc6_settings;
 		(void) memset(&mc6_settings, 0, sizeof(mc6_settings));
 		mc6_settings.ipv6mr_multiaddr = rxMcAddr->in6.sin6_addr;
-		mc6_settings.ipv6mr_interface = 0;
+		mc6_settings.ipv6mr_interface = if_nametoindex((char *)networkInterface->name);
 		errno = 0;
 		if (setsockopt(rxSocket, ipProtoSetting, ipAddMembershipSetting,
 				&mc6_settings, sizeof(mc6_settings)) < 0) {
