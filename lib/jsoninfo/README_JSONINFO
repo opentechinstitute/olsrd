@@ -16,6 +16,11 @@ If there is no command or no recognized command, then it sends the
 /status output, which is the combination of /neighbors, /links,
 /routes, /hna, /mid, /topology, /gateways, and /interfaces.
 
+grouped information:
+* /all - all of the data in JSON format
+* /runtime - all of the data that reflects the runtime status of olsrd and the mesh
+* /startup - all of the data about the startup configuration
+
 runtime information:
 * /neighbors (including 2-hop)
 * /links
@@ -27,9 +32,11 @@ runtime information:
 * /interfaces
 * /status - data that changes during runtime (all above commands combined)
 
-static information:
+start-up information:
 * /config - the current configuration, i.e. what was loaded from the olsrd.conf
 * /plugins - currently loaded plugins and their config parameters
+
+start-up information not in JSON format:
 * /olsrd.conf - the current config, formatted for writing directly to /etc/olsrd.conf
 
 
