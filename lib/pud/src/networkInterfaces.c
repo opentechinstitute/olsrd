@@ -462,6 +462,9 @@ int getDownlinkSocketFd(void) {
 /**
  Create an downlink socket
 
+ @param rxSocketHandlerFunction
+ The socket handler function
+
  @return
  - the socket descriptor (>= 0)
  - -1 if an error occurred
