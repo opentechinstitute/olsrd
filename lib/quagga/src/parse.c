@@ -52,9 +52,9 @@ static struct zroute
   length = ntohs (length);
 
   r = olsr_malloc(sizeof *r, "QUAGGA: New zebra route");
+  pnt = &opt[3];
   switch (zebra.version) {
     case 0:
-      pnt = &opt[3];
       break;
     case 1:
     case 2:
@@ -76,33 +76,33 @@ static struct zroute
     memcpy(r->prefix.v6.s6_addr, pnt, size);
   pnt += size;
 
+  if (r->message & ZAPI_MESSAGE_NEXTHOP) {
+    r->nexthop_num = *pnt++;
+    r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "QUAGGA: New zebra route nexthop");
+    for (c = 0; c < r->nexthop_num; c++) {
+      if (olsr_cnf->ip_version == AF_INET) {
+        memcpy(&r->nexthop[c].v4.s_addr, pnt, sizeof r->nexthop[c].v4.s_addr);
+        pnt += sizeof r->nexthop[c].v4.s_addr;
+      } else {
+        memcpy(r->nexthop[c].v6.s6_addr, pnt, sizeof r->nexthop[c].v6.s6_addr);
+        pnt += sizeof r->nexthop[c].v6.s6_addr;
+      }
+    }
+  }
+
+  if (r->message & ZAPI_MESSAGE_IFINDEX) {
+    r->ifindex_num = *pnt++;
+    r->ifindex = olsr_malloc(sizeof(uint32_t) * r->ifindex_num, "QUAGGA: New zebra route ifindex");
+    for (c = 0; c < r->ifindex_num; c++) {
+      memcpy(&r->ifindex[c], pnt, sizeof r->ifindex[c]);
+      r->ifindex[c] = ntohl (r->ifindex[c]);
+      pnt += sizeof r->ifindex[c];
+    }
+  }
   switch (zebra.version) {
     case 0:
     case 1:
     case 2:
-      if (r->message & ZAPI_MESSAGE_NEXTHOP) {
-        r->nexthop_num = *pnt++;
-        r->nexthop = olsr_malloc((sizeof *r->nexthop) * r->nexthop_num, "QUAGGA: New zebra route nexthop");
-        for (c = 0; c < r->nexthop_num; c++) {
-          if (olsr_cnf->ip_version == AF_INET) {
-            memcpy(&r->nexthop[c].v4.s_addr, pnt, sizeof r->nexthop[c].v4.s_addr);
-            pnt += sizeof r->nexthop[c].v4.s_addr;
-          } else {
-            memcpy(r->nexthop[c].v6.s6_addr, pnt, sizeof r->nexthop[c].v6.s6_addr);
-            pnt += sizeof r->nexthop[c].v6.s6_addr;
-          }
-        }
-      }
-
-      if (r->message & ZAPI_MESSAGE_IFINDEX) {
-        r->ifindex_num = *pnt++;
-        r->ifindex = olsr_malloc(sizeof(uint32_t) * r->ifindex_num, "QUAGGA: New zebra route ifindex");
-        for (c = 0; c < r->ifindex_num; c++) {
-          memcpy(&r->ifindex[c], pnt, sizeof r->ifindex[c]);
-          r->ifindex[c] = ntohl (r->ifindex[c]);
-          pnt += sizeof r->ifindex[c];
-        }
-      }
       break;
     default:
       olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
@@ -149,9 +149,9 @@ zparse(void *foo __attribute__ ((unused)))
       length = ntohs (length);
       if (!length) // something weired happened
         olsr_exit("(QUAGGA) Zero message length!", EXIT_FAILURE);
+      command = f[2];
       switch (zebra.version) {
         case 0:
-          command = f[2];
           break;
         case 1:
         case 2:
