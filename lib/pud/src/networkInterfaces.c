@@ -657,47 +657,47 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 	for (ifAddr = ifAddrs; ifAddr != NULL; ifAddr = ifAddr->ifa_next) {
 		union olsr_sockaddr * addr = (union olsr_sockaddr *)ifAddr->ifa_addr;
 		if ((addr != NULL) && ((addr->in.sa_family == AF_INET) || (addr->in.sa_family == AF_INET6))) {
-				char * ifName = ifAddr->ifa_name;
+			char * ifName = ifAddr->ifa_name;
 
-				struct interface * olsrIntf = ((addr->in.sa_family != olsr_cnf->ip_version) ?
-						NULL :
-						if_ifwithaddr((addr->in.sa_family == AF_INET) ?
-								(union olsr_ip_addr *)&addr->in4.sin_addr :
-								(union olsr_ip_addr *)&addr->in6.sin6_addr));
-				bool isOlsrIf = (olsrIntf != NULL);
+			struct interface * olsrIntf = ((addr->in.sa_family != olsr_cnf->ip_version) ?
+					NULL :
+					if_ifwithaddr((addr->in.sa_family == AF_INET) ?
+							(union olsr_ip_addr *)&addr->in4.sin_addr :
+							(union olsr_ip_addr *)&addr->in6.sin6_addr));
+			bool isOlsrIf = (olsrIntf != NULL);
 
-				/* determine whether the iterated interface is configured as a
-				 * non-OLSR interface in the plugin parameter list */
-				bool isRxNonOlsrIf = isRxNonOlsrInterface(ifName) && (addr->in.sa_family == rxMcAddr->in.sa_family);
-				bool isTxNonOlsrIf = isTxNonOlsrInterface(ifName) && (addr->in.sa_family == txMcAddr->in.sa_family);
+			/* determine whether the iterated interface is configured as a
+			 * non-OLSR interface in the plugin parameter list */
+			bool isRxNonOlsrIf = isRxNonOlsrInterface(ifName) && (addr->in.sa_family == rxMcAddr->in.sa_family);
+			bool isTxNonOlsrIf = isTxNonOlsrInterface(ifName) && (addr->in.sa_family == txMcAddr->in.sa_family);
 
-				bool isNonOlsrIf = isRxNonOlsrIf || isTxNonOlsrIf;
+			bool isNonOlsrIf = isRxNonOlsrIf || isTxNonOlsrIf;
 
-				if (!isOlsrIf && !isNonOlsrIf) {
-					/* Interface is not an OLSR interface AND interface is not
-					 * configured as non-OLSR interface: skip */
-					continue;
-				}
+			if (!isOlsrIf && !isNonOlsrIf) {
+				/* Interface is not an OLSR interface AND interface is not
+				 * configured as non-OLSR interface: skip */
+				continue;
+			}
 
-				if (isOlsrIf && !createOlsrInterface(olsrIntf)) {
-					/* creating an OLSR interface failed */
-					goto end;
-				}
+			if (isOlsrIf && !createOlsrInterface(olsrIntf)) {
+				/* creating an OLSR interface failed */
+				goto end;
+			}
 
-				if (!isNonOlsrIf) {
-					/* interface is not configured as non-OLSR interface: skip */
-					continue;
-				}
+			if (!isNonOlsrIf) {
+				/* interface is not configured as non-OLSR interface: skip */
+				continue;
+			}
 
-				if (isRxNonOlsrIf && !createRxInterface(ifName, addr, rxSocketHandlerFunction, rxMcAddr)) {
-					/* creating a receive interface failed */
-					goto end;
-				}
+			if (isRxNonOlsrIf && !createRxInterface(ifName, addr, rxSocketHandlerFunction, rxMcAddr)) {
+				/* creating a receive interface failed */
+				goto end;
+			}
 
-				if (isTxNonOlsrIf && !createTxInterface(ifName, addr)) {
-					/* creating a transmit interface failed */
-					goto end;
-				}
+			if (isTxNonOlsrIf && !createTxInterface(ifName, addr)) {
+				/* creating a transmit interface failed */
+				goto end;
+			}
 		}
 	}
 
