@@ -479,6 +479,8 @@ int getDownlinkSocketFd(void) {
 /**
  Create an downlink socket
 
+ @param ipVersion
+ The IP version (AF_INET or AF_INET6) for the socket
  @param rxSocketHandlerFunction
  The socket handler function
 
@@ -486,7 +488,7 @@ int getDownlinkSocketFd(void) {
  - the socket descriptor (>= 0)
  - -1 if an error occurred
  */
-static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
+static int createDownlinkSocket(int ipVersion, socket_handler_func rxSocketHandlerFunction) {
 	union olsr_sockaddr address;
 	struct sockaddr * addr;
 	size_t addrSize;
@@ -496,7 +498,7 @@ static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
 	int socketReuseFlagValue = 1;
 
 	memset(&address, 0, sizeof(address));
-	if (olsr_cnf->ip_version == AF_INET) {
+	if (ipVersion == AF_INET) {
 		address.in4.sin_family = AF_INET;
 		address.in4.sin_addr.s_addr = INADDR_ANY;
 		address.in4.sin_port = getDownlinkPort();
@@ -512,7 +514,7 @@ static int createDownlinkSocket(socket_handler_func rxSocketHandlerFunction) {
 
 	/*  Create a datagram socket on which to receive */
 	errno = 0;
-	downlinkSocket = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
+	downlinkSocket = socket(ipVersion, SOCK_DGRAM, 0);
 	if (downlinkSocket < 0) {
 		pudError(true, "Could not create the downlink socket");
 		goto bail;
@@ -700,7 +702,7 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 	}
 
 	if (isUplinkAddrSet()) {
-		downlinkSocketFd = createDownlinkSocket(rxSocketHandlerFunctionDownlink);
+		downlinkSocketFd = createDownlinkSocket(getUplinkAddr()->in.sa_family, rxSocketHandlerFunctionDownlink);
 		if (downlinkSocketFd == -1) {
 			goto end;
 		}
