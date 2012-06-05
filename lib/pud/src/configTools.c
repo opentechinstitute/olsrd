@@ -38,7 +38,7 @@ bool readULL(const char * parameterName, const char * str, unsigned long long * 
 
 	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0'))) {
 		/* invalid conversion */
-		pudError(true, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
+		pudError(false, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
 		return false;
 	}
 
@@ -74,7 +74,7 @@ bool readULL(const char * parameterName, const char * str, unsigned long long * 
 
 	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0'))) {
 		/* invalid conversion */
-		pudError(true, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
+		pudError(false, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
 		return false;
 	}
 
