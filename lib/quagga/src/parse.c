@@ -61,6 +61,7 @@ static struct zroute
       pnt = &opt[6];
       break;
     default:
+      olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
       break;
   }
   r->type = *pnt++;
@@ -104,7 +105,7 @@ static struct zroute
       }
       break;
     default:
-      OLSR_PRINTF(1, "(QUAGGA) Unsupported zebra packet version!\n");
+      olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
       break;
   }
 
@@ -160,6 +161,7 @@ zparse(void *foo __attribute__ ((unused)))
           command = ntohs (command);
           break;
         default:
+          olsr_exit("(QUAGGA) Unsupported zebra packet version!\n", EXIT_FAILURE);
           break;
       }
       if (olsr_cnf->ip_version == AF_INET) {
