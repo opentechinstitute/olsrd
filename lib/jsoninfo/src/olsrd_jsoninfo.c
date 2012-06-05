@@ -66,6 +66,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+#ifdef __linux__
+#include <fcntl.h>
+#endif
+
 #include "ipcalc.h"
 #include "olsr.h"
 #include "olsr_types.h"
@@ -249,6 +253,50 @@ abuf_json_float(struct autobuf *abuf, const char* key, float value)
   abuf_appendf(abuf, "\t\"%s\": %.03f", key, (double)value);
   entrynumber++;
 }
+
+
+
+/* Linux specific functions for getting system info */
+
+#ifdef __linux__
+static int get_string_from_file(const char* filename, char* buf, int len)
+{
+  int bytes = -1;
+  int fd = open(filename, O_RDONLY);
+  if (fd > -1) {
+    bytes = read(fd, buf, len);
+    if (bytes < len)
+      buf[bytes-1] = '\0'; // remove trailing \n
+    else
+      buf[len-1] = '\0';
+    close(fd);
+  }
+  return bytes;
+}
+
+static int
+abuf_json_sysdata(struct autobuf *abuf, const char* key, const char* syspath)
+{
+  int ret = -1;
+  char buf[256];
+  *buf = 0;
+  ret = get_string_from_file(syspath, buf, 256);
+  if (*buf != 0)
+    abuf_json_string(abuf, key, buf);
+  return ret;
+}
+
+static void
+abuf_json_sys_class_net(struct autobuf *abuf, const char* key,
+                        const char* ifname, const char* datapoint)
+{
+  char filename[256];
+  snprintf(filename, 255, "/sys/class/net/%s/%s", ifname, datapoint);
+  abuf_json_sysdata(abuf, key, filename);
+}
+
+#endif /* __linux__ */
+
 
 
 /**
@@ -940,6 +988,41 @@ ipc_print_interfaces(struct autobuf *abuf)
                              ip6_to_string(&maskbuf, &rifs->int6_multaddr.sin6_addr));
       }
     }
+#ifdef __linux__
+    abuf_json_sys_class_net(abuf, "addressLength", ifs->name, "addr_len");
+    abuf_json_sys_class_net(abuf, "carrier", ifs->name, "carrier");
+    abuf_json_sys_class_net(abuf, "dormant", ifs->name, "dormant");
+    abuf_json_sys_class_net(abuf, "features", ifs->name, "features");
+    abuf_json_sys_class_net(abuf, "flags", ifs->name, "flags");
+    abuf_json_sys_class_net(abuf, "linkMode", ifs->name, "link_mode");
+    abuf_json_sys_class_net(abuf, "macAddress", ifs->name, "address");
+    abuf_json_sys_class_net(abuf, "MTU", ifs->name, "mtu");
+    abuf_json_sys_class_net(abuf, "operationalState", ifs->name, "operstate");
+    abuf_json_sys_class_net(abuf, "txQueueLength", ifs->name, "tx_queue_len");
+    abuf_json_sys_class_net(abuf, "collisions", ifs->name, "statistics/collisions");
+    abuf_json_sys_class_net(abuf, "multicastPackets", ifs->name, "statistics/multicast");
+    abuf_json_sys_class_net(abuf, "rxBytes", ifs->name, "statistics/rx_bytes");
+    abuf_json_sys_class_net(abuf, "rxCompressed", ifs->name, "statistics/rx_compressed");
+    abuf_json_sys_class_net(abuf, "rxCrcErrors", ifs->name, "statistics/rx_crc_errors");
+    abuf_json_sys_class_net(abuf, "rxDropped", ifs->name, "statistics/rx_dropped");
+    abuf_json_sys_class_net(abuf, "rxErrors", ifs->name, "statistics/rx_errors");
+    abuf_json_sys_class_net(abuf, "rxFifoErrors", ifs->name, "statistics/rx_fifo_errors");
+    abuf_json_sys_class_net(abuf, "rxFrameErrors", ifs->name, "statistics/rx_frame_errors");
+    abuf_json_sys_class_net(abuf, "rxLengthErrors", ifs->name, "statistics/rx_length_errors");
+    abuf_json_sys_class_net(abuf, "rxMissedErrors", ifs->name, "statistics/rx_missed_errors");
+    abuf_json_sys_class_net(abuf, "rxOverErrors", ifs->name, "statistics/rx_over_errors");
+    abuf_json_sys_class_net(abuf, "rxPackets", ifs->name, "statistics/rx_packets");
+    abuf_json_sys_class_net(abuf, "txAbortedErrors", ifs->name, "statistics/tx_aborted_errors");
+    abuf_json_sys_class_net(abuf, "txBytes", ifs->name, "statistics/tx_bytes");
+    abuf_json_sys_class_net(abuf, "txCarrierErrors", ifs->name, "statistics/tx_carrier_errors");
+    abuf_json_sys_class_net(abuf, "txCompressed", ifs->name, "statistics/tx_compressed");
+    abuf_json_sys_class_net(abuf, "txDropped", ifs->name, "statistics/tx_dropped");
+    abuf_json_sys_class_net(abuf, "txErrors", ifs->name, "statistics/tx_errors");
+    abuf_json_sys_class_net(abuf, "txFifoErrors", ifs->name, "statistics/tx_fifo_errors");
+    abuf_json_sys_class_net(abuf, "txHeartbeatErrors", ifs->name, "statistics/tx_heartbeat_errors");
+    abuf_json_sys_class_net(abuf, "txPackets", ifs->name, "statistics/tx_packets");
+    abuf_json_sys_class_net(abuf, "txWindowErrors", ifs->name, "statistics/tx_window_errors");
+#endif
     abuf_json_close_array_entry(abuf);
   }
   abuf_json_close_array(abuf);
