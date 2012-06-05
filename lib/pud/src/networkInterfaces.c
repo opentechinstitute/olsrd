@@ -229,7 +229,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
  - true on success
  - false on failure
  */
-static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
+static bool createRxInterface(const char * ifName, union olsr_sockaddr * ipAddr,
 		socket_handler_func rxSocketHandlerFunction, union olsr_sockaddr * rxMcAddr) {
 	int socketFd = -1;
 	TRxTxNetworkInterface * networkInterface = NULL;
@@ -246,7 +246,7 @@ static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
 
 	memcpy(networkInterface->name, ifName, sizeof(networkInterface->name));
 	networkInterface->name[IFNAMSIZ] = '\0';
-	networkInterface->ipAddress = ipAddr;
+	networkInterface->ipAddress = *ipAddr;
 	networkInterface->handler = NULL;
 	networkInterface->next = NULL;
 
@@ -413,7 +413,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
  - true on success
  - false on failure
  */
-static bool createTxInterface(const char * ifName, union olsr_sockaddr ipAddr) {
+static bool createTxInterface(const char * ifName, union olsr_sockaddr * ipAddr) {
 	int socketFd = -1;
 	TRxTxNetworkInterface * networkInterface = NULL;
 
@@ -429,7 +429,7 @@ static bool createTxInterface(const char * ifName, union olsr_sockaddr ipAddr) {
 
 	memcpy(networkInterface->name, ifName, sizeof(networkInterface->name));
 	networkInterface->name[IFNAMSIZ] = '\0';
-	networkInterface->ipAddress = ipAddr;
+	networkInterface->ipAddress = *ipAddr;
 	networkInterface->handler = NULL;
 	networkInterface->next = NULL;
 
@@ -652,12 +652,11 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 
 	/* loop over all interfaces */
 	for (ifAddr = ifAddrs; ifAddr != NULL; ifAddr = ifAddr->ifa_next) {
-		struct sockaddr * addr = ifAddr->ifa_addr;
+		union olsr_sockaddr * addr = (union olsr_sockaddr *)ifAddr->ifa_addr;
 		if (addr != NULL) {
-			int addrFamily = addr->sa_family;
+			int addrFamily = addr->in.sa_family;
 			if (addrFamily == olsr_cnf->ip_version) {
 				char * ifName = ifAddr->ifa_name;
-				union olsr_sockaddr ipAddr;
 
 				/* determine whether the iterated interface is an OLSR
 				 * interface: returns NULL when the interface is not an
@@ -687,18 +686,12 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 					continue;
 				}
 
-				if (addrFamily == AF_INET) {
-					memcpy(&ipAddr.in4, addr, sizeof(struct sockaddr_in));
-				} else {
-					memcpy(&ipAddr.in6, addr, sizeof(struct sockaddr_in6));
-				}
-
-				if (isRxNonOlsrIf && !createRxInterface(ifName, ipAddr, rxSocketHandlerFunction, rxMcAddr)) {
+				if (isRxNonOlsrIf && !createRxInterface(ifName, addr, rxSocketHandlerFunction, rxMcAddr)) {
 					/* creating a receive interface failed */
 					goto end;
 				}
 
-				if (isTxNonOlsrIf && !createTxInterface(ifName, ipAddr)) {
+				if (isTxNonOlsrIf && !createTxInterface(ifName, addr)) {
 					/* creating a transmit interface failed */
 					goto end;
 				}
