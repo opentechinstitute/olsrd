@@ -660,10 +660,11 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 			if (addrFamily == olsr_cnf->ip_version) {
 				char * ifName = ifAddr->ifa_name;
 
-				/* determine whether the iterated interface is an OLSR
-				 * interface: returns NULL when the interface is not an
-				 * OLSR interface */
-				struct interface *olsrIntf = if_ifwithname(ifName);
+				struct interface * olsrIntf = ((addr->in.sa_family != olsr_cnf->ip_version) ?
+						NULL :
+						if_ifwithaddr((addr->in.sa_family == AF_INET) ?
+								(union olsr_ip_addr *)&addr->in4.sin_addr :
+								(union olsr_ip_addr *)&addr->in6.sin6_addr));
 				bool isOlsrIf = (olsrIntf != NULL);
 
 				/* determine whether the iterated interface is configured as a
