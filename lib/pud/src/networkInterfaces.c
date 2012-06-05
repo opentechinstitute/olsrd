@@ -75,13 +75,15 @@ TRxTxNetworkInterface *getRxNetworkInterfaces(void) {
  information, except for the socket descriptor.
  @param rxSocketHandlerFunction
  The function that handles reception of data on the network interface
+ @param rxMcAddr
+ The receive multicast address (must have same IP version as networkInterface address)
 
  @return
  - the socket descriptor (>= 0)
  - -1 if an error occurred
  */
 static int createRxSocket(TRxTxNetworkInterface * networkInterface,
-		socket_handler_func rxSocketHandlerFunction) {
+		socket_handler_func rxSocketHandlerFunction, union olsr_sockaddr * rxMcAddr) {
 	int ipFamilySetting;
 	int ipProtoSetting;
 	int ipMcLoopSetting;
@@ -100,6 +102,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	assert(rxSocketHandlerFunction != NULL);
 	assert(strncmp((char *) &networkInterface->name[0], "",
 					sizeof(networkInterface->name)) != 0);
+	assert(networkInterface->ipAddress.in.sa_family == rxMcAddr->in.sa_family);
 
 	memset(&address, 0, sizeof(address));
 	if (olsr_cnf->ip_version == AF_INET) {
@@ -174,7 +177,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	if (ipFamilySetting == AF_INET) {
 		struct ip_mreq mc_settings;
 		(void) memset(&mc_settings, 0, sizeof(mc_settings));
-		mc_settings.imr_multiaddr = getRxMcAddr()->in4.sin_addr;
+		mc_settings.imr_multiaddr = rxMcAddr->in4.sin_addr;
 		mc_settings.imr_interface = networkInterface->ipAddress.in4.sin_addr;
 		errno = 0;
 		if (setsockopt(rxSocket, ipProtoSetting, ipAddMembershipSetting,
@@ -186,7 +189,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	} else {
 		struct ipv6_mreq mc6_settings;
 		(void) memset(&mc6_settings, 0, sizeof(mc6_settings));
-		mc6_settings.ipv6mr_multiaddr = getRxMcAddr()->in6.sin6_addr;
+		mc6_settings.ipv6mr_multiaddr = rxMcAddr->in6.sin6_addr;
 		mc6_settings.ipv6mr_interface = 0;
 		errno = 0;
 		if (setsockopt(rxSocket, ipProtoSetting, ipAddMembershipSetting,
@@ -219,13 +222,15 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
  the IP address of the interface
  @param rxSocketHandlerFunction
  the function that handles reception of data on the network interface
+ @param rxMcAddr
+ The receive multicast address (must have same IP version as ipAddr)
 
  @return
  - true on success
  - false on failure
  */
 static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
-		socket_handler_func rxSocketHandlerFunction) {
+		socket_handler_func rxSocketHandlerFunction, union olsr_sockaddr * rxMcAddr) {
 	int socketFd = -1;
 	TRxTxNetworkInterface * networkInterface = NULL;
 
@@ -246,7 +251,7 @@ static bool createRxInterface(const char * ifName, union olsr_sockaddr ipAddr,
 	networkInterface->next = NULL;
 
 	/* networkInterface needs to be filled in when calling createRxSocket */
-	socketFd = createRxSocket(networkInterface, rxSocketHandlerFunction);
+	socketFd = createRxSocket(networkInterface, rxSocketHandlerFunction, rxMcAddr);
 	if (socketFd < 0) {
 		goto bail;
 	}
@@ -637,6 +642,7 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 	int retval = false;
 	struct ifaddrs *ifAddrs = NULL;
 	struct ifaddrs *ifAddr = NULL;
+	union olsr_sockaddr * rxMcAddr = getRxMcAddr();
 
 	errno = 0;
 	if (getifaddrs(&ifAddrs) != 0) {
@@ -687,8 +693,7 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 					memcpy(&ipAddr.in6, addr, sizeof(struct sockaddr_in6));
 				}
 
-				if (isRxNonOlsrIf && !createRxInterface(ifName, ipAddr,
-						rxSocketHandlerFunction)) {
+				if (isRxNonOlsrIf && !createRxInterface(ifName, ipAddr, rxSocketHandlerFunction, rxMcAddr)) {
 					/* creating a receive interface failed */
 					goto end;
 				}
