@@ -60,6 +60,7 @@
 #include <netinet/ip.h>         /* struct ip */
 #include <netinet/udp.h>        /* SOL_UDP */
 #include <stdlib.h>             /* atoi, malloc */
+#include <strings.h>    /* strcasecmp */
 
 /* OLSRD includes */
 #include "olsr.h"               /* OLSR_PRINTF() */
@@ -77,6 +78,7 @@
 #include "Address.h"            /* IsMulticast() */
 
 int my_MDNS_TTL = 0;
+int my_TTL_Check = 1;
 
 /* List of network interface objects used by BMF plugin */
 struct TBmfInterface *BmfInterfaces = NULL;
@@ -541,6 +543,14 @@ AddNonOlsrBmfIf(const char *ifName, void *data __attribute__ ((unused)), set_plu
   nNonOlsrIfs++;
   return 0;
 }                               /* AddNonOlsrBmfIf */
+
+
+int
+set_TTL_Check(const char *TTL_Check, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+assert(TTL_Check!= NULL);
+set_plugin_boolean(TTL_Check, &my_TTL_Check, addon);
+} /* Set TTL Check */
 
 int
 AddFilteredHost(const char *host, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))

@@ -46,7 +46,8 @@ LoadPlugin "olsrd_mdns.so.1.0.0"
 {
 PlParam     "NonOlsrIf"  "eth0"
 PlParam     "NonOlsrIf"  "eth1"
-PlParam     "MDNS_TTL"  "5"
+PlParam     "MDNS_TTL"   "5"
+PLParam     "TTL_Check"  "true"
 }
 
 Where eth0 and eth1 are the names of the interfaces where you want to capture traffic (and decapsulate incoming traffic).
@@ -57,6 +58,7 @@ This version of the plugin will not chech this stuff to be properly configured!
 MDNS_TTL is the time to live given to the MDNS OLSR messages. It makes no sense to announce your services to hosts that are too many hops away, because they will experience a very bad unicast connection.
 With this TTL setting we can tune how far we announce our services and we make the protocol scale much better
 
+TTL_Check enable or disable the rule that set TTL/HopLimit of generated mDns packet to 1 and discard capture of packets with TTL/HopLimit set to 1
 === References ===
 
  * Multicast DNS: [http://tools.ietf.org/html/draft-cheshire-dnsext-multicastdns-07 IETF draft-cheshire-dnsext-multicastdns-07]
