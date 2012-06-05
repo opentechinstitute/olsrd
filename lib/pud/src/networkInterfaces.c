@@ -316,7 +316,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 	int txSocket = -1;
 
 	int mcLoopValue = 0;
-	unsigned char txTtl = getTxTtl();
+	int txTtl = getTxTtl();
 
 	assert(networkInterface != NULL);
 	assert(strncmp((char *) &networkInterface->name[0], "",
