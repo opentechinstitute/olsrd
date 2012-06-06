@@ -17,10 +17,16 @@
 
  @param addr
  A pointer to OLSR socket address
+ @param defaultPort
+ The default port (in host byte order), returned when addr is NULL
  @return
  The port (in network byte order)
  */
-static inline in_port_t getOlsrSockaddrPort(union olsr_sockaddr * addr) {
+static inline in_port_t getOlsrSockaddrPort(union olsr_sockaddr * addr, in_port_t defaultPort) {
+	if (!addr) {
+		return htons(defaultPort);
+	}
+
 	if (addr->in.sa_family == AF_INET) {
 		return addr->in4.sin_port;
 	} else {
@@ -37,6 +43,10 @@ static inline in_port_t getOlsrSockaddrPort(union olsr_sockaddr * addr) {
  The port (in network byte order)
  */
 static inline void setOlsrSockaddrPort(union olsr_sockaddr * addr, in_port_t port) {
+	if (!addr) {
+		return;
+	}
+
 	if (addr->in.sa_family == AF_INET) {
 		addr->in4.sin_port = port;
 	} else {

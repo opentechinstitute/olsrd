@@ -483,7 +483,7 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  The receive multicast port (in network byte order)
  */
 unsigned short getRxMcPort(void) {
-	return getOlsrSockaddrPort(getRxMcAddr());
+	return getOlsrSockaddrPort(getRxMcAddr(), PUD_RX_MC_PORT_DEFAULT);
 }
 
 int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
@@ -659,7 +659,7 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  The transmit multicast port (in network byte order)
  */
 unsigned short getTxMcPort(void) {
-	return getOlsrSockaddrPort(getTxMcAddr());
+	return getOlsrSockaddrPort(getTxMcAddr(), PUD_TX_MC_PORT_DEFAULT);
 }
 
 int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
@@ -808,7 +808,7 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
  The uplink port (in network byte order)
  */
 unsigned short getUplinkPort(void) {
-	return getOlsrSockaddrPort(getUplinkAddr());
+	return getOlsrSockaddrPort(getUplinkAddr(), PUD_UPLINK_PORT_DEFAULT);
 }
 
 int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
