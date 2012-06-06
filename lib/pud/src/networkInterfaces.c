@@ -563,77 +563,6 @@ static int createDownlinkSocket(int ipVersion, socket_handler_func rxSocketHandl
 }
 
 /*
- * OLSR interfaces
- */
-
-/** The list of OLSR network interface objects */
-static TOLSRNetworkInterface *olsrNetworkInterfacesListHead = NULL;
-
-/** Pointer to the last OLSR network interface object */
-static TOLSRNetworkInterface *lastOlsrNetworkInterface = NULL;
-
-/**
- Get the OLSR interface structure for a certain OLSR interface. Note that
- pointer comparison is performed to compare the OLSR interfaces.
-
- @param olsrIntf
- a pointer to an OLSR interface
-
- @return
- - a pointer to the OLSR interface structure
- - NULL when not found
- */
-TOLSRNetworkInterface * getOlsrNetworkInterface(struct interface *olsrIntf) {
-	TOLSRNetworkInterface * retval = olsrNetworkInterfacesListHead;
-
-	while ((retval->olsrIntf != olsrIntf) && (retval != NULL)) {
-		retval = retval->next;
-	}
-
-	return retval;
-}
-
-/**
- Create an OLSR interface and add it to the list of OLSR network interface
- objects
-
- @param olsrIntf
- a pointer to the OLSR interface
-
- @return
- - true on success
- - false on failure
- */
-static int createOlsrInterface(struct interface *olsrIntf) {
-	TOLSRNetworkInterface * networkInterface = NULL;
-
-	networkInterface = olsr_malloc(sizeof(TOLSRNetworkInterface),
-			"TOLSRNetworkInterface (PUD)");
-	if (networkInterface == NULL) {
-		goto bail;
-	}
-
-	networkInterface->olsrIntf = olsrIntf;
-	networkInterface->next = NULL;
-
-	/* Add new object to the end of the global list. */
-	if (olsrNetworkInterfacesListHead == NULL) {
-		olsrNetworkInterfacesListHead = networkInterface;
-		lastOlsrNetworkInterface = networkInterface;
-	} else {
-		lastOlsrNetworkInterface->next = networkInterface;
-		lastOlsrNetworkInterface = networkInterface;
-	}
-
-	return true;
-
-	bail: if (networkInterface != NULL) {
-		free(networkInterface);
-	}
-	return false;
-}
-
-/*
  * Interface Functions
  */
 
@@ -670,30 +599,12 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 		if ((addr != NULL) && ((addr->in.sa_family == AF_INET) || (addr->in.sa_family == AF_INET6))) {
 			char * ifName = ifAddr->ifa_name;
 
-			struct interface * olsrIntf = ((addr->in.sa_family != olsr_cnf->ip_version) ?
-					NULL :
-					if_ifwithaddr((addr->in.sa_family == AF_INET) ?
-							(union olsr_ip_addr *)&addr->in4.sin_addr :
-							(union olsr_ip_addr *)&addr->in6.sin6_addr));
-			bool isOlsrIf = (olsrIntf != NULL);
-
 			/* determine whether the iterated interface is configured as a
 			 * non-OLSR interface in the plugin parameter list */
 			bool isRxNonOlsrIf = isRxNonOlsrInterface(ifName) && (addr->in.sa_family == rxMcAddr->in.sa_family);
 			bool isTxNonOlsrIf = isTxNonOlsrInterface(ifName) && (addr->in.sa_family == txMcAddr->in.sa_family);
 
 			bool isNonOlsrIf = isRxNonOlsrIf || isTxNonOlsrIf;
-
-			if (!isOlsrIf && !isNonOlsrIf) {
-				/* Interface is not an OLSR interface AND interface is not
-				 * configured as non-OLSR interface: skip */
-				continue;
-			}
-
-			if (isOlsrIf && !createOlsrInterface(olsrIntf)) {
-				/* creating an OLSR interface failed */
-				goto end;
-			}
 
 			if (!isNonOlsrIf) {
 				/* interface is not configured as non-OLSR interface: skip */
@@ -725,22 +636,6 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 
 	end: freeifaddrs(ifAddrs);
 	return retval;
-}
-
-/**
- Cleanup the OLSR network interfaces in the given list
-
- @param networkInterface
- the list of network interface to close and clean up
- */
-static void cleanupOlsrInterfaces(TOLSRNetworkInterface * networkInterface) {
-	TOLSRNetworkInterface * nextNetworkInterface = networkInterface;
-	while (nextNetworkInterface != NULL) {
-		TOLSRNetworkInterface * iteratedNetworkInterface = nextNetworkInterface;
-		nextNetworkInterface = iteratedNetworkInterface->next;
-		iteratedNetworkInterface->next = NULL;
-		free(iteratedNetworkInterface);
-	}
 }
 
 /**
@@ -779,11 +674,6 @@ void closeNetworkInterfaces(void) {
 	if (txNetworkInterfacesListHead != NULL) {
 		closeInterfaces(txNetworkInterfacesListHead);
 		txNetworkInterfacesListHead = NULL;
-	}
-
-	if (olsrNetworkInterfacesListHead != NULL) {
-		cleanupOlsrInterfaces(olsrNetworkInterfacesListHead);
-		olsrNetworkInterfacesListHead = NULL;
 	}
 
 	if (downlinkSocketFd != -1 ) {
