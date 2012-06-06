@@ -58,6 +58,7 @@ bool startPositionFile(void) {
 
 	if (regcomp(&regexNameValue, regexNameValueString, REG_EXTENDED)) {
 		pudError(false, "Could not compile regex \"%s\"", regexNameValueString);
+		regfree(&regexComment);
 		return false;
 	}
 
