@@ -75,7 +75,7 @@ static bool readUL(const char * valueName, const char * value, unsigned long * v
 
 	if (!((endPtr != value) && (*value != '\0') && (*endPtr == '\0'))) {
 		/* invalid conversion */
-		sgwDynSpeedError(true, "Configured %s (%s) could not be converted to a number", valueName, value);
+		sgwDynSpeedError(false, "Value of parameter %s (%s) could not be converted to a number", valueName, value);
 		return false;
 	}
 
