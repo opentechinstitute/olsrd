@@ -259,7 +259,7 @@ bool readULL(const char * parameterName, const char * str, unsigned long long * 
  - true on success
  - false otherwise
  */
- bool readIPAddress(const char * parameterName, const char * str, unsigned short portDefault,
+ bool readIPAddress(const char * parameterName, const char * str, in_port_t portDefault,
 		union olsr_sockaddr * dst, bool * dstSet) {
 	union olsr_sockaddr ip;
 	int conversion;

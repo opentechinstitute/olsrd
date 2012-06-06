@@ -499,7 +499,7 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	setOlsrSockaddrPort(getRxMcAddr(), htons((uint16_t) rxMcPortNew));
+	setOlsrSockaddrPort(getRxMcAddr(), htons((in_port_t) rxMcPortNew));
 
 	return false;
 }
@@ -675,7 +675,7 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	setOlsrSockaddrPort(getTxMcAddr(), htons((uint16_t) txMcPortNew));
+	setOlsrSockaddrPort(getTxMcAddr(), htons((in_port_t) txMcPortNew));
 
 	return false;
 }
@@ -824,7 +824,7 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 		return true;
 	}
 
-	setOlsrSockaddrPort(getUplinkAddr(), htons((uint16_t) uplinkPortNew));
+	setOlsrSockaddrPort(getUplinkAddr(), htons((in_port_t) uplinkPortNew));
 
 	return false;
 }
