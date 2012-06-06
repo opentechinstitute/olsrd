@@ -90,7 +90,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	int ipAddMembershipSetting;
 
 	union olsr_sockaddr address;
-	struct sockaddr * addr;
+	void * addr;
 	size_t addrSize;
 
 	int rxSocket = -1;
@@ -116,7 +116,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 		address.in4.sin_family = ipFamilySetting;
 		address.in4.sin_addr.s_addr = INADDR_ANY;
 		address.in4.sin_port = getRxMcPort();
-		addr = (struct sockaddr *)&address.in4;
+		addr = &address.in4;
 		addrSize = sizeof(struct sockaddr_in);
 	} else {
 		assert(networkInterface->ipAddress.in6.sin6_addr.s6_addr != in6addr_any.s6_addr);
@@ -129,7 +129,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 		address.in6.sin6_family = ipFamilySetting;
 		address.in6.sin6_addr = in6addr_any;
 		address.in6.sin6_port = getRxMcPort();
-		addr = (struct sockaddr *)&address.in6;
+		addr = &address.in6;
 		addrSize = sizeof(struct sockaddr_in6);
 	}
 
@@ -498,7 +498,7 @@ int getDownlinkSocketFd(void) {
  */
 static int createDownlinkSocket(int ipVersion, socket_handler_func rxSocketHandlerFunction) {
 	union olsr_sockaddr address;
-	struct sockaddr * addr;
+	void * addr;
 	size_t addrSize;
 
 	int downlinkSocket = -1;
@@ -510,13 +510,13 @@ static int createDownlinkSocket(int ipVersion, socket_handler_func rxSocketHandl
 		address.in4.sin_family = AF_INET;
 		address.in4.sin_addr.s_addr = INADDR_ANY;
 		address.in4.sin_port = getDownlinkPort();
-		addr = (struct sockaddr *)&address.in4;
+		addr = &address.in4;
 		addrSize = sizeof(struct sockaddr_in);
 	} else {
 		address.in6.sin6_family = AF_INET6;
 		address.in6.sin6_addr = in6addr_any;
 		address.in6.sin6_port = getDownlinkPort();
-		addr = (struct sockaddr *)&address.in6;
+		addr = &address.in6;
 		addrSize = sizeof(struct sockaddr_in6);
 	}
 

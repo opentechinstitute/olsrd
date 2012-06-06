@@ -183,7 +183,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 		int fd = getDownlinkSocketFd();
 		if (fd != -1) {
 			union olsr_sockaddr * uplink_addr = getUplinkAddr();
-			struct sockaddr * addr;
+			void * addr;
 			socklen_t addrSize;
 
 			UplinkMessage * cl_uplink = (UplinkMessage *) &txBuffer[txBufferBytesUsed];
@@ -200,10 +200,10 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 					(externalState == MOVEMENT_STATE_STATIONARY) ? getUplinkUpdateIntervalStationary() : getUplinkUpdateIntervalMoving();
 
 			if (uplink_addr->in.sa_family == AF_INET) {
-				addr = (struct sockaddr *)&uplink_addr->in4;
+				addr = &uplink_addr->in4;
 				addrSize = sizeof(struct sockaddr_in);
 			} else {
-				addr = (struct sockaddr *)&uplink_addr->in6;
+				addr = &uplink_addr->in6;
 				addrSize = sizeof(struct sockaddr_in6);
 			}
 
