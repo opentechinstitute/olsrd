@@ -165,8 +165,7 @@ static struct timer_entry *writetimer_entry;
 
 /* JSON support functions */
 
-
-/* JSON does not tolerate commas dangling at the end of arrays, so we need to
+/* JSON does not allow commas dangling at the end of arrays, so we need to
  * count which entry number we're at in order to make sure we don't tack a
  * dangling comma on at the end */
 static int entrynumber = 0;
@@ -420,9 +419,9 @@ read_uuid_from_file(const char *file)
   *uuid = 0;
 
   f = fopen(file, "r");
-  olsr_printf(1, "[jsoninfo] Reading UUID from '%s'\n", file);
+  olsr_printf(1, "(JSONINFO) Reading UUID from '%s'\n", file);
   if (f == NULL ) {
-    olsr_printf(1, "[jsoninfo] Could not open '%s': %s\n",
+    olsr_printf(1, "(JSONINFO) Could not open '%s': %s\n",
                 file, strerror(errno));
     return -1;
   }
@@ -434,7 +433,7 @@ read_uuid_from_file(const char *file)
       *end = 0;
     return 0;
   } else {
-    olsr_printf(1, "[jsoninfo] Could not read UUID from '%s': %s\n",
+    olsr_printf(1, "(JSONINFO) Could not read UUID from '%s': %s\n",
                 file, strerror(errno));
     return -1;
   }
@@ -609,7 +608,6 @@ ipc_print_routes(struct autobuf *abuf)
   struct ipaddr_str buf1, buf2;
   struct rt_entry *rt;
 
-  //abuf_puts(abuf, "Table: Routes\nDestination\tGateway IP\tMetric\tETX\tInterface\n");
   abuf_json_open_array(abuf, "routes");
 
   /* Walk the route table */
@@ -640,7 +638,6 @@ ipc_print_topology(struct autobuf *abuf)
   struct tc_entry *tc;
 
   abuf_json_open_array(abuf, "topology");
-  //abuf_puts(abuf, "Table: Topology\nDest. IP\tLast hop IP\tLQ\tNLQ\tCost\tVTime\n");
 
   /* Topology */
   OLSR_FOR_ALL_TC_ENTRIES(tc) {
@@ -1001,7 +998,6 @@ ipc_print_interfaces(struct autobuf *abuf)
 {
   const struct olsr_if *ifs;
   abuf_json_open_array(abuf, "interfaces");
-  //abuf_puts(abuf, "Table: Interfaces\nName\tState\tMTU\tWLAN\tSrc-Adress\tMask\tDst-Adress\n");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
     const struct interface *const rifs = ifs->interf;
     abuf_json_open_array_entry(abuf);
