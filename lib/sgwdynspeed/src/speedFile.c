@@ -89,25 +89,17 @@ static bool readUL(const char * valueName, const char * value, unsigned long * v
  * @return true upon success, false otherwise
  */
 bool startSpeedFile(void) {
-	int result;
-
 	if (started) {
 		return true;
 	}
 
-	result = regcomp(&regexComment, regexCommentString, REG_EXTENDED | REG_ICASE);
-	if (result) {
-		char msgbuf[256];
-		regerror(result, &regexComment, msgbuf, sizeof(msgbuf));
-		sgwDynSpeedError(false, "Could not compile regex \"%s\": %s", regexCommentString, msgbuf);
+	if (regcomp(&regexComment, regexCommentString, REG_EXTENDED | REG_ICASE)) {
+		sgwDynSpeedError(false, "Could not compile regex \"%s\"", regexCommentString);
 		return false;
 	}
 
-	result = regcomp(&regexNameValue, regexNameValueString, REG_EXTENDED | REG_ICASE);
-	if (result) {
-		char msgbuf[256];
-		regerror(result, &regexNameValue, msgbuf, sizeof(msgbuf));
-		sgwDynSpeedError(false, "Could not compile regex \"%s\": %s", regexNameValueString, msgbuf);
+	if (regcomp(&regexNameValue, regexNameValueString, REG_EXTENDED | REG_ICASE)) {
+		sgwDynSpeedError(false, "Could not compile regex \"%s\"", regexNameValueString);
 		regfree(&regexComment);
 		return false;
 	}
