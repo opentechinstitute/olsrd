@@ -352,9 +352,6 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		ipTtlSetting = IPV6_MULTICAST_HOPS;
 		index = if_nametoindex((char *)networkInterface->name);
 
-		address.in6.sin6_family = ipFamilySetting;
-		address.in6.sin6_addr = networkInterface->ipAddress.in6.sin6_addr;
-		address.in6.sin6_port = getTxMcPort();
 		addr = &index;
 		addrSize = sizeof(index);
 	}
