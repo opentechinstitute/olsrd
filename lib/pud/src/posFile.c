@@ -36,7 +36,7 @@ static bool started = false;
 
 /** type to hold the cached stat result */
 typedef struct _CachedStat {
-	struct timespec st_mtim; /* Time of last modification.  */
+	time_t timeStamp; /* Time of last modification (second resolution) */
 } CachedStat;
 
 /** the cached stat result */
@@ -62,8 +62,7 @@ bool startPositionFile(void) {
 		return false;
 	}
 
-	cachedStat.st_mtim.tv_sec = -1;
-	cachedStat.st_mtim.tv_nsec = -1;
+	cachedStat.timeStamp = -1;
 
 	started = true;
 	return true;
@@ -128,7 +127,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 		goto out;
 	}
 
-	if (!memcmp(&cachedStat.st_mtim, &statBuf.st_mtim, sizeof(cachedStat.st_mtim))) {
+	if (!memcmp(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp))) {
 		/* file did not change since last read */
 		goto out;
 	}
@@ -150,7 +149,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	result.speed = POSFILE_DEFAULT_SPEED;
 	result.direction = POSFILE_DEFAULT_DIRECTION;
 
-	memcpy(&cachedStat.st_mtim, &statBuf.st_mtim, sizeof(cachedStat.st_mtim));
+	memcpy(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp));
 
 	while (fgets(line, LINE_LENGTH, fd)) {
 		regmatch_t pmatch[regexNameValuematchCount];
