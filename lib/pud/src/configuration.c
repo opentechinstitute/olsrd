@@ -132,6 +132,7 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
 	strcpy((char *) &nodeId[0], value);
 	nodeIdLength = valueLength;
 	nodeIdSet = true;
+	nodeIdBinary.set = false;
 
 	return false;
 }
