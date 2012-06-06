@@ -12,24 +12,40 @@
 #include <regex.h>
 #include <sys/stat.h>
 
+/** the maximal length of a line that is read from the file */
 #define LINE_LENGTH 256
 
+/** regular expression describing a comment */
 static const char * regexCommentString = "^([[:space:]]*|[[:space:]#]+.*)$";
+
+/** regular expression describing a key/value pair */
 static const char * regexNameValueString =
 		"^[[:space:]]*([^[:space:]]+)[[:space:]]*=[[:space:]]*([^[:space:]]+)[[:space:]]*$";
+
+/** the number of matches in regexNameValueString */
 static const size_t regexNameValuematchCount = 3;
 
+/** the compiled regular expression describing a comment */
 static regex_t regexComment;
+
+/** the compiled regular expression describing a key/value pair */
 static regex_t regexNameValue;
+
+/** true when the plugin has been started */
 static bool started = false;
 
+/** type to hold the cached stat result */
 typedef struct _CachedStat {
 	struct timespec st_mtim; /* Time of last modification.  */
 } CachedStat;
 
+/** the cached stat result */
 static CachedStat cachedStat;
 
-
+/**
+ * Initialises the positionFile reader.
+ * @return true upon success, false otherwise
+ */
 bool startPositionFile(void) {
 	if (started) {
 		return true;
@@ -52,6 +68,9 @@ bool startPositionFile(void) {
 	return true;
 }
 
+/**
+ * Cleans up the positionFile reader.
+ */
 void stopPositionFile(void) {
 	if (started) {
 		regfree(&regexNameValue);
@@ -60,6 +79,14 @@ void stopPositionFile(void) {
 	}
 }
 
+/**
+ * Performs a regex match
+ * @param regex the compiled regex to match against
+ * @param line the line to match
+ * @param nmatch the number of matches to produce
+ * @param pmatch the array with match information
+ * @return true upon success, false otherwise
+ */
 static bool regexMatch(regex_t * regex, char * line, size_t nmatch, regmatch_t pmatch[]) {
 	int result = regexec(regex, line, nmatch, pmatch, 0);
 	if (!result) {
@@ -79,8 +106,13 @@ static bool regexMatch(regex_t * regex, char * line, size_t nmatch, regmatch_t p
 	return false;
 }
 
+/** the buffer in which to store a line read from the file */
 static char line[LINE_LENGTH];
 
+/**
+ * Read the position file
+ * @param fileName the filename
+ */
 bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	bool retval = false;
 	struct stat statBuf;
@@ -133,7 +165,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 			goto out;
 		}
 
-		/* copy name/value */
+		/* determine name/value */
 		name = &line[pmatch[1].rm_so];
 		line[pmatch[1].rm_eo] = '\0';
 		value = &line[pmatch[2].rm_so];
