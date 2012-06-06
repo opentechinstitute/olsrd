@@ -483,15 +483,12 @@ int setRxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  The receive multicast port (in network byte order)
  */
 unsigned short getRxMcPort(void) {
-	in_port_t * port;
-	getOlsrSockaddrPortAddress(getRxMcAddr(), &port);
-	return *port;
+	return getOlsrSockaddrPort(getRxMcAddr());
 }
 
 int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_RX_MC_PORT_NAME;
 	unsigned short rxMcPortNew;
-	in_port_t * port;
 
 	if (!readUS(valueName, value, &rxMcPortNew)) {
 		return true;
@@ -502,8 +499,7 @@ int setRxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(getRxMcAddr(), &port);
-	*port = htons((uint16_t) rxMcPortNew);
+	setOlsrSockaddrPort(getRxMcAddr(), htons((uint16_t) rxMcPortNew));
 
 	return false;
 }
@@ -663,15 +659,12 @@ int setTxMcAddr(const char *value, void *data __attribute__ ((unused)), set_plug
  The transmit multicast port (in network byte order)
  */
 unsigned short getTxMcPort(void) {
-	in_port_t * port;
-	getOlsrSockaddrPortAddress(getTxMcAddr(), &port);
-	return *port;
+	return getOlsrSockaddrPort(getTxMcAddr());
 }
 
 int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_TX_MC_PORT_NAME;
 	unsigned short txMcPortNew;
-	in_port_t * port;
 
 	if (!readUS(valueName, value, &txMcPortNew)) {
 		return true;
@@ -682,8 +675,7 @@ int setTxMcPort(const char *value, void *data __attribute__ ((unused)), set_plug
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(getTxMcAddr(), &port);
-	*port = htons((uint16_t) txMcPortNew);
+	setOlsrSockaddrPort(getTxMcAddr(), htons((uint16_t) txMcPortNew));
 
 	return false;
 }
@@ -816,15 +808,12 @@ int setUplinkAddr(const char *value, void *data __attribute__ ((unused)), set_pl
  The uplink port (in network byte order)
  */
 unsigned short getUplinkPort(void) {
-	in_port_t * port;
-	getOlsrSockaddrPortAddress(getUplinkAddr(), &port);
-	return *port;
+	return getOlsrSockaddrPort(getUplinkAddr());
 }
 
 int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_PORT_NAME;
 	unsigned short uplinkPortNew;
-	in_port_t * port;
 
 	if (!readUS(valueName, value, &uplinkPortNew)) {
 		return true;
@@ -835,8 +824,7 @@ int setUplinkPort(const char *value, void *data __attribute__ ((unused)), set_pl
 		return true;
 	}
 
-	getOlsrSockaddrPortAddress(getUplinkAddr(), &port);
-	*port = htons((uint16_t) uplinkPortNew);
+	setOlsrSockaddrPort(getUplinkAddr(), htons((uint16_t) uplinkPortNew));
 
 	return false;
 }

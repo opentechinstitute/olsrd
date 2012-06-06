@@ -288,10 +288,7 @@ bool readULL(const char * parameterName, const char * str, unsigned long long * 
 	}
 
 	if (!*dstSet) {
-		in_port_t * port;
-
-		getOlsrSockaddrPortAddress(&ip, &port);
-		*port = htons(portDefault);
+		setOlsrSockaddrPort(&ip, htons(portDefault));
 	}
 
 	*dst = ip;

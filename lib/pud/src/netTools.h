@@ -13,18 +13,34 @@
 #include <net/if.h>
 
 /**
- Determine the address of the port in an OLSR socket address
+ Get the port in an OLSR socket address
+
+ @param addr
+ A pointer to OLSR socket address
+ @return
+ The port (in network byte order)
+ */
+static inline in_port_t getOlsrSockaddrPort(union olsr_sockaddr * addr) {
+	if (addr->in.sa_family == AF_INET) {
+		return addr->in4.sin_port;
+	} else {
+		return addr->in6.sin6_port;
+	}
+}
+
+/**
+ Set the port in an OLSR socket address
 
  @param addr
  A pointer to OLSR socket address
  @param port
- A pointer to the location where the pointer to the port will be stored
+ The port (in network byte order)
  */
-static inline void getOlsrSockaddrPortAddress(union olsr_sockaddr * addr, in_port_t ** port) {
+static inline void setOlsrSockaddrPort(union olsr_sockaddr * addr, in_port_t port) {
 	if (addr->in.sa_family == AF_INET) {
-		*port = &addr->in4.sin_port;
+		addr->in4.sin_port = port;
 	} else {
-		*port = &addr->in6.sin6_port;
+		addr->in6.sin6_port = port;
 	}
 }
 
