@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <assert.h>
 
 #define SPEED_UPLINK_NAME   "upstream"
 #define SPEED_DOWNLINK_NAME "downstream"
@@ -64,6 +65,10 @@ static CachedStat cachedStat;
 static bool readUL(const char * valueName, const char * value, unsigned long * valueNumber) {
 	char * endPtr = NULL;
 	unsigned long valueNew;
+
+	assert(valueName != NULL);
+	assert(value != NULL);
+	assert(valueNumber != NULL);
 
 	errno = 0;
 	valueNew = strtoul(value, &endPtr, 10);
