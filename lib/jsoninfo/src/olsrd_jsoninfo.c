@@ -1010,7 +1010,7 @@ ipc_print_interfaces(struct autobuf *abuf)
       abuf_json_string(abuf, "state", "down");
     } else {
       abuf_json_string(abuf, "state", "up");
-      abuf_json_int(abuf, "mtu", rifs->int_mtu);
+      abuf_json_int(abuf, "olsrMTU", rifs->int_mtu);
       abuf_json_boolean(abuf, "wireless", rifs->is_wireless);
 
       if (olsr_cnf->ip_version == AF_INET) {
@@ -1037,7 +1037,7 @@ ipc_print_interfaces(struct autobuf *abuf)
     abuf_json_sys_class_net(abuf, "flags", ifs->name, "flags");
     abuf_json_sys_class_net(abuf, "linkMode", ifs->name, "link_mode");
     abuf_json_sys_class_net(abuf, "macAddress", ifs->name, "address");
-    abuf_json_sys_class_net(abuf, "MTU", ifs->name, "mtu");
+    abuf_json_sys_class_net(abuf, "ethernetMTU", ifs->name, "mtu");
     abuf_json_sys_class_net(abuf, "operationalState", ifs->name, "operstate");
     abuf_json_sys_class_net(abuf, "txQueueLength", ifs->name, "tx_queue_len");
     abuf_json_sys_class_net(abuf, "collisions", ifs->name, "statistics/collisions");
