@@ -51,12 +51,12 @@ bool startPositionFile(void) {
 		return true;
 	}
 
-	if (regcomp(&regexComment, regexCommentString, REG_EXTENDED)) {
+	if (regcomp(&regexComment, regexCommentString, REG_EXTENDED | REG_ICASE)) {
 		pudError(false, "Could not compile regex \"%s\"", regexCommentString);
 		return false;
 	}
 
-	if (regcomp(&regexNameValue, regexNameValueString, REG_EXTENDED)) {
+	if (regcomp(&regexNameValue, regexNameValueString, REG_EXTENDED | REG_ICASE)) {
 		pudError(false, "Could not compile regex \"%s\"", regexNameValueString);
 		regfree(&regexComment);
 		return false;
