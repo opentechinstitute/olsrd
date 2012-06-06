@@ -757,8 +757,6 @@ bool startReceiver(void) {
 
 #ifdef HTTPINFO_PUD
 	olsr_cnf->pud_position = &transmitGpsInformation;
-#else
-	olsr_cnf->pud_position = NULL;
 #endif
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
