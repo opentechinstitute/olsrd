@@ -748,25 +748,30 @@ ipc_print_mid(struct autobuf *abuf)
 
     while (entry != &mid_set[idx]) {
       struct ipaddr_str buf, buf2;
-      alias = entry->aliases;
+      abuf_json_open_array_entry(abuf);
+      abuf_json_string(abuf, "ipAddress",
+                       olsr_ip_to_string(&buf, &entry->main_addr));
 
+      abuf_json_open_array(abuf, "aliases");
+      alias = entry->aliases;
       while (alias) {
         uint32_t vt = alias->vtime - now_times;
         int diff = (int)(vt);
 
         abuf_json_open_array_entry(abuf);
-        abuf_json_string(abuf, "ipv4Address",
-                         olsr_ip_to_string(&buf, &entry->main_addr));
-        abuf_json_string(abuf, "alias",
+        abuf_json_string(abuf, "ipAddress",
                          olsr_ip_to_string(&buf2, &alias->alias));
         abuf_json_int(abuf, "validityTime", diff);
         abuf_json_close_array_entry(abuf);
+
         alias = alias->next_alias;
       }
+      abuf_json_close_array(abuf); // aliases
+      abuf_json_close_array_entry(abuf);
       entry = entry->next;
     }
   }
-  abuf_json_close_array(abuf);
+  abuf_json_close_array(abuf); // mid
 }
 
 static void
