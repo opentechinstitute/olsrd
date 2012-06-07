@@ -175,26 +175,26 @@ static void
 abuf_json_open_object(struct autobuf *abuf, const char* header)
 {
   entrynumber = 0;
-  abuf_appendf(abuf, "{\"%s\": {", header);
+  abuf_appendf(abuf, "\"%s\": {", header);
 }
 
 static void
 abuf_json_close_object(struct autobuf *abuf)
 {
-  abuf_appendf(abuf, "\t}\n}\n");
+  abuf_appendf(abuf, "\t}\n");
 }
 
 static void
 abuf_json_open_array(struct autobuf *abuf, const char* header)
 {
   arrayentrynumber = 0;
-  abuf_appendf(abuf, "{\"%s\": [\n", header);
+  abuf_appendf(abuf, "\"%s\": [\n", header);
 }
 
 static void
 abuf_json_close_array(struct autobuf *abuf)
 {
-  abuf_appendf(abuf, "]}\n");
+  abuf_appendf(abuf, "]\n");
 }
 
 static void
@@ -753,7 +753,6 @@ ipc_print_mid(struct autobuf *abuf)
                          olsr_ip_to_string(&buf, &entry->main_addr));
         abuf_json_string(abuf, "alias",
                          olsr_ip_to_string(&buf2, &alias->alias));
-        abuf_json_open_array_entry(abuf);
         abuf_json_int(abuf, "validityTime", diff);
         abuf_json_close_array_entry(abuf);
         alias = alias->next_alias;
@@ -1140,10 +1139,6 @@ send_info(unsigned int send_what, int the_socket)
     abuf_puts(&abuf, "{\n");
   }
 
-  /* wrap everything in a JSON array to handle multiple elements */
-  if(send_what & SIW_ALL) // array for any and all of the status
-    abuf_appendf(&abuf, "\"data\": [");
-
   if ((send_what & SIW_LINKS) == SIW_LINKS) {
     ipc_print_links(&abuf);
     // if this is being output with others, then include commas
@@ -1188,9 +1183,6 @@ send_info(unsigned int send_what, int the_socket)
   if ((send_what & SIW_PLUGINS) == SIW_PLUGINS) {
     ipc_print_plugins(&abuf);
   }
-  /* end of JSON data block in an array */
-  if(send_what & SIW_RUNTIME_ALL || send_what & SIW_STARTUP_ALL)
-    abuf_puts(&abuf, "]\n");
 
   /* output overarching meta data last so we can use abuf_json_* functions, they add a comma at the beginning */
   if (send_what & SIW_ALL) {
