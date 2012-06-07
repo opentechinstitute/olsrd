@@ -50,6 +50,7 @@ TAGCMD ?=	etags
 DESTDIR  ?=
 ETCDIR   ?= $(DESTDIR)/etc
 USRDIR   ?= $(DESTDIR)/usr
+INCLUDEDIR ?= $(DESTDIR)/usr/include
 LIBDIR   ?= $(USRDIR)/lib
 SBINDIR  ?= $(USRDIR)/sbin
 SHAREDIR ?= $(USRDIR)/share
@@ -58,6 +59,9 @@ MANDIR   ?= $(SHAREDIR)/man
 EXENAME  ?= olsrd
 CFGNAME  ?= $(EXENAME).conf
 CFGFILE  ?= $(ETCDIR)/$(CFGNAME)
+
+DOCDIR_OLSRD ?= $(DOCDIR)/$(EXENAME)
+
 
 CPPFLAGS =	-Isrc
 ifneq ($(TOPDIR),.)
