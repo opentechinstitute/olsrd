@@ -56,16 +56,16 @@ install: all
 	@$(MAKE) -C "$(NMEALIB_PATH)" DESTDIR="$(DESTDIR)" install
 	@$(MAKE) -C "$(LIBRARY_PATH)" DESTDIR="$(DESTDIR)" install
 	$(INSTALL_LIB)
-	mkdir -p "$(ETCDIR)"
-	cp "$(RESOURCESDIR)/olsrd.pud.position.conf" "$(ETCDIR)"
+	mkdir -p "$(DOCDIR_OLSRD)"
+	cp "$(RESOURCESDIR)/olsrd.pud.position.conf" "$(DOCDIR_OLSRD)"
 	$(STRIP) "$(LIBDIR)/$(PLUGIN_FULLNAME)"
 
 uninstall:
 	@$(MAKE) -C "$(NMEALIB_PATH)" DESTDIR="$(DESTDIR)" uninstall
 	@$(MAKE) -C "$(LIBRARY_PATH)" DESTDIR="$(DESTDIR)" uninstall
-	rm -f "$(LIBDIR)/lib$(PLUGIN_NAME).so" "$(LIBDIR)/$(PLUGIN_NAME)" "$(ETCDIR)/olsrd.pud.position.conf"
+	rm -f "$(LIBDIR)/lib$(PLUGIN_NAME).so" "$(LIBDIR)/$(PLUGIN_NAME)" "$(DOCDIR_OLSRD)/olsrd.pud.position.conf"
 	$(UNINSTALL_LIB)
-	rmdir -v -p --ignore-fail-on-non-empty "$(LIBDIR)" "$(ETCDIR)"
+	rmdir -v -p --ignore-fail-on-non-empty "$(LIBDIR)" "$(DOCDIR_OLSRD)"
 
 clean:
 	@echo "[$@]"

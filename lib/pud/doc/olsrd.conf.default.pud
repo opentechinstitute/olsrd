@@ -566,8 +566,10 @@ LoadPlugin "./lib/pud/olsrd_pud.so.1.1.0"
 
     # positionFile is the file that contains the position information that the
     #              plugin should use. When this parameter is set then the
-    #              file is read during olsrd startup.
-    #PlParam     "positionFile"                 "/etc/olsrd.pud.position.conf"
+    #              file is read during olsrd startup. It has no default, but an
+    #              example file is available:
+    #                /usr/share/doc/olsrd/olsrd.pud.position.conf
+    # PlParam "positionFile"                    ""
 
     #
     # TX Parameters
