@@ -883,13 +883,18 @@ ipc_print_config(struct autobuf *abuf)
   /*
   struct if_config_options *interface_defaults;
   */
-  abuf_json_int(abuf, "ipcConnections", olsr_cnf->ipc_connections);
-  if (olsr_cnf->ipc_connections)
+  abuf_json_int(abuf, "totalIpcConnectionsAllowed", olsr_cnf->ipc_connections);
+  abuf_appendf(abuf, ",\n\t\"ipcAllowedAddresses\": [{}");
+  if (olsr_cnf->ipc_connections) {
     for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
-      abuf_json_string(abuf, "ipcAllowedAddress",
+      abuf_json_open_array_entry(abuf);
+      abuf_json_string(abuf, "ipAddress",
                        olsr_ip_to_string(&mainaddrbuf, &ipcn->net.prefix));
-      abuf_json_int(abuf, "ipcAllowedAddressMask", ipcn->net.prefix_len);
+      abuf_json_int(abuf, "netmask", ipcn->net.prefix_len);
+      abuf_json_close_array_entry(abuf);
     }
+  }
+  abuf_json_close_array(abuf);
 
   // keep all time in ms, so convert these two, which are in seconds
   abuf_json_int(abuf, "pollRate", olsr_cnf->pollrate * 1000);
