@@ -168,94 +168,100 @@ static struct timer_entry *writetimer_entry;
 /* JSON does not allow commas dangling at the end of arrays, so we need to
  * count which entry number we're at in order to make sure we don't tack a
  * dangling comma on at the end */
-static int entrynumber = 0;
-static int arrayentrynumber = 0;
+static int entrynumber[5] = {0,0,0,0,0};
+static int currentjsondepth = 0;
 
 static void
 abuf_json_open_object(struct autobuf *abuf, const char* header)
 {
-  entrynumber = 0;
   abuf_appendf(abuf, "\"%s\": {", header);
+  entrynumber[currentjsondepth]++;
+  currentjsondepth++;
+  entrynumber[currentjsondepth] = 0;
 }
 
 static void
 abuf_json_close_object(struct autobuf *abuf)
 {
   abuf_appendf(abuf, "\t}\n");
+  currentjsondepth--;
 }
 
 static void
 abuf_json_open_array(struct autobuf *abuf, const char* header)
 {
-  arrayentrynumber = 0;
+  if (entrynumber[currentjsondepth])
+    abuf_appendf(abuf, ",\n\t");
   abuf_appendf(abuf, "\"%s\": [\n", header);
+  entrynumber[currentjsondepth]++;
+  currentjsondepth++;
+  entrynumber[currentjsondepth] = 0;
 }
 
 static void
 abuf_json_close_array(struct autobuf *abuf)
 {
   abuf_appendf(abuf, "]\n");
+  entrynumber[currentjsondepth] = 0;
+  currentjsondepth--;
 }
 
 static void
 abuf_json_open_array_entry(struct autobuf *abuf)
 {
-  entrynumber = 0;
-  if (arrayentrynumber)
+  if (entrynumber[currentjsondepth])
     abuf_appendf(abuf, ",\n{");
   else
     abuf_appendf(abuf, "{");
-  arrayentrynumber++;
+  entrynumber[currentjsondepth]++;
+  currentjsondepth++;
+  entrynumber[currentjsondepth] = 0;
 }
 
 static void
 abuf_json_close_array_entry(struct autobuf *abuf)
 {
   abuf_appendf(abuf, "}");
+  entrynumber[currentjsondepth] = 0;
+  currentjsondepth--;
+}
+
+static void
+abuf_json_insert_comma(struct autobuf *abuf)
+{
+  if (entrynumber[currentjsondepth])
+    abuf_appendf(abuf, ",\n");
+  else
+    abuf_appendf(abuf, "\n");
+  entrynumber[currentjsondepth]++;
 }
 
 static void
 abuf_json_boolean(struct autobuf *abuf, const char* key, int value)
 {
-  if (entrynumber)
-    abuf_appendf(abuf, ",\n");
-  else
-    abuf_appendf(abuf, "\n");
+  abuf_json_insert_comma(abuf);
   abuf_appendf(abuf, "\t\"%s\": %s", key, value ? "true" : "false");
-  entrynumber++;
 }
 
 static void
 abuf_json_string(struct autobuf *abuf, const char* key, const char* value)
 {
-  if (entrynumber)
-    abuf_appendf(abuf, ",\n");
-  else
-    abuf_appendf(abuf, "\n");
+  abuf_json_insert_comma(abuf);
   abuf_appendf(abuf, "\t\"%s\": \"%s\"", key, value);
-  entrynumber++;
 }
 
 static void
 abuf_json_int(struct autobuf *abuf, const char* key, long value)
 {
-  if (entrynumber)
-    abuf_appendf(abuf, ",\n");
-  else
-    abuf_appendf(abuf, "\n");
+  abuf_json_insert_comma(abuf);
   abuf_appendf(abuf, "\t\"%s\": %li", key, value);
-  entrynumber++;
 }
 
 static void
 abuf_json_float(struct autobuf *abuf, const char* key, float value)
 {
-  if (entrynumber)
-    abuf_appendf(abuf, ",\n");
-  else
-    abuf_appendf(abuf, "\n");
+  abuf_json_insert_comma(abuf);
   abuf_appendf(abuf, "\t\"%s\": %.03f", key, (double)value);
-  entrynumber++;
 }
 
 
@@ -880,11 +886,11 @@ ipc_print_config(struct autobuf *abuf)
   abuf_json_int(abuf, "brokenRouteCost", ROUTE_COST_BROKEN);
 
   abuf_json_string(abuf, "fibMetrics", FIB_METRIC_TXT[olsr_cnf->fib_metric]);
-  /*
+  /* TODO
   struct if_config_options *interface_defaults;
   */
   abuf_json_int(abuf, "totalIpcConnectionsAllowed", olsr_cnf->ipc_connections);
-  abuf_appendf(abuf, ",\n\t\"ipcAllowedAddresses\": [{}");
+  abuf_json_open_array(abuf, "ipcAllowedAddresses");
   if (olsr_cnf->ipc_connections) {
     for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL; ipcn = ipcn->next) {
       abuf_json_open_array_entry(abuf);
@@ -1138,56 +1144,29 @@ send_info(unsigned int send_what, int the_socket)
 {
   struct autobuf abuf;
 
+  /* global variables for tracking when to put a comma in for JSON */
+  entrynumber[0] = 0;
+  currentjsondepth = 0;
+
   abuf_init(&abuf, 32768);
 
-  if (send_what & SIW_ALL) { // only add if outputing JSON
-    abuf_puts(&abuf, "{\n");
-  }
+ // only add if outputing JSON
+  if (send_what & SIW_ALL) abuf_puts(&abuf, "{\n");
 
-  if ((send_what & SIW_LINKS) == SIW_LINKS) {
-    ipc_print_links(&abuf);
-    // if this is being output with others, then include commas
-    if (send_what != SIW_LINKS) abuf_puts(&abuf, ",");
-  }
-  if ((send_what & SIW_NEIGHBORS) == SIW_NEIGHBORS) {
-    ipc_print_neighbors(&abuf);
-    if (send_what != SIW_NEIGHBORS) abuf_puts(&abuf, ",");
-  }
-  if ((send_what & SIW_TOPOLOGY) == SIW_TOPOLOGY) {
-    ipc_print_topology(&abuf);
-    if (send_what != SIW_TOPOLOGY) abuf_puts(&abuf, ",");
-  }
-  if ((send_what & SIW_HNA) == SIW_HNA) {
-    ipc_print_hna(&abuf);
-    if (send_what != SIW_HNA) abuf_puts(&abuf, ",");
-  }
-  if ((send_what & SIW_MID) == SIW_MID) {
-    ipc_print_mid(&abuf);
-    if (send_what != SIW_MID) abuf_puts(&abuf, ",");
-  }
-  if ((send_what & SIW_ROUTES) == SIW_ROUTES) {
-    ipc_print_routes(&abuf);
-    if (send_what != SIW_ROUTES) abuf_puts(&abuf, ",");
-  }
-  if ((send_what & SIW_GATEWAYS) == SIW_GATEWAYS) {
-    ipc_print_gateways(&abuf);
-    if (send_what != SIW_GATEWAYS) abuf_puts(&abuf, ",");
-  }
-  if ((send_what & SIW_INTERFACES) == SIW_INTERFACES) {
-    ipc_print_interfaces(&abuf);
-  }
-
-  /* if we have printed any of the above, we need a comma to separate */
-  if(send_what & SIW_RUNTIME_ALL && send_what & SIW_STARTUP_ALL)
-    abuf_puts(&abuf, ",");
-
+  if ((send_what & SIW_LINKS) == SIW_LINKS) ipc_print_links(&abuf);
+  if ((send_what & SIW_NEIGHBORS) == SIW_NEIGHBORS) ipc_print_neighbors(&abuf);
+  if ((send_what & SIW_TOPOLOGY) == SIW_TOPOLOGY) ipc_print_topology(&abuf);
+  if ((send_what & SIW_HNA) == SIW_HNA) ipc_print_hna(&abuf);
+  if ((send_what & SIW_MID) == SIW_MID) ipc_print_mid(&abuf);
+  if ((send_what & SIW_ROUTES) == SIW_ROUTES) ipc_print_routes(&abuf);
+  if ((send_what & SIW_GATEWAYS) == SIW_GATEWAYS) ipc_print_gateways(&abuf);
+  if ((send_what & SIW_INTERFACES) == SIW_INTERFACES) ipc_print_interfaces(&abuf);
   if ((send_what & SIW_CONFIG) == SIW_CONFIG) {
-    ipc_print_config(&abuf);
     if (send_what != SIW_CONFIG) abuf_puts(&abuf, ",");
+    ipc_print_config(&abuf);
+    //if (send_what != SIW_CONFIG) abuf_puts(&abuf, ",");
   }
-  if ((send_what & SIW_PLUGINS) == SIW_PLUGINS) {
-    ipc_print_plugins(&abuf);
-  }
+  if ((send_what & SIW_PLUGINS) == SIW_PLUGINS) ipc_print_plugins(&abuf);
 
   /* output overarching meta data last so we can use abuf_json_* functions, they add a comma at the beginning */
   if (send_what & SIW_ALL) {
