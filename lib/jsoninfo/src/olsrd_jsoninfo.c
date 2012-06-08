@@ -853,7 +853,21 @@ ipc_print_plugins(struct autobuf *abuf)
       abuf_json_open_array_entry(abuf);
       abuf_json_string(abuf, "plugin", pentry->name);
       for (pparam = pentry->params; pparam; pparam = pparam->next) {
-       abuf_json_string(abuf, pparam->key, pparam->value);
+        int i, keylen = strlen(pparam->key);
+        char key[keylen + 1];
+        long value;
+        char valueTest[256];
+        strcpy(key, pparam->key);
+        for (i = 0; i < keylen; i++)
+          key[i] = tolower(key[i]);
+
+        // test if a int/long and set as such in JSON
+        value = atol(pparam->value);
+        snprintf(valueTest, 255, "%li", value);
+        if (strcmp(valueTest, pparam->value) == 0)
+          abuf_json_int(abuf, key, value);
+        else
+          abuf_json_string(abuf, key, pparam->value);
       }
       abuf_json_close_array_entry(abuf);
     }
