@@ -31,7 +31,7 @@ ifneq ($(OS),linux)
 all: default_target
 
 default_target install clean:
-	@echo "*** $(PLUGIN_NAME) plugin only supported on Linux, sorry!"
+	@echo "*** $(PLUGIN_NAME) plugin not supported on $(OS), sorry!"
 
 else
 
