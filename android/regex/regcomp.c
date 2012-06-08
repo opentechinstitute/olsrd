@@ -1509,6 +1509,8 @@ pluscount(struct parse *p, struct re_guts *g)
 				maxnest = plusnest;
 			plusnest--;
 			break;
+		default:
+			break;
 		}
 	} while (OP(s) != OEND);
 	if (plusnest != 0)
