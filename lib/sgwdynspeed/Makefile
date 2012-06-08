@@ -6,14 +6,23 @@ include $(TOPDIR)/Makefile.inc
 
 RESOURCESDIR = ./resources
 
-ifneq ($(OS),linux)
+SUPPORTED = 0
+ifeq ($(OS),linux)
+SUPPORTED = 1
+endif
+ifeq ($(OS),android)
+SUPPORTED = 1
+endif
+
+
+ifeq ($(SUPPORTED),0)
 
 .PHONY: all default_target install clean
 
 all: default_target
 
 default_target install clean:
-	@echo "*** $(PLUGIN_NAME) plugin only supported on Linux, sorry!"
+	@echo "*** $(PLUGIN_NAME) plugin not supported on $(OS), sorry!"
 
 else
 
