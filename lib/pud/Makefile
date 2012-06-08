@@ -12,7 +12,7 @@ TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
 
-CFLAGS += -Werror -D_GNU_SOURCE
+CFLAGS += -D_GNU_SOURCE
 
 
 RESOURCESDIR = ./resources
