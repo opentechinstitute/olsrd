@@ -885,7 +885,7 @@ ipc_print_config(struct autobuf *abuf)
 
   abuf_json_int(abuf, "olsrPort", olsr_cnf->olsrport);
   abuf_json_int(abuf, "debugLevel", olsr_cnf->debug_level);
-  abuf_json_int(abuf, "noFork", olsr_cnf->no_fork);
+  abuf_json_boolean(abuf, "noFork", olsr_cnf->no_fork);
   abuf_json_boolean(abuf, "hostEmulation", olsr_cnf->host_emul);
   abuf_json_int(abuf, "ipVersion", olsr_cnf->ip_version);
   abuf_json_boolean(abuf, "allowNoInterfaces", olsr_cnf->allow_no_interfaces);
