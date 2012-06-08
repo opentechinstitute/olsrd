@@ -1026,8 +1026,10 @@ ipc_print_config(struct autobuf *abuf)
 static void
 ipc_print_interfaces(struct autobuf *abuf)
 {
+#ifdef __linux__
   int linklen;
   char path[PATH_MAX], linkpath[PATH_MAX];
+#endif
   const struct olsr_if *ifs;
   abuf_json_open_array(abuf, "interfaces");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
