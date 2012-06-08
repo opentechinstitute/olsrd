@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -65,6 +64,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ctype.h>
+#include <libgen.h>
 
 #ifdef __linux__
 #include <fcntl.h>
@@ -1025,6 +1026,8 @@ ipc_print_config(struct autobuf *abuf)
 static void
 ipc_print_interfaces(struct autobuf *abuf)
 {
+  int linklen;
+  char path[PATH_MAX], linkpath[PATH_MAX];
   const struct olsr_if *ifs;
   abuf_json_open_array(abuf, "interfaces");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
@@ -1055,6 +1058,13 @@ ipc_print_interfaces(struct autobuf *abuf)
       }
     }
 #ifdef __linux__
+    snprintf(path, PATH_MAX, "/sys/class/net/%s/device/driver/module", ifs->name);
+    linklen = readlink(path, linkpath, PATH_MAX - 1);
+    if (linkpath != NULL && linklen > 1) {
+      linkpath[linklen] = '\0';
+      abuf_json_string(abuf, "kernelModule", basename(linkpath));
+    }
+
     abuf_json_sys_class_net(abuf, "addressLength", ifs->name, "addr_len");
     abuf_json_sys_class_net(abuf, "carrier", ifs->name, "carrier");
     abuf_json_sys_class_net(abuf, "dormant", ifs->name, "dormant");
