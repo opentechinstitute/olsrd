@@ -1190,7 +1190,7 @@ mcadd( struct parse *p, cset *cs, char *cp)
  */
 /* ARGSUSED */
 static void
-mcinvert(struct parse *p, cset *cs)
+mcinvert(struct parse *p __attribute__((unused)), cset *cs)
 {
 	assert(cs->multis == NULL);	/* xxx */
 }
@@ -1203,7 +1203,7 @@ mcinvert(struct parse *p, cset *cs)
  */
 /* ARGSUSED */
 static void
-mccase(struct parse *p, cset *cs)
+mccase(struct parse *p __attribute__((unused)), cset *cs)
 {
 	assert(cs->multis == NULL);	/* xxx */
 }
