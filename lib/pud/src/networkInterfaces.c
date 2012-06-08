@@ -311,7 +311,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 	int ipMcLoopSetting;
 	int ipMcIfSetting;
 	int ipTtlSetting;
-	unsigned int index;
+	unsigned int ifIndex;
 
 	union olsr_sockaddr address;
 	void * addr;
@@ -335,7 +335,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		ipMcLoopSetting = IP_MULTICAST_LOOP;
 		ipMcIfSetting = IP_MULTICAST_IF;
 		ipTtlSetting = IP_MULTICAST_TTL;
-		index = 0;
+		ifIndex = 0;
 
 		address.in4.sin_family = ipFamilySetting;
 		address.in4.sin_addr = networkInterface->ipAddress.in4.sin_addr;
@@ -350,10 +350,10 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		ipMcLoopSetting = IPV6_MULTICAST_LOOP;
 		ipMcIfSetting = IPV6_MULTICAST_IF;
 		ipTtlSetting = IPV6_MULTICAST_HOPS;
-		index = if_nametoindex((char *)networkInterface->name);
+		ifIndex = if_nametoindex((char *)networkInterface->name);
 
-		addr = &index;
-		addrSize = sizeof(index);
+		addr = &ifIndex;
+		addrSize = sizeof(ifIndex);
 	}
 
 	/*  Create a datagram socket on which to transmit */

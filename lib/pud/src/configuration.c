@@ -346,7 +346,7 @@ int addRxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 	if (valueLength > IFNAMSIZ) {
 		pudError(false, "Value of parameter %s (%s) is too long,"
 			" maximum length is %u, current length is %lu",
-				PUD_RX_NON_OLSR_IF_NAME, value, IFNAMSIZ, valueLength);
+				PUD_RX_NON_OLSR_IF_NAME, value, IFNAMSIZ, (long unsigned int)valueLength);
 		return true;
 	}
 
@@ -604,7 +604,7 @@ int addTxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 	valueLength = strlen(value);
 	if (valueLength > IFNAMSIZ) {
 		pudError(false, "Value of parameter %s (%s) is too long, maximum length is %u, current length is %lu",
-				PUD_TX_NON_OLSR_IF_NAME, value, IFNAMSIZ, valueLength);
+				PUD_TX_NON_OLSR_IF_NAME, value, IFNAMSIZ, (long unsigned int)valueLength);
 		return true;
 	}
 
