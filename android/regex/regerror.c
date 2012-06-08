@@ -48,8 +48,8 @@ static char *regatoi(const regex_t *, char *, int);
 
 static const struct rerr {
 	int code;
-	char *name;
-	char *explain;
+	const char *name;
+	const char *explain;
 } rerrs[] = {
 	{ REG_NOMATCH,	"REG_NOMATCH",	"regexec() failed to match" },
 	{ REG_BADPAT,	"REG_BADPAT",	"invalid regular expression" },
