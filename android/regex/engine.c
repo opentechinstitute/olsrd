@@ -318,6 +318,8 @@ dissect(struct match *m, char *start, char *stop, sopno startst, sopno stopst)
 			while (OP(m->g->strip[es]) != O_CH)
 				es += OPND(m->g->strip[es]);
 			break;
+		default:
+			break;
 		}
 		es++;
 
