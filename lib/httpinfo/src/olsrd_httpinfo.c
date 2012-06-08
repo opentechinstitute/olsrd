@@ -741,7 +741,7 @@ build_ipaddr_link(struct autobuf *abuf, const bool want_link, const union olsr_i
   struct ipaddr_str ipaddrstr;
   const struct hostent *const hp =
 #ifndef WIN32
-    resolve_ip_addresses ? gethostbyaddr(ipaddr, olsr_cnf->ipsize,
+    resolve_ip_addresses ? gethostbyaddr((const void *)ipaddr, olsr_cnf->ipsize,
                                          olsr_cnf->ip_version) :
 #endif
     NULL;
