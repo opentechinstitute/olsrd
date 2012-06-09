@@ -34,18 +34,6 @@ INCLUDES = -I "$(INC_DIR_BASE_C)" -I "$(INC_DIR_OLSRD)"
 LIBRARIES = -lm
 
 
-
-ifneq ($(OS),linux)
-
-.PHONY: all default_target install clean
-
-all: default_target
-
-default_target install clean:
-	@echo "*** only supported on Linux"
-
-else
-
 .PHONY: all default_target prepare clean doc doc-clean install install-headers uninstall uninstall-headers
 
 #
@@ -110,5 +98,3 @@ uninstall-headers:
 	rm -fr "$(INCLUDEDIR)/$(PROJECT)/"*.h
 	rmdir -v -p --ignore-fail-on-non-empty \
 	  "$(INCLUDEDIR)/$(PROJECT)"
-
-endif
