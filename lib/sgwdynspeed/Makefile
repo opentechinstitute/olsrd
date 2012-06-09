@@ -4,8 +4,6 @@ TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
 
-CFLAGS += -Werror
-
 RESOURCESDIR = ./resources
 
 ifneq ($(OS),linux)
