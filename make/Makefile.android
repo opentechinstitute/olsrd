@@ -117,8 +117,8 @@ endif
 # (2.2), so we include the Android files here, and build with
 # -DPOSIX_MISTAKE like Android does.
 $(REGEX_OBJS): $(REGEX_SRCS)
-	echo "[CC] $<"
-	$(CC) $(CFLAGS) $(CPPFLAGS) -DPOSIX_MISTAKE -c -o $@ $<
+	@echo "[CC] $<"
+	@$(CC) $(CFLAGS) $(CPPFLAGS) -DPOSIX_MISTAKE -c -o $@ $<
 
 regex: $(REGEX_OBJS)
 
