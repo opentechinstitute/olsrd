@@ -74,6 +74,7 @@ extern struct list_entity ListOfFilteredHosts;
 //extern int BroadcastRetransmitCount;
 
 void DoMDNS(int sd, void *x, unsigned int y);
+void DoElection(int skfd, void *x, unsigned int y);
 void BmfPError(const char *format, ...) __attribute__ ((format(printf, 1, 2)));
 union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
 //int InterfaceChange(struct interface* interf, int action);
@@ -87,6 +88,7 @@ void olsr_mdns_gen(unsigned char *packet, int len);
 
 /* Parser function to register with the scheduler */
 bool olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
+
 
 #endif /* _MDNS_MDNS_H */
 

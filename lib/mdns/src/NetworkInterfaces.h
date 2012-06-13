@@ -55,6 +55,7 @@
 
 /* Size of buffer in which packets are received */
 #define BMF_BUFFER_SIZE 2048
+#define HELLO_BUFFER_SIZE 2048
 
 struct TBmfInterface {
   /* File descriptor of raw packet socket, used for capturing multicast packets */
@@ -67,6 +68,14 @@ struct TBmfInterface {
   /* File descriptor of UDP packet socket, used for listening to encapsulation packets.
    * Used only when PlParam "BmfMechanism" is set to "UnicastPromiscuous". */
   int listeningSkfd;
+
+  /* File descriptor of UDP packet socket, used for listening router election hello
+   * packets */
+  int electionSkfd;
+
+  /* File descriptor of UDP packet socket, used for sending router election hello
+   * packets */
+  int helloSkfd;
 
   unsigned char macAddr[IFHWADDRLEN];
 

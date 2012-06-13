@@ -37,8 +37,8 @@
  * the copyright holders.
  */
 
-#ifndef LIST_H_
-#define LIST_H_
+#ifndef LISTBACKPORT_H_
+#define LISTBACKPORT_H_
 
 #include <stddef.h>
 #include <stdbool.h>
