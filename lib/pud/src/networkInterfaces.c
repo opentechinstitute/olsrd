@@ -12,7 +12,6 @@
 /* System includes */
 #include <unistd.h>
 #include <fcntl.h>
-#include <ifaddrs.h>
 
 /*
  * Main IP MAC address
@@ -590,61 +589,45 @@ static int createDownlinkSocket(int ipVersion, socket_handler_func rxSocketHandl
  */
 bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 		socket_handler_func rxSocketHandlerFunctionDownlink) {
-	int retval = false;
-	struct ifaddrs *ifAddrs = NULL;
-	struct ifaddrs *ifAddr = NULL;
+	TRxTxNetworkInterface * interfaces;
 	union olsr_sockaddr * rxMcAddr = getRxMcAddr();
 	union olsr_sockaddr * txMcAddr = getTxMcAddr();
 
-	errno = 0;
-	if (getifaddrs(&ifAddrs) != 0) {
-		pudError(true, "Could not get list of interfaces and their addresses");
-		return retval;
-	}
-
-	/* loop over all interfaces */
-	for (ifAddr = ifAddrs; ifAddr != NULL; ifAddr = ifAddr->ifa_next) {
-		union olsr_sockaddr * addr = (union olsr_sockaddr *)ifAddr->ifa_addr;
-		if ((addr != NULL) && ((addr->in.sa_family == AF_INET) || (addr->in.sa_family == AF_INET6))) {
-			char * ifName = ifAddr->ifa_name;
-
-			/* determine whether the iterated interface is configured as a
-			 * non-OLSR interface in the plugin parameter list */
-			bool isRxNonOlsrIf = isRxNonOlsrInterface(ifName) && (addr->in.sa_family == rxMcAddr->in.sa_family);
-			bool isTxNonOlsrIf = isTxNonOlsrInterface(ifName) && (addr->in.sa_family == txMcAddr->in.sa_family);
-
-			bool isNonOlsrIf = isRxNonOlsrIf || isTxNonOlsrIf;
-
-			if (!isNonOlsrIf) {
-				/* interface is not configured as non-OLSR interface: skip */
-				continue;
-			}
-
-			if (isRxNonOlsrIf && !createRxInterface(ifName, rxSocketHandlerFunction, rxMcAddr)) {
+	/* loop over all configured rx interfaces */
+	interfaces = getRxNetworkInterfaces();
+	if (interfaces) {
+		TRxTxNetworkInterface * interface;
+		for (interface = interfaces; interface != NULL; interface = interfaces->next) {
+			if (!createRxInterface(interface->name, rxSocketHandlerFunction, rxMcAddr)) {
 				/* creating a receive interface failed */
-				goto end;
-			}
-
-			if (isTxNonOlsrIf && !createTxInterface(ifName, txMcAddr)) {
-				/* creating a transmit interface failed */
-				goto end;
+				return false;
 			}
 		}
 	}
 
+	/* loop over all configured tx interfaces */
+	interfaces = getTxNetworkInterfaces();
+	if (interfaces) {
+		TRxTxNetworkInterface * interface;
+		for (interface = interfaces; interface != NULL; interface = interfaces->next) {
+			if (!createTxInterface(interface->name, txMcAddr)) {
+				/* creating a transmit interface failed */
+				return false;
+			}
+		}
+	}
+
+	/* create uplink socket when needed */
 	if (isUplinkAddrSet()) {
 		downlinkSocketFd = createDownlinkSocket(getUplinkAddr()->in.sa_family, rxSocketHandlerFunctionDownlink);
 		if (downlinkSocketFd == -1) {
-			goto end;
+			return false;
 		}
 	} else {
 		downlinkSocketFd = -1;
 	}
 
-	retval = true;
-
-	end: freeifaddrs(ifAddrs);
-	return retval;
+	return true;
 }
 
 /**
