@@ -23,8 +23,7 @@
 #include <nmea/gmath.h>
 
 #include <math.h>
-
-#include <nmea/config.h>
+#include <assert.h>
 
 /**
  * \brief Convert degree to radian
@@ -122,8 +121,8 @@ double nmea_distance_ellipsoid(
     double sqr_u, A, B, delta_sigma, lambda_prev;
 
     /* Check input */
-    NMEA_ASSERT(from_pos != 0);
-    NMEA_ASSERT(to_pos != 0);
+    assert(from_pos != 0);
+    assert(to_pos != 0);
 
     if ((from_pos->lat == to_pos->lat) && (from_pos->lon == to_pos->lon))
     { /* Identical points */
@@ -273,8 +272,8 @@ int nmea_move_horz_ellipsoid(
     double tmp1, phi2, lambda, C, L;
     
     /* Check input */
-    NMEA_ASSERT(start_pos != 0);
-    NMEA_ASSERT(end_pos != 0);
+    assert(start_pos != 0);
+    assert(end_pos != 0);
     
     if (fabs(distance) < 1e-12)
     { /* No move */

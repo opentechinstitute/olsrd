@@ -23,8 +23,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <nmea/config.h>
-
 nmeaPROPERTY * nmea_property(void) {
     static nmeaPROPERTY prop = {
         0, 0, NMEA_DEF_PARSEBUFF

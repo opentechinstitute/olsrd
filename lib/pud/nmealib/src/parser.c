@@ -27,8 +27,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <assert.h>
 
-#include <nmea/config.h>
 #include <nmea/context.h>
 #include <nmea/parse.h>
 #include <nmea/sentence.h>
@@ -54,7 +54,7 @@ int nmea_parser_init(nmeaPARSER *parser)
     int resv = 0;
     int buff_size = nmea_property()->parse_buff_size;
 
-    NMEA_ASSERT(parser);
+    assert(parser);
 
     if(buff_size < NMEA_MIN_PARSEBUFF)
         buff_size = NMEA_MIN_PARSEBUFF;
@@ -77,7 +77,7 @@ int nmea_parser_init(nmeaPARSER *parser)
  */
 void nmea_parser_destroy(nmeaPARSER *parser)
 {
-    NMEA_ASSERT(parser);
+    assert(parser);
     if (parser->buffer) {
     	free(parser->buffer);
     	parser->buffer = NULL;
@@ -99,7 +99,7 @@ int nmea_parse(
     int ptype, nread = 0;
     void *pack = 0;
 
-    NMEA_ASSERT(parser && parser->buffer);
+    assert(parser && parser->buffer);
 
     nmea_parser_push(parser, buff, buff_sz);
 
@@ -143,7 +143,7 @@ static int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_
     int nparsed = 0, crc, sen_sz, ptype;
     nmeaParserNODE *node = 0;
 
-    NMEA_ASSERT(parser && parser->buffer);
+    assert(parser && parser->buffer);
 
     /* clear unuse buffer (for debug) */
     /*
@@ -320,7 +320,7 @@ int nmea_parser_top(nmeaPARSER *parser)
     int retval = GPNON;
     nmeaParserNODE *node = (nmeaParserNODE *)parser->top_node;
 
-    NMEA_ASSERT(parser && parser->buffer);
+    assert(parser && parser->buffer);
 
     if(node)
         retval = node->packType;
@@ -338,7 +338,7 @@ int nmea_parser_pop(nmeaPARSER *parser, void **pack_ptr)
     int retval = GPNON;
     nmeaParserNODE *node = (nmeaParserNODE *)parser->top_node;
 
-    NMEA_ASSERT(parser && parser->buffer);
+    assert(parser && parser->buffer);
 
     if(node)
     {
@@ -363,7 +363,7 @@ int nmea_parser_peek(nmeaPARSER *parser, void **pack_ptr)
     int retval = GPNON;
     nmeaParserNODE *node = (nmeaParserNODE *)parser->top_node;
 
-    NMEA_ASSERT(parser && parser->buffer);
+    assert(parser && parser->buffer);
 
     if(node)
     {
@@ -384,7 +384,7 @@ int nmea_parser_drop(nmeaPARSER *parser)
     int retval = GPNON;
     nmeaParserNODE *node = (nmeaParserNODE *)parser->top_node;
 
-    NMEA_ASSERT(parser && parser->buffer);
+    assert(parser && parser->buffer);
 
     if(node)
     {
@@ -406,7 +406,7 @@ int nmea_parser_drop(nmeaPARSER *parser)
  */
 int nmea_parser_buff_clear(nmeaPARSER *parser)
 {
-    NMEA_ASSERT(parser && parser->buffer);
+    assert(parser && parser->buffer);
     parser->buff_use = 0;
     return 1;
 }
@@ -417,7 +417,7 @@ int nmea_parser_buff_clear(nmeaPARSER *parser)
  */
 int nmea_parser_queue_clear(nmeaPARSER *parser)
 {
-    NMEA_ASSERT(parser);
+    assert(parser);
     while(parser->top_node)
         nmea_parser_drop(parser);
     return 1;

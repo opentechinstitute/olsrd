@@ -67,8 +67,8 @@
 #include <nmea/parse.h>
 
 #include <string.h>
+#include <assert.h>
 
-#include <nmea/config.h>
 #include <nmea/context.h>
 #include <nmea/tok.h>
 #include <nmea/units.h>
@@ -119,7 +119,7 @@ int nmea_pack_type(const char *buff, int buff_sz)
         "GPVTG",
     };
 
-    NMEA_ASSERT(buff);
+    assert(buff);
 
     if(buff_sz < 5)
         return GPNON;
@@ -152,7 +152,7 @@ int nmea_find_tail(const char *buff, int buff_sz, int *res_crc)
     int nread = 0;
     int crc = 0;
 
-    NMEA_ASSERT(buff && res_crc);
+    assert(buff && res_crc);
 
     *res_crc = -1;
 
@@ -199,7 +199,7 @@ int nmea_parse_GPGGA(const char *buff, int buff_sz, nmeaGPGGA *pack)
 {
     char time_buff[NMEA_TIMEPARSE_BUF];
 
-    NMEA_ASSERT(buff && pack);
+    assert(buff && pack);
 
     memset(pack, 0, sizeof(nmeaGPGGA));
 
@@ -234,7 +234,7 @@ int nmea_parse_GPGGA(const char *buff, int buff_sz, nmeaGPGGA *pack)
  */
 int nmea_parse_GPGSA(const char *buff, int buff_sz, nmeaGPGSA *pack)
 {
-    NMEA_ASSERT(buff && pack);
+    assert(buff && pack);
 
     memset(pack, 0, sizeof(nmeaGPGSA));
 
@@ -265,7 +265,7 @@ int nmea_parse_GPGSV(const char *buff, int buff_sz, nmeaGPGSV *pack)
 {
     int nsen, nsat;
 
-    NMEA_ASSERT(buff && pack);
+    assert(buff && pack);
 
     memset(pack, 0, sizeof(nmeaGPGSV));
 
@@ -308,7 +308,7 @@ int nmea_parse_GPRMC(const char *buff, int buff_sz, nmeaGPRMC *pack)
     int nsen;
     char time_buff[NMEA_TIMEPARSE_BUF];
 
-    NMEA_ASSERT(buff && pack);
+    assert(buff && pack);
 
     memset(pack, 0, sizeof(nmeaGPRMC));
 
@@ -350,7 +350,7 @@ int nmea_parse_GPRMC(const char *buff, int buff_sz, nmeaGPRMC *pack)
  */
 int nmea_parse_GPVTG(const char *buff, int buff_sz, nmeaGPVTG *pack)
 {
-    NMEA_ASSERT(buff && pack);
+    assert(buff && pack);
 
     memset(pack, 0, sizeof(nmeaGPVTG));
 
@@ -386,7 +386,7 @@ int nmea_parse_GPVTG(const char *buff, int buff_sz, nmeaGPVTG *pack)
  */
 void nmea_GPGGA2info(nmeaGPGGA *pack, nmeaINFO *info)
 {
-    NMEA_ASSERT(pack && info);
+    assert(pack && info);
 
     info->utc.hour = pack->utc.hour;
     info->utc.min = pack->utc.min;
@@ -409,7 +409,7 @@ void nmea_GPGSA2info(nmeaGPGSA *pack, nmeaINFO *info)
 {
     int i, j, nuse = 0;
 
-    NMEA_ASSERT(pack && info);
+    assert(pack && info);
 
     info->fix = pack->fix_type;
     info->PDOP = pack->PDOP;
@@ -441,7 +441,7 @@ void nmea_GPGSV2info(nmeaGPGSV *pack, nmeaINFO *info)
 {
     int isat, isi, nsat;
 
-    NMEA_ASSERT(pack && info);
+    assert(pack && info);
 
     if(pack->pack_index > pack->pack_count ||
         pack->pack_index * NMEA_SATINPACK > NMEA_MAXSAT)
@@ -474,7 +474,7 @@ void nmea_GPGSV2info(nmeaGPGSV *pack, nmeaINFO *info)
  */
 void nmea_GPRMC2info(nmeaGPRMC *pack, nmeaINFO *info)
 {
-    NMEA_ASSERT(pack && info);
+    assert(pack && info);
 
     if('A' == pack->status)
     {
@@ -504,7 +504,7 @@ void nmea_GPRMC2info(nmeaGPRMC *pack, nmeaINFO *info)
  */
 void nmea_GPVTG2info(nmeaGPVTG *pack, nmeaINFO *info)
 {
-    NMEA_ASSERT(pack && info);
+    assert(pack && info);
 
     info->direction = pack->dir;
     info->declination = pack->dec;

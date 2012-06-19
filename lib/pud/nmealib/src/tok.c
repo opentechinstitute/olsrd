@@ -28,8 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <nmea/config.h>
-
 #define NMEA_TOKS_COMPARE   (1)
 #define NMEA_TOKS_PERCENT   (2)
 #define NMEA_TOKS_WIDTH     (3)
