@@ -20,9 +20,6 @@ typedef struct _TRxTxNetworkInterface {
 		/** The name of the interface */
 		unsigned char name[IFNAMSIZ + 1];
 
-		/** The IP address of the interface */
-		union olsr_sockaddr ipAddress;
-
 		/** the socket handler function */
 		socket_handler_func handler;
 

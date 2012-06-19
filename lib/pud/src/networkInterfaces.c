@@ -7,6 +7,7 @@
 
 /* OLSRD includes */
 #include "olsr.h"
+#include "interfaces.h"
 
 /* System includes */
 #include <unistd.h>
@@ -76,7 +77,7 @@ TRxTxNetworkInterface *getRxNetworkInterfaces(void) {
  @param rxSocketHandlerFunction
  The function that handles reception of data on the network interface
  @param rxMcAddr
- The receive multicast address (must have same IP version as networkInterface address)
+ The receive multicast address
 
  @return
  - the socket descriptor (>= 0)
@@ -102,11 +103,10 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	assert(rxSocketHandlerFunction != NULL);
 	assert(strncmp((char *) &networkInterface->name[0], "",
 					sizeof(networkInterface->name)) != 0);
-	assert(networkInterface->ipAddress.in.sa_family == rxMcAddr->in.sa_family);
 
 	memset(&address, 0, sizeof(address));
-	if (networkInterface->ipAddress.in.sa_family == AF_INET) {
-		assert(networkInterface->ipAddress.in4.sin_addr.s_addr != INADDR_ANY);
+	if (rxMcAddr->in.sa_family == AF_INET) {
+		assert(rxMcAddr->in4.sin_addr.s_addr != INADDR_ANY);
 
 		ipFamilySetting = AF_INET;
 		ipProtoSetting = IPPROTO_IP;
@@ -119,7 +119,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 		addr = &address.in4;
 		addrSize = sizeof(struct sockaddr_in);
 	} else {
-		assert(networkInterface->ipAddress.in6.sin6_addr.s6_addr != in6addr_any.s6_addr);
+		assert(rxMcAddr->in6.sin6_addr.s6_addr != in6addr_any.s6_addr);
 
 		ipFamilySetting = AF_INET6;
 		ipProtoSetting = IPPROTO_IPV6;
@@ -176,9 +176,16 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	 * which the multicast datagrams are to be received. */
 	if (ipFamilySetting == AF_INET) {
 		struct ip_mreq mc_settings;
+		struct interface* interface = if_ifwithname((const char *)networkInterface->name);
+
+		if (!interface) {
+			pudError(true, "Could not get interface address of %s", networkInterface->name);
+			goto bail;
+		}
+
 		(void) memset(&mc_settings, 0, sizeof(mc_settings));
 		mc_settings.imr_multiaddr = rxMcAddr->in4.sin_addr;
-		mc_settings.imr_interface = networkInterface->ipAddress.in4.sin_addr;
+		mc_settings.imr_interface = interface->int_addr.sin_addr;
 		errno = 0;
 		if (setsockopt(rxSocket, ipProtoSetting, ipAddMembershipSetting,
 				&mc_settings, sizeof(mc_settings)) < 0) {
@@ -218,18 +225,16 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 
  @param ifName
  the network interface name
- @param ipAddr
- the IP address of the interface
  @param rxSocketHandlerFunction
  the function that handles reception of data on the network interface
  @param rxMcAddr
- The receive multicast address (must have same IP version as ipAddr)
+ The receive multicast address
 
  @return
  - true on success
  - false on failure
  */
-static bool createRxInterface(const char * ifName, union olsr_sockaddr * ipAddr,
+static bool createRxInterface(const char * ifName,
 		socket_handler_func rxSocketHandlerFunction, union olsr_sockaddr * rxMcAddr) {
 	int socketFd = -1;
 	TRxTxNetworkInterface * networkInterface = NULL;
@@ -246,7 +251,6 @@ static bool createRxInterface(const char * ifName, union olsr_sockaddr * ipAddr,
 
 	memcpy(networkInterface->name, ifName, sizeof(networkInterface->name));
 	networkInterface->name[IFNAMSIZ] = '\0';
-	networkInterface->ipAddress = *ipAddr;
 	networkInterface->handler = NULL;
 	networkInterface->next = NULL;
 
@@ -300,12 +304,14 @@ TRxTxNetworkInterface *getTxNetworkInterfaces(void) {
  @param networkInterface
  The network interface object. This function expects it to be filled with all
  information, except for the socket descriptor.
+ @param txMcAddr
+ The transmit multicast address
 
  @return
  - the socket descriptor (>= 0)
  - -1 if an error occurred
  */
-static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
+static int createTxSocket(TRxTxNetworkInterface * networkInterface, union olsr_sockaddr * txMcAddr) {
 	int ipFamilySetting;
 	int ipProtoSetting;
 	int ipMcLoopSetting;
@@ -327,8 +333,15 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 					sizeof(networkInterface->name)) != 0);
 
 	memset(&address, 0, sizeof(address));
-	if (networkInterface->ipAddress.in.sa_family == AF_INET) {
-		assert(networkInterface->ipAddress.in4.sin_addr.s_addr != INADDR_ANY);
+	if (txMcAddr->in.sa_family == AF_INET) {
+		struct interface* interface = if_ifwithname((const char *)networkInterface->name);
+
+		if (!interface) {
+			pudError(true, "Could not get interface address of %s", networkInterface->name);
+			goto bail;
+		}
+
+		assert(txMcAddr->in4.sin_addr.s_addr != INADDR_ANY);
 
 		ipFamilySetting = AF_INET;
 		ipProtoSetting = IPPROTO_IP;
@@ -338,12 +351,12 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 		ifIndex = 0;
 
 		address.in4.sin_family = ipFamilySetting;
-		address.in4.sin_addr = networkInterface->ipAddress.in4.sin_addr;
+		address.in4.sin_addr = interface->int_addr.sin_addr;
 		address.in4.sin_port = getTxMcPort();
 		addr = &address.in4;
 		addrSize = sizeof(struct sockaddr_in);
 	} else {
-		assert(networkInterface->ipAddress.in6.sin6_addr.s6_addr != in6addr_any.s6_addr);
+		assert(txMcAddr->in6.sin6_addr.s6_addr != in6addr_any.s6_addr);
 
 		ipFamilySetting = AF_INET6;
 		ipProtoSetting = IPPROTO_IPV6;
@@ -414,14 +427,14 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface) {
 
  @param ifName
  the network interface name
- @param ipAddr
- the IP address of the interface
+ @param txMcAddr
+ the transmit multicast address
 
  @return
  - true on success
  - false on failure
  */
-static bool createTxInterface(const char * ifName, union olsr_sockaddr * ipAddr) {
+static bool createTxInterface(const char * ifName, union olsr_sockaddr * txMcAddr) {
 	int socketFd = -1;
 	TRxTxNetworkInterface * networkInterface = NULL;
 
@@ -437,12 +450,11 @@ static bool createTxInterface(const char * ifName, union olsr_sockaddr * ipAddr)
 
 	memcpy(networkInterface->name, ifName, sizeof(networkInterface->name));
 	networkInterface->name[IFNAMSIZ] = '\0';
-	networkInterface->ipAddress = *ipAddr;
 	networkInterface->handler = NULL;
 	networkInterface->next = NULL;
 
 	/* networkInterface needs to be filled in when calling createTxSocket */
-	socketFd = createTxSocket(networkInterface);
+	socketFd = createTxSocket(networkInterface, txMcAddr);
 	if (socketFd < 0) {
 		goto bail;
 	}
@@ -608,12 +620,12 @@ bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 				continue;
 			}
 
-			if (isRxNonOlsrIf && !createRxInterface(ifName, addr, rxSocketHandlerFunction, rxMcAddr)) {
+			if (isRxNonOlsrIf && !createRxInterface(ifName, rxSocketHandlerFunction, rxMcAddr)) {
 				/* creating a receive interface failed */
 				goto end;
 			}
 
-			if (isTxNonOlsrIf && !createTxInterface(ifName, addr)) {
+			if (isTxNonOlsrIf && !createTxInterface(ifName, txMcAddr)) {
 				/* creating a transmit interface failed */
 				goto end;
 			}
