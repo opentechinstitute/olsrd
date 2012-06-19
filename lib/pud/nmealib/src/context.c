@@ -43,7 +43,7 @@ void nmea_trace(const char *str, ...)
     if(func)
     {
         va_start(arg_list, str);
-        size = NMEA_POSIX(vsnprintf)(&buff[0], NMEA_DEF_PARSEBUFF - 1, str, arg_list);
+        size = vsnprintf(&buff[0], NMEA_DEF_PARSEBUFF - 1, str, arg_list);
         va_end(arg_list);
 
         if(size > 0)
@@ -68,7 +68,7 @@ void nmea_error(const char *str, ...)
     if(func)
     {
         va_start(arg_list, str);
-        size = NMEA_POSIX(vsnprintf)(&buff[0], NMEA_DEF_PARSEBUFF - 1, str, arg_list);
+        size = vsnprintf(&buff[0], NMEA_DEF_PARSEBUFF - 1, str, arg_list);
         va_end(arg_list);
 
         if(size > 0)

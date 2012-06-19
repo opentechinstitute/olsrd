@@ -21,7 +21,6 @@
 #ifndef __NMEA_CONFIG_H__
 #define __NMEA_CONFIG_H__
 
-#define NMEA_POSIX(x)  (x)
 #define NMEA_INLINE    inline
 
 #if !defined(NDEBUG)
