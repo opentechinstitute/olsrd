@@ -24,7 +24,17 @@ LIBRARY_LIB = $(LIBRARY_PATH)/lib
 CFLAGS += -I $(NMEALIB_INC) -I $(LIBRARY_INC)
 LIBS += -L $(NMEALIB_LIB) -L $(LIBRARY_LIB) -l$(NMEALIB_NAME) -lm -l$(LIBRARY_NAME)
 
-ifneq ($(OS),linux)
+
+SUPPORTED = 0
+ifeq ($(OS),linux)
+SUPPORTED = 1
+endif
+ifeq ($(OS),android)
+SUPPORTED = 1
+endif
+
+
+ifeq ($(SUPPORTED),0)
 
 .PHONY: all default_target install clean
 
