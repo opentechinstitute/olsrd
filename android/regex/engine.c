@@ -699,12 +699,12 @@ fast(struct match *m, char *start, char *stop, sopno startst, sopno stopst)
 		/* is there an EOL and/or BOL between lastc and c? */
 		flagch = '\0';
 		i = 0;
-		if ( (lastc == '\n' && m->g->cflags&REG_NEWLINE) ||
+		if ( (lastc == '\n' && (m->g->cflags&REG_NEWLINE)) ||
 				(lastc == OUT && !(m->eflags&REG_NOTBOL)) ) {
 			flagch = BOL;
 			i = m->g->nbol;
 		}
-		if ( (c == '\n' && m->g->cflags&REG_NEWLINE) ||
+		if ( (c == '\n' && (m->g->cflags&REG_NEWLINE)) ||
 				(c == OUT && !(m->eflags&REG_NOTEOL)) ) {
 			flagch = (flagch == BOL) ? BOLEOL : EOL;
 			i += m->g->neol;
@@ -781,12 +781,12 @@ slow(struct match *m, char *start, char *stop, sopno startst, sopno stopst)
 		/* is there an EOL and/or BOL between lastc and c? */
 		flagch = '\0';
 		i = 0;
-		if ( (lastc == '\n' && m->g->cflags&REG_NEWLINE) ||
+		if ( (lastc == '\n' && (m->g->cflags&REG_NEWLINE)) ||
 				(lastc == OUT && !(m->eflags&REG_NOTBOL)) ) {
 			flagch = BOL;
 			i = m->g->nbol;
 		}
-		if ( (c == '\n' && m->g->cflags&REG_NEWLINE) ||
+		if ( (c == '\n' && (m->g->cflags&REG_NEWLINE)) ||
 				(c == OUT && !(m->eflags&REG_NOTEOL)) ) {
 			flagch = (flagch == BOL) ? BOLEOL : EOL;
 			i += m->g->neol;
