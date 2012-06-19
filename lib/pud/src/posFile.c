@@ -112,6 +112,7 @@ static char line[LINE_LENGTH];
 /**
  * Read the position file
  * @param fileName the filename
+ * @param nmeaInfo the NMEA data
  */
 bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	bool retval = false;
