@@ -21,8 +21,6 @@
 #ifndef __NMEA_CONFIG_H__
 #define __NMEA_CONFIG_H__
 
-#define NMEA_INLINE    inline
-
 #if !defined(NDEBUG)
 #include <assert.h>
 #define NMEA_ASSERT(x)   assert(x)
