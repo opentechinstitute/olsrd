@@ -176,7 +176,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	 * which the multicast datagrams are to be received. */
 	if (ipFamilySetting == AF_INET) {
 		struct ip_mreq mc_settings;
-		struct interface* interface = if_ifwithname((const char *)networkInterface->name);
+		struct interface* interface = if_ifwithname(networkInterface->name);
 
 		if (!interface) {
 			pudError(true, "Could not get interface address of %s", networkInterface->name);
@@ -197,7 +197,7 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 		struct ipv6_mreq mc6_settings;
 		(void) memset(&mc6_settings, 0, sizeof(mc6_settings));
 		mc6_settings.ipv6mr_multiaddr = rxMcAddr->in6.sin6_addr;
-		mc6_settings.ipv6mr_interface = if_nametoindex((char *)networkInterface->name);
+		mc6_settings.ipv6mr_interface = if_nametoindex(networkInterface->name);
 		errno = 0;
 		if (setsockopt(rxSocket, ipProtoSetting, ipAddMembershipSetting,
 				&mc6_settings, sizeof(mc6_settings)) < 0) {
@@ -334,7 +334,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface, union olsr_s
 
 	memset(&address, 0, sizeof(address));
 	if (txMcAddr->in.sa_family == AF_INET) {
-		struct interface* interface = if_ifwithname((const char *)networkInterface->name);
+		struct interface* interface = if_ifwithname(networkInterface->name);
 
 		if (!interface) {
 			pudError(true, "Could not get interface address of %s", networkInterface->name);
@@ -363,7 +363,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface, union olsr_s
 		ipMcLoopSetting = IPV6_MULTICAST_LOOP;
 		ipMcIfSetting = IPV6_MULTICAST_IF;
 		ipTtlSetting = IPV6_MULTICAST_HOPS;
-		ifIndex = if_nametoindex((char *)networkInterface->name);
+		ifIndex = if_nametoindex(networkInterface->name);
 
 		addr = &ifIndex;
 		addrSize = sizeof(ifIndex);

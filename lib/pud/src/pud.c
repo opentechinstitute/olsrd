@@ -99,7 +99,7 @@ static void sendToAllTxInterfaces(unsigned char *buffer,
 		TRxTxNetworkInterface *networkInterface = txNetworkInterfaces;
 		errno = 0;
 		if (sendto(networkInterface->socketFd, buffer, bufferLength, 0, addr, addrSize) < 0) {
-			pudError(true, "Transmit error on interface %s", (char *) &networkInterface->name);
+			pudError(true, "Transmit error on interface %s", &networkInterface->name[0]);
 		}
 		txNetworkInterfaces = networkInterface->next;
 	}
