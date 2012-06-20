@@ -72,7 +72,7 @@ install: all
 	@mkdir -v -p "$(LIBDIR)"
 	cp "lib/$(LIBNAME)" "$(LIBDIR)/$(LIBNAME).$(VERSION)"
 	$(STRIP) "$(LIBDIR)/$(LIBNAME).$(VERSION)"
-	ldconfig -n "$(LIBDIR)"
+	/sbin/ldconfig -n "$(LIBDIR)"
 
 install-headers: all
 	@mkdir -v -p "$(INCLUDEDIR)"
@@ -81,7 +81,7 @@ install-headers: all
 
 uninstall:
 	rm -f "$(LIBDIR)/$(LIBNAME)" "$(LIBDIR)/$(LIBNAME).$(VERSION)"
-	ldconfig -n "$(LIBDIR)"
+	/sbin/ldconfig -n "$(LIBDIR)"
 	@rmdir -v -p --ignore-fail-on-non-empty "$(LIBDIR)"
 
 uninstall-headers:
