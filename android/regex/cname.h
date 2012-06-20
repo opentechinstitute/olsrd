@@ -37,8 +37,8 @@
 
 /* character-name table */
 static const struct cname {
-	const char *name;
-	const char code;
+	char *name;
+	char code;
 } cnames[] = {
 	{ "NUL",			'\0' },
 	{ "SOH",			'\001' },

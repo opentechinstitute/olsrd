@@ -168,7 +168,7 @@ regcomp(regex_t *preg, const char *pattern, int cflags)
 			return(REG_INVARG);
 		len = preg->re_endp - pattern;
 	} else
-		len = strlen(pattern);
+		len = strlen((char *)pattern);
 
 	/* do the mallocs early so failure handling is easy */
 	g = (struct re_guts *)malloc(sizeof(struct re_guts) +
@@ -366,7 +366,7 @@ p_ere_exp(struct parse *p)
 		break;
 	case '{':		/* okay as ordinary except if digit follows */
 		REQUIRE(!MORE() || !isdigit((uch)PEEK()), REG_BADRPT);
-		/* no break */
+		/* FALLTHROUGH */
 	default:
 		ordinary(p, c);
 		break;
@@ -562,7 +562,7 @@ p_simp_re(struct parse *p,
 		break;
 	case '*':
 		REQUIRE(starordinary, REG_BADRPT);
-		/* no break */
+		/* FALLTHROUGH */
 	default:
 		ordinary(p, (char)c);
 		break;
@@ -1190,7 +1190,7 @@ mcadd( struct parse *p, cset *cs, char *cp)
  */
 /* ARGSUSED */
 static void
-mcinvert(struct parse *p __attribute__((unused)), cset *cs)
+mcinvert(struct parse *p, cset *cs)
 {
 	assert(cs->multis == NULL);	/* xxx */
 }
@@ -1203,7 +1203,7 @@ mcinvert(struct parse *p __attribute__((unused)), cset *cs)
  */
 /* ARGSUSED */
 static void
-mccase(struct parse *p __attribute__((unused)), cset *cs)
+mccase(struct parse *p, cset *cs)
 {
 	assert(cs->multis == NULL);	/* xxx */
 }
@@ -1451,7 +1451,7 @@ findmust(struct parse *p, struct re_guts *g)
 					return;
 				}
 			} while (OP(s) != O_QUEST && OP(s) != O_CH);
-			/* no break */
+			/* fallthrough */
 		default:		/* things that break a sequence */
 			if (newlen > g->mlen) {		/* ends one */
 				start = newstart;
@@ -1508,8 +1508,6 @@ pluscount(struct parse *p, struct re_guts *g)
 			if (plusnest > maxnest)
 				maxnest = plusnest;
 			plusnest--;
-			break;
-		default:
 			break;
 		}
 	} while (OP(s) != OEND);
