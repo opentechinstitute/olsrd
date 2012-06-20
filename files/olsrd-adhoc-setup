@@ -61,7 +61,7 @@ echo -n "Setting up IP address: "
 # get MAC to generate hopefully unique IP address with, by using the last two
 # hex pairs as the last two hex pairs for the IP address, converting the hex
 # to decimal first.
-MAC=`/sbin/ifconfig | grep wlan0 | sed 's|.*HWaddr ||'`
+MAC=`/sbin/ifconfig | grep $wlan | sed 's|.*HWaddr ||'`
 MAC5=`echo $MAC | cut -d : -f 5`
 MAC6=`echo $MAC | cut -d : -f 6`
 ip3=`printf %d 0x$MAC5`
