@@ -15,6 +15,7 @@ sbindir ?= $(prefix)/sbin
 LIBDIR =	$(DESTDIR)$(libdir)
 MANDIR =	$(DESTDIR)$(mandir)
 SBINDIR =	$(DESTDIR)$(sbindir)
+SHAREDIR =	$(DESTDIR)$(datarootdir)
 
 SRCS += 	$(wildcard src/linux/*.c src/unix/*.c)
 HDRS +=		$(wildcard src/linux/*.h src/unix/*.h)
