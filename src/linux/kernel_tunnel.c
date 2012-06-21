@@ -73,16 +73,11 @@
 #include <sys/types.h>
 #include <net/if.h>
 
-static const char DEV_IPV4_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF;
-static const char DEV_IPV6_TUNNEL[IFNAMSIZ] = TUNNEL_ENDPOINT_IF6;
-
 static bool store_iptunnel_state;
 static struct olsr_cookie_info *tunnel_cookie;
 static struct avl_tree tunnel_tree;
 
-int olsr_os_init_iptunnel(void) {
-  const char *dev = olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL;
-
+int olsr_os_init_iptunnel(const char * dev) {
   tunnel_cookie = olsr_alloc_cookie("iptunnel", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(tunnel_cookie, sizeof(struct olsr_iptunnel_entry));
   avl_init(&tunnel_tree, avl_comp_default);
@@ -98,7 +93,7 @@ int olsr_os_init_iptunnel(void) {
   return olsr_os_ifip(if_nametoindex(dev), &olsr_cnf->main_addr, true);
 }
 
-void olsr_os_cleanup_iptunnel(void) {
+void olsr_os_cleanup_iptunnel(const char * dev) {
   while (tunnel_tree.count > 0) {
     struct olsr_iptunnel_entry *t;
 
@@ -109,7 +104,7 @@ void olsr_os_cleanup_iptunnel(void) {
     olsr_os_del_ipip_tunnel(t);
   }
   if (!store_iptunnel_state) {
-    olsr_if_set_state(olsr_cnf->ip_version == AF_INET ? DEV_IPV4_TUNNEL : DEV_IPV6_TUNNEL, false);
+    olsr_if_set_state(dev, false);
   }
 
   olsr_free_cookie(tunnel_cookie);
@@ -142,7 +137,7 @@ static int os_ip4_tunnel(const char *name, in_addr_t *target)
   strncpy(p.name, name, IFNAMSIZ);
 
   memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, target != NULL ? DEV_IPV4_TUNNEL : name, IFNAMSIZ);
+  strncpy(ifr.ifr_name, target != NULL ? TUNNEL_ENDPOINT_IF : name, IFNAMSIZ);
   ifr.ifr_ifru.ifru_data = (void *) &p;
 
   if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {
@@ -183,7 +178,7 @@ static int os_ip6_tunnel(const char *name, struct in6_addr *target)
   strncpy(p.name, name, IFNAMSIZ);
 
   memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, target != NULL ? DEV_IPV6_TUNNEL : name, IFNAMSIZ);
+  strncpy(ifr.ifr_name, target != NULL ? TUNNEL_ENDPOINT_IF6 : name, IFNAMSIZ);
   ifr.ifr_ifru.ifru_data = (void *) &p;
 
   if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {

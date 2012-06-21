@@ -108,7 +108,7 @@ olsr_init_gateways(void) {
 
   refresh_smartgw_netmask();
 
-  if (olsr_os_init_iptunnel()) {
+  if (olsr_os_init_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6)) {
     return 1;
   }
 
@@ -158,7 +158,7 @@ void olsr_cleanup_gateways(void) {
   }
 
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
-  olsr_os_cleanup_iptunnel();
+  olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
 }
 
 /**
