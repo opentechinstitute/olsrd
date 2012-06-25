@@ -21,7 +21,6 @@
 #ifndef __NMEA_H__
 #define __NMEA_H__
 
-#include <nmea/config.h>
 #include <nmea/context.h>
 #include <nmea/generate.h>
 #include <nmea/generator.h>
