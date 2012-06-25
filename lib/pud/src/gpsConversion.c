@@ -79,7 +79,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 
 	smask = getPositionUpdateSmask(olsrGpsMessage);
 
-	flags = getPositionUpdateSmask(olsrGpsMessage);
+	flags = getPositionUpdateFlags(olsrGpsMessage);
 
 	if (flags & PUD_FLAGS_GATEWAY) {
 		gateway[0] = '1';
