@@ -44,6 +44,8 @@ int setNodeId(const char *value, void *data, set_plugin_parameter_addon addon);
 bool isRxNonOlsrInterface(const char *ifName);
 int addRxNonOlsrInterface(const char *value, void *data,
 		set_plugin_parameter_addon addon);
+unsigned int getRxNonOlsrInterfaceCount(void);
+unsigned char * getRxNonOlsrInterfaceName(unsigned int index);
 
 /** The name of the allowed source IP address plugin parameter */
 #define PUD_RX_ALLOWED_SOURCE_IP_NAME			"rxAllowedSourceIpAddress"
@@ -91,6 +93,8 @@ int setPositionFile(const char *value, void *data, set_plugin_parameter_addon ad
 bool isTxNonOlsrInterface(const char *ifName);
 int addTxNonOlsrInterface(const char *value, void *data,
 		set_plugin_parameter_addon addon);
+unsigned int getTxNonOlsrInterfaceCount(void);
+unsigned char * getTxNonOlsrInterfaceName(unsigned int index);
 
 /** The name of the transmit multicast address plugin parameter */
 #define PUD_TX_MC_ADDR_NAME						"txMcAddr"

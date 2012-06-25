@@ -359,6 +359,21 @@ int addRxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 	return false;
 }
 
+/**
+ * @return the number of configured non-olsr receive interfaces
+ */
+unsigned int getRxNonOlsrInterfaceCount(void) {
+	return rxNonOlsrInterfaceCount;
+}
+
+/**
+ * @param index the index of the configured non-olsr receive interface
+ * @return the index-th interface name
+ */
+unsigned char * getRxNonOlsrInterfaceName(unsigned int index) {
+	return &rxNonOlsrInterfaceNames[index][0];
+}
+
 /*
  * rxAllowedSourceIpAddress
  */
@@ -614,6 +629,21 @@ int addTxNonOlsrInterface(const char *value, void *data __attribute__ ((unused))
 	}
 
 	return false;
+}
+
+/**
+ * @return the number of configured non-olsr transmit interfaces
+ */
+unsigned int getTxNonOlsrInterfaceCount(void) {
+	return txNonOlsrInterfaceCount;
+}
+
+/**
+ * @param index the index of the configured non-olsr transmit interface
+ * @return the index-th interface name
+ */
+unsigned char * getTxNonOlsrInterfaceName(unsigned int index) {
+	return &txNonOlsrInterfaceNames[index][0];
 }
 
 /*

@@ -83,4 +83,6 @@ static inline bool isMulticast(union olsr_sockaddr *addr) {
 unsigned char * getHardwareAddress(const char * ifName, int family,
 		struct ifreq *ifr);
 
+struct in_addr * getIPv4Address(const char * ifName, struct ifreq *ifr);
+
 #endif /* _PUD_NETTOOLS_H_ */

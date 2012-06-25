@@ -175,16 +175,17 @@ static int createRxSocket(TRxTxNetworkInterface * networkInterface,
 	 * which the multicast datagrams are to be received. */
 	if (ipFamilySetting == AF_INET) {
 		struct ip_mreq mc_settings;
-		struct interface* interface = if_ifwithname(networkInterface->name);
 
-		if (!interface) {
+		struct ifreq ifr;
+		struct in_addr * ifAddr = getIPv4Address(networkInterface->name, &ifr);
+		if (!ifAddr) {
 			pudError(true, "Could not get interface address of %s", networkInterface->name);
 			goto bail;
 		}
 
 		(void) memset(&mc_settings, 0, sizeof(mc_settings));
 		mc_settings.imr_multiaddr = rxMcAddr->in4.sin_addr;
-		mc_settings.imr_interface = interface->int_addr.sin_addr;
+		mc_settings.imr_interface = *ifAddr;
 		errno = 0;
 		if (setsockopt(rxSocket, ipProtoSetting, ipAddMembershipSetting,
 				&mc_settings, sizeof(mc_settings)) < 0) {
@@ -333,9 +334,9 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface, union olsr_s
 
 	memset(&address, 0, sizeof(address));
 	if (txMcAddr->in.sa_family == AF_INET) {
-		struct interface* interface = if_ifwithname(networkInterface->name);
-
-		if (!interface) {
+		struct ifreq ifr;
+		struct in_addr * ifAddr = getIPv4Address(networkInterface->name, &ifr);
+		if (!ifAddr) {
 			pudError(true, "Could not get interface address of %s", networkInterface->name);
 			goto bail;
 		}
@@ -350,7 +351,7 @@ static int createTxSocket(TRxTxNetworkInterface * networkInterface, union olsr_s
 		ifIndex = 0;
 
 		address.in4.sin_family = ipFamilySetting;
-		address.in4.sin_addr = interface->int_addr.sin_addr;
+		address.in4.sin_addr = *ifAddr;
 		address.in4.sin_port = getTxMcPort();
 		addr = &address.in4;
 		addrSize = sizeof(struct sockaddr_in);
@@ -589,31 +590,25 @@ static int createDownlinkSocket(int ipVersion, socket_handler_func rxSocketHandl
  */
 bool createNetworkInterfaces(socket_handler_func rxSocketHandlerFunction,
 		socket_handler_func rxSocketHandlerFunctionDownlink) {
-	TRxTxNetworkInterface * interfaces;
 	union olsr_sockaddr * rxMcAddr = getRxMcAddr();
 	union olsr_sockaddr * txMcAddr = getTxMcAddr();
+	unsigned int count = 0;
 
 	/* loop over all configured rx interfaces */
-	interfaces = getRxNetworkInterfaces();
-	if (interfaces) {
-		TRxTxNetworkInterface * interface;
-		for (interface = interfaces; interface != NULL; interface = interfaces->next) {
-			if (!createRxInterface(interface->name, rxSocketHandlerFunction, rxMcAddr)) {
-				/* creating a receive interface failed */
-				return false;
-			}
+	count = getRxNonOlsrInterfaceCount();
+	while (count--) {
+		if (!createRxInterface((char *)getRxNonOlsrInterfaceName(count), rxSocketHandlerFunction, rxMcAddr)) {
+			/* creating a receive interface failed */
+			return false;
 		}
 	}
 
 	/* loop over all configured tx interfaces */
-	interfaces = getTxNetworkInterfaces();
-	if (interfaces) {
-		TRxTxNetworkInterface * interface;
-		for (interface = interfaces; interface != NULL; interface = interfaces->next) {
-			if (!createTxInterface(interface->name, txMcAddr)) {
-				/* creating a transmit interface failed */
-				return false;
-			}
+	count = getTxNonOlsrInterfaceCount();
+	while (count--) {
+		if (!createTxInterface((char *)getTxNonOlsrInterfaceName(count), txMcAddr)) {
+			/* creating a transmit interface failed */
+			return false;
 		}
 	}
 
