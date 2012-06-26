@@ -76,3 +76,20 @@ LoadPlugin "olsrd_jsoninfo.so.0.0"
     # specify a UUID for this node to track it for debugging
     #PlParam      "UUIDFile" "/etc/olsrd/olsrd.uuid"
 }
+
+
+Example Usage
+=============
+
+You can use http URLs with various web tools to access the information:
+
+  curl http://localhost:9090/all
+
+You can combine the various commands to generate a custom report:
+
+  curl http://localhost:9090/interfaces/routes/links
+
+If you want a copy of the current configuration, you can download it
+using this URL:
+
+  wget http://localhost:9090/olsrd.conf
