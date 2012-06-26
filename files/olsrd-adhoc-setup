@@ -34,7 +34,7 @@ echo "    attaching to '$essid' with BSSID '$bssid'"
 
 if [ -x /usr/bin/nmcli ]; then
 	echo -n "Turning off NetworkManager wifi control: "
-    /usr/bin/nmcli nm wifi off
+    /usr/bin/nmcli dev disconnect iface $wlan
     echo "done"
 fi
 
