@@ -35,5 +35,11 @@ CFLAGS ?= -Wall -Wextra -Wold-style-definition -Wdeclaration-after-statement -Wm
           -Wno-multichar -Wno-deprecated-declarations -Wendif-labels -Wwrite-strings -Wbad-function-cast \
           -Wpointer-arith -Wcast-qual -Wshadow -Wformat -Wsequence-point -Wcast-align -Wnested-externs \
           -Winline -Wdisabled-optimization -finline-functions-called-once -funit-at-a-time -fearly-inlining \
-          -finline-limit=350 -O2  -fPIC -ggdb -fPIC -O2 -Wall -Wextra -Wformat=2 -Winit-self -Wmissing-include-dirs \
+          -finline-limit=350 -fPIC -ggdb -Wformat=2 -Winit-self -Wmissing-include-dirs \
           -Wswitch-default -Wswitch-enum
+
+ifeq ($(DEBUG),0)
+CFLAGS+= -O2
+else
+CFLAGS+= -O0
+endif
