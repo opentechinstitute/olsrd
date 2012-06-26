@@ -1100,6 +1100,16 @@ ipc_print_interfaces(struct autobuf *abuf)
     abuf_json_sys_class_net(abuf, "txHeartbeatErrors", ifs->name, "statistics/tx_heartbeat_errors");
     abuf_json_sys_class_net(abuf, "txPackets", ifs->name, "statistics/tx_packets");
     abuf_json_sys_class_net(abuf, "txWindowErrors", ifs->name, "statistics/tx_window_errors");
+    abuf_json_sys_class_net(abuf, "beaconing", ifs->name, "wireless/beacon");
+    abuf_json_sys_class_net(abuf, "encryptionKey", ifs->name, "wireless/crypt");
+    abuf_json_sys_class_net(abuf, "fragmentationThreshold", ifs->name, "wireless/fragment");
+    abuf_json_sys_class_net(abuf, "signalLevel", ifs->name, "wireless/level");
+    abuf_json_sys_class_net(abuf, "linkQuality", ifs->name, "wireless/link");
+    abuf_json_sys_class_net(abuf, "misc", ifs->name, "wireless/misc");
+    abuf_json_sys_class_net(abuf, "noiseLevel", ifs->name, "wireless/noise");
+    abuf_json_sys_class_net(abuf, "nwid", ifs->name, "wireless/nwid");
+    abuf_json_sys_class_net(abuf, "wirelessRetries", ifs->name, "wireless/retries");
+    abuf_json_sys_class_net(abuf, "wirlessStatus", ifs->name, "wireless/status");
 #endif
     abuf_json_close_array_entry(abuf);
   }
