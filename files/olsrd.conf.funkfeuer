@@ -1,3 +1,7 @@
+#
+# sourced from: http://wiki.funkfeuer.at/index.php/OLSR-Konfiguration
+#
+
 DebugLevel              0
 IpVersion               4
 AllowNoInt              yes
