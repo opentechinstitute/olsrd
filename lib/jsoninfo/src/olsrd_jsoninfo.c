@@ -1181,7 +1181,7 @@ ipc_print_interfaces(struct autobuf *abuf)
     abuf_json_sys_class_net(abuf, "noiseLevel", ifs->name, "wireless/noise");
     abuf_json_sys_class_net(abuf, "nwid", ifs->name, "wireless/nwid");
     abuf_json_sys_class_net(abuf, "wirelessRetries", ifs->name, "wireless/retries");
-    abuf_json_sys_class_net(abuf, "wirlessStatus", ifs->name, "wireless/status");
+    abuf_json_sys_class_net(abuf, "wirelessStatus", ifs->name, "wireless/status");
 #endif
     abuf_json_close_array_entry(abuf);
   }
