@@ -284,6 +284,52 @@ static void determineCumulativeSmaskSigFix(
 }
 
 /**
+ * Adjust the range of the direction so that we can correctly average it:
+ * <pre>
+ * [   0, 180) --> [   0, 180)
+ * [ 180, 360) --> [-180,   0)
+ * </pre>
+ * @param direction the direction to adjust
+ * @return the adjusted direction
+ */
+static double getAdjustedDirectionForAveraging(double direction) {
+	assert(direction >= (double)0.0);
+	assert(direction < (double)360.0);
+
+	printf("  getAdjustedDirectionForAveraging=%f (entry)\n", direction);
+	if (direction >= (double)180.0) {
+		printf("  getAdjustedDirectionForAveraging=%f (exit)\n", direction - (double)360.0);
+		return (direction - (double)360.0);
+	}
+
+	printf("  getAdjustedDirectionForAveraging=%f (exit)\n", direction);
+	return direction;
+}
+
+/**
+ * Adjust the range of the direction after averaging: the reverse of getAdjustedDirectionForAveraging
+ * <pre>
+ * [-180,   0) --> [ 180, 360)
+ * [   0, 180) --> [   0, 180)
+ * </pre>
+ * @param direction the direction to adjust
+ * @return the adjusted direction
+ */
+static double getAdjustedDirectionAfterAveraging(double direction) {
+	assert(direction >= (double)-180.0);
+	assert(direction < (double)180.0);
+
+	printf("  getAdjustedDirectionAfterAveraging=%f (entry)\n", direction);
+	if (direction < (double)0.0) {
+		printf("  getAdjustedDirectionAfterAveraging=%f (exit)\n", direction + (double)360.0);
+		return (direction + (double)360.0);
+	}
+
+	printf("  getAdjustedDirectionAfterAveraging=%f (exit)\n", direction);
+	return direction;
+}
+
+/**
  Add/remove a position update entry to/from the average position list, updates
  the counters, adjusts the entriesCount and redetermines the cumulative
  smask, sig and fix.
@@ -300,6 +346,7 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 		bool add) {
 	PositionUpdateEntry * cumulative =
 			&positionAverageList->positionAverageCumulative;
+	double 	adjustedDirection = getAdjustedDirectionForAveraging(entry->nmeaInfo.direction);
 
 	if (!add) {
 		assert(positionAverageList->entriesCount >= positionAverageList->entriesMaxCount);
@@ -348,8 +395,8 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 			: -entry->nmeaInfo.elv;
 	cumulative->nmeaInfo.speed += add ? entry->nmeaInfo.speed
 			: -entry->nmeaInfo.speed;
-	cumulative->nmeaInfo.direction += add ? entry->nmeaInfo.direction
-			: -entry->nmeaInfo.direction;
+	cumulative->nmeaInfo.direction += add ? adjustedDirection
+			: -adjustedDirection;
 	cumulative->nmeaInfo.declination += add ? entry->nmeaInfo.declination
 			: -entry->nmeaInfo.declination;
 
@@ -392,6 +439,8 @@ static void updatePositionAverageFromCumulative(
 		positionAverageList->positionAverage.nmeaInfo.direction /= divider;
 		positionAverageList->positionAverage.nmeaInfo.declination /= divider;
 	}
+
+	positionAverageList->positionAverage.nmeaInfo.direction = getAdjustedDirectionAfterAveraging(positionAverageList->positionAverage.nmeaInfo.direction);
 
 	/* satinfo: use from average */
 }

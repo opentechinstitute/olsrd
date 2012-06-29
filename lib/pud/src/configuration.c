@@ -61,7 +61,7 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
  */
 
 /** The nodeId buffer */
-static unsigned char nodeId[PUD_TX_NODEID_BUFFERSIZE + 1];
+static unsigned char nodeId[PUD_TX_NODEID_BUFFERSIZE];
 
 /** The length of the string in the nodeId buffer */
 static size_t nodeIdLength = 0;
@@ -122,9 +122,9 @@ int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin
 	assert (value != NULL);
 
 	valueLength = strlen(value);
-	if (valueLength > PUD_TX_NODEID_BUFFERSIZE) {
+	if (valueLength > (PUD_TX_NODEID_BUFFERSIZE - 1)) {
 		pudError(false, "Value of parameter %s is too long, maximum length is"
-			" %u, current length is %lu", PUD_NODE_ID_NAME, PUD_TX_NODEID_BUFFERSIZE,
+			" %u, current length is %lu", PUD_NODE_ID_NAME, (PUD_TX_NODEID_BUFFERSIZE - 1),
 				(unsigned long) valueLength);
 		return true;
 	}
@@ -207,7 +207,7 @@ static bool intSetupNodeIdBinaryString(void) {
 		return false;
 	}
 
-	if (nodeidlength > PUD_TX_NODEID_BUFFERSIZE) {
+	if (nodeidlength > (PUD_TX_NODEID_BUFFERSIZE - 1)) {
 		pudError(false, "Length of parameter %s (%s) is too great", PUD_NODE_ID_NAME, &nodeid[0]);
 		return false;
 	}
@@ -1391,7 +1391,7 @@ unsigned int checkConfig(void) {
 
 	if (!nodeIdSet) {
 		if (nodeIdType == PUD_NODEIDTYPE_DNS) {
-			char name[PUD_TX_NODEID_BUFFERSIZE + 1];
+			char name[PUD_TX_NODEID_BUFFERSIZE];
 
 			errno = 0;
 			if (gethostname(&name[0], sizeof(name)) < 0) {
@@ -1401,6 +1401,7 @@ unsigned int checkConfig(void) {
 				setNodeId(&name[0], NULL,
 						(set_plugin_parameter_addon) {.pc = NULL});
 			}
+			name[PUD_TX_NODEID_BUFFERSIZE - 1] = '\0';
 		} else if ((nodeIdType != PUD_NODEIDTYPE_MAC) && (nodeIdType
 				!= PUD_NODEIDTYPE_IPV4) && (nodeIdType != PUD_NODEIDTYPE_IPV6)) {
 			pudError(false, "No node ID set while one is required for"

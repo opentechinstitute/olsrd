@@ -46,8 +46,8 @@
 #define PUD_LATITUDE_BITS			28
 
 /** The maximum size of the string representation of the latitude
- * sign [0,90] [0,59] dot [0,59] [0,999] */
-#define PUD_TX_LATITUDE_DIGITS		(1 + 2 + 2 + 1 + 2 + 3)
+ * sign [0,90] [0,59] dot [0,59] [0,999] (including \0) */
+#define PUD_TX_LATITUDE_DIGITS		(1 + 2 + 2 + 1 + 2 + 3 + 1)
 
 /** The number of decimals of the latitude in the transmit sentence */
 #define PUD_TX_LATITUDE_DECIMALS	"5"
@@ -60,8 +60,8 @@
 #define PUD_LONGITUDE_BITS			27
 
 /** The maximum size of the string representation of the longitude
- * sign [0,180] [0,59] dot [0,59] [0,999] */
-#define PUD_TX_LONGITUDE_DIGITS		(1 + 3 + 2 + 1 + 2 + 3)
+ * sign [0,180] [0,59] dot [0,59] [0,999] (including \0) */
+#define PUD_TX_LONGITUDE_DIGITS		(1 + 3 + 2 + 1 + 2 + 3 + 1)
 
 /** The number of decimals of the longitude in the transmit sentence */
 #define PUD_TX_LONGITUDE_DECIMALS	"5"
@@ -79,8 +79,8 @@
 /** The maximum altitude */
 #define PUD_ALTITUDE_MAX	(((1 << PUD_ALTITUDE_BITS) - 1) + PUD_ALTITUDE_MIN)
 
-/** The maximum size of the string representation of the altitude */
-#define PUD_TX_ALTITUDE_DIGITS		6
+/** The maximum size of the string representation of the altitude (including \0) */
+#define PUD_TX_ALTITUDE_DIGITS		(6 + 1)
 
 /*
  * Speed
@@ -92,8 +92,8 @@
 /** The maximum speed value */
 #define PUD_SPEED_MAX				((1 << PUD_SPEED_BITS) - 1)
 
-/** The maximum size of the string representation of the speed */
-#define PUD_TX_SPEED_DIGITS			4
+/** The maximum size of the string representation of the speed (including \0) */
+#define PUD_TX_SPEED_DIGITS			(4 + 1)
 
 /*
  * Track
@@ -102,8 +102,8 @@
 /** The number of bits for the track angle field */
 #define PUD_TRACK_BITS				9
 
-/** The maximum size of the string representation of the track angle */
-#define PUD_TX_TRACK_DIGITS			3
+/** The maximum size of the string representation of the track angle (including \0) */
+#define PUD_TX_TRACK_DIGITS			(3 + 1)
 
 /*
  * HDOP
@@ -118,8 +118,8 @@
 /** The maximum HDOP value (in m) */
 #define PUD_HDOP_MAX		(((1 << PUD_HDOP_BITS) - 1) * PUD_HDOP_RESOLUTION)
 
-/** The maximum size of the string representation of the HDOP */
-#define PUD_TX_HDOP_DIGITS			5
+/** The maximum size of the string representation of the HDOP (including \0) */
+#define PUD_TX_HDOP_DIGITS			(5 + 1)
 
 /** The number of decimals of the HDOP in the transmit sentence */
 #define PUD_TX_HDOP_DECIMALS		"3"
@@ -223,15 +223,15 @@ typedef enum _NodeIdType {
 /** the number of nodeId bytes for PUD_NODEIDTYPE_IPV6 (sizeof(struct in6_addr)) */
 #define PUD_NODEIDTYPE_IPV6_BYTES		16
 
-/** The maximum size of the string representation of the nodeIdType */
-#define PUD_TX_NODEIDTYPE_DIGITS		3
+/** The maximum size of the string representation of the nodeIdType (including \0) */
+#define PUD_TX_NODEIDTYPE_DIGITS		(3 + 1)
 
 /*
  * Node ID
  */
 
-/** The maximum size of the string representation of the nodeId */
-#define PUD_TX_NODEID_BUFFERSIZE		1023
+/** The maximum size of the string representation of the nodeId (including \0) */
+#define PUD_TX_NODEID_BUFFERSIZE		1024
 
 /**
  The type that is used to store the nodeId as a binary representation along
@@ -244,7 +244,7 @@ typedef struct _nodeIdBinaryType {
 				unsigned char mac[PUD_NODEIDTYPE_MAC_BYTES];
 				union olsr_ip_addr ip;
 				unsigned long long longValue;
-				unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE + 1];
+				unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE];
 		} buffer;
 } nodeIdBinaryType;
 

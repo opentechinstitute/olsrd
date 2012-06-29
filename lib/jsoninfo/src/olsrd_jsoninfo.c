@@ -881,6 +881,8 @@ ipc_print_config(struct autobuf *abuf)
 {
   struct ipaddr_str mainaddrbuf;
   struct ip_prefix_list *ipcn;
+  struct olsr_lq_mult *mult;
+  char ipv6_buf[INET6_ADDRSTRLEN];                  /* buffer for IPv6 inet_htop */
 
   abuf_json_open_object(abuf, "config");
 
@@ -906,9 +908,50 @@ ipc_print_config(struct autobuf *abuf)
   abuf_json_int(abuf, "brokenRouteCost", ROUTE_COST_BROKEN);
 
   abuf_json_string(abuf, "fibMetrics", FIB_METRIC_TXT[olsr_cnf->fib_metric]);
-  /* TODO
-  struct if_config_options *interface_defaults;
-  */
+
+  abuf_json_string(abuf, "defaultIpv6Multicast",
+                   inet_ntop(AF_INET6, &olsr_cnf->interface_defaults->ipv6_multicast.v6,
+                             ipv6_buf, sizeof(ipv6_buf)));
+  if (olsr_cnf->interface_defaults->ipv4_multicast.v4.s_addr)
+    abuf_json_string(abuf, "defaultIpv4Broadcast",
+                     inet_ntoa(olsr_cnf->interface_defaults->ipv4_multicast.v4));
+  else
+    abuf_json_string(abuf, "defaultIpv4Broadcast", "auto");
+
+  if (olsr_cnf->interface_defaults->mode==IF_MODE_ETHER)
+    abuf_json_string(abuf, "defaultInterfaceMode", "ether");
+  else
+    abuf_json_string(abuf, "defaultInterfaceMode", "mesh");
+
+  abuf_json_float(abuf, "defaultHelloEmissionInterval",
+                  olsr_cnf->interface_defaults->hello_params.emission_interval);
+  abuf_json_float(abuf, "defaultHelloValidityTime",
+                  olsr_cnf->interface_defaults->hello_params.validity_time);
+  abuf_json_float(abuf, "defaultTcEmissionInterval",
+                  olsr_cnf->interface_defaults->tc_params.emission_interval);
+  abuf_json_float(abuf, "defaultTcValidityTime",
+                  olsr_cnf->interface_defaults->tc_params.validity_time);
+  abuf_json_float(abuf, "defaultMidEmissionInterval",
+                  olsr_cnf->interface_defaults->mid_params.emission_interval);
+  abuf_json_float(abuf, "defaultMidValidityTime",
+                  olsr_cnf->interface_defaults->mid_params.validity_time);
+  abuf_json_float(abuf, "defaultHnaEmissionInterval",
+                  olsr_cnf->interface_defaults->hna_params.emission_interval);
+  abuf_json_float(abuf, "defaultHnaValidityTime",
+                  olsr_cnf->interface_defaults->hna_params.validity_time);
+  abuf_json_boolean(abuf, "defaultAutoDetectChanges",
+                    olsr_cnf->interface_defaults->autodetect_chg);
+
+  abuf_json_open_array(abuf, "defaultLinkQualityMultipliers");
+  for (mult = olsr_cnf->interface_defaults->lq_mult; mult != NULL; mult = mult->next) {
+    abuf_json_open_array_entry(abuf);
+    abuf_json_string(abuf, "route",
+                     inet_ntop(olsr_cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)));
+    abuf_json_float(abuf, "multiplier", mult->value / 65535.0);
+    abuf_json_close_array_entry(abuf);
+  }
+  abuf_json_close_array(abuf);
+
   abuf_json_int(abuf, "totalIpcConnectionsAllowed", olsr_cnf->ipc_connections);
   abuf_json_open_array(abuf, "ipcAllowedAddresses");
   if (olsr_cnf->ipc_connections) {
@@ -938,8 +981,8 @@ ipc_print_config(struct autobuf *abuf)
     }
   }
   abuf_json_int(abuf, "linkQualityLevel", olsr_cnf->lq_level);
-  abuf_json_int(abuf, "linkQualityFisheye", olsr_cnf->lq_fish);
   abuf_json_float(abuf, "linkQualityAging", olsr_cnf->lq_aging);
+  abuf_json_boolean(abuf, "linkQualityFisheye", olsr_cnf->lq_fish);
   abuf_json_string(abuf, "linkQualityAlgorithm", olsr_cnf->lq_algorithm);
   // keep all time in ms, so convert this from seconds
   abuf_json_int(abuf, "minTcValidTime", olsr_cnf->min_tc_vtime * 1000);
@@ -1030,17 +1073,43 @@ ipc_print_interfaces(struct autobuf *abuf)
   int linklen;
   char path[PATH_MAX], linkpath[PATH_MAX];
 #endif
+  char ipv6_buf[INET6_ADDRSTRLEN];                  /* buffer for IPv6 inet_htop */
+  struct olsr_lq_mult *mult;
   const struct olsr_if *ifs;
   abuf_json_open_array(abuf, "interfaces");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
     const struct interface *const rifs = ifs->interf;
     abuf_json_open_array_entry(abuf);
     abuf_json_string(abuf, "name", ifs->name);
+    abuf_json_string(abuf, "nameFromKernel", ifs->interf->int_name);
+    abuf_json_int(abuf, "interfaceMode", ifs->interf->mode);
+    abuf_json_boolean(abuf, "emulatedHostClientInterface", ifs->interf->is_hcif);
+    abuf_json_boolean(abuf, "sendTcImmediately", ifs->interf->immediate_send_tc);
+    abuf_json_int(abuf, "fishEyeTtlIndex", ifs->interf->ttl_index);
+    abuf_json_int(abuf, "olsrForwardingTimeout", ifs->interf->fwdtimer);
+    abuf_json_int(abuf, "olsrMessageSequenceNumber", ifs->interf->olsr_seqnum);
+
+    abuf_json_open_array(abuf, "linkQualityMultipliers");
+    for (mult = ifs->cnf->lq_mult; mult != NULL; mult = mult->next) {
+      abuf_json_open_array_entry(abuf);
+      abuf_json_string(abuf, "route",
+                       inet_ntop(olsr_cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)));
+      abuf_json_float(abuf, "multiplier", mult->value / 65535.0);
+      abuf_json_close_array_entry(abuf);
+    }
+    abuf_json_close_array(abuf);
+
     if (!rifs) {
       abuf_json_string(abuf, "state", "down");
     } else {
       abuf_json_string(abuf, "state", "up");
+      abuf_json_int(abuf, "olsrInterfaceMetric", rifs->int_metric);
       abuf_json_int(abuf, "olsrMTU", rifs->int_mtu);
+      abuf_json_int(abuf, "helloEmissionInterval", rifs->hello_etime);
+      abuf_json_int(abuf, "helloValidityTime", rifs->valtimes.hello);
+      abuf_json_int(abuf, "tcValidityTime", rifs->valtimes.tc);
+      abuf_json_int(abuf, "midValidityTime", rifs->valtimes.mid);
+      abuf_json_int(abuf, "hnaValidityTime", rifs->valtimes.hna);
       abuf_json_boolean(abuf, "wireless", rifs->is_wireless);
 
       if (olsr_cnf->ip_version == AF_INET) {
@@ -1060,6 +1129,9 @@ ipc_print_interfaces(struct autobuf *abuf)
       }
     }
 #ifdef __linux__
+    abuf_json_boolean(abuf, "icmpRedirect", rifs->nic_state.redirect);
+    abuf_json_boolean(abuf, "spoofFilter", rifs->nic_state.spoof);
+
     snprintf(path, PATH_MAX, "/sys/class/net/%s/device/driver/module", ifs->name);
     linklen = readlink(path, linkpath, PATH_MAX - 1);
     if (linkpath != NULL && linklen > 1) {
@@ -1100,6 +1172,16 @@ ipc_print_interfaces(struct autobuf *abuf)
     abuf_json_sys_class_net(abuf, "txHeartbeatErrors", ifs->name, "statistics/tx_heartbeat_errors");
     abuf_json_sys_class_net(abuf, "txPackets", ifs->name, "statistics/tx_packets");
     abuf_json_sys_class_net(abuf, "txWindowErrors", ifs->name, "statistics/tx_window_errors");
+    abuf_json_sys_class_net(abuf, "beaconing", ifs->name, "wireless/beacon");
+    abuf_json_sys_class_net(abuf, "encryptionKey", ifs->name, "wireless/crypt");
+    abuf_json_sys_class_net(abuf, "fragmentationThreshold", ifs->name, "wireless/fragment");
+    abuf_json_sys_class_net(abuf, "signalLevel", ifs->name, "wireless/level");
+    abuf_json_sys_class_net(abuf, "linkQuality", ifs->name, "wireless/link");
+    abuf_json_sys_class_net(abuf, "misc", ifs->name, "wireless/misc");
+    abuf_json_sys_class_net(abuf, "noiseLevel", ifs->name, "wireless/noise");
+    abuf_json_sys_class_net(abuf, "nwid", ifs->name, "wireless/nwid");
+    abuf_json_sys_class_net(abuf, "wirelessRetries", ifs->name, "wireless/retries");
+    abuf_json_sys_class_net(abuf, "wirelessStatus", ifs->name, "wireless/status");
 #endif
     abuf_json_close_array_entry(abuf);
   }

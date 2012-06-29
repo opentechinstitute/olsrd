@@ -728,6 +728,17 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	if ((externalState == MOVEMENT_STATE_MOVING) || updateTransmitGpsInformation) {
 		transmitGpsInformation.txPosition.nmeaInfo = posAvgEntry->nmeaInfo;
 		transmitGpsInformation.positionUpdated = true;
+
+		/*
+		 * When we're stationary:
+		 * - the direction is not reliable or even invalid, so we must clear it.
+		 * - to avoid confusion in consumers of the data, we must clear the speed
+		 *   because it is possible to have a very low speed while moving.
+		 */
+		if (externalState == MOVEMENT_STATE_STATIONARY) {
+			transmitGpsInformation.txPosition.nmeaInfo.speed = (double)0.0;
+			transmitGpsInformation.txPosition.nmeaInfo.direction = (double)0.0;
+		}
 	}
 
 	if (externalStateChange) {
