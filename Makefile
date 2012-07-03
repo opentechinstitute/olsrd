@@ -42,13 +42,13 @@
 VERS =		0.6.3
 
 TOPDIR = .
+INSTALLOVERWRITE ?=
 include Makefile.inc
 
 # pass generated variables to save time
 MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)"
 
 LIBS +=		$(OS_LIB_DYNLOAD)
-
 ifeq ($(OS), win32)
 LDFLAGS +=	-Wl,--out-implib=libolsrd.a
 LDFLAGS +=	-Wl,--export-all-symbols
@@ -128,7 +128,11 @@ install_olsrd:	install_bin
 		@echo can be found at files/olsrd.conf.default.lq
 		@echo ==========================================================
 		mkdir -p $(ETCDIR)
+ifeq ($(INSTALLOVERWRITE),)
 		-cp -i files/olsrd.conf.default.lq $(CFGFILE)
+else
+		-cp -f files/olsrd.conf.default.lq $(CFGFILE)
+endif
 		@echo -------------------------------------------
 		@echo Edit $(CFGFILE) before running olsrd!!
 		@echo -------------------------------------------
