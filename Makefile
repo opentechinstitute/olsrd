@@ -128,7 +128,7 @@ install_olsrd:	install_bin
 		@echo can be found at files/olsrd.conf.default.lq
 		@echo ==========================================================
 		mkdir -p $(ETCDIR)
-		-cp -f files/olsrd.conf.default.lq $(CFGFILE)
+		-cp -i files/olsrd.conf.default.lq $(CFGFILE)
 		@echo -------------------------------------------
 		@echo Edit $(CFGFILE) before running olsrd!!
 		@echo -------------------------------------------
