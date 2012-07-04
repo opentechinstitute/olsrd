@@ -682,37 +682,12 @@ ipc_print_topology(struct autobuf *abuf)
 static void
 ipc_print_hna(struct autobuf *abuf)
 {
-  struct ip_prefix_list *hna;
   struct hna_entry *tmp_hna;
   struct hna_net *tmp_net;
   struct ipaddr_str buf, mainaddrbuf;
 
   abuf_json_open_array(abuf, "hna");
 
-  /* Announced HNA entries */
-  if (olsr_cnf->ip_version == AF_INET) {
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_json_open_array_entry(abuf);
-      abuf_json_string(abuf, "destination",
-                       olsr_ip_to_string(&buf, &hna->net.prefix));
-      abuf_json_int(abuf, "genmask", hna->net.prefix_len);
-      abuf_json_string(abuf, "gateway",
-                       olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-      abuf_json_close_array_entry(abuf);
-    }
-  } else {
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_json_open_array_entry(abuf);
-      abuf_json_string(abuf, "destination",
-                       olsr_ip_to_string(&buf, &hna->net.prefix));
-      abuf_json_int(abuf, "genmask", hna->net.prefix_len);
-      abuf_json_string(abuf, "gateway",
-                       olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-      abuf_json_close_array_entry(abuf);
-    }
-  }
-
-  /* HNA entries */
   OLSR_FOR_ALL_HNA_ENTRIES(tmp_hna) {
 
     /* Check all networks */
@@ -879,7 +854,8 @@ ipc_print_plugins(struct autobuf *abuf)
 static void
 ipc_print_config(struct autobuf *abuf)
 {
-  struct ipaddr_str mainaddrbuf;
+  struct ip_prefix_list *hna;
+  struct ipaddr_str buf, mainaddrbuf;
   struct ip_prefix_list *ipcn;
   struct olsr_lq_mult *mult;
   char ipv6_buf[INET6_ADDRSTRLEN];                  /* buffer for IPv6 inet_htop */
@@ -948,6 +924,18 @@ ipc_print_config(struct autobuf *abuf)
     abuf_json_string(abuf, "route",
                      inet_ntop(olsr_cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)));
     abuf_json_float(abuf, "multiplier", mult->value / 65535.0);
+    abuf_json_close_array_entry(abuf);
+  }
+  abuf_json_close_array(abuf);
+
+  abuf_json_open_array(abuf, "hna");
+  for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+    abuf_json_open_array_entry(abuf);
+    abuf_json_string(abuf, "destination",
+                     olsr_ip_to_string(&buf, &hna->net.prefix));
+    abuf_json_int(abuf, "genmask", hna->net.prefix_len);
+    abuf_json_string(abuf, "gateway",
+                     olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
     abuf_json_close_array_entry(abuf);
   }
   abuf_json_close_array(abuf);
