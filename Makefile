@@ -128,11 +128,12 @@ install_olsrd:	install_bin
 		@echo can be found at files/olsrd.conf.default.lq
 		@echo ==========================================================
 		mkdir -p $(ETCDIR)
-ifeq ($(INSTALLOVERWRITE),)
-		-cp -i files/olsrd.conf.default.lq $(CFGFILE)
-else
-		-cp -f files/olsrd.conf.default.lq $(CFGFILE)
-endif
+		@if [ -e $(CFGFILE) ]; then \
+			cp -f files/olsrd.conf.default.lq $(CFGFILE).new; \
+			echo "Configuration file was saved as $(CFGFILE).new"; \
+		else \
+			cp -f files/olsrd.conf.default.lq $(CFGFILE); \
+		fi
 		@echo -------------------------------------------
 		@echo Edit $(CFGFILE) before running olsrd!!
 		@echo -------------------------------------------
@@ -151,7 +152,7 @@ ifneq ($(MANDIR),)
 		rm -f $(MANDIR)/man8/$(EXENAME).8.gz
 		rmdir -p --ignore-fail-on-non-empty $(MANDIR)/man8/
 endif
-		rm -f $(CFGFILE)
+		rm -f $(CFGFILE) $(CFGFILE).new
 		rmdir -p --ignore-fail-on-non-empty $(ETCDIR)
 
 tags:
