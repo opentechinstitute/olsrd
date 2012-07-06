@@ -630,7 +630,7 @@ ipc_print_routes(struct autobuf *abuf)
       abuf_json_int(abuf, "rtpMetricCost", ROUTE_COST_BROKEN);
     else
       abuf_json_int(abuf, "rtpMetricCost", rt->rt_best->rtp_metric.cost);
-    abuf_json_string(abuf, "interface",
+    abuf_json_string(abuf, "networkInterface",
                      if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
     abuf_json_close_array_entry(abuf);
   }
@@ -939,6 +939,7 @@ ipc_print_config(struct autobuf *abuf)
     abuf_json_close_array_entry(abuf);
   }
   abuf_json_close_array(abuf);
+
 
   abuf_json_int(abuf, "totalIpcConnectionsAllowed", olsr_cnf->ipc_connections);
   abuf_json_open_array(abuf, "ipcAllowedAddresses");
