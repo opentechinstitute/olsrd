@@ -1175,6 +1175,8 @@ static bool nmea_INFO_has_field_local(int smask, nmeaINFO_FIELD fieldName) {
 	}
 }
 
+static const char * NA_STRING = "N.A.";
+
 static void build_pud_body(struct autobuf *abuf) {
 	TransmitGpsInformation * txGpsInfo = olsr_cnf->pud_position;
 	char * nodeId;
@@ -1219,7 +1221,7 @@ static void build_pud_body(struct autobuf *abuf) {
 			txGpsInfo->txPosition.nmeaInfo.utc.hsec
 		);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1242,7 +1244,7 @@ static void build_pud_body(struct autobuf *abuf) {
 			i++;
 		}
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1269,7 +1271,7 @@ static void build_pud_body(struct autobuf *abuf) {
 		}
 		abuf_appendf(abuf, "%s (%d)", s, txGpsInfo->txPosition.nmeaInfo.sig);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1293,7 +1295,7 @@ static void build_pud_body(struct autobuf *abuf) {
 		}
 		abuf_appendf(abuf, "%s (%d)", s, txGpsInfo->txPosition.nmeaInfo.fix);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1302,7 +1304,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, PDOP)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.PDOP);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1311,7 +1313,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, HDOP)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.HDOP);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1320,7 +1322,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, VDOP)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.VDOP);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1329,7 +1331,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LAT)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.lat);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1338,7 +1340,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LON)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.lon);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1347,7 +1349,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, ELV)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.elv);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1356,7 +1358,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, SPEED)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.speed);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1365,7 +1367,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, DIRECTION)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.direction);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
@@ -1374,7 +1376,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, DECLINATION)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.declination);
 	} else {
-		abuf_puts(abuf, "N.A.");
+		abuf_puts(abuf, NA_STRING);
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
