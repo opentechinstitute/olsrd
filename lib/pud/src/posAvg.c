@@ -296,13 +296,10 @@ static double getAdjustedDirectionForAveraging(double direction) {
 	assert(direction >= (double)0.0);
 	assert(direction < (double)360.0);
 
-	printf("  getAdjustedDirectionForAveraging=%f (entry)\n", direction);
 	if (direction >= (double)180.0) {
-		printf("  getAdjustedDirectionForAveraging=%f (exit)\n", direction - (double)360.0);
 		return (direction - (double)360.0);
 	}
 
-	printf("  getAdjustedDirectionForAveraging=%f (exit)\n", direction);
 	return direction;
 }
 
