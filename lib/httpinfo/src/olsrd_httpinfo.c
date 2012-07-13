@@ -1195,9 +1195,12 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 
 	/* start of table */
-	abuf_appendf(abuf,
+	abuf_puts(abuf,
 		"<p><table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n"
 		"<tr><th>Parameter</th><th>&nbsp;&nbsp;</th><th>Unit</th><th>&nbsp;&nbsp;</th><th>Value</th></tr>\n"
+	);
+
+	abuf_appendf(abuf,
 		"<tr><td>Name</td><td></td><td></td><td></td><td id=\"nodeId\">%s</td></tr>\n",
 		nodeId
 	);
