@@ -1098,6 +1098,9 @@ build_all_body(struct autobuf *abuf)
   build_neigh_body(abuf);
   build_topo_body(abuf);
   build_mid_body(abuf);
+#ifdef HTTPINFO_PUD
+  build_pud_body(abuf);
+#endif
 }
 
 #ifdef HTTPINFO_PUD
