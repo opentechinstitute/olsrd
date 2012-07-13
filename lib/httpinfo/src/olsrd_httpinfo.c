@@ -1200,11 +1200,13 @@ static void build_pud_body(struct autobuf *abuf) {
 		"<tr><th>Parameter</th><th>&nbsp;&nbsp;</th><th>Unit</th><th>&nbsp;&nbsp;</th><th>Value</th></tr>\n"
 	);
 
+	/* nodeId */
 	abuf_appendf(abuf,
 		"<tr><td>Name</td><td></td><td></td><td></td><td id=\"nodeId\">%s</td></tr>\n",
 		nodeId
 	);
 
+	/* utc */
 	abuf_puts(abuf, "<tr><td>Date / Time</td><td></td><td>UTC</td><td></td><td id=\"utc\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, UTC)) {
 		abuf_appendf(abuf, "%04d%02d%02d %02d:%02d:%02d.%02d",
@@ -1221,6 +1223,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* smask */
 	abuf_puts(abuf, "<tr><td>Input Sentences</td><td></td><td></td><td></td><td id=\"smask\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, SMASK)
 			&& (txGpsInfo->txPosition.nmeaInfo.smask != GPNON)) {
@@ -1243,6 +1246,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* sig */
 	abuf_puts(abuf, "<tr><td>Signal Strength</td><td></td><td></td><td></td><td id=\"sig\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, SIG)) {
 		const char * s;
@@ -1269,6 +1273,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* fix */
 	abuf_puts(abuf, "<tr><td>Fix</td><td></td><td></td><td></td><td id=\"fix\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, FIX)) {
 		const char * s;
@@ -1292,6 +1297,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* PDOP */
 	abuf_puts(abuf, "<tr><td>PDOP</td><td></td><td></td><td></td><td id=\"pdop\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, PDOP)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.PDOP);
@@ -1300,6 +1306,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* HDOP */
 	abuf_puts(abuf, "<tr><td>HDOP</td><td></td><td></td><td></td><td id=\"hdop\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, HDOP)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.HDOP);
@@ -1308,6 +1315,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* VDOP */
 	abuf_puts(abuf, "<tr><td>VDOP</td><td></td><td></td><td></td><td id=\"vdop\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, VDOP)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.VDOP);
@@ -1316,6 +1324,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* lat */
 	abuf_puts(abuf, "<tr><td>Latitude</td><td></td><td>degrees</td><td></td><td id=\"lat\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LAT)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.lat);
@@ -1324,6 +1333,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* lon */
 	abuf_puts(abuf, "<tr><td>Longitude</td><td></td><td>degrees</td><td></td><td id=\"lon\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LON)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.lon);
@@ -1332,6 +1342,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* elv */
 	abuf_puts(abuf, "<tr><td>Elevation</td><td></td><td>m</td><td></td><td id=\"elv\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, ELV)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.elv);
@@ -1340,6 +1351,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* speed */
 	abuf_puts(abuf, "<tr><td>Speed</td><td></td><td>kph</td><td></td><td id=\"speed\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, SPEED)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.speed);
@@ -1348,6 +1360,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* direction */
 	abuf_puts(abuf, "<tr><td>Direction</td><td></td><td>degrees</td><td></td><td id=\"direction\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, DIRECTION)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.direction);
@@ -1356,6 +1369,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* declination */
 	abuf_puts(abuf, "<tr><td>Declination</td><td></td><td>degrees</td><td></td><td id=\"declination\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, DECLINATION)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.declination);
@@ -1364,9 +1378,12 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	// FIXME add satinfo
+
 	/* end of table */
 	abuf_puts(abuf, "</table></p>\n");
 
+	/* add Google Maps and OpenStreetMap links when we have both lat and lon */
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LAT)
 			&& nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LON)) {
 		const char * c = nodeId;
