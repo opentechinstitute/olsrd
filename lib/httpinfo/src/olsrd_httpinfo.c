@@ -1221,6 +1221,28 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	abuf_puts(abuf, "<tr><td>Input Sentences</td><td></td><td></td><td></td><td id=\"smask\">");
+	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, SMASK)
+			&& (txGpsInfo->txPosition.nmeaInfo.smask != GPNON)) {
+		const int id[] = { GPGGA, GPGSA, GPGSV, GPRMC, GPVTG, GPNON };
+		const char * ids[] = { "GPGGA", "GPGSA", "GPGSV", "GPRMC", "GPVTG" };
+		bool printed = false;
+		int i = 0;
+
+		while (id[i] != GPNON) {
+			if (txGpsInfo->txPosition.nmeaInfo.smask & id[i]) {
+				if (printed)
+					abuf_puts(abuf, "&nbsp;");
+				abuf_puts(abuf, ids[i]);
+				printed = true;
+			}
+			i++;
+		}
+	} else {
+		abuf_puts(abuf, "N.A.");
+	}
+	abuf_puts(abuf, "</td></tr>\n");
+
 	abuf_puts(abuf, "<tr><td>Signal Strength</td><td></td><td></td><td></td><td id=\"sig\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, SIG)) {
 		const char * s;
