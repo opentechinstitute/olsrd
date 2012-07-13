@@ -1180,7 +1180,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	abuf_puts(abuf, "<h2>Position</h2>");
 
 	if (!txGpsInfo) {
-		abuf_puts(abuf, "<h2>" PUD_PLUGIN_ABBR " plugin not loaded</h2>\n");
+		abuf_puts(abuf, "<p><b>" PUD_PLUGIN_ABBR " plugin not loaded</b></p>\n");
 		return;
 	}
 
