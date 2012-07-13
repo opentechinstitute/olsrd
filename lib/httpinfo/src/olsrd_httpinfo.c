@@ -1193,7 +1193,7 @@ static void build_pud_body(struct autobuf *abuf) {
 
 	/* start of table */
 	abuf_appendf(abuf,
-		"<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n"
+		"<p><table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n"
 		"<tr><th>Parameter</th><th>&nbsp;&nbsp;</th><th>Unit</th><th>&nbsp;&nbsp;</th><th>Value</th></tr>\n"
 		"<tr><td>Name</td><td></td><td></td><td></td><td id=\"nodeId\">%s</td>\n",
 		nodeId
@@ -1337,7 +1337,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	abuf_puts(abuf, "</td>\n");
 
 	/* end of table */
-	abuf_puts(abuf, "</table>\n");
+	abuf_puts(abuf, "</table></p>\n");
 
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LAT)
 			&& nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LON)) {
