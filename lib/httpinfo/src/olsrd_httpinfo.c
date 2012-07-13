@@ -1177,6 +1177,8 @@ static void build_pud_body(struct autobuf *abuf) {
 	char * nodeId;
 	char nodeIdString[1024];
 
+	abuf_puts(abuf, "<h2>Position</h2>");
+
 	if (!txGpsInfo) {
 		abuf_puts(abuf, "<h2>" PUD_PLUGIN_ABBR " plugin not loaded</h2>\n");
 		return;
