@@ -18,37 +18,35 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*! \file */
+#ifndef __NMEA_CONVERSIONS_H__
+#define __NMEA_CONVERSIONS_H__
 
-#ifndef __NMEA_TIME_H__
-#define __NMEA_TIME_H__
+#include <nmea/sentence.h>
+#include <nmea/info.h>
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
-/**
- * Date and time data
- * @see nmea_time_now
- */
-typedef struct _nmeaTIME {
-	int year; /**< Years since 1900 */
-	int mon;  /**< Months since January - [0,11] */
-	int day;  /**< Day of the month - [1,31] */
-	int hour; /**< Hours since midnight - [0,23] */
-	int min;  /**< Minutes after the hour - [0,59] */
-	int sec;  /**< Seconds after the minute - [0,59] */
-	int hsec; /**< Hundredth part of second - [0,99] */
+int nmea_gsv_npack(int sat_count);
 
-} nmeaTIME;
+void nmea_GPGGA2info(const nmeaGPGGA *pack, nmeaINFO *info);
+void nmea_info2GPGGA(const nmeaINFO *info, nmeaGPGGA *pack);
 
-/**
- * \brief Get time now to nmeaTIME structure
- */
-void nmea_time_now(nmeaTIME *t);
+void nmea_GPGSA2info(const nmeaGPGSA *pack, nmeaINFO *info);
+void nmea_info2GPGSA(const nmeaINFO *info, nmeaGPGSA *pack);
+
+void nmea_GPGSV2info(const nmeaGPGSV *pack, nmeaINFO *info);
+void nmea_info2GPGSV(const nmeaINFO *info, nmeaGPGSV *pack, int pack_idx);
+
+void nmea_GPRMC2info(const nmeaGPRMC *pack, nmeaINFO *info);
+void nmea_info2GPRMC(const nmeaINFO *info, nmeaGPRMC *pack);
+
+void nmea_GPVTG2info(const nmeaGPVTG *pack, nmeaINFO *info);
+void nmea_info2GPVTG(const nmeaINFO *info, nmeaGPVTG *pack);
 
 #ifdef  __cplusplus
 }
 #endif
 
-#endif /* __NMEA_TIME_H__ */
+#endif /* __NMEA_CONVERSIONS_H__ */

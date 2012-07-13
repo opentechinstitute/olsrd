@@ -20,11 +20,11 @@ Introduction
 
 Features
 
-- Analysis NMEA sentences and granting GPS data in C structures
-- Generate NMEA sentences
+- Parsing of NMEA sentences into C structures
+- Generate NMEA sentences from C structures
 - Supported sentences: GPGGA, GPGSA, GPGSV, GPRMC, GPVTG
 - Multilevel architecture of algorithms
-- Additional functions of geographical mathematics and work with navigation data
+- Additional functions of geographical mathematics
 
 Supported (tested) platforms
 

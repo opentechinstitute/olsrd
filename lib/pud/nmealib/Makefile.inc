@@ -22,7 +22,7 @@ endif
 
 # we expect the version to be like 'v0.5.3-27-g0c2727a' and then strip the 'v',
 # and the '-27-g0c2727a' parts
-VERSION=0.6.10
+VERSION=1.0.0
 
 # protect against no version number
 ifeq ($(strip $(VERSION)),)
