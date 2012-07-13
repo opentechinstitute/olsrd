@@ -1198,7 +1198,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	abuf_appendf(abuf,
 		"<p><table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n"
 		"<tr><th>Parameter</th><th>&nbsp;&nbsp;</th><th>Unit</th><th>&nbsp;&nbsp;</th><th>Value</th></tr>\n"
-		"<tr><td>Name</td><td></td><td></td><td></td><td id=\"nodeId\">%s</td>\n",
+		"<tr><td>Name</td><td></td><td></td><td></td><td id=\"nodeId\">%s</td></tr>\n",
 		nodeId
 	);
 
@@ -1216,7 +1216,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>Signal Strength</td><td></td><td></td><td></td><td id=\"sig\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, SIG)) {
@@ -1242,7 +1242,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>Fix</td><td></td><td></td><td></td><td id=\"fix\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, FIX)) {
@@ -1265,7 +1265,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>PDOP</td><td></td><td></td><td></td><td id=\"pdop\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, PDOP)) {
@@ -1273,7 +1273,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>HDOP</td><td></td><td></td><td></td><td id=\"hdop\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, HDOP)) {
@@ -1281,7 +1281,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>VDOP</td><td></td><td></td><td></td><td id=\"vdop\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, VDOP)) {
@@ -1289,7 +1289,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>Latitude</td><td></td><td>degrees</td><td></td><td id=\"lat\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LAT)) {
@@ -1297,7 +1297,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>Longitude</td><td></td><td>degrees</td><td></td><td id=\"lon\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, LON)) {
@@ -1305,7 +1305,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>Elevation</td><td></td><td>m</td><td></td><td id=\"elv\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, ELV)) {
@@ -1313,7 +1313,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>Speed</td><td></td><td>kph</td><td></td><td id=\"speed\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, SPEED)) {
@@ -1321,7 +1321,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>Direction</td><td></td><td>degrees</td><td></td><td id=\"direction\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, DIRECTION)) {
@@ -1329,7 +1329,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	abuf_puts(abuf, "<tr><td>Declination</td><td></td><td>degrees</td><td></td><td id=\"declination\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.smask, DECLINATION)) {
@@ -1337,7 +1337,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	} else {
 		abuf_puts(abuf, "N.A.");
 	}
-	abuf_puts(abuf, "</td>\n");
+	abuf_puts(abuf, "</td></tr>\n");
 
 	/* end of table */
 	abuf_puts(abuf, "</table></p>\n");
