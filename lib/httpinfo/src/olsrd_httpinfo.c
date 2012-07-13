@@ -1363,7 +1363,7 @@ static void build_pud_body(struct autobuf *abuf) {
 
 		abuf_appendf(abuf,
 			"<p>\n"
-			"<a href=\"http://www.openstreetmap.org/index.html?mlat=%f&amp;mlon=%f&amp;zoom=14&amp;layers=M\">Show on OpenStreetMap</a></p>\n",
+			"<a href=\"http://www.openstreetmap.org/index.html?mlat=%f&amp;mlon=%f&amp;zoom=15&amp;layers=M\">Show on OpenStreetMap</a></p>\n",
 			txGpsInfo->txPosition.nmeaInfo.lat,
 			txGpsInfo->txPosition.nmeaInfo.lon
 		);
