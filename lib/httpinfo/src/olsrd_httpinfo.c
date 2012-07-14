@@ -1191,7 +1191,7 @@ static void build_pud_body(struct autobuf *abuf) {
 
 	nodeId = (char *) txGpsInfo->nodeId;
 
-	if (!txGpsInfo->nodeId || !strlen((char *) txGpsInfo->nodeId)) {
+	if (!nodeId || !strlen(nodeId)) {
 		inet_ntop(olsr_cnf->ip_version, &olsr_cnf->main_addr, &nodeIdString[0], sizeof(nodeIdString));
 		nodeId = nodeIdString;
 	}
