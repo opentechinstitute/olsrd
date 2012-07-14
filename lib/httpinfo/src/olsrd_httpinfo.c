@@ -64,7 +64,9 @@
 #include "lq_plugin.h"
 #include "common/autobuf.h"
 #ifdef HTTPINFO_PUD
+  #include <pud/src/receiver.h>
   #include <pud/src/pud.h>
+  #include <nmea/info.h>
   #include <nmea/sentence.h>
 #endif
 
