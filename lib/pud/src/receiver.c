@@ -104,7 +104,7 @@ static void clearMovementType(MovementType * result) {
  - false otherwise
  */
 static bool positionValid(PositionUpdateEntry * position) {
-	return (nmea_INFO_has_field(position->nmeaInfo.smask, FIX)
+	return (nmea_INFO_is_present(position->nmeaInfo.present, FIX)
 			&& (position->nmeaInfo.fix != NMEA_FIX_BAD));
 }
 
@@ -141,7 +141,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 
 	/* only fixup timestamp when the position is valid _and_ when the position was not updated */
 	if (positionValid(&transmitGpsInformation.txPosition) && !transmitGpsInformation.positionUpdated) {
-		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc);
+		nmea_time_now(&transmitGpsInformation.txPosition.nmeaInfo.utc, &transmitGpsInformation.txPosition.nmeaInfo.present);
 	}
 
 	nmeaInfo = transmitGpsInformation.txPosition.nmeaInfo;
@@ -427,19 +427,19 @@ static void detemineMovingFromPosition(PositionUpdateEntry * avg, PositionUpdate
 	/* both avg and lastTx are valid here */
 
 	/* avg field presence booleans */
-	avgHasSpeed = nmea_INFO_has_field(avg->nmeaInfo.smask, SPEED);
-	avgHasPos = nmea_INFO_has_field(avg->nmeaInfo.smask, LAT)
-			&& nmea_INFO_has_field(avg->nmeaInfo.smask, LON);
-	avgHasHdop = nmea_INFO_has_field(avg->nmeaInfo.smask, HDOP);
-	avgHasElv = nmea_INFO_has_field(avg->nmeaInfo.smask, ELV);
-	avgHasVdop = nmea_INFO_has_field(avg->nmeaInfo.smask, VDOP);
+	avgHasSpeed = nmea_INFO_is_present(avg->nmeaInfo.present, SPEED);
+	avgHasPos = nmea_INFO_is_present(avg->nmeaInfo.present, LAT)
+			&& nmea_INFO_is_present(avg->nmeaInfo.present, LON);
+	avgHasHdop = nmea_INFO_is_present(avg->nmeaInfo.present, HDOP);
+	avgHasElv = nmea_INFO_is_present(avg->nmeaInfo.present, ELV);
+	avgHasVdop = nmea_INFO_is_present(avg->nmeaInfo.present, VDOP);
 
 	/* lastTx field presence booleans */
-	lastTxHasPos = nmea_INFO_has_field(lastTx->nmeaInfo.smask, LAT)
-			&& nmea_INFO_has_field(lastTx->nmeaInfo.smask, LON);
-	lastTxHasHdop = nmea_INFO_has_field(lastTx->nmeaInfo.smask, HDOP);
-	lastTxHasElv = nmea_INFO_has_field(lastTx->nmeaInfo.smask, ELV);
-	lastTxHasVdop = nmea_INFO_has_field(lastTx->nmeaInfo.smask, VDOP);
+	lastTxHasPos = nmea_INFO_is_present(lastTx->nmeaInfo.present, LAT)
+			&& nmea_INFO_is_present(lastTx->nmeaInfo.present, LON);
+	lastTxHasHdop = nmea_INFO_is_present(lastTx->nmeaInfo.present, HDOP);
+	lastTxHasElv = nmea_INFO_is_present(lastTx->nmeaInfo.present, ELV);
+	lastTxHasVdop = nmea_INFO_is_present(lastTx->nmeaInfo.present, VDOP);
 
 	/* fill in some values _or_ defaults */
 	dopMultiplier = getDopMultiplier();
@@ -731,13 +731,13 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 		/*
 		 * When we're stationary:
-		 * - the direction is not reliable or even invalid, so we must clear it.
+		 * - the track is not reliable or even invalid, so we must clear it.
 		 * - to avoid confusion in consumers of the data, we must clear the speed
 		 *   because it is possible to have a very low speed while moving.
 		 */
 		if (externalState == MOVEMENT_STATE_STATIONARY) {
 			transmitGpsInformation.txPosition.nmeaInfo.speed = (double)0.0;
-			transmitGpsInformation.txPosition.nmeaInfo.direction = (double)0.0;
+			transmitGpsInformation.txPosition.nmeaInfo.track = (double)0.0;
 		}
 	}
 

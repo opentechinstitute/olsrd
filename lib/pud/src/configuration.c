@@ -12,7 +12,7 @@
 
 /* System includes */
 #include <unistd.h>
-#include <nmea/util.h>
+#include <nmea/parse.h>
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
 #include <limits.h>
 
@@ -202,7 +202,7 @@ static bool intSetupNodeIdBinaryString(void) {
 	size_t nodeidlength;
 	char * nodeid = (char *)getNodeIdWithLength(&nodeidlength);
 
-	if (nmea_string_has_invalid_chars(nodeid, PUD_NODE_ID_NAME, &report[0], sizeof(report))) {
+	if (nmea_parse_sentence_has_invalid_chars(nodeid, nodeidlength, PUD_NODE_ID_NAME, &report[0], sizeof(report))) {
 		pudError(false, "%s", &report[0]);
 		return false;
 	}
@@ -782,7 +782,7 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 		return true;
 	}
 
-	if (nmea_string_has_invalid_chars(value, valueName, &report[0], sizeof(report))) {
+	if (nmea_parse_sentence_has_invalid_chars(value, valueLength, valueName, &report[0], sizeof(report))) {
 		pudError(false, "%s", &report[0]);
 		return true;
 	}

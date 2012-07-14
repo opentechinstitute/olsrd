@@ -21,6 +21,26 @@ typedef struct _PositionUpdateEntry {
  Also counts the fix values.
  */
 typedef struct _PositionUpdateCounters {
+		/* present */
+		unsigned long long smask; /**< the number of entries with SMASK present */
+		unsigned long long utcdate; /**< the number of entries with UTCDATE present */
+		unsigned long long utctime; /**< the number of entries with UTCTIME present */
+		unsigned long long sig; /**< the number of entries with SIG present */
+		unsigned long long fix; /**< the number of entries with FIX present */
+		unsigned long long pdop; /**< the number of entries with PDOP present */
+		unsigned long long hdop; /**< the number of entries with HDOP present */
+		unsigned long long vdop; /**< the number of entries with VDOP present */
+		unsigned long long lat; /**< the number of entries with LAT present */
+		unsigned long long lon; /**< the number of entries with LON present */
+		unsigned long long elv; /**< the number of entries with ELV present */
+		unsigned long long speed; /**< the number of entries with SPEED present */
+		unsigned long long track; /**< the number of entries with TRACK present */
+		unsigned long long mtrack; /**< the number of entries with MTRACK present */
+		unsigned long long magvar; /**< the number of entries with MAGVAR present */
+		unsigned long long satinusecount; /**< the number of entries with SATINUSECOUNT present */
+		unsigned long long satinuse; /**< the number of entries with SATINUSE present */
+		unsigned long long satinview; /**< the number of entries with SATINVIEW present */
+
 		/* smask */
 		unsigned long long gpgga; /**< the number of GPGGA based entries */
 		unsigned long long gpgsa; /**< the number of GPGSA based entries */

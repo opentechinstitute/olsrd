@@ -148,7 +148,9 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	result.lon = POSFILE_DEFAULT_LON;
 	result.elv = POSFILE_DEFAULT_ELV;
 	result.speed = POSFILE_DEFAULT_SPEED;
-	result.direction = POSFILE_DEFAULT_DIRECTION;
+	result.track = POSFILE_DEFAULT_TRACK;
+	result.mtrack = POSFILE_DEFAULT_MTRACK;
+	result.magvar = POSFILE_DEFAULT_MAGVAR;
 
 	memcpy(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp));
 
@@ -187,6 +189,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 						POSFILE_VALUE_SIG_BAD, POSFILE_VALUE_SIG_LOW, POSFILE_VALUE_SIG_MID, POSFILE_VALUE_SIG_HIGH);
 				goto out;
 			}
+			nmea_INFO_set_present(&result.present, SIG);
 		} else if (!strncasecmp(POSFILE_NAME_FIX, name, sizeof(line))) {
 			if (!strncasecmp(POSFILE_VALUE_FIX_BAD, value, sizeof(line))) {
 				result.fix = NMEA_FIX_BAD;
@@ -200,6 +203,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 						POSFILE_VALUE_FIX_2D, POSFILE_VALUE_FIX_3D);
 				goto out;
 			}
+			nmea_INFO_set_present(&result.present, FIX);
 		} else if (!strncasecmp(POSFILE_NAME_HDOP, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_HDOP, value, &val)) {
@@ -209,6 +213,9 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 			result.HDOP = val;
 			result.VDOP = POSFILE_CALCULATED_VDOP(result.HDOP);
 			result.PDOP = POSFILE_CALCULATED_PDOP(result.HDOP);
+			nmea_INFO_set_present(&result.present, HDOP);
+			nmea_INFO_set_present(&result.present, VDOP);
+			nmea_INFO_set_present(&result.present, PDOP);
 		} else if (!strncasecmp(POSFILE_NAME_LAT, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_LAT, value, &val)) {
@@ -216,6 +223,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 			}
 
 			result.lat = val;
+			nmea_INFO_set_present(&result.present, LAT);
 		} else if (!strncasecmp(POSFILE_NAME_LON, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_LON, value, &val)) {
@@ -223,6 +231,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 			}
 
 			result.lon = val;
+			nmea_INFO_set_present(&result.present, LON);
 		} else if (!strncasecmp(POSFILE_NAME_ELV, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_ELV, value, &val)) {
@@ -230,6 +239,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 			}
 
 			result.elv = val;
+			nmea_INFO_set_present(&result.present, ELV);
 		} else if (!strncasecmp(POSFILE_NAME_SPEED, name, sizeof(line))) {
 			double val;
 			if (!readDouble(POSFILE_NAME_SPEED, value, &val)) {
@@ -237,32 +247,47 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 			}
 
 			result.speed = val;
-		} else if (!strncasecmp(POSFILE_NAME_DIRECTION, name, sizeof(line))) {
+			nmea_INFO_set_present(&result.present, SPEED);
+		} else if (!strncasecmp(POSFILE_NAME_TRACK, name, sizeof(line))) {
 			double val;
-			if (!readDouble(POSFILE_NAME_DIRECTION, value, &val)) {
+			if (!readDouble(POSFILE_NAME_TRACK, value, &val)) {
 				goto out;
 			}
 
-			result.direction = val;
+			result.track = val;
+			nmea_INFO_set_present(&result.present, TRACK);
+		} else if (!strncasecmp(POSFILE_NAME_MTRACK, name, sizeof(line))) {
+			double val;
+			if (!readDouble(POSFILE_NAME_MTRACK, value, &val)) {
+				goto out;
+			}
+
+			result.mtrack = val;
+			nmea_INFO_set_present(&result.present, MTRACK);
+		} else if (!strncasecmp(POSFILE_NAME_MAGVAR, name, sizeof(line))) {
+			double val;
+			if (!readDouble(POSFILE_NAME_MAGVAR, value, &val)) {
+				goto out;
+			}
+
+			result.magvar = val;
+			nmea_INFO_set_present(&result.present, MAGVAR);
 		} else {
 			pudError(false, "Position file \"%s\", line %d uses an invalid option \"%s\","
-					" valid options are [%s|%s|%s|%s|%s|%s|%s|%s]", fileName, lineNumber, name, POSFILE_NAME_SIG,
+					" valid options are [%s|%s|%s|%s|%s|%s|%s|%s|%s|%s]", fileName, lineNumber, name, POSFILE_NAME_SIG,
 					POSFILE_NAME_FIX, POSFILE_NAME_HDOP, POSFILE_NAME_LAT, POSFILE_NAME_LON, POSFILE_NAME_ELV,
-					POSFILE_NAME_SPEED, POSFILE_NAME_DIRECTION);
+					POSFILE_NAME_SPEED, POSFILE_NAME_TRACK, POSFILE_NAME_MTRACK, POSFILE_NAME_MAGVAR);
 			goto out;
 		}
 	}
 
 	fclose(fd);
 
-	result.smask = POSFILE_SANITISE_SMASK;
+	result.smask = POSFILE_DEFAULT_SMASK;
+	nmea_INFO_set_present(&result.present, SMASK);
+
 	nmea_INFO_sanitise(&result);
 	nmea_INFO_unit_conversion(&result);
-	if (result.fix == NMEA_FIX_BAD) {
-		result.smask = 0;
-	} else {
-		result.smask = POSFILE_DEFAULT_SMASK;
-	}
 
 	memcpy(nmeaInfo, &result, sizeof(result));
 	retval = true;

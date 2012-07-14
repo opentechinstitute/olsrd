@@ -7,6 +7,7 @@
 
 /* System includes */
 #include <assert.h>
+#include <nmea/info.h>
 #include <nmea/sentence.h>
 
 /* Defines */
@@ -141,10 +142,10 @@ PositionUpdateEntry * getPositionAverageEntry(
 }
 
 /**
- Update position average mask and fix counters for a new entry or for an entry
- that is/will be removed. Update the respective counters when the smask of the
- entry has the corresponding flag set. The fix counters count the fix values
- separately.
+ Update position average present, smask and fix counters for a new entry or for
+ an entry that is/will be removed. Update the respective counters when the smask
+ of the entry has the corresponding flag set. The fix counters count the fix
+ values separately.
 
  @param positionAverageList
  The position average list
@@ -157,11 +158,86 @@ PositionUpdateEntry * getPositionAverageEntry(
 static void updateCounters(PositionAverageList * positionAverageList,
 		PositionUpdateEntry * entry, bool add) {
 	PositionUpdateCounters * counters = &positionAverageList->counters;
+	uint32_t present = entry->nmeaInfo.present;
 	int smask = entry->nmeaInfo.smask;
 #ifndef NDEBUG
 	unsigned long long maxCount = positionAverageList->entriesMaxCount;
 #endif
 	int amount = (add ? 1 : -1);
+
+	/* present */
+	if ((present & SMASK) != 0) {
+		assert(add ? (counters->smask < maxCount):(counters->smask > 0));
+		counters->smask += amount;
+	}
+	if ((present & UTCDATE) != 0) {
+		assert(add ? (counters->utcdate < maxCount):(counters->utcdate > 0));
+		counters->utcdate += amount;
+	}
+	if ((present & UTCTIME) != 0) {
+		assert(add ? (counters->utctime < maxCount):(counters->utctime > 0));
+		counters->utctime += amount;
+	}
+	if ((present & SIG) != 0) {
+		assert(add ? (counters->sig < maxCount):(counters->sig > 0));
+		counters->sig += amount;
+	}
+	if ((present & FIX) != 0) {
+		assert(add ? (counters->fix < maxCount):(counters->fix > 0));
+		counters->fix += amount;
+	}
+	if ((present & PDOP) != 0) {
+		assert(add ? (counters->pdop < maxCount):(counters->pdop > 0));
+		counters->pdop += amount;
+	}
+	if ((present & HDOP) != 0) {
+		assert(add ? (counters->hdop < maxCount):(counters->hdop > 0));
+		counters->hdop += amount;
+	}
+	if ((present & VDOP) != 0) {
+		assert(add ? (counters->vdop < maxCount):(counters->vdop > 0));
+		counters->vdop += amount;
+	}
+	if ((present & LAT) != 0) {
+		assert(add ? (counters->lat < maxCount):(counters->lat > 0));
+		counters->lat += amount;
+	}
+	if ((present & LON) != 0) {
+		assert(add ? (counters->lon < maxCount):(counters->lon > 0));
+		counters->lon += amount;
+	}
+	if ((present & ELV) != 0) {
+		assert(add ? (counters->elv < maxCount):(counters->elv > 0));
+		counters->elv += amount;
+	}
+	if ((present & SPEED) != 0) {
+		assert(add ? (counters->speed < maxCount):(counters->speed > 0));
+		counters->speed += amount;
+	}
+	if ((present & TRACK) != 0) {
+		assert(add ? (counters->track < maxCount):(counters->track > 0));
+		counters->track += amount;
+	}
+	if ((present & MTRACK) != 0) {
+		assert(add ? (counters->mtrack < maxCount):(counters->mtrack > 0));
+		counters->mtrack += amount;
+	}
+	if ((present & MAGVAR) != 0) {
+		assert(add ? (counters->magvar < maxCount):(counters->magvar > 0));
+		counters->magvar += amount;
+	}
+	if ((present & SATINUSECOUNT) != 0) {
+		assert(add ? (counters->satinusecount < maxCount):(counters->satinusecount > 0));
+		counters->satinusecount += amount;
+	}
+	if ((present & SATINUSE) != 0) {
+		assert(add ? (counters->satinuse < maxCount):(counters->satinuse > 0));
+		counters->satinuse += amount;
+	}
+	if ((present & SATINVIEW) != 0) {
+		assert(add ? (counters->satinview < maxCount):(counters->satinview > 0));
+		counters->satinview += amount;
+	}
 
 	/* smask */
 	if ((smask & GPGGA) != 0) {
@@ -186,7 +262,7 @@ static void updateCounters(PositionAverageList * positionAverageList,
 	}
 
 	/* sig */
-	if (nmea_INFO_has_field(smask, SIG)) {
+	if (nmea_INFO_is_present(present, SIG)) {
 		if (entry->nmeaInfo.sig == NMEA_SIG_HIGH) {
 			assert(add ? (counters->sigHigh < maxCount):(counters->sigHigh > 0));
 			counters->sigHigh += amount;
@@ -203,7 +279,7 @@ static void updateCounters(PositionAverageList * positionAverageList,
 	}
 
 	/* fix */
-	if (nmea_INFO_has_field(smask, FIX)) {
+	if (nmea_INFO_is_present(present, FIX)) {
 		if (entry->nmeaInfo.fix == NMEA_FIX_3D) {
 			assert(add ? (counters->fix3d < maxCount):(counters->fix3d > 0));
 			counters->fix3d += amount;
@@ -227,12 +303,70 @@ static void updateCounters(PositionAverageList * positionAverageList,
  @param positionAverageList
  The position average list
  */
-static void determineCumulativeSmaskSigFix(
+static void determineCumulativePresentSmaskSigFix(
 		PositionAverageList * positionAverageList) {
 	PositionUpdateEntry * cumulative =
 			&positionAverageList->positionAverageCumulative;
 	PositionUpdateCounters * counters = &positionAverageList->counters;
 	unsigned long long count = positionAverageList->entriesCount;
+
+	/* present */
+	cumulative->nmeaInfo.present = 0;
+
+	if (counters->smask >= count) {
+		cumulative->nmeaInfo.present |= SMASK;
+	}
+	if (counters->utcdate >= count) {
+		cumulative->nmeaInfo.present |= UTCDATE;
+	}
+	if (counters->utctime >= count) {
+		cumulative->nmeaInfo.present |= UTCTIME;
+	}
+	if (counters->sig >= count) {
+		cumulative->nmeaInfo.present |= SIG;
+	}
+	if (counters->fix >= count) {
+		cumulative->nmeaInfo.present |= FIX;
+	}
+	if (counters->pdop >= count) {
+		cumulative->nmeaInfo.present |= PDOP;
+	}
+	if (counters->hdop >= count) {
+		cumulative->nmeaInfo.present |= HDOP;
+	}
+	if (counters->vdop >= count) {
+		cumulative->nmeaInfo.present |= VDOP;
+	}
+	if (counters->lat >= count) {
+		cumulative->nmeaInfo.present |= LAT;
+	}
+	if (counters->lon >= count) {
+		cumulative->nmeaInfo.present |= LON;
+	}
+	if (counters->elv >= count) {
+		cumulative->nmeaInfo.present |= ELV;
+	}
+	if (counters->speed >= count) {
+		cumulative->nmeaInfo.present |= SPEED;
+	}
+	if (counters->track >= count) {
+		cumulative->nmeaInfo.present |= TRACK;
+	}
+	if (counters->mtrack >= count) {
+		cumulative->nmeaInfo.present |= MTRACK;
+	}
+	if (counters->magvar >= count) {
+		cumulative->nmeaInfo.present |= MAGVAR;
+	}
+	if (counters->satinusecount >= count) {
+		cumulative->nmeaInfo.present |= SATINUSECOUNT;
+	}
+	if (counters->satinuse >= count) {
+		cumulative->nmeaInfo.present |= SATINUSE;
+	}
+	if (counters->satinview >= count) {
+		cumulative->nmeaInfo.present |= SATINVIEW;
+	}
 
 	/* smask */
 	cumulative->nmeaInfo.smask = 0;
@@ -240,26 +374,22 @@ static void determineCumulativeSmaskSigFix(
 	if (counters->gpgga >= count) {
 		cumulative->nmeaInfo.smask |= GPGGA;
 	}
-
 	if (counters->gpgsa >= count) {
 		cumulative->nmeaInfo.smask |= GPGSA;
 	}
-
 	if (counters->gpgsv >= count) {
 		cumulative->nmeaInfo.smask |= GPGSV;
 	}
-
 	if (counters->gprmc >= count) {
 		cumulative->nmeaInfo.smask |= GPRMC;
 	}
-
 	if (counters->gpvtg >= count) {
 		cumulative->nmeaInfo.smask |= GPVTG;
 	}
 
 	/* sig */
 	cumulative->nmeaInfo.sig = NMEA_SIG_BAD;
-	if (nmea_INFO_has_field(cumulative->nmeaInfo.smask, SIG)) {
+	if (nmea_INFO_is_present(cumulative->nmeaInfo.present, SIG)) {
 		if (counters->sigBad == 0) {
 			if (counters->sigHigh >= count) {
 				cumulative->nmeaInfo.sig = NMEA_SIG_HIGH;
@@ -273,7 +403,7 @@ static void determineCumulativeSmaskSigFix(
 
 	/* fix */
 	cumulative->nmeaInfo.fix = NMEA_FIX_BAD;
-	if (nmea_INFO_has_field(cumulative->nmeaInfo.smask, FIX)) {
+	if (nmea_INFO_is_present(cumulative->nmeaInfo.present, FIX)) {
 		if (counters->fixBad == 0) {
 			if (counters->fix3d >= count) {
 				cumulative->nmeaInfo.fix = NMEA_FIX_3D;
@@ -285,43 +415,43 @@ static void determineCumulativeSmaskSigFix(
 }
 
 /**
- * Adjust the range of the direction so that we can correctly average it:
+ * Adjust the range of the track so that we can correctly average it:
  * <pre>
  * [   0, 180) --> [   0, 180)
  * [ 180, 360) --> [-180,   0)
  * </pre>
- * @param direction the direction to adjust
- * @return the adjusted direction
+ * @param track the track to adjust
+ * @return the adjusted track
  */
-static double getAdjustedDirectionForAveraging(double direction) {
-	assert(direction >= (double)0.0);
-	assert(direction < (double)360.0);
+static double getAdjustedTrackForAveraging(double track) {
+	assert(track >= (double)0.0);
+	assert(track < (double)360.0);
 
-	if (direction >= (double)180.0) {
-		return (direction - (double)360.0);
+	if (track >= (double)180.0) {
+		return (track - (double)360.0);
 	}
 
-	return direction;
+	return track;
 }
 
 /**
- * Adjust the range of the direction after averaging: the reverse of getAdjustedDirectionForAveraging
+ * Adjust the range of the track after averaging: the reverse of getAdjustedTrackForAveraging
  * <pre>
  * [-180,   0) --> [ 180, 360)
  * [   0, 180) --> [   0, 180)
  * </pre>
- * @param direction the direction to adjust
- * @return the adjusted direction
+ * @param track the track to adjust
+ * @return the adjusted track
  */
-static double getAdjustedDirectionAfterAveraging(double direction) {
-	assert(direction >= (double)-180.0);
-	assert(direction < (double)180.0);
+static double getAdjustedTrackAfterAveraging(double track) {
+	assert(track >= (double)-180.0);
+	assert(track < (double)180.0);
 
-	if (direction < (double)0.0) {
-		return (direction + (double)360.0);
+	if (track < (double)0.0) {
+		return (track + (double)360.0);
 	}
 
-	return direction;
+	return track;
 }
 
 /**
@@ -341,12 +471,14 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 		bool add) {
 	PositionUpdateEntry * cumulative =
 			&positionAverageList->positionAverageCumulative;
-	double 	adjustedDirection = getAdjustedDirectionForAveraging(entry->nmeaInfo.direction);
+	double 	adjustedTrack = getAdjustedTrackForAveraging(entry->nmeaInfo.track);
+	double 	adjustedMTrack = getAdjustedTrackForAveraging(entry->nmeaInfo.mtrack);
 
 	if (!add) {
 		assert(positionAverageList->entriesCount >= positionAverageList->entriesMaxCount);
 		assert(entry == getPositionAverageEntry(positionAverageList, OLDEST));
 
+		/* do not touch present */
 		/* do not touch smask */
 
 		/* do not touch utc */
@@ -359,6 +491,7 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 		assert(positionAverageList->entriesCount < positionAverageList->entriesMaxCount);
 		assert(entry == getPositionAverageEntry(positionAverageList, INCOMING));
 
+		/* present at the end */
 		/* smask at the end */
 
 		/* use the latest utc */
@@ -385,20 +518,22 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 	cumulative->nmeaInfo.lon += add ? entry->nmeaInfo.lon
 			: -entry->nmeaInfo.lon;
 
-	/* elv, speed, direction, declination */
+	/* elv, speed, track, mtrack, magvar */
 	cumulative->nmeaInfo.elv += add ? entry->nmeaInfo.elv
 			: -entry->nmeaInfo.elv;
 	cumulative->nmeaInfo.speed += add ? entry->nmeaInfo.speed
 			: -entry->nmeaInfo.speed;
-	cumulative->nmeaInfo.direction += add ? adjustedDirection
-			: -adjustedDirection;
-	cumulative->nmeaInfo.declination += add ? entry->nmeaInfo.declination
-			: -entry->nmeaInfo.declination;
+	cumulative->nmeaInfo.track += add ? adjustedTrack
+			: -adjustedTrack;
+	cumulative->nmeaInfo.mtrack += add ? adjustedMTrack
+			: -adjustedMTrack;
+	cumulative->nmeaInfo.magvar += add ? entry->nmeaInfo.magvar
+			: -entry->nmeaInfo.magvar;
 
 	positionAverageList->entriesCount += (add ? 1 : -1);
 
 	updateCounters(positionAverageList, entry, add);
-	determineCumulativeSmaskSigFix(positionAverageList);
+	determineCumulativePresentSmaskSigFix(positionAverageList);
 }
 
 /**
@@ -431,11 +566,13 @@ static void updatePositionAverageFromCumulative(
 
 		positionAverageList->positionAverage.nmeaInfo.elv /= divider;
 		positionAverageList->positionAverage.nmeaInfo.speed /= divider;
-		positionAverageList->positionAverage.nmeaInfo.direction /= divider;
-		positionAverageList->positionAverage.nmeaInfo.declination /= divider;
+		positionAverageList->positionAverage.nmeaInfo.track /= divider;
+		positionAverageList->positionAverage.nmeaInfo.mtrack /= divider;
+		positionAverageList->positionAverage.nmeaInfo.magvar /= divider;
 	}
 
-	positionAverageList->positionAverage.nmeaInfo.direction = getAdjustedDirectionAfterAveraging(positionAverageList->positionAverage.nmeaInfo.direction);
+	positionAverageList->positionAverage.nmeaInfo.track = getAdjustedTrackAfterAveraging(positionAverageList->positionAverage.nmeaInfo.track);
+	positionAverageList->positionAverage.nmeaInfo.mtrack = getAdjustedTrackAfterAveraging(positionAverageList->positionAverage.nmeaInfo.mtrack);
 
 	/* satinfo: use from average */
 }

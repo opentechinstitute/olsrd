@@ -9,6 +9,7 @@
 #include "olsr.h"
 
 /* System includes */
+#include <nmea/info.h>
 #include <nmea/tok.h>
 #include <nmea/gmath.h>
 #include <arpa/inet.h>
@@ -88,7 +89,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 	/* time is ALWAYS present so we can just use it */
 	getPositionUpdateTime(olsrGpsMessage, time(NULL), &timeStruct);
 
-	if (likely(nmea_INFO_has_field(smask, LAT))) {
+	if (likely(nmea_INFO_is_present_smask(smask, LAT))) {
 		double latitude = getPositionUpdateLatitude(olsrGpsMessage);
 
 		if (latitude >= 0) {
@@ -105,7 +106,7 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		latitudeString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(smask, LON))) {
+	if (likely(nmea_INFO_is_present_smask(smask, LON))) {
 		double longitude = getPositionUpdateLongitude(olsrGpsMessage);
 
 		if (longitude >= 0) {
@@ -122,25 +123,25 @@ unsigned int gpsFromOlsr(union olsr_message *olsrMessage,
 		longitudeString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(smask, ELV))) {
+	if (likely(nmea_INFO_is_present_smask(smask, ELV))) {
 		snprintf(&altitudeString[0], PUD_TX_ALTITUDE_DIGITS, "%ld", getPositionUpdateAltitude(olsrGpsMessage));
 	} else {
 		altitudeString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(smask, SPEED))) {
+	if (likely(nmea_INFO_is_present_smask(smask, SPEED))) {
 		snprintf(&speedString[0], PUD_TX_SPEED_DIGITS, "%lu", getPositionUpdateSpeed(olsrGpsMessage));
 	} else {
 		speedString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(smask, DIRECTION))) {
+	if (likely(nmea_INFO_is_present_smask(smask, TRACK))) {
 		snprintf(&trackString[0], PUD_TX_TRACK_DIGITS, "%lu", getPositionUpdateTrack(olsrGpsMessage));
 	} else {
 		trackString[0] = '\0';
 	}
 
-	if (likely(nmea_INFO_has_field(smask, HDOP))) {
+	if (likely(nmea_INFO_is_present_smask(smask, HDOP))) {
 		snprintf(&hdopString[0], PUD_TX_HDOP_DIGITS, "%." PUD_TX_HDOP_DECIMALS "f",
 				nmea_meters2dop(getPositionUpdateHdop(olsrGpsMessage)));
 	} else {
@@ -236,37 +237,37 @@ unsigned int gpsToOlsr(nmeaINFO *nmeaInfo, union olsr_message *olsrMessage,
 	setPositionUpdateTime(olsrGpsMessage, nmeaInfo->utc.hour, nmeaInfo->utc.min,
 			nmeaInfo->utc.sec);
 
-	if (likely(nmea_INFO_has_field(nmeaInfo->smask, LAT))) {
+	if (likely(nmea_INFO_is_present(nmeaInfo->present, LAT))) {
 		setPositionUpdateLatitude(olsrGpsMessage, nmeaInfo->lat);
 	} else {
 		setPositionUpdateLatitude(olsrGpsMessage, 0.0);
 	}
 
-	if (likely(nmea_INFO_has_field(nmeaInfo->smask, LON))) {
+	if (likely(nmea_INFO_is_present(nmeaInfo->present, LON))) {
 		setPositionUpdateLongitude(olsrGpsMessage, nmeaInfo->lon);
 	} else {
 		setPositionUpdateLongitude(olsrGpsMessage, 0.0);
 	}
 
-	if (likely(nmea_INFO_has_field(nmeaInfo->smask, ELV))) {
+	if (likely(nmea_INFO_is_present(nmeaInfo->present, ELV))) {
 		setPositionUpdateAltitude(olsrGpsMessage, nmeaInfo->elv);
 	} else {
 		setPositionUpdateAltitude(olsrGpsMessage, 0.0);
 	}
 
-	if (likely(nmea_INFO_has_field(nmeaInfo->smask, SPEED))) {
+	if (likely(nmea_INFO_is_present(nmeaInfo->present, SPEED))) {
 		setPositionUpdateSpeed(olsrGpsMessage, nmeaInfo->speed);
 	} else {
 		setPositionUpdateSpeed(olsrGpsMessage, 0.0);
 	}
 
-	if (likely(nmea_INFO_has_field(nmeaInfo->smask, DIRECTION))) {
-		setPositionUpdateTrack(olsrGpsMessage, nmeaInfo->direction);
+	if (likely(nmea_INFO_is_present(nmeaInfo->present, TRACK))) {
+		setPositionUpdateTrack(olsrGpsMessage, nmeaInfo->track);
 	} else {
 		setPositionUpdateTrack(olsrGpsMessage, 0);
 	}
 
-	if (likely(nmea_INFO_has_field(nmeaInfo->smask, HDOP))) {
+	if (likely(nmea_INFO_is_present(nmeaInfo->present, HDOP))) {
 		setPositionUpdateHdop(olsrGpsMessage, nmeaInfo->HDOP);
 	} else {
 		setPositionUpdateHdop(olsrGpsMessage, PUD_HDOP_MAX);
