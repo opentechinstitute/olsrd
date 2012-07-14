@@ -157,35 +157,36 @@ PositionUpdateEntry * getPositionAverageEntry(
 static void updateCounters(PositionAverageList * positionAverageList,
 		PositionUpdateEntry * entry, bool add) {
 	PositionUpdateCounters * counters = &positionAverageList->counters;
+	int smask = entry->nmeaInfo.smask;
 #ifndef NDEBUG
 	unsigned long long maxCount = positionAverageList->entriesMaxCount;
 #endif
 	int amount = (add ? 1 : -1);
 
 	/* smask */
-	if ((entry->nmeaInfo.smask & GPGGA) != 0) {
+	if ((smask & GPGGA) != 0) {
 		assert(add ? (counters->gpgga < maxCount):(counters->gpgga > 0));
 		counters->gpgga += amount;
 	}
-	if ((entry->nmeaInfo.smask & GPGSA) != 0) {
+	if ((smask & GPGSA) != 0) {
 		assert(add ? (counters->gpgsa < maxCount):(counters->gpgsa > 0));
 		counters->gpgsa += amount;
 	}
-	if ((entry->nmeaInfo.smask & GPGSV) != 0) {
+	if ((smask & GPGSV) != 0) {
 		assert(add ? (counters->gpgsv < maxCount):(counters->gpgsv > 0));
 		counters->gpgsv += amount;
 	}
-	if ((entry->nmeaInfo.smask & GPRMC) != 0) {
+	if ((smask & GPRMC) != 0) {
 		assert(add ? (counters->gprmc < maxCount):(counters->gprmc > 0));
 		counters->gprmc += amount;
 	}
-	if ((entry->nmeaInfo.smask & GPVTG) != 0) {
+	if ((smask & GPVTG) != 0) {
 		assert(add ? (counters->gpvtg < maxCount):(counters->gpvtg > 0));
 		counters->gpvtg += amount;
 	}
 
 	/* sig */
-	if (nmea_INFO_has_field(entry->nmeaInfo.smask, SIG)) {
+	if (nmea_INFO_has_field(smask, SIG)) {
 		if (entry->nmeaInfo.sig == NMEA_SIG_HIGH) {
 			assert(add ? (counters->sigHigh < maxCount):(counters->sigHigh > 0));
 			counters->sigHigh += amount;
@@ -202,7 +203,7 @@ static void updateCounters(PositionAverageList * positionAverageList,
 	}
 
 	/* fix */
-	if (nmea_INFO_has_field(entry->nmeaInfo.smask, FIX)) {
+	if (nmea_INFO_has_field(smask, FIX)) {
 		if (entry->nmeaInfo.fix == NMEA_FIX_3D) {
 			assert(add ? (counters->fix3d < maxCount):(counters->fix3d > 0));
 			counters->fix3d += amount;
