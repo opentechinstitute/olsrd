@@ -1254,16 +1254,16 @@ static void build_pud_body(struct autobuf *abuf) {
 		const char * s;
 		switch (txGpsInfo->txPosition.nmeaInfo.sig) {
 			case NMEA_SIG_BAD:
-				s = "BAD";
+				s = "Invalid";
 				break;
 			case NMEA_SIG_LOW:
-				s = "LOW";
+				s = "Fix";
 				break;
 			case NMEA_SIG_MID:
-				s = "MID";
+				s = "Differential";
 				break;
 			case NMEA_SIG_HIGH:
-				s = "HIGH";
+				s = "Sensitive";
 				break;
 			default:
 				s = "Unknown";
