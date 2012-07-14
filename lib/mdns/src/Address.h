@@ -52,12 +52,4 @@ struct TBmfInterface;
 
 int IsMulticast(union olsr_ip_addr *ipAddress);
 
-struct FilteredHosts {
-
-	union olsr_ip_addr ipaddr;
-	struct list_entity list;
-
-};
-
-
 #endif /* _MDNS_ADDRESS_H */

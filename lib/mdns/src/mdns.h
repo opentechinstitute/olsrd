@@ -46,6 +46,7 @@
 #include "olsrd_plugin.h"             /* union set_plugin_parameter_addon */
 #include "duplicate_set.h"
 #include "parser.h"
+#include "list_backport.h"
 
 #define MESSAGE_TYPE 132
 #define PARSER_TYPE		MESSAGE_TYPE
@@ -68,7 +69,11 @@
 /* Forward declaration of OLSR interface type */
 struct interface;
 
-extern struct list_entity ListOfFilteredHosts;
+struct FilteredHost{
+  union olsr_ip_addr host;
+
+  struct list_entity list;
+};
 
 //extern int FanOutLimit;
 //extern int BroadcastRetransmitCount;
@@ -83,7 +88,9 @@ union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
 //void CloseBmf(void);
 int InitMDNS(struct interface *skipThisIntf);
 void CloseMDNS(void);
-
+int AddFilteredHost(const char *FilteredHost, void *data __attribute__ ((unused)),
+			 set_plugin_parameter_addon addon __attribute__ ((unused)));
+int isInFilteredList(union olsr_ip_addr *src);
 void olsr_mdns_gen(unsigned char *packet, int len);
 
 /* Parser function to register with the scheduler */

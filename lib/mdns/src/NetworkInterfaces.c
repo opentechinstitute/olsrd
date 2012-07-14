@@ -826,33 +826,6 @@ return 0;
 } /* Set TTL Check */
 
 int
-AddFilteredHost(const char *host, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
-{
-  struct FilteredHosts *hostToAdd;
-  
-assert(host!= NULL);
-
-  hostToAdd = olsr_malloc(sizeof(struct FilteredHosts), "text"); //TODO: what is "text", some debug ?
-  
-  
-if (olsr_cnf->ip_version == AF_INET) { //IPv4
-
-  inet_pton(olsr_cnf->ip_version,host,&hostToAdd->ipaddr.v4);
-
-  }
-  else { //IPv6
-
-  inet_pton(olsr_cnf->ip_version,host,&hostToAdd->ipaddr.v6);
-
-  }
-
-  listbackport_add_tail(&ListOfFilteredHosts,&(hostToAdd->list));
-  
-
-  return 0;
-}                               /* AddFilteredHost */
-
-int
 set_MDNS_TTL(const char *MDNS_TTL, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   assert(MDNS_TTL!= NULL);

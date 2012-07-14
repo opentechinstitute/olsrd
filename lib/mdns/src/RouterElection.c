@@ -212,7 +212,7 @@ set_Network_ID(const char *Network_ID, void *data __attribute__ ((unused)), set_
   assert(Network_ID!= NULL);
   set_plugin_int(Network_ID, &temp, addon);
   NETWORK_ID = (uint8_t) temp;
-  return 1;
+  return 0;
 } /* Set Network ID */
 
 

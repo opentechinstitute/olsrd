@@ -74,10 +74,12 @@
 #include "Packet.h"             /* ENCAP_HDR_LEN, BMF_ENCAP_TYPE, BMF_ENCAP_LEN etc. */
 #include "list_backport.h"
 #include "RouterElection.h"
+#include "list_backport.h"
 
-#define OLSR_FOR_ALL_FILTEREDNODES_ENTRIES(n, iterator) list_for_each_element_safe(&ListOfFilteredHosts, n, list, iterator)
+#define OLSR_FOR_ALL_FILTEREDNODES_ENTRIES(n, iterator) listbackport_for_each_element_safe(&ListOfFilteredHosts, n, list, iterator)
 
 struct list_entity ListOfFilteredHosts;
+int FHListInit = 0;
 
 /* -------------------------------------------------------------------------
  * Function   : PacketReceivedFromOLSR
@@ -321,16 +323,66 @@ MainAddressOf(union olsr_ip_addr *ip)
   return result;
 }                               /* MainAddressOf */
 
+int
+AddFilteredHost(const char *FilteredHost, void *data __attribute__ ((unused)), 
+		set_plugin_parameter_addon addon __attribute__ ((unused))){
 
-static int
-isInFilteredList(union olsr_ip_addr *ip) {
+  int res = 0;
+  struct FilteredHost *tmp;
+  tmp = (struct FilteredHost *) malloc(sizeof(struct FilteredHost));
+  listbackport_init_node(&tmp->list);
 
-	//TODO: implement here check if IP is in filtered list
+  if(FHListInit == 0){
+    listbackport_init_head(&ListOfFilteredHosts);
+    FHListInit = 1;
+  }
 
-return 1;
+  if(olsr_cnf->ip_version == AF_INET){
+    res = inet_pton(AF_INET, FilteredHost, &tmp->host.v4);
+    if(res > 0){
+      listbackport_add_tail(&ListOfFilteredHosts, &tmp->list);
+    }
+    else
+      free(tmp);
+  }
+  else{
+    res = inet_pton(AF_INET6, FilteredHost, &tmp->host.v6);
+    if(res > 0)
+      listbackport_add_tail(&ListOfFilteredHosts, &tmp->list);
+    else
+      free(tmp);
+  }
 
+  return 0;
 }
 
+int
+isInFilteredList(union olsr_ip_addr *src){//TODO: implement here check if IP is in filtered list
+
+  struct FilteredHost *tmp, *iterator;
+  
+  if(FHListInit == 0){
+    listbackport_init_head(&ListOfFilteredHosts);
+    FHListInit = 1;
+  }
+
+
+  if(listbackport_is_empty(&ListOfFilteredHosts))
+    return 0;
+
+  OLSR_FOR_ALL_FILTEREDNODES_ENTRIES(tmp, iterator){
+    if(olsr_cnf->ip_version == AF_INET){
+      if(memcmp(&tmp->host.v4, &src->v4, sizeof(struct in_addr)) == 0)
+        return 1;
+    }
+    else{
+      if(memcmp(&tmp->host.v6, &src->v6, sizeof(struct in6_addr)) == 0)
+        return 1;
+    }
+  }
+
+  return 0;
+}
 
 /* -------------------------------------------------------------------------
  * Function   : BmfPacketCaptured
@@ -391,8 +443,7 @@ BmfPacketCaptured(
 
 
     if (isInFilteredList(&src)) {
-
-	//return;
+      return;
     }
 
   }                             //END IPV4
@@ -427,11 +478,10 @@ BmfPacketCaptured(
       return;
 
   
-/*    if (isInFilteredList(&src)) {
-    
-    return;
+    if (isInFilteredList(&src)) {
+      return;
     }
-*/
+
   }                             //END IPV6
   else
     return;                     //Is not IP packet
@@ -510,9 +560,6 @@ DoMDNS(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attri
 int
 InitMDNS(struct interface *skipThisIntf)
 {
-   
-  listbackport_init_head(&ListOfFilteredHosts);
-
   //Tells OLSR to launch olsr_parser when the packets for this plugin arrive
   olsr_parser_add_function(&olsr_parser, PARSER_TYPE);
   //Creates captures sockets and register them to the OLSR scheduler
