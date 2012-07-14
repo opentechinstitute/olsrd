@@ -1180,7 +1180,7 @@ static const char * NA_STRING = "N.A.";
 static void build_pud_body(struct autobuf *abuf) {
 	TransmitGpsInformation * txGpsInfo = olsr_cnf->pud_position;
 	char * nodeId;
-	char nodeIdString[1024];
+	char nodeIdString[256];
 
 	abuf_puts(abuf, "<h2>Position</h2>");
 
