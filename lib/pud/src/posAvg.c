@@ -425,11 +425,19 @@ static void determineCumulativePresentSmaskSigFix(
  * Calculate angle components
  *
  * @param components a pointer to the components structure
- * @param angle a pointer to the angle (in degrees) from which to calculate the components
+ * @param angle a pointer to the angle (in degrees) from which to calculate
+ * the components. Set to NULL when the angle is not present in the input data.
+ *
  */
 static void calculateAngleComponents(AngleComponents * components, double * angle) {
-	if (!components || !angle)
+	if (!components)
 		return;
+
+	if (!angle) {
+		components->x = 0.0;
+		components->y = 0.0;
+		return;
+	}
 
 	components->x = cos(nmea_degree2radian(*angle));
 	components->y = sin(nmea_degree2radian(*angle));
@@ -604,9 +612,9 @@ void addNewPositionToAverage(PositionAverageList * positionAverageList,
 	}
 
 	/* calculate the angle components */
-	calculateAngleComponents(&newEntry->track, &newEntry->nmeaInfo.track);
-	calculateAngleComponents(&newEntry->mtrack, &newEntry->nmeaInfo.mtrack);
-	calculateAngleComponents(&newEntry->magvar, &newEntry->nmeaInfo.magvar);
+	calculateAngleComponents(&newEntry->track, nmea_INFO_is_present(newEntry->nmeaInfo.present, TRACK) ? &newEntry->nmeaInfo.track : NULL);
+	calculateAngleComponents(&newEntry->mtrack, nmea_INFO_is_present(newEntry->nmeaInfo.present, MTRACK) ? &newEntry->nmeaInfo.mtrack : NULL);
+	calculateAngleComponents(&newEntry->magvar, nmea_INFO_is_present(newEntry->nmeaInfo.present, MAGVAR) ? &newEntry->nmeaInfo.magvar : NULL);
 
 	/* now just add the new position */
 	addOrRemoveEntryToFromCumulativeAverage(positionAverageList, newEntry, true);
