@@ -367,7 +367,7 @@ unsigned int getRxNonOlsrInterfaceCount(void) {
 }
 
 /**
- * @param index the index of the configured non-olsr receive interface
+ * @param idx the index of the configured non-olsr receive interface
  * @return the index-th interface name
  */
 unsigned char * getRxNonOlsrInterfaceName(unsigned int idx) {
@@ -639,7 +639,7 @@ unsigned int getTxNonOlsrInterfaceCount(void) {
 }
 
 /**
- * @param index the index of the configured non-olsr transmit interface
+ * @param idx the index of the configured non-olsr transmit interface
  * @return the index-th interface name
  */
 unsigned char * getTxNonOlsrInterfaceName(unsigned int idx) {
