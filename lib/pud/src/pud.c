@@ -14,6 +14,7 @@
 #include "ipcalc.h"
 #include "net_olsr.h"
 #include "parser.h"
+#include "log.h"
 
 /* System includes */
 
@@ -29,6 +30,9 @@
 
 /** The de-duplication list */
 static DeDupList deDupList;
+
+/** When false, use olsr_printf in pudError, otherwise use olsr_syslog */
+static bool pudErrorUseSysLog = false;
 
 /**
  Report a plugin error.
@@ -69,7 +73,11 @@ void pudError(bool useErrno, const char *format, ...) {
 			stringErr = "";
 		}
 	}
-	olsr_printf(0, "%s: %s%s%s\n", PUD_PLUGIN_ABBR, strDesc, colon, stringErr);
+
+	if (!pudErrorUseSysLog)
+		olsr_printf(0, "%s: %s%s%s\n", PUD_PLUGIN_ABBR, strDesc, colon, stringErr);
+	else
+		olsr_syslog(OLSR_LOG_ERR, "%s: %s%s%s\n", PUD_PLUGIN_ABBR, strDesc, colon, stringErr);
 }
 
 /**
