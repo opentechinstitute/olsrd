@@ -43,17 +43,16 @@ static DeDupList deDupList;
  */
 void pudError(bool useErrno, const char *format, ...) {
 	char strDesc[256];
-	char *stringErr = NULL;
-
-	if (useErrno) {
-		stringErr = strerror(errno);
-	}
+	const char *colon;
+	const char *stringErr;
 
 	if ((format == NULL) || (*format == '\0')) {
-		if (useErrno) {
-			olsr_printf(0, "%s: %s\n", PUD_PLUGIN_ABBR, stringErr);
+		strDesc[0] = '\0';
+		colon = "";
+		if (!useErrno) {
+			stringErr = "Unknown error";
 		} else {
-			olsr_printf(0, "%s: Unknown error\n", PUD_PLUGIN_ABBR);
+			stringErr = strerror(errno);
 		}
 	} else {
 		va_list arglist;
@@ -62,14 +61,15 @@ void pudError(bool useErrno, const char *format, ...) {
 		vsnprintf(strDesc, sizeof(strDesc), format, arglist);
 		va_end(arglist);
 
-		strDesc[sizeof(strDesc) - 1] = '\0'; /* Ensures null termination */
-
 		if (useErrno) {
-			olsr_printf(0, "%s: %s: %s\n", PUD_PLUGIN_ABBR, strDesc, stringErr);
+			colon = ": ";
+			stringErr = strerror(errno);
 		} else {
-			olsr_printf(0, "%s: %s\n", PUD_PLUGIN_ABBR, strDesc);
+			colon = "";
+			stringErr = "";
 		}
 	}
+	olsr_printf(0, "%s: %s%s%s\n", PUD_PLUGIN_ABBR, strDesc, colon, stringErr);
 }
 
 /**
