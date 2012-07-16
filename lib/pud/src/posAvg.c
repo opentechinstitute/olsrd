@@ -7,8 +7,11 @@
 
 /* System includes */
 #include <assert.h>
+#include <math.h>
+#include <string.h>
 #include <nmea/info.h>
 #include <nmea/sentence.h>
+#include <nmea/gmath.h>
 
 /* Defines */
 
@@ -32,6 +35,10 @@ void flushPositionAverageList(PositionAverageList * positionAverageList) {
 			sizeof(positionAverageList->counters));
 
 	nmea_zero_INFO(&positionAverageList->positionAverageCumulative.nmeaInfo);
+	memset(&positionAverageList->positionAverageCumulative.track, 0, sizeof(positionAverageList->positionAverageCumulative.track));
+	memset(&positionAverageList->positionAverageCumulative.mtrack, 0, sizeof(positionAverageList->positionAverageCumulative.mtrack));
+	memset(&positionAverageList->positionAverageCumulative.magvar, 0, sizeof(positionAverageList->positionAverageCumulative.magvar));
+
 	nmea_zero_INFO(&positionAverageList->positionAverage.nmeaInfo);
 }
 
@@ -415,43 +422,45 @@ static void determineCumulativePresentSmaskSigFix(
 }
 
 /**
- * Adjust the range of the track so that we can correctly average it:
- * <pre>
- * [   0, 180) --> [   0, 180)
- * [ 180, 360) --> [-180,   0)
- * </pre>
- * @param track the track to adjust
- * @return the adjusted track
+ * Calculate angle components
+ *
+ * @param components a pointer to the components structure
+ * @param angle a pointer to the angle (in degrees) from which to calculate the components
  */
-static double getAdjustedTrackForAveraging(double track) {
-	assert(track >= (double)0.0);
-	assert(track < (double)360.0);
+static void calculateAngleComponents(AngleComponents * components, double * angle) {
+	if (!components || !angle)
+		return;
 
-	if (track >= (double)180.0) {
-		return (track - (double)360.0);
-	}
-
-	return track;
+	components->x = cos(nmea_degree2radian(*angle));
+	components->y = sin(nmea_degree2radian(*angle));
 }
 
 /**
- * Adjust the range of the track after averaging: the reverse of getAdjustedTrackForAveraging
- * <pre>
- * [-180,   0) --> [ 180, 360)
- * [   0, 180) --> [   0, 180)
- * </pre>
- * @param track the track to adjust
- * @return the adjusted track
+ * Calculate angle from its components
+ *
+ * @param components a pointer to the components structure
+ * @return angle the angle (in degrees)
  */
-static double getAdjustedTrackAfterAveraging(double track) {
-	assert(track >= (double)-180.0);
-	assert(track < (double)180.0);
+static double calculateAngle(AngleComponents * components) {
+	if (!components)
+		return 0;
 
-	if (track < (double)0.0) {
-		return (track + (double)360.0);
-	}
+	return nmea_radian2degree(atan2(components->y, components->x));
+}
 
-	return track;
+/**
+ * Add the src angle components to the dst angle components (accumulate)
+ *
+ * @param dst a pointer to the destination components structure
+ * @param src a pointer to the source components structure
+ * @param add true to add, false to subtract
+ */
+static void addAngleComponents(AngleComponents * dst, AngleComponents * src, bool add) {
+	if (!dst || !src)
+		return;
+
+	dst->x += add ? src->x : -src->x;
+	src->y += add ? src->y : -src->y;
 }
 
 /**
@@ -471,8 +480,6 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 		bool add) {
 	PositionUpdateEntry * cumulative =
 			&positionAverageList->positionAverageCumulative;
-	double 	adjustedTrack = getAdjustedTrackForAveraging(entry->nmeaInfo.track);
-	double 	adjustedMTrack = getAdjustedTrackForAveraging(entry->nmeaInfo.mtrack);
 
 	if (!add) {
 		assert(positionAverageList->entriesCount >= positionAverageList->entriesMaxCount);
@@ -518,18 +525,18 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 	cumulative->nmeaInfo.lon += add ? entry->nmeaInfo.lon
 			: -entry->nmeaInfo.lon;
 
-	/* elv, speed, track, mtrack, magvar */
+	/* elv, speed */
 	cumulative->nmeaInfo.elv += add ? entry->nmeaInfo.elv
 			: -entry->nmeaInfo.elv;
 	cumulative->nmeaInfo.speed += add ? entry->nmeaInfo.speed
 			: -entry->nmeaInfo.speed;
-	cumulative->nmeaInfo.track += add ? adjustedTrack
-			: -adjustedTrack;
-	cumulative->nmeaInfo.mtrack += add ? adjustedMTrack
-			: -adjustedMTrack;
-	cumulative->nmeaInfo.magvar += add ? entry->nmeaInfo.magvar
-			: -entry->nmeaInfo.magvar;
 
+	/* track, mtrack, magvar */
+	addAngleComponents(&cumulative->track, &entry->track, add);
+	addAngleComponents(&cumulative->mtrack, &entry->mtrack, add);
+	addAngleComponents(&cumulative->magvar, &entry->magvar, add);
+
+	/* adjust list count */
 	positionAverageList->entriesCount += (add ? 1 : -1);
 
 	updateCounters(positionAverageList, entry, add);
@@ -546,6 +553,10 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 static void updatePositionAverageFromCumulative(
 		PositionAverageList * positionAverageList) {
 	double divider = positionAverageList->entriesCount;
+
+	double avgTrack = calculateAngle(&positionAverageList->positionAverageCumulative.track);
+	double avgMTrack = calculateAngle(&positionAverageList->positionAverageCumulative.mtrack);
+	double avgMagvar = calculateAngle(&positionAverageList->positionAverageCumulative.magvar);
 
 	positionAverageList->positionAverage = positionAverageList->positionAverageCumulative;
 
@@ -566,13 +577,11 @@ static void updatePositionAverageFromCumulative(
 
 		positionAverageList->positionAverage.nmeaInfo.elv /= divider;
 		positionAverageList->positionAverage.nmeaInfo.speed /= divider;
-		positionAverageList->positionAverage.nmeaInfo.track /= divider;
-		positionAverageList->positionAverage.nmeaInfo.mtrack /= divider;
-		positionAverageList->positionAverage.nmeaInfo.magvar /= divider;
-	}
 
-	positionAverageList->positionAverage.nmeaInfo.track = getAdjustedTrackAfterAveraging(positionAverageList->positionAverage.nmeaInfo.track);
-	positionAverageList->positionAverage.nmeaInfo.mtrack = getAdjustedTrackAfterAveraging(positionAverageList->positionAverage.nmeaInfo.mtrack);
+		positionAverageList->positionAverage.nmeaInfo.track = avgTrack;
+		positionAverageList->positionAverage.nmeaInfo.mtrack = avgMTrack;
+		positionAverageList->positionAverage.nmeaInfo.magvar = avgMagvar;
+	}
 
 	/* satinfo: use from average */
 }
@@ -597,6 +606,11 @@ void addNewPositionToAverage(PositionAverageList * positionAverageList,
 		addOrRemoveEntryToFromCumulativeAverage(positionAverageList,
 				getPositionAverageEntry(positionAverageList, OLDEST), false);
 	}
+
+	/* calculate the angle components */
+	calculateAngleComponents(&newEntry->track, &newEntry->nmeaInfo.track);
+	calculateAngleComponents(&newEntry->mtrack, &newEntry->nmeaInfo.mtrack);
+	calculateAngleComponents(&newEntry->magvar, &newEntry->nmeaInfo.magvar);
 
 	/* now just add the new position */
 	addOrRemoveEntryToFromCumulativeAverage(positionAverageList, newEntry, true);

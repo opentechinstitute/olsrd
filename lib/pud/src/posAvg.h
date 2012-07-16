@@ -9,9 +9,20 @@
 #include <nmea/info.h>
 #include <stdbool.h>
 
+/** Stores angle components */
+typedef struct _AngleComponents {
+		double x; /**< cos of the angle (in radians) */
+		double y; /**< sin of the angle (in radians) */
+} AngleComponents;
+
 /** Stores an nmeaINFO entry, used in the averaging */
 typedef struct _PositionUpdateEntry {
 		nmeaINFO nmeaInfo; /**< the position information */
+
+		/* used for averaging of angles */
+		AngleComponents track; /**< the track angle components */
+		AngleComponents mtrack; /**< the mtrack angle components */
+		AngleComponents magvar; /**< the magvar angle components */
 } PositionUpdateEntry;
 
 /**
