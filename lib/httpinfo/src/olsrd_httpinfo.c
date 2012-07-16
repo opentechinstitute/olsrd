@@ -1350,7 +1350,7 @@ static void build_pud_body(struct autobuf *abuf) {
 	abuf_puts(abuf, "</td></tr>\n");
 
 	/* magvar */
-	abuf_puts(abuf, "<tr><td>Magnetic Variance</td><td></td><td>degrees</td><td></td><td id=\"magvar\">");
+	abuf_puts(abuf, "<tr><td>Magnetic Variation</td><td></td><td>degrees</td><td></td><td id=\"magvar\">");
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.present, MAGVAR)) {
 		abuf_appendf(abuf, "%f", txGpsInfo->txPosition.nmeaInfo.magvar);
 	} else {
