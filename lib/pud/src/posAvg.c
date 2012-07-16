@@ -554,10 +554,6 @@ static void updatePositionAverageFromCumulative(
 		PositionAverageList * positionAverageList) {
 	double divider = positionAverageList->entriesCount;
 
-	double avgTrack = calculateAngle(&positionAverageList->positionAverageCumulative.track);
-	double avgMTrack = calculateAngle(&positionAverageList->positionAverageCumulative.mtrack);
-	double avgMagvar = calculateAngle(&positionAverageList->positionAverageCumulative.magvar);
-
 	positionAverageList->positionAverage = positionAverageList->positionAverageCumulative;
 
 	/* smask: use from cumulative average */
@@ -578,9 +574,9 @@ static void updatePositionAverageFromCumulative(
 		positionAverageList->positionAverage.nmeaInfo.elv /= divider;
 		positionAverageList->positionAverage.nmeaInfo.speed /= divider;
 
-		positionAverageList->positionAverage.nmeaInfo.track = avgTrack;
-		positionAverageList->positionAverage.nmeaInfo.mtrack = avgMTrack;
-		positionAverageList->positionAverage.nmeaInfo.magvar = avgMagvar;
+		positionAverageList->positionAverage.nmeaInfo.track = calculateAngle(&positionAverageList->positionAverageCumulative.track);
+		positionAverageList->positionAverage.nmeaInfo.mtrack = calculateAngle(&positionAverageList->positionAverageCumulative.mtrack);
+		positionAverageList->positionAverage.nmeaInfo.magvar = calculateAngle(&positionAverageList->positionAverageCumulative.magvar);
 	}
 
 	/* satinfo: use from average */
