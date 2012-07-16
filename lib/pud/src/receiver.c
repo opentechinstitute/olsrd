@@ -663,7 +663,6 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	bool subStateExternalStateChange;
 	bool externalStateChange;
 	bool updateTransmitGpsInformation = false;
-	PositionUpdateEntry txPosition;
 	MovementState externalState;
 
 	/* do not process when the message does not start with $GP */
@@ -706,9 +705,7 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 
 	clearMovementType(&movementResult);
 
-	txPosition = transmitGpsInformation.txPosition;
-
-	detemineMovingFromPosition(posAvgEntry, &txPosition, &movementResult);
+	detemineMovingFromPosition(posAvgEntry, &transmitGpsInformation.txPosition, &movementResult);
 
 	/*
 	 * State Determination
@@ -722,11 +719,11 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 	 */
 
 	updateTransmitGpsInformation = subStateExternalStateChange
-			|| (positionValid(posAvgEntry) && !positionValid(&txPosition))
+			|| (positionValid(posAvgEntry) && !positionValid(&transmitGpsInformation.txPosition))
 			|| (movementResult.inside == TRISTATE_BOOLEAN_SET);
 
 	if ((externalState == MOVEMENT_STATE_MOVING) || updateTransmitGpsInformation) {
-		transmitGpsInformation.txPosition.nmeaInfo = posAvgEntry->nmeaInfo;
+		transmitGpsInformation.txPosition = *posAvgEntry;
 		transmitGpsInformation.positionUpdated = true;
 
 		/*
