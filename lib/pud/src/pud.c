@@ -346,6 +346,9 @@ bool initPud(void) {
 	 */
 	olsr_parser_add_function(&packetReceivedFromOlsr, PUD_OLSR_MSG_TYPE);
 
+	/* switch to syslog logging, load was succesful */
+	pudErrorUseSysLog = !olsr_cnf->no_fork;
+
 	return true;
 
 	error: closePud();
