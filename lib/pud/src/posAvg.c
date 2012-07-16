@@ -540,8 +540,13 @@ static void addOrRemoveEntryToFromCumulativeAverage(
 			: -entry->nmeaInfo.speed;
 
 	/* track, mtrack, magvar */
+	cumulative->nmeaInfo.track += add ? entry->nmeaInfo.track : -entry->nmeaInfo.track;
 	addAngleComponents(&cumulative->track, &entry->track, add);
+
+	cumulative->nmeaInfo.mtrack += add ? entry->nmeaInfo.mtrack : -entry->nmeaInfo.mtrack;
 	addAngleComponents(&cumulative->mtrack, &entry->mtrack, add);
+
+	cumulative->nmeaInfo.magvar += add ? entry->nmeaInfo.magvar : -entry->nmeaInfo.magvar;
 	addAngleComponents(&cumulative->magvar, &entry->magvar, add);
 
 	/* adjust list count */
