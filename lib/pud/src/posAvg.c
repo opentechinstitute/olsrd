@@ -460,7 +460,7 @@ static void addAngleComponents(AngleComponents * dst, AngleComponents * src, boo
 		return;
 
 	dst->x += add ? src->x : -src->x;
-	src->y += add ? src->y : -src->y;
+	dst->y += add ? src->y : -src->y;
 }
 
 /**
