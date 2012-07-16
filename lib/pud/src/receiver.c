@@ -17,6 +17,7 @@
 #include <nmea/parser.h>
 #include <nmea/gmath.h>
 #include <nmea/sentence.h>
+#include <nmea/context.h>
 #include <OlsrdPudWireFormat/wireFormat.h>
 
 /*
@@ -749,6 +750,15 @@ bool receiverUpdateGpsInformation(unsigned char * rxBuffer, size_t rxCount) {
 }
 
 /**
+ * Log nmea library errors as plugin errors
+ * @param str
+ * @param str_size
+ */
+static void nmea_errors(const char *str, int str_size __attribute__((unused))) {
+	pudError(false, "NMEA library error: %s", str);
+}
+
+/**
  Start the receiver
 
  @return
@@ -763,6 +773,9 @@ bool startReceiver(void) {
 		pudError(false, "Could not initialise NMEA parser");
 		return false;
 	}
+
+	/* hook up the NMEA library error callback */
+	nmea_context_set_error_func(&nmea_errors);
 
 	if (positionFile) {
 		readPositionFile(positionFile, &transmitGpsInformation.txPosition.nmeaInfo);
