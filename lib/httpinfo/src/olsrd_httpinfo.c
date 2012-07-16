@@ -1358,10 +1358,59 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
-	// FIXME add satinfo
-
 	/* end of table */
 	abuf_puts(abuf, "</table></p>\n");
+
+	/* sats */
+	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.present, SATINVIEW)) {
+		int cnt = 0;
+
+		abuf_puts(abuf, "<p>\n");
+		abuf_puts(abuf, "Satellite Infomation:\n");
+		abuf_puts(abuf, "<table border=\"1\" cellpadding=\"2\" cellspacing=\"0\" id=\"satinfo\">\n");
+		abuf_puts(abuf, "<tbody align=\"center\">\n");
+		abuf_puts(abuf,
+				"<tr><th>ID</th><th>In Use</th><th>Elevation (degrees)</th><th>Azimuth (degrees)</th><th>Signal (dB)</th></tr>\n");
+
+		if (txGpsInfo->txPosition.nmeaInfo.satinfo.inview) {
+			int satIndex;
+			for (satIndex = 0; satIndex < NMEA_MAXSAT; satIndex++) {
+				nmeaSATELLITE * sat = &txGpsInfo->txPosition.nmeaInfo.satinfo.sat[satIndex];
+				if (sat->id) {
+					const char * inuseStr;
+
+					if (!nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.present, SATINUSE)) {
+						inuseStr = NA_STRING;
+					} else {
+						int inuseIndex;
+						bool inuse = false;
+						for (inuseIndex = 0; inuseIndex < NMEA_MAXSAT; inuseIndex++) {
+							if (txGpsInfo->txPosition.nmeaInfo.satinfo.in_use[inuseIndex] == sat->id) {
+								inuse = true;
+								break;
+							}
+						}
+						if (inuse) {
+							inuseStr = "yes";
+						} else {
+							inuseStr = "no";
+						}
+					}
+
+					abuf_appendf(abuf, "<tr><td>%02d</td><td>%s</td><td>%02d</td><td>%03d</td><td>%02d</td></tr>\n",
+							sat->id, inuseStr, sat->elv, sat->azimuth, sat->sig);
+					cnt++;
+				}
+			}
+		}
+
+		if (!cnt) {
+			abuf_puts(abuf, "<tr><td colspan=\"5\">none</td></tr>\n");
+		}
+
+		abuf_puts(abuf, "</tbody></table>\n");
+		abuf_puts(abuf, "</p>\n");
+	}
 
 	/* add Google Maps and OpenStreetMap links when we have both lat and lon */
 	if (nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.present, LAT)
