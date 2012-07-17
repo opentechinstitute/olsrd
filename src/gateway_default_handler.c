@@ -43,22 +43,19 @@ static struct olsr_gw_handler gw_def_handler = {
  * depending on the distance to this router
  */
 static void gw_default_choose_gateway(void) {
-  struct tc_entry *tc;
-  struct gateway_entry *inet_ipv4, *inet_ipv6;
-  olsr_linkcost cost_ipv4, cost_ipv6;
+  struct gateway_entry *inet_ipv4 = NULL;
+  struct gateway_entry *inet_ipv6 = NULL;
+  olsr_linkcost cost_ipv4 = ROUTE_COST_BROKEN;
+  olsr_linkcost cost_ipv6 = ROUTE_COST_BROKEN;
   struct gateway_entry *gw;
   bool dual;
-  olsr_linkcost path_cost_times_threshold;
-
-  cost_ipv4 = ROUTE_COST_BROKEN;
-  cost_ipv6 = ROUTE_COST_BROKEN;
-
-  inet_ipv4 = NULL;
-  inet_ipv6 = NULL;
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    /* gateways should not exist without tc entry */
-    if ((tc = olsr_lookup_tc_entry(&gw->originator)) == NULL) {
+    olsr_linkcost path_cost_times_threshold;
+    struct tc_entry *tc = olsr_lookup_tc_entry(&gw->originator);
+
+    if (!tc) {
+	  /* gateways should not exist without tc entry */
       continue;
     }
 
@@ -80,9 +77,12 @@ static void gw_default_choose_gateway(void) {
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 
   /* determine if we found an IPv4 and IPv6 gateway */
-  gw_def_finished_ipv4 |= inet_ipv4 != NULL;
-  gw_def_finished_ipv6 |= inet_ipv6 != NULL;
-  dual = inet_ipv4 == inet_ipv6;
+  gw_def_finished_ipv4 |= (inet_ipv4 != NULL);
+  gw_def_finished_ipv6 |= (inet_ipv6 != NULL);
+
+  /* determine if we are dealing with a dual stack gateway */
+  dual = (inet_ipv4 == inet_ipv6) && (inet_ipv4 != NULL);
+
   if (inet_ipv4) {
 	/* we are dealing with an IPv4 or dual stack gateway */
     olsr_set_inet_gateway(&inet_ipv4->originator, true, dual, false);
@@ -213,11 +213,9 @@ static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
  * @param gw the gateway entry
  */
 static void gw_default_update_handler(struct gateway_entry *gw) {
-  bool v4changed, v6changed;
-
-  v4changed = (gw == olsr_get_ipv4_inet_gateway(NULL))
+  bool v4changed = (gw == olsr_get_ipv4_inet_gateway(NULL))
       && (!gw->ipv4 || (gw->ipv4nat && !olsr_cnf->smart_gw_allow_nat));
-  v6changed = (gw == olsr_get_ipv6_inet_gateway(NULL)) && !gw->ipv6;
+  bool v6changed = (gw == olsr_get_ipv6_inet_gateway(NULL)) && !gw->ipv6;
 
   if (v4changed || v6changed) {
     olsr_gw_default_lookup_gateway(v4changed, v6changed);
@@ -230,12 +228,10 @@ static void gw_default_update_handler(struct gateway_entry *gw) {
  * @param gw the gateway entry
  */
 static void gw_default_delete_handler(struct gateway_entry *gw) {
-  bool isv4, isv6;
+  bool isv4 = (gw == olsr_get_ipv4_inet_gateway(NULL));
+  bool isv6 = (gw == olsr_get_ipv6_inet_gateway(NULL));
 
-  isv4 = gw == olsr_get_ipv4_inet_gateway(NULL);
-  isv6 = gw == olsr_get_ipv6_inet_gateway(NULL);
-
-  if (gw != NULL && (isv4 || isv6)) {
+  if (gw && (isv4 || isv6)) {
     olsr_gw_default_lookup_gateway(isv4, isv6);
   }
 }
