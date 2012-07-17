@@ -18,11 +18,15 @@ static bool gw_def_finished_ipv4;
 static bool gw_def_finished_ipv6;
 static struct timer_entry *gw_def_timer;
 
+/* forward declarations */
 static void gw_default_startup_handler(void);
 static void gw_default_choosegw_handler(bool ipv4, bool ipv6);
 static void gw_default_update_handler(struct gateway_entry *);
 static void gw_default_delete_handler(struct gateway_entry *);
 
+/**
+ * Callback list for the gateway (default) handler
+ */
 static struct olsr_gw_handler gw_def_handler = {
   &gw_default_startup_handler,
   &gw_default_choosegw_handler,
