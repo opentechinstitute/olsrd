@@ -90,21 +90,30 @@ static void gw_default_choose_gateway(void) {
   }
 }
 
-/* timer for lazy gateway selection */
+/**
+ * Timer callback for lazy gateway selection
+ *
+ * @param unused unused
+ */
 static void gw_default_timer(void *unused __attribute__ ((unused))) {
-  /* accept a 10% increase without trigger a stablecount reset */
-  if (tc_tree.count * 10 <= gw_def_nodecount * 11) {
+  /* accept a 10% increase/decrease in the number of gateway nodes without triggering a stablecount reset */
+  if (((tc_tree.count * 10) <= (gw_def_nodecount * 11)) ||
+      ((tc_tree.count * 10) >= (gw_def_nodecount *  9))) {
     gw_def_nodecount = tc_tree.count;
   }
-  if (tc_tree.count <= gw_def_nodecount) {
+
+  if (tc_tree.count == gw_def_nodecount) {
+    /* the number of gateway nodes is 'stable' */
     gw_def_stablecount++;
   }
   else {
+    /* there was a significant change in the number of gateway nodes */
     gw_def_nodecount = tc_tree.count;
     gw_def_stablecount = 0;
   }
 
   if (gw_def_stablecount >= olsr_cnf->smart_gw_stablecount) {
+    /* the number of gateway nodes is stable enough, so we should select a new gateway now */
     gw_default_choose_gateway();
   }
 }
