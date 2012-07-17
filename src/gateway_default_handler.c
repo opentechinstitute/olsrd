@@ -122,6 +122,27 @@ static void gw_default_timer(void *unused __attribute__ ((unused))) {
   }
 }
 
+/**
+ * Lookup a new gateway based on distance metric
+ *
+ * @param ipv4 lookup new v4 gateway
+ * @param ipv6 lookup new v6 gateway
+ */
+static void olsr_gw_default_lookup_gateway(bool ipv4, bool ipv6) {
+  if (ipv4) {
+    /* get new ipv4 GW if we use OLSRv4 or NIIT */
+    gw_def_finished_ipv4 = !(olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
+  }
+  if (ipv6) {
+    /* get new ipv6 GW if we use OLSRv6 */
+    gw_def_finished_ipv6 = !(olsr_cnf->ip_version == AF_INET6);
+  }
+
+  if (!(gw_def_finished_ipv4 && gw_def_finished_ipv6)) {
+    gw_default_choose_gateway();
+  }
+}
+
 /*
  * Exported functions
  */
@@ -139,27 +160,6 @@ void olsr_gw_default_init(void) {
 
   /* setup default handler */
   olsr_set_inetgw_handler(&gw_def_handler);
-}
-
-/**
- * Lookup a new gateway based on distance metric
- *
- * @param ipv4 lookup new v4 gateway
- * @param ipv6 lookup new v6 gateway
- */
-void olsr_gw_default_lookup_gateway(bool ipv4, bool ipv6) {
-  if (ipv4) {
-    /* get new ipv4 GW if we use OLSRv4 or NIIT */
-    gw_def_finished_ipv4 = !(olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
-  }
-  if (ipv6) {
-    /* get new ipv6 GW if we use OLSRv6 */
-    gw_def_finished_ipv6 = !(olsr_cnf->ip_version == AF_INET6);
-  }
-
-  if (!(gw_def_finished_ipv4 && gw_def_finished_ipv6)) {
-    gw_default_choose_gateway();
-  }
 }
 
 /*

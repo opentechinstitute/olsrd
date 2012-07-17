@@ -12,7 +12,6 @@
 #include "gateway.h"
 
 void olsr_gw_default_init(void);
-void olsr_gw_default_lookup_gateway(bool, bool);
 
 #endif /* !WIN32 */
 #endif /* GATEWAY_DEFAULT_HANDLER_H_ */
