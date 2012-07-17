@@ -6,16 +6,11 @@
  */
 #ifdef linux
 
+#include "gateway_default_handler.h"
+
 #include "defs.h"
 #include "gateway.h"
-#include "gateway_default_handler.h"
-#include "scheduler.h"
-#include "tc_set.h"
-#include "log.h"
 #include "lq_plugin.h"
-
-#include "assert.h"
-
 
 static uint32_t gw_def_nodecount;
 static uint32_t gw_def_stablecount;
