@@ -131,11 +131,10 @@ static void gw_default_timer(void *unused __attribute__ ((unused))) {
  */
 void olsr_gw_default_init(void) {
   /* initialize values */
-  gw_def_timer = NULL;
-  gw_def_finished_ipv4 = false;
-  gw_def_finished_ipv6 = false;
   gw_def_nodecount = 0;
   gw_def_stablecount = 0;
+  gw_def_finished_ipv4 = false;
+  gw_def_finished_ipv6 = false;
   gw_def_timer = NULL;
 
   /* setup default handler */
