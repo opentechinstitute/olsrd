@@ -62,11 +62,13 @@ static void gw_default_choose_gateway(void) {
       continue;
     }
 
+    /* determine the path costs threshold */
     if (olsr_cnf->smart_gw_thresh == 0) {
       path_cost_times_threshold = tc->path_cost;
     } else {
       path_cost_times_threshold = ((long long)tc->path_cost * (long long)olsr_cnf->smart_gw_thresh + 50LL) / 100LL;
     }
+
     if (!gw_def_finished_ipv4 && gw->ipv4 && gw->ipv4nat == olsr_cnf->smart_gw_allow_nat && path_cost_times_threshold < cost_ipv4) {
       inet_ipv4 = gw;
       cost_ipv4 = path_cost_times_threshold;
@@ -77,19 +79,21 @@ static void gw_default_choose_gateway(void) {
     }
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 
-  /* found an IPv4 gateway ? */
+  /* determine if we found an IPv4 and IPv6 gateway */
   gw_def_finished_ipv4 |= inet_ipv4 != NULL;
   gw_def_finished_ipv6 |= inet_ipv6 != NULL;
   dual = inet_ipv4 == inet_ipv6;
   if (inet_ipv4) {
+	/* we are dealing with an IPv4 or dual stack gateway */
     olsr_set_inet_gateway(&inet_ipv4->originator, true, dual, false);
   }
   if (inet_ipv6 && !dual) {
+    /* we are dealing with an IPv6-only gateway */
     olsr_set_inet_gateway(&inet_ipv6->originator, false, true, false);
   }
 
-  /* finished ? */
   if ((olsr_cnf->smart_gw_thresh == 0) && gw_def_finished_ipv4 && gw_def_finished_ipv6) {
+    /* stop looking for a better gateway */
     olsr_stop_timer(gw_def_timer);
     gw_def_timer = NULL;
   }
@@ -124,18 +128,18 @@ static void gw_default_timer(void *unused __attribute__ ((unused))) {
 }
 
 /**
- * Lookup a new gateway based on distance metric
+ * Lookup a new gateway
  *
  * @param ipv4 lookup new v4 gateway
  * @param ipv6 lookup new v6 gateway
  */
 static void olsr_gw_default_lookup_gateway(bool ipv4, bool ipv6) {
   if (ipv4) {
-    /* get new ipv4 GW if we use OLSRv4 or NIIT */
+    /* get a new IPv4 gateway if we use OLSRv4 or NIIT */
     gw_def_finished_ipv4 = !(olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
   }
   if (ipv6) {
-    /* get new ipv6 GW if we use OLSRv6 */
+    /* get a new IPv6 gateway if we use OLSRv6 */
     gw_def_finished_ipv6 = !(olsr_cnf->ip_version == AF_INET6);
   }
 
@@ -167,26 +171,34 @@ void olsr_gw_default_init(void) {
  * Handler functions
  */
 
-/* gateway handler callbacks */
+/**
+ * Handle gateway startup
+ */
 static void gw_default_startup_handler(void) {
   /* reset node count */
   gw_def_nodecount = tc_tree.count;
   gw_def_stablecount = 0;
 
-  /* get new ipv4 GW if we use OLSRv4 or NIIT */
+  /* get a new IPv4 gateway if we use OLSRv4 or NIIT */
   gw_def_finished_ipv4 = !(olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
 
-  /* get new ipv6 GW if we use OLSRv6 */
+  /* get a new IPv6 gateway if we use OLSRv6 */
   gw_def_finished_ipv6 = !(olsr_cnf->ip_version == AF_INET6);
 
   /* keep in mind we might be a gateway ourself */
   gw_def_finished_ipv4 |= olsr_cnf->has_ipv4_gateway;
   gw_def_finished_ipv6 |= olsr_cnf->has_ipv6_gateway;
 
-  /* start gateway selection timer */
+  /* (re)start gateway lazy selection timer */
   olsr_set_timer(&gw_def_timer, olsr_cnf->smart_gw_period, 0, true, &gw_default_timer, NULL, 0);
 }
 
+/**
+ * Choose a new gateway
+ *
+ * @param ipv4 lookup new v4 gateway
+ * @param ipv6 lookup new v6 gateway
+ */
 static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
   olsr_gw_default_lookup_gateway(ipv4, ipv6);
 
@@ -195,6 +207,11 @@ static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
   }
 }
 
+/**
+ * Update a gateway entry
+ *
+ * @param gw the gateway entry
+ */
 static void gw_default_update_handler(struct gateway_entry *gw) {
   bool v4changed, v6changed;
 
@@ -207,6 +224,11 @@ static void gw_default_update_handler(struct gateway_entry *gw) {
   }
 }
 
+/**
+ * Remove a gateway entry
+ *
+ * @param gw the gateway entry
+ */
 static void gw_default_delete_handler(struct gateway_entry *gw) {
   bool isv4, isv6;
 
