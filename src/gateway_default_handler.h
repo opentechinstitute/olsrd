@@ -8,9 +8,9 @@
 #ifndef GATEWAY_DEFAULT_HANDLER_H_
 #define GATEWAY_DEFAULT_HANDLER_H_
 
-#ifndef WIN32
+#ifdef linux
 
 void olsr_gw_default_init(void);
 
-#endif /* !WIN32 */
+#endif /* linux */
 #endif /* GATEWAY_DEFAULT_HANDLER_H_ */
