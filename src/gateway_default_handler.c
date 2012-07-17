@@ -16,9 +16,11 @@
 
 #include "assert.h"
 
-static uint32_t gw_def_nodecount, gw_def_stablecount;
-static bool gw_def_finished_ipv4, gw_def_finished_ipv6;
 
+static uint32_t gw_def_nodecount;
+static uint32_t gw_def_stablecount;
+static bool gw_def_finished_ipv4;
+static bool gw_def_finished_ipv6;
 static struct timer_entry *gw_def_timer;
 
 static void gw_default_startup_handler(void);
