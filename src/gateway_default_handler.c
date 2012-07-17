@@ -4,6 +4,7 @@
  *  Created on: Jan 29, 2010
  *      Author: rogge
  */
+#ifdef linux
 
 #include "defs.h"
 #include "gateway.h"
@@ -15,7 +16,6 @@
 
 #include "assert.h"
 
-#ifdef linux
 static uint32_t gw_def_nodecount, gw_def_stablecount;
 static bool gw_def_finished_ipv4, gw_def_finished_ipv6;
 
@@ -216,4 +216,4 @@ static void gw_default_delete_handler(struct gateway_entry *gw) {
     olsr_gw_default_lookup_gateway(isv4, isv6);
   }
 }
-#endif
+#endif /* linux */

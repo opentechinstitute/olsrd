@@ -5,6 +5,8 @@
  *      Author: henning
  */
 
+#ifdef linux
+
 #include "common/avl.h"
 #include "defs.h"
 #include "ipcalc.h"
@@ -23,7 +25,6 @@
 #include <assert.h>
 #include <net/if.h>
 
-#ifdef linux
 struct avl_tree gateway_tree;
 
 static struct olsr_cookie_info *gw_mem_cookie = NULL;
@@ -537,4 +538,4 @@ olsr_print_gateway_entries(void) {
 #endif
 }
 
-#endif /* !WIN32 */
+#endif /* linux */
