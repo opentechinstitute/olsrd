@@ -216,6 +216,17 @@ olsr_set_inetgw_handler(struct olsr_gw_handler *h) {
 }
 
 /**
+ * @param originator
+ * @return gateway_entry for corresponding router
+ */
+static struct gateway_entry *
+olsr_find_gateway_entry(union olsr_ip_addr *originator) {
+  struct avl_node *node = avl_find(&gateway_tree, originator);
+
+  return node == NULL ? NULL : node2gateway(node);
+}
+
+/**
  * Sets a new internet gateway.
  * An external set command might trigger an internal one if
  * address is not a legal gateway.
@@ -311,17 +322,6 @@ struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *ext) {
     *ext = v6gw_choosen_external;
   }
   return current_ipv6_gw;
-}
-
-/**
- * @param originator
- * @return gateway_entry for corresponding router
- */
-struct gateway_entry *
-olsr_find_gateway_entry(union olsr_ip_addr *originator) {
-  struct avl_node *node = avl_find(&gateway_tree, originator);
-
-  return node == NULL ? NULL : node2gateway(node);
 }
 
 /**
