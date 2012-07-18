@@ -35,6 +35,10 @@ static struct olsr_gw_handler *gw_handler;
 static struct olsr_iptunnel_entry *v4gw_tunnel, *v6gw_tunnel;
 static bool v4gw_choosen_external, v6gw_choosen_external;
 
+/*
+ * Helper Functions
+ */
+
 /**
  * Reconstructs an uplink/downlink speed value from the encoded
  * 1 byte transport value (3 bit mantissa, 5 bit exponent)
@@ -116,6 +120,45 @@ static void refresh_smartgw_netmask(void) {
 }
 
 /**
+ * Triggers an instant gateway selection based on the current data
+ * @param ipv4 trigger a ipv4 gateway lookup
+ * @param ipv6 trigger a ipv6 gateway lookup
+ * @return 0 if successful, -1 otherwise
+ */
+static int
+olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
+  gw_handler->select_gateway(ipv4, ipv6);
+  return ((ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL)) ? -1 : 0;
+}
+
+/**
+ * @param originator
+ * @return gateway_entry for corresponding router
+ */
+static struct gateway_entry *
+olsr_find_gateway_entry(union olsr_ip_addr *originator) {
+  struct avl_node *node = avl_find(&gateway_tree, originator);
+
+  return node == NULL ? NULL : node2gateway(node);
+}
+
+static void cleanup_gateway_handler(void *ptr) {
+  struct gateway_entry *gw = ptr;
+
+  if (gw->ipv4 || gw->ipv6) {
+    return;
+  }
+
+  /* remove gateway entry */
+  avl_delete(&gateway_tree, &gw->node);
+  olsr_cookie_free(gw_mem_cookie, gw);
+}
+
+/*
+ * Exported Functions
+ */
+
+/**
  * Initialize gateway system
  */
 int
@@ -171,18 +214,6 @@ olsr_trigger_inetgw_startup(void) {
 }
 
 /**
- * Triggers an instant gateway selection based on the current data
- * @param ipv4 trigger a ipv4 gateway lookup
- * @param ipv6 trigger a ipv6 gateway lookup
- * @return 0 if successful, -1 otherwise
- */
-static int
-olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
-  gw_handler->select_gateway(ipv4, ipv6);
-  return ((ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL)) ? -1 : 0;
-}
-
-/**
  * Triggers a check if the one of the gateways have been lost
  * through ETX = infinity
  */
@@ -205,6 +236,166 @@ void olsr_trigger_gatewayloss_check(void) {
     olsr_trigger_inetgw_selection(ipv4, ipv6);
   }
 }
+
+/**
+ * update a gateway_entry based on data received from a HNA
+ * @param originator ip of the source of the HNA
+ * @param mask netmask of the HNA
+ * @param prefixlen of the HNA
+ */
+void
+olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
+  struct gateway_entry *gw;
+  uint8_t *ptr;
+
+  ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
+
+  gw = olsr_find_gateway_entry(originator);
+  if (!gw) {
+    struct ipaddr_str buf;
+    gw = olsr_cookie_malloc(gw_mem_cookie);
+
+    gw->originator = *originator;
+    gw->node.key = &gw->originator;
+
+    avl_insert(&gateway_tree, &gw->node, AVL_DUP_NO);
+  }
+  else if (olsr_seqno_diff(seqno, gw->seqno) <= 0) {
+    /* ignore older HNAs */
+    return;
+  }
+
+  /* keep new HNA seqno */
+  gw->seqno = seqno;
+
+  if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_LINKSPEED) != 0) {
+    gw->uplink = deserialize_gw_speed(ptr[GW_HNA_UPLINK]);
+    gw->downlink = deserialize_gw_speed(ptr[GW_HNA_DOWNLINK]);
+  }
+  else {
+    gw->uplink = 1;
+    gw->downlink = 1;
+  }
+
+  gw->ipv4 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV4) != 0;
+  gw->ipv4nat = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV4_NAT) != 0;
+
+  if (olsr_cnf->ip_version == AF_INET6) {
+    gw->ipv6 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6) != 0;
+
+    /* do not reset prefixlength for ::ffff:0:0 HNAs */
+    if (prefixlen == ipv6_internet_route.prefix_len) {
+      memset(&gw->external_prefix, 0, sizeof(gw->external_prefix));
+
+      if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6PREFIX) != 0
+          && memcmp(mask->v6.s6_addr, &ipv6_internet_route.prefix, olsr_cnf->ipsize) == 0) {
+        /* this is the right prefix (2000::/3), so we can copy the prefix */
+        gw->external_prefix.prefix_len = ptr[GW_HNA_V6PREFIXLEN];
+        memcpy(&gw->external_prefix.prefix, &ptr[GW_HNA_V6PREFIX], 8);
+      }
+    }
+  }
+
+  /* stop cleanup timer if necessary */
+  if (gw->cleanup_timer) {
+    olsr_stop_timer(gw->cleanup_timer);
+    gw->cleanup_timer = NULL;
+  }
+
+  /* call update handler */
+  gw_handler->handle_update_gw(gw);
+}
+
+/**
+ * Delete a gateway based on the originator IP and the prefixlength of a HNA.
+ * Should only be called if prefix is a smart_gw prefix or if node is removed
+ * from TC set.
+ * @param originator
+ * @param prefixlen
+ */
+void
+olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
+  struct gateway_entry *gw;
+  bool change = false;
+  gw = olsr_find_gateway_entry(originator);
+  if (gw && (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6)) {
+    if (olsr_cnf->ip_version == AF_INET && prefixlen == 0) {
+      change = gw->ipv4;
+      gw->ipv4 = false;
+      gw->ipv4nat = false;
+    }
+    else if (olsr_cnf->ip_version == AF_INET6 && prefixlen == ipv6_internet_route.prefix_len) {
+      change = gw->ipv6;
+      gw->ipv6 = false;
+    }
+    else if (olsr_cnf->ip_version == AF_INET6 && prefixlen == ipv6_mappedv4_route.prefix_len) {
+      change = gw->ipv4;
+      gw->ipv4 = false;
+      gw->ipv4nat = false;
+    }
+
+    if (prefixlen == FORCE_DELETE_GW_ENTRY || !(gw->ipv4 || gw->ipv6)) {
+      /* prevent this gateway from being choosen as the new gateway */
+      gw->ipv4 = false;
+      gw->ipv4nat = false;
+      gw->ipv6 = false;
+
+      /* handle gateway loss */
+      gw_handler->handle_delete_gw(gw);
+
+      /* cleanup gateway if necessary */
+      if (current_ipv4_gw == gw) {
+        olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, false);
+        olsr_os_del_ipip_tunnel(v4gw_tunnel);
+
+        current_ipv4_gw = NULL;
+        v4gw_tunnel = NULL;
+      }
+      if (current_ipv6_gw == gw) {
+        olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, false);
+        olsr_os_del_ipip_tunnel(v6gw_tunnel);
+
+        current_ipv6_gw = NULL;
+        v6gw_tunnel = NULL;
+      }
+
+      /* remove gateway entry */
+      olsr_set_timer(&gw->cleanup_timer, GW_CLEANUP_INTERVAL, 0, false, cleanup_gateway_handler, gw, NULL);
+    }
+    else if (change) {
+      gw_handler->handle_update_gw(gw);
+    }
+  }
+}
+
+/**
+ * Print debug information about gateway entries
+ */
+void
+olsr_print_gateway_entries(void) {
+#ifndef NODEBUG
+  struct ipaddr_str buf;
+  struct gateway_entry *gw;
+  const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
+
+  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n",
+      olsr_wallclock_string());
+  OLSR_PRINTF(0, "%-*s %-6s %-9s %-9s %s\n", addrsize, "IP address", "Type", "Uplink", "Downlink",
+      olsr_cnf->ip_version == AF_INET ? "" : "External Prefix");
+
+  OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
+    OLSR_PRINTF(0, "%-*s %s%c%s%c%c %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
+        gw->ipv4nat ? "" : "   ",
+        gw->ipv4 ? '4' : ' ',
+        gw->ipv4nat ? "(N)" : "",
+        (gw->ipv4 && gw->ipv6) ? ',' : ' ',
+        gw->ipv6 ? '6' : ' ',
+        gw->uplink, gw->downlink,
+        gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));
+  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
+#endif
+}
+
 /**
  * Set a new gateway handler. Do only call this once during startup from
  * a plugin to overwrite the default handler.
@@ -213,17 +404,6 @@ void olsr_trigger_gatewayloss_check(void) {
 void
 olsr_set_inetgw_handler(struct olsr_gw_handler *h) {
   gw_handler = h;
-}
-
-/**
- * @param originator
- * @return gateway_entry for corresponding router
- */
-static struct gateway_entry *
-olsr_find_gateway_entry(union olsr_ip_addr *originator) {
-  struct avl_node *node = avl_find(&gateway_tree, originator);
-
-  return node == NULL ? NULL : node2gateway(node);
 }
 
 /**
@@ -325,149 +505,6 @@ struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *ext) {
 }
 
 /**
- * update a gateway_entry based on data received from a HNA
- * @param originator ip of the source of the HNA
- * @param mask netmask of the HNA
- * @param prefixlen of the HNA
- */
-void
-olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
-  struct gateway_entry *gw;
-  uint8_t *ptr;
-
-  ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
-
-  gw = olsr_find_gateway_entry(originator);
-  if (!gw) {
-    struct ipaddr_str buf;
-    gw = olsr_cookie_malloc(gw_mem_cookie);
-
-    gw->originator = *originator;
-    gw->node.key = &gw->originator;
-
-    avl_insert(&gateway_tree, &gw->node, AVL_DUP_NO);
-  }
-  else if (olsr_seqno_diff(seqno, gw->seqno) <= 0) {
-    /* ignore older HNAs */
-    return;
-  }
-
-  /* keep new HNA seqno */
-  gw->seqno = seqno;
-
-  if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_LINKSPEED) != 0) {
-    gw->uplink = deserialize_gw_speed(ptr[GW_HNA_UPLINK]);
-    gw->downlink = deserialize_gw_speed(ptr[GW_HNA_DOWNLINK]);
-  }
-  else {
-    gw->uplink = 1;
-    gw->downlink = 1;
-  }
-
-  gw->ipv4 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV4) != 0;
-  gw->ipv4nat = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV4_NAT) != 0;
-
-  if (olsr_cnf->ip_version == AF_INET6) {
-    gw->ipv6 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6) != 0;
-
-    /* do not reset prefixlength for ::ffff:0:0 HNAs */
-    if (prefixlen == ipv6_internet_route.prefix_len) {
-      memset(&gw->external_prefix, 0, sizeof(gw->external_prefix));
-
-      if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV6PREFIX) != 0
-          && memcmp(mask->v6.s6_addr, &ipv6_internet_route.prefix, olsr_cnf->ipsize) == 0) {
-        /* this is the right prefix (2000::/3), so we can copy the prefix */
-        gw->external_prefix.prefix_len = ptr[GW_HNA_V6PREFIXLEN];
-        memcpy(&gw->external_prefix.prefix, &ptr[GW_HNA_V6PREFIX], 8);
-      }
-    }
-  }
-
-  /* stop cleanup timer if necessary */
-  if (gw->cleanup_timer) {
-    olsr_stop_timer(gw->cleanup_timer);
-    gw->cleanup_timer = NULL;
-  }
-
-  /* call update handler */
-  gw_handler->handle_update_gw(gw);
-}
-
-static void cleanup_gateway_handler(void *ptr) {
-  struct gateway_entry *gw = ptr;
-
-  if (gw->ipv4 || gw->ipv6) {
-    return;
-  }
-
-  /* remove gateway entry */
-  avl_delete(&gateway_tree, &gw->node);
-  olsr_cookie_free(gw_mem_cookie, gw);
-}
-
-/**
- * Delete a gateway based on the originator IP and the prefixlength of a HNA.
- * Should only be called if prefix is a smart_gw prefix or if node is removed
- * from TC set.
- * @param originator
- * @param prefixlen
- */
-void
-olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
-  struct gateway_entry *gw;
-  bool change = false;
-  gw = olsr_find_gateway_entry(originator);
-  if (gw && (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6)) {
-    if (olsr_cnf->ip_version == AF_INET && prefixlen == 0) {
-      change = gw->ipv4;
-      gw->ipv4 = false;
-      gw->ipv4nat = false;
-    }
-    else if (olsr_cnf->ip_version == AF_INET6 && prefixlen == ipv6_internet_route.prefix_len) {
-      change = gw->ipv6;
-      gw->ipv6 = false;
-    }
-    else if (olsr_cnf->ip_version == AF_INET6 && prefixlen == ipv6_mappedv4_route.prefix_len) {
-      change = gw->ipv4;
-      gw->ipv4 = false;
-      gw->ipv4nat = false;
-    }
-
-    if (prefixlen == FORCE_DELETE_GW_ENTRY || !(gw->ipv4 || gw->ipv6)) {
-      /* prevent this gateway from being choosen as the new gateway */
-      gw->ipv4 = false;
-      gw->ipv4nat = false;
-      gw->ipv6 = false;
-
-      /* handle gateway loss */
-      gw_handler->handle_delete_gw(gw);
-
-      /* cleanup gateway if necessary */
-      if (current_ipv4_gw == gw) {
-        olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, false);
-        olsr_os_del_ipip_tunnel(v4gw_tunnel);
-
-        current_ipv4_gw = NULL;
-        v4gw_tunnel = NULL;
-      }
-      if (current_ipv6_gw == gw) {
-        olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, false);
-        olsr_os_del_ipip_tunnel(v6gw_tunnel);
-
-        current_ipv6_gw = NULL;
-        v6gw_tunnel = NULL;
-      }
-
-      /* remove gateway entry */
-      olsr_set_timer(&gw->cleanup_timer, GW_CLEANUP_INTERVAL, 0, false, cleanup_gateway_handler, gw, NULL);
-    }
-    else if (change) {
-      gw_handler->handle_update_gw(gw);
-    }
-  }
-}
-
-/**
  * Checks if a prefix/netmask combination is a smart gateway
  * @param prefix
  * @param mask
@@ -508,34 +545,6 @@ olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
   if (!olsr_cnf->has_ipv6_gateway || prefixlen != ipv6_internet_route.prefix_len){
     ptr[GW_HNA_FLAGS] &= ~GW_HNA_FLAG_IPV6PREFIX;
   }
-}
-
-/**
- * Print debug information about gateway entries
- */
-void
-olsr_print_gateway_entries(void) {
-#ifndef NODEBUG
-  struct ipaddr_str buf;
-  struct gateway_entry *gw;
-  const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
-
-  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n",
-      olsr_wallclock_string());
-  OLSR_PRINTF(0, "%-*s %-6s %-9s %-9s %s\n", addrsize, "IP address", "Type", "Uplink", "Downlink",
-      olsr_cnf->ip_version == AF_INET ? "" : "External Prefix");
-
-  OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    OLSR_PRINTF(0, "%-*s %s%c%s%c%c %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
-        gw->ipv4nat ? "" : "   ",
-        gw->ipv4 ? '4' : ' ',
-        gw->ipv4nat ? "(N)" : "",
-        (gw->ipv4 && gw->ipv6) ? ',' : ' ',
-        gw->ipv6 ? '6' : ' ',
-        gw->uplink, gw->downlink,
-        gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));
-  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
-#endif
 }
 
 #endif /* linux */
