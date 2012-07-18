@@ -100,9 +100,6 @@ static void refresh_smartgw_netmask(void) {
   memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
 
   if (olsr_cnf->smart_gw_active) {
-    union olsr_ip_addr gw_net;
-    memset(&gw_net, 0, sizeof(gw_net));
-
     ip = (uint8_t *) &smart_gateway_netmask;
 
     if (olsr_cnf->smart_gw_uplink > 0 && olsr_cnf->smart_gw_downlink > 0) {
