@@ -47,10 +47,9 @@ static bool v4gw_choosen_external, v6gw_choosen_external;
  */
 static uint32_t
 deserialize_gw_speed(uint8_t value) {
-  uint32_t speed, exp;
+  uint32_t speed = (value >> 3)+1;
+  uint32_t exp = value & 7;
 
-  speed = (value >> 3)+1;
-  exp = value & 7;
   while (exp-- > 0) {
     speed *= 10;
   }
