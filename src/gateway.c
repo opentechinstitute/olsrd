@@ -176,7 +176,7 @@ olsr_trigger_inetgw_startup(void) {
  * @param ipv6 trigger a ipv6 gateway lookup
  * @return 0 if successful, -1 otherwise
  */
-int
+static int
 olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
   gw_handler->select_gateway(ipv4, ipv6);
   return ((ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL)) ? -1 : 0;
