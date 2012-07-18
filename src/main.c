@@ -643,7 +643,7 @@ int main(int argc, char *argv[]) {
  */
 #ifndef WIN32
 void olsr_reconfigure(int signo __attribute__ ((unused))) {
-  /* if we are started with -nofork, we do not weant to go into the
+  /* if we are started with -nofork, we do not want to go into the
    * background here. So we can simply stop on -HUP
    */
   olsr_syslog(OLSR_LOG_INFO, "sot: olsr_reconfigure()\n");
