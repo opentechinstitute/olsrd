@@ -131,11 +131,9 @@ olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
  * @param originator
  * @return gateway_entry for corresponding router
  */
-static struct gateway_entry *
+static inline struct gateway_entry *
 olsr_find_gateway_entry(union olsr_ip_addr *originator) {
-  struct avl_node *node = avl_find(&gateway_tree, originator);
-
-  return node == NULL ? NULL : node2gateway(node);
+  return node2gateway(avl_find(&gateway_tree, originator));
 }
 
 static void cleanup_gateway_handler(void *ptr) {
