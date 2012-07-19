@@ -6,7 +6,7 @@
 #    (e.g. into to /opt, otherwise call 'make NDK_BASE=')
 #
 # 2) Compile olsrd with the make command:
-#    make OS=android DEBUG=0 NDK_BASE=/opt
+#    make OS=android DEBUG=0 NDK_BASE=/opt/android-ndk-r8
 #
 # 3) Install olsrd on your local PC, e.g.
 #    sudo make OS=android DEBUG=0 install_all
