@@ -62,11 +62,15 @@ static uint8_t
 serialize_gw_speed(uint32_t speed) {
   uint8_t exp = 0;
 
-  if (speed == 0 || speed > 320000000) {
+  if (speed == 0) {
     return 0;
   }
 
-  while (speed > 32 || (speed % 10) == 0) {
+  if (speed > 320000000) {
+    return 0xff;
+  }
+
+  while ((speed > 32 || (speed % 10) == 0) && exp < 7) {
     speed /= 10;
     exp ++;
   }
