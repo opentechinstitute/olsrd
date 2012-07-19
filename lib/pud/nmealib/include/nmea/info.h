@@ -68,7 +68,7 @@
 #define NMEA_FIX_2D    (2)
 #define NMEA_FIX_3D    (3)
 
-#define NMEA_MAXSAT    (12)
+#define NMEA_MAXSAT    (64)
 #define NMEA_SATINPACK (4)
 #define NMEA_NSATPACKS (NMEA_MAXSAT / NMEA_SATINPACK)
 
