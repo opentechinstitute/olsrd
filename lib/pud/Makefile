@@ -12,6 +12,7 @@ TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
 
+PUD_NMEALIB_STATICALLY_LINKED ?=
 CFLAGS += -D_GNU_SOURCE
 
 
@@ -20,9 +21,15 @@ NMEALIB_INC = $(NMEALIB_PATH)/include
 NMEALIB_LIB = $(NMEALIB_PATH)/lib
 LIBRARY_INC = $(LIBRARY_PATH)/include
 LIBRARY_LIB = $(LIBRARY_PATH)/lib
+NMEALIB_LIB_STATIC = $(NMEALIB_LIB)/lib$(NMEALIB_NAME).a
 
 CFLAGS += -I $(NMEALIB_INC) -I $(LIBRARY_INC)
+ifeq ($(PUD_NMEALIB_STATICALLY_LINKED),)
 LIBS += -L $(NMEALIB_LIB) -L $(LIBRARY_LIB) -l$(NMEALIB_NAME) -lm -l$(LIBRARY_NAME)
+else
+# libnmea is statically linked
+LIBS += -L $(LIBRARY_LIB) -lm -l$(LIBRARY_NAME)
+endif
 
 
 SUPPORTED = 0
@@ -59,8 +66,13 @@ default_target: nmealib library $(PLUGIN_FULLNAME)
 	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) -I $(NMEALIB_INC) -I $(LIBRARY_INC) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc) /g' >"$@"
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
-	@echo "[LD] $@"
+ifeq ($(PUD_NMEALIB_STATICALLY_LINKED),)
+	@echo "[LD] $@ (nmealib dynamically linked)"
 	@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
+else
+	@echo "[LD] $@ (nmealib statically linked)"
+	@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(NMEALIB_LIB_STATIC) $(LIBS)
+endif
 
 install: all
 	@$(MAKE) -C "$(NMEALIB_PATH)" DESTDIR="$(DESTDIR)" install
