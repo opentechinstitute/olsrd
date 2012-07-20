@@ -12,6 +12,7 @@ include Makefile.inc
 #
 
 LIBNAME = libnmea.so
+LIBNAMESTATIC = libnmea.a
 
 DESTDIR ?=
 USRDIR ?= $(DESTDIR)/usr
@@ -32,9 +33,13 @@ INCLUDES = -I ./include
 
 all: default_target
 
-default_target: all-before lib/$(LIBNAME)
+default_target: all-before lib/$(LIBNAMESTATIC) lib/$(LIBNAME)
 
 remake: clean all
+
+lib/$(LIBNAMESTATIC): $(OBJ)
+	@echo "[AR] $@"
+	@ar rcs "$@" $(OBJ)
 
 lib/$(LIBNAME): $(OBJ)
 	@echo "[LD] $@"
