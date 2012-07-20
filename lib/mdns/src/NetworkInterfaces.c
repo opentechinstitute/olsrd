@@ -76,6 +76,7 @@
 #include "Packet.h"             /* IFHWADDRLEN */
 #include "mdns.h"               /* PLUGIN_NAME, MainAddressOf() */
 #include "Address.h"            /* IsMulticast() */
+#include "plugin_util.h"
 
 int my_MDNS_TTL = 0;
 int my_TTL_Check = 1;
@@ -821,6 +822,7 @@ set_TTL_Check(const char *TTL_Check, void *data __attribute__ ((unused)), set_pl
 {
 assert(TTL_Check!= NULL);
 set_plugin_boolean(TTL_Check, &my_TTL_Check, addon);
+return 0;
 } /* Set TTL Check */
 
 int

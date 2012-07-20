@@ -390,11 +390,11 @@ BmfPacketCaptured(
       return;
 
 
-/*    if (isInFilteredList(&src)) {
+    if (isInFilteredList(&src)) {
 
-	return;
+	//return;
     }
-*/
+
   }                             //END IPV4
 
   else if ((encapsulationUdpData[0] & 0xf0) == 0x60) {  //IPv6
@@ -517,7 +517,7 @@ InitMDNS(struct interface *skipThisIntf)
   olsr_parser_add_function(&olsr_parser, PARSER_TYPE);
   //Creates captures sockets and register them to the OLSR scheduler
   CreateBmfNetworkInterfaces(skipThisIntf);
-  InitRouterList();
+  InitRouterList(NULL);
 
   return 1;
 }                               /* InitMDNS */
@@ -539,7 +539,7 @@ CloseMDNS(void)
 void DoElection(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
   static const char * rxBufferPrefix = "$REP";
-  static const size_t rxBufferPrefixLength = 4;
+  static const ssize_t rxBufferPrefixLength = 4;
   unsigned char rxBuffer[HELLO_BUFFER_SIZE];
   ssize_t rxCount;
   union olsr_sockaddr sender;
@@ -567,7 +567,7 @@ void DoElection(int skfd, void *data __attribute__ ((unused)), unsigned int flag
 		  rxBufferPrefix, rxBufferPrefixLength) != 0))
     return;
 
-  if (rxCount < sizeof(struct RtElHelloPkt))
+  if ( rxCount < (int)sizeof(struct RtElHelloPkt))
     return;					// too small to be a hello pkt
   else
     rcvPkt = (struct RtElHelloPkt *)ARM_NOWARN_ALIGN(rxBuffer);
