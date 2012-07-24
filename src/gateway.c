@@ -306,8 +306,8 @@ olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *ma
     gw->downlink = deserialize_gw_speed(ptr[GW_HNA_DOWNLINK]);
   }
   else {
-    gw->uplink = 1;
-    gw->downlink = 1;
+    gw->uplink = 0;
+    gw->downlink = 0;
   }
 
   gw->ipv4 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV4) != 0;
