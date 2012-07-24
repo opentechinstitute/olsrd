@@ -457,13 +457,11 @@ olsr_set_inetgw_handler(struct olsr_gw_handler *h) {
  */
 bool
 olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool external) {
-  struct gateway_entry *entry, *oldV4, *oldV6;
-  struct olsr_iptunnel_entry *tunnelV4, *tunnelV6;
-
-  oldV4 = current_ipv4_gw;
-  oldV6 = current_ipv6_gw;
-  tunnelV4 = v4gw_tunnel;
-  tunnelV6 = v6gw_tunnel;
+  struct gateway_entry *entry;
+  struct gateway_entry *oldV4 = current_ipv4_gw;
+  struct gateway_entry *oldV6 = current_ipv6_gw;
+  struct olsr_iptunnel_entry *tunnelV4 = v4gw_tunnel;
+  struct olsr_iptunnel_entry *tunnelV6 = v6gw_tunnel;
 
   ipv4 = ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
   ipv6 = ipv6 && (olsr_cnf->ip_version == AF_INET6);
