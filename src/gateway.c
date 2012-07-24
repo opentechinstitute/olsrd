@@ -39,6 +39,8 @@ static bool v4gw_choosen_external, v6gw_choosen_external;
  * Helper Functions
  */
 
+#define OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen) (((uint8_t *)mask) + ((prefixlen+7)/8))
+
 /**
  * Reconstructs an uplink/downlink speed value from the encoded
  * 1 byte transport value (3 bit mantissa, 5 bit exponent)
@@ -239,12 +241,9 @@ void olsr_trigger_gatewayloss_check(void) {
  */
 void
 olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
-  struct gateway_entry *gw;
-  uint8_t *ptr;
+  struct gateway_entry *gw = olsr_find_gateway_entry(originator);
+  uint8_t *ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
 
-  ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
-
-  gw = olsr_find_gateway_entry(originator);
   if (!gw) {
     struct ipaddr_str buf;
     gw = olsr_cookie_malloc(gw_mem_cookie);
@@ -512,7 +511,7 @@ olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *mask) {
     return false;
   }
 
-  ptr = ((uint8_t *)mask) + ((prefix->prefix_len+7)/8);
+  ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefix->prefix_len);
   return ptr[GW_HNA_PAD] == 0 && ptr[GW_HNA_FLAGS] != 0;
 }
 
@@ -523,7 +522,7 @@ olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *mask) {
  */
 void
 olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
-  uint8_t *ptr = ((uint8_t *)mask) + ((prefixlen+7)/8);
+  uint8_t *ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
 
   memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen/8);
   if (olsr_cnf->has_ipv4_gateway) {
