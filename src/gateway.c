@@ -198,11 +198,16 @@ olsr_init_gateways(void) {
   olsr_cookie_set_memory_size(gw_mem_cookie, sizeof(struct gateway_entry));
 
   avl_init(&gateway_tree, avl_comp_default);
-  current_ipv4_gw = NULL;
-  current_ipv6_gw = NULL;
 
+  current_ipv4_gw = NULL;
   v4gw_tunnel = NULL;
+  v4gw_choosen_external = false;
+
+  current_ipv6_gw = NULL;
   v6gw_tunnel = NULL;
+  v6gw_choosen_external = false;
+
+  gw_handler = NULL;
 
   refresh_smartgw_netmask();
 
