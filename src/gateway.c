@@ -222,6 +222,9 @@ olsr_init_gateways(void) {
    * can be overwritten with olsr_set_inetgw_handler
    */
   olsr_gw_default_init();
+
+  assert(gw_handler);
+
   return 0;
 }
 
@@ -442,6 +445,7 @@ olsr_print_gateway_entries(void) {
  */
 void
 olsr_set_inetgw_handler(struct olsr_gw_handler *h) {
+  assert(h);
   gw_handler = h;
 }
 
