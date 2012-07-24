@@ -25,15 +25,35 @@
 #include <assert.h>
 #include <net/if.h>
 
+/** the gateway tree */
 struct avl_tree gateway_tree;
 
+/** gateway cookie */
 static struct olsr_cookie_info *gw_mem_cookie = NULL;
+
+/** the gateway netmask for the HNA */
 static uint8_t smart_gateway_netmask[sizeof(union olsr_ip_addr)];
-static struct gateway_entry *current_ipv4_gw, *current_ipv6_gw;
+
+/** the gateway handler/plugin */
 static struct olsr_gw_handler *gw_handler;
 
-static struct olsr_iptunnel_entry *v4gw_tunnel, *v6gw_tunnel;
-static bool v4gw_choosen_external, v6gw_choosen_external;
+/** the current IPv4 gateway */
+static struct gateway_entry *current_ipv4_gw;
+
+/** the tunnel of the current IPv4  gateway */
+static struct olsr_iptunnel_entry *v4gw_tunnel;
+
+/** true if a change of the IPv4 gateway was triggered directly by a user */
+static bool v4gw_choosen_external;
+
+/** the current IPv6 gateway */
+static struct gateway_entry *current_ipv6_gw;
+
+/** the tunnel of the current IPv6  gateway */
+static struct olsr_iptunnel_entry *v6gw_tunnel;
+
+/** true if a change of the IPv6 gateway was triggered directly by a user */
+static bool v6gw_choosen_external;
 
 /*
  * Helper Functions
@@ -42,10 +62,11 @@ static bool v4gw_choosen_external, v6gw_choosen_external;
 #define OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen) (((uint8_t *)mask) + ((prefixlen+7)/8))
 
 /**
- * Reconstructs an uplink/downlink speed value from the encoded
- * 1 byte transport value (3 bit mantissa, 5 bit exponent)
- * @param value
- * @return
+ * Convert an encoded 1 byte transport value (5 bits mantissa, 3 bits exponent)
+ * to an uplink/downlink speed value
+ *
+ * @param value the encoded 1 byte transport value
+ * @return the uplink/downlink speed value (in kbit/s)
  */
 static uint32_t
 deserialize_gw_speed(uint8_t value) {
@@ -59,10 +80,11 @@ deserialize_gw_speed(uint8_t value) {
 }
 
 /**
- * Convert an uplink/downlink speed into an exponential encoded
- * transport value (1 byte, 3 bit mantissa and 5 bit exponent)
- * @param value uplink/downlink speed in kbit/s
- * @return encoded byte value
+ * Convert an uplink/downlink speed value into an encoded 1 byte transport
+ * value (5 bits mantissa, 3 bits exponent)
+ *
+ * @param speed the uplink/downlink speed value (in kbit/s)
+ * @return value the encoded 1 byte transport value
  */
 static uint8_t
 serialize_gw_speed(uint32_t speed) {
@@ -86,9 +108,10 @@ serialize_gw_speed(uint32_t speed) {
 /**
  * Callback for tunnel interface monitoring which will set the route into the tunnel
  * when the interface comes up again.
- * @param if_index
- * @param ifh
- * @param flag
+ *
+ * @param if_index the interface index
+ * @param ifh the interface
+ * @param flag interface change flags
  */
 static void smartgw_tunnel_monitor (int if_index __attribute__ ((unused)),
     struct interface *ifh __attribute__ ((unused)),
@@ -96,6 +119,9 @@ static void smartgw_tunnel_monitor (int if_index __attribute__ ((unused)),
   return;
 }
 
+/**
+ * Setup the gateway netmask
+ */
 static void refresh_smartgw_netmask(void) {
   uint8_t *ip;
   memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
@@ -119,6 +145,7 @@ static void refresh_smartgw_netmask(void) {
 
 /**
  * Triggers an instant gateway selection based on the current data
+ *
  * @param ipv4 trigger a ipv4 gateway lookup
  * @param ipv6 trigger a ipv6 gateway lookup
  * @return 0 if successful, -1 otherwise
@@ -130,18 +157,26 @@ olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
 }
 
 /**
- * @param originator
- * @return gateway_entry for corresponding router
+ * Find the gateway entry that belongs to the specified originator
+ *
+ * @param originator the originator
+ * @return gateway_entry for corresponding router, or NULL when not found
  */
 static inline struct gateway_entry *
 olsr_find_gateway_entry(union olsr_ip_addr *originator) {
   return node2gateway(avl_find(&gateway_tree, originator));
 }
 
+/**
+ * Timer callback to remove and cleanup a gateway entry
+ *
+ * @param ptr
+ */
 static void cleanup_gateway_handler(void *ptr) {
   struct gateway_entry *gw = ptr;
 
   if (gw->ipv4 || gw->ipv6) {
+    /* do not clean it up when it is in use */
     return;
   }
 
@@ -201,8 +236,7 @@ void olsr_cleanup_gateways(void) {
 }
 
 /**
- * Triggers the first lookup of an gateway. This lookup might
- * take some time to wait for routing/gateway information.
+ * Triggers the first lookup of a gateway.
  */
 void
 olsr_trigger_inetgw_startup(void) {
@@ -210,8 +244,8 @@ olsr_trigger_inetgw_startup(void) {
 }
 
 /**
- * Triggers a check if the one of the gateways have been lost
- * through ETX = infinity
+ * Triggers a check if the one of the gateways have been lost or has an
+ * ETX = infinity
  */
 void olsr_trigger_gatewayloss_check(void) {
   struct tc_entry *tc;
@@ -234,10 +268,12 @@ void olsr_trigger_gatewayloss_check(void) {
 }
 
 /**
- * update a gateway_entry based on data received from a HNA
+ * Update a gateway_entry based on a HNA
+ *
  * @param originator ip of the source of the HNA
  * @param mask netmask of the HNA
  * @param prefixlen of the HNA
+ * @param seqno the sequence number of the HNA
  */
 void
 olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
@@ -303,6 +339,7 @@ olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *ma
  * Delete a gateway based on the originator IP and the prefixlength of a HNA.
  * Should only be called if prefix is a smart_gw prefix or if node is removed
  * from TC set.
+ *
  * @param originator
  * @param prefixlen
  */
@@ -312,6 +349,8 @@ olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
   bool change = false;
   gw = olsr_find_gateway_entry(originator);
   if (gw && (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6)) {
+    /* found a gw and it wasn't deleted yet */
+
     if (olsr_cnf->ip_version == AF_INET && prefixlen == 0) {
       change = gw->ipv4;
       gw->ipv4 = false;
@@ -328,7 +367,7 @@ olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
     }
 
     if (prefixlen == FORCE_DELETE_GW_ENTRY || !(gw->ipv4 || gw->ipv6)) {
-      /* prevent this gateway from being choosen as the new gateway */
+      /* prevent this gateway from being chosen as the new gateway */
       gw->ipv4 = false;
       gw->ipv4nat = false;
       gw->ipv6 = false;
@@ -352,7 +391,7 @@ olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
         v6gw_tunnel = NULL;
       }
 
-      /* remove gateway entry */
+      /* remove gateway entry on a delayed schedule */
       olsr_set_timer(&gw->cleanup_timer, GW_CLEANUP_INTERVAL, 0, false, cleanup_gateway_handler, gw, NULL);
     }
     else if (change) {
@@ -390,8 +429,10 @@ olsr_print_gateway_entries(void) {
 }
 
 /**
- * Set a new gateway handler. Do only call this once during startup from
- * a plugin to overwrite the default handler.
+ * Set a new gateway handler.
+ * Only call this once: during startup (from a plugin to override the default
+ * handler)
+ *
  * @param h pointer to gateway handler struct
  */
 void
@@ -401,8 +442,6 @@ olsr_set_inetgw_handler(struct olsr_gw_handler *h) {
 
 /**
  * Sets a new internet gateway.
- * An external set command might trigger an internal one if
- * address is not a legal gateway.
  *
  * @param originator ip address of the node with the new gateway
  * @param ipv4 set ipv4 gateway
@@ -451,7 +490,7 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
       v4gw_choosen_external = external;
     }
     else {
-      // TODO: what to do now ? Choose another one ? Fire up a timer ?
+      /* adding the tunnel failed, we try again in the next cycle */
       current_ipv4_gw = NULL;
     }
     if (oldV4 != NULL) {
@@ -465,7 +504,7 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
       v6gw_choosen_external = external;
     }
     else {
-      // TODO: what to do now ? Choose another one ? Fire up a timer ?
+      /* adding the tunnel failed, we try again in the next cycle */
       current_ipv6_gw = NULL;
     }
     if (oldV6 != NULL) {
@@ -476,8 +515,9 @@ olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool
 }
 
 /**
- * returns the gateway_entry of the current ipv4 internet gw.
- * @return pointer to gateway_entry or NULL if not set
+ * @return a pointer to the gateway_entry of the current ipv4 internet gw or
+ * NULL if not set. Also updates *ext (if not NULL) to indicate whether or not
+ * the gw was chosen externally.
  */
 struct gateway_entry *olsr_get_ipv4_inet_gateway(bool *ext) {
   if (ext) {
@@ -487,8 +527,9 @@ struct gateway_entry *olsr_get_ipv4_inet_gateway(bool *ext) {
 }
 
 /**
- * returns the gateway_entry of the current ipv6 internet gw.
- * @return pointer to gateway_entry or NULL if not set
+ * @return a pointer to the gateway_entry of the current ipv4 internet gw or
+ * NULL if not set. Also updates *ext (if not NULL) to indicate whether or not
+ * the gw was chosen externally.
  */
 struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *ext) {
   if (ext) {
@@ -498,7 +539,8 @@ struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *ext) {
 }
 
 /**
- * Checks if a prefix/netmask combination is a smart gateway
+ * Checks if a HNA prefix/netmask combination is a smart gateway
+ *
  * @param prefix
  * @param mask
  * @return true if is a valid smart gateway HNA, false otherwise
@@ -517,6 +559,7 @@ olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *mask) {
 
 /**
  * Apply the smart gateway modifications to an outgoing HNA
+ *
  * @param mask pointer to netmask of the HNA
  * @param prefixlen of the HNA
  */
