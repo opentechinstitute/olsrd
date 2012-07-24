@@ -256,20 +256,18 @@ olsr_trigger_inetgw_startup(void) {
  * ETX = infinity
  */
 void olsr_trigger_gatewayloss_check(void) {
-  struct tc_entry *tc;
-  bool ipv4 = false, ipv6 = false;
+  bool ipv4 = false;
+  bool ipv6 = false;
+
   if (current_ipv4_gw) {
-    tc = olsr_lookup_tc_entry(&current_ipv4_gw->originator);
-    if (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN) {
-      ipv4 = true;
-    }
+	struct tc_entry *tc = olsr_lookup_tc_entry(&current_ipv4_gw->originator);
+	ipv4 = (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN);
   }
   if (current_ipv6_gw) {
-    tc = olsr_lookup_tc_entry(&current_ipv6_gw->originator);
-    if (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN) {
-      ipv6 = true;
-    }
+	struct tc_entry *tc = olsr_lookup_tc_entry(&current_ipv6_gw->originator);
+	ipv6 = (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN);
   }
+
   if (ipv4 || ipv6) {
     olsr_trigger_inetgw_selection(ipv4, ipv6);
   }
