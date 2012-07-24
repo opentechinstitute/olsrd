@@ -287,9 +287,7 @@ olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *ma
   uint8_t *ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
 
   if (!gw) {
-    struct ipaddr_str buf;
     gw = olsr_cookie_malloc(gw_mem_cookie);
-
     gw->originator = *originator;
     gw->node.key = &gw->originator;
 
