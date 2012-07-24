@@ -207,6 +207,16 @@ libs_uninstall uninstall_libs:
 		rmdir -p --ignore-fail-on-non-empty $(LIBDIR)
 
 #
+# DOCUMENTATION
+#
+.PHONY: doc doc_clean
+doc:
+		$(MAKECMDPREFIX)$(MAKECMD) -C doc OS=$(OS)
+
+doc_clean:
+		$(MAKECMDPREFIX)$(MAKECMD) -C doc OS=$(OS) clean
+
+#
 # PLUGINS
 #
 
