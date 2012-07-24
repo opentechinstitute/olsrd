@@ -349,9 +349,9 @@ olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *ma
  */
 void
 olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
-  struct gateway_entry *gw;
+  struct gateway_entry *gw = olsr_find_gateway_entry(originator);
   bool change = false;
-  gw = olsr_find_gateway_entry(originator);
+
   if (gw && (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6)) {
     /* found a gw and it wasn't deleted yet */
 
