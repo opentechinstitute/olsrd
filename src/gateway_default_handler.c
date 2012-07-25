@@ -64,6 +64,11 @@ static void gw_default_choose_gateway(void) {
       continue;
     }
 
+    if (!gw->uplink || !gw->downlink) {
+      /* do not consider nodes without bandwidth or with a uni-directional link */
+      continue;
+    }
+
     /* determine the path costs threshold */
     if (olsr_cnf->smart_gw_thresh == 0) {
       path_cost_times_threshold = tc->path_cost;
