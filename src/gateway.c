@@ -70,8 +70,17 @@ static bool v6gw_choosen_external;
  */
 static uint32_t
 deserialize_gw_speed(uint8_t value) {
-  uint32_t speed = (value >> 3)+1;
-  uint32_t exp = value & 7;
+  uint32_t speed;
+  uint32_t exp;
+
+  if (!value) {
+    /* 0 and 1 alias onto 0 during serialisation. We take 0 here to mean 0 and
+     * not 1 (since a bandwidth of 1 is no bandwidth at all really) */
+    return 0;
+  }
+
+  speed = (value >> 3)+1;
+  exp = value & 7;
 
   while (exp-- > 0) {
     speed *= 10;
