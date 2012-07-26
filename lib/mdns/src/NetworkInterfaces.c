@@ -504,6 +504,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   memcpy(newIf->macAddr, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN);
   memcpy(newIf->ifName, ifName, IFNAMSIZ);
   newIf->olsrIntf = olsrIntf;
+  newIf->isActive = 1; //as default the interface is active
   if (olsrIntf != NULL) {
     /* For an OLSR-interface, copy the interface address and broadcast
      * address from the OLSR interface object. Downcast to correct sockaddr

@@ -34,7 +34,6 @@
 #include "RouterElection.h"
 #include "mdns.h"
 
-int ISMASTER = 1;
 struct RtElHelloPkt *hello;
 uint8_t NETWORK_ID;
 union olsr_ip_addr ROUTER_ID;
@@ -43,20 +42,22 @@ union olsr_ip_addr ROUTER_ID;
 struct list_entity ListOfRouter;
 #define ROUTER_ELECTION_ENTRIES(nr, iterator) listbackport_for_each_element_safe(&ListOfRouter, nr, list, iterator)
 
-int ParseElectionPacket (struct RtElHelloPkt *rcvPkt, struct RouterListEntry *listEntry){
+int ParseElectionPacket (struct RtElHelloPkt *rcvPkt, struct RouterListEntry *listEntry, int skfd){
   OLSR_PRINTF(1, "parsing ipv4 packet \n");
   listEntry->ttl = ENTRYTTL;
   listEntry->network_id = rcvPkt->network_id;
   listbackport_init_node(&listEntry->list);
+  listEntry->skfd = skfd;
   (void) memcpy(&listEntry->router_id, &rcvPkt->router_id.v4, sizeof(struct in_addr));  //Need to insert an address validity check?
   return 1;
 }
 
-int ParseElectionPacket6 (struct RtElHelloPkt *rcvPkt, struct RouterListEntry6 *listEntry6){
+int ParseElectionPacket6 (struct RtElHelloPkt *rcvPkt, struct RouterListEntry6 *listEntry6, int skfd){
   OLSR_PRINTF(1, "parsing ipv6 packet \n");
   listEntry6->ttl = ENTRYTTL;
   listEntry6->network_id = rcvPkt->network_id;
   listbackport_init_node(&listEntry6->list);
+  listEntry6->skfd = skfd;
   (void) memcpy(&listEntry6->router_id, &rcvPkt->router_id.v6, sizeof(struct in6_addr));//Need to insert an address validity check?
   return 1;
 }
@@ -71,7 +72,7 @@ int UpdateRouterList (struct RouterListEntry *listEntry){
 
   ROUTER_ELECTION_ENTRIES(tmp, iterator) {
     OLSR_PRINTF(1,"inspecting entry");
-    if((tmp->network_id == listEntry->network_id) &&
+    if((tmp->network_id == listEntry->network_id) && (tmp->skfd == listEntry->skfd) &&
 		(memcmp(&listEntry->router_id, &tmp->router_id, sizeof(struct in_addr)) == 0)){
       exist = 1;
       tmp->ttl = listEntry->ttl;
@@ -92,7 +93,7 @@ int UpdateRouterList6 (struct RouterListEntry6 *listEntry6){
     return 0;
  
   ROUTER_ELECTION_ENTRIES(tmp, iterator) { 
-    if((tmp->network_id == listEntry6->network_id) &&
+    if((tmp->network_id == listEntry6->network_id) && (tmp->skfd == listEntry6->skfd)  &&
               (memcmp(&listEntry6->router_id, &tmp->router_id, sizeof(struct in6_addr))) == 0){
       exist = 1;
       tmp->ttl = listEntry6->ttl;
@@ -140,47 +141,52 @@ void helloTimer (void *foo __attribute__ ((unused))){
 
 void electTimer (void *foo __attribute__ ((unused))){
 
+  struct TBmfInterface *walker;
   struct RouterListEntry *tmp, *iterator;
   struct RouterListEntry6 *tmp6, *iterator6;
 
   OLSR_PRINTF(1,"elect start \n");
 
-  if (listbackport_is_empty(&ListOfRouter)){
-    ISMASTER = 1;
-    OLSR_PRINTF(1,"elect empty \n");
-    return;
-  }
-
-  ISMASTER = 1;
-  if (olsr_cnf->ip_version == AF_INET) {
-    ROUTER_ELECTION_ENTRIES(tmp, iterator){
-      OLSR_PRINTF(1,"inspecting element \n");
-      if(tmp->network_id == NETWORK_ID)
-        if(memcmp(&tmp->router_id, &ROUTER_ID.v4, sizeof(struct in_addr)) < 0)
-          ISMASTER = 0;
-      OLSR_PRINTF(1,"confrontation done \n");
-      tmp->ttl = ((tmp->ttl)- 1);
-      if(tmp->ttl <= 0){
-        listbackport_remove(&tmp->list);
-        free(tmp);
-      }
-      OLSR_PRINTF(1,"inspect finish \n");
+  for(walker = BmfInterfaces; walker != NULL; walker = walker->next){
+    if (listbackport_is_empty(&ListOfRouter)){
+      walker->isActive = 1;
+      OLSR_PRINTF(1,"elect empty \n");
+      continue;
     }
-  }
-  else{
-    ROUTER_ELECTION_ENTRIES(tmp6, iterator6){
-      if(tmp6->network_id == NETWORK_ID)
-        if(memcmp(&tmp6->router_id, &ROUTER_ID.v6, sizeof(struct in6_addr)) < 0)
-          ISMASTER = 0;
-      tmp6->ttl = ((tmp6->ttl)- 1);
-      if(tmp6->ttl <=  0){
-        listbackport_remove(&tmp6->list);
-        free(tmp6);
+
+    walker->isActive = 1;
+    if (olsr_cnf->ip_version == AF_INET) {
+      ROUTER_ELECTION_ENTRIES(tmp, iterator){
+        OLSR_PRINTF(1,"inspecting element \n");
+        if(tmp->network_id == NETWORK_ID)
+          if(tmp->skfd == walker->electionSkfd)
+            if(memcmp(&tmp->router_id, &ROUTER_ID.v4, sizeof(struct in_addr)) < 0)
+              walker->isActive = 0;
+        OLSR_PRINTF(1,"confrontation done \n");
+        tmp->ttl = ((tmp->ttl)- 1);
+        if(tmp->ttl <= 0){
+          listbackport_remove(&tmp->list);
+          free(tmp);
+        }
+        OLSR_PRINTF(1,"inspect finish \n");
       }
     }
-  }
+    else{
+      ROUTER_ELECTION_ENTRIES(tmp6, iterator6){
+        if(tmp6->network_id == NETWORK_ID)
+          if(tmp->skfd == walker->electionSkfd)
+            if(memcmp(&tmp6->router_id, &ROUTER_ID.v6, sizeof(struct in6_addr)) < 0)
+              walker->isActive = 0;
+        tmp6->ttl = ((tmp6->ttl)- 1);
+        if(tmp6->ttl <=  0){
+          listbackport_remove(&tmp6->list);
+          free(tmp6);
+        }
+      }
+    }
 
-  OLSR_PRINTF(1,"elect finish \n");
+    OLSR_PRINTF(1,"elect finish \n");
+  }
 
   return;
 }

@@ -77,6 +77,9 @@ struct TBmfInterface {
    * packets */
   int helloSkfd;
 
+  /* Used to check if the router is master on the selected interface */
+  int isActive;
+
   unsigned char macAddr[IFHWADDRLEN];
 
   char ifName[IFNAMSIZ];

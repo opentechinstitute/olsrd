@@ -145,7 +145,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
        * in that case. */
       memset(dest.sll_addr, 0xFF, IFHWADDRLEN);
       
-      if(ISMASTER == 0)             //Don't forward packet if isn't master router
+      if(walker->isActive == 0)             //Don't forward packet if isn't master router
         return;
 
       nBytesWritten = sendto(walker->capturingSkfd, encapsulationUdpData, stripped_len, 0, (struct sockaddr *)&dest, sizeof(dest));
@@ -438,10 +438,6 @@ BmfPacketCaptured(
 	if(((u_int8_t) ipHeader->ip_ttl) <= ((u_int8_t) 1))    // Discard mdns packet with TTL limit 1 or less
       		return;
 
-    if(ISMASTER == 0)             //Don't forward packet if isn't master router
-      return;
-
-
     if (isInFilteredList(&src)) {
       return;
     }
@@ -473,10 +469,6 @@ BmfPacketCaptured(
     if(my_TTL_Check)
     	if(((uint8_t) ipHeader6->ip6_hops) <= ((uint8_t) 1))  // Discard mdns packet with hop limit 1 or less
     		return;
-  
-    if(ISMASTER == 0)             //Don't forward packet if isn't master router
-      return;
-
   
     if (isInFilteredList(&src)) {
       return;
@@ -511,6 +503,7 @@ DoMDNS(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attri
     socklen_t addrLen = sizeof(pktAddr);
     int nBytes;
     unsigned char *ipPacket;
+    struct TBmfInterface *walker;
 
     /* Receive the captured Ethernet frame, leaving space for the BMF
      * encapsulation header */
@@ -538,6 +531,11 @@ DoMDNS(int skfd, void *data __attribute__ ((unused)), unsigned int flags __attri
       //              walker->ifName);
 
       return;                   /* for */
+    }
+
+    for(walker = BmfInterfaces; walker != NULL; walker = walker->next){	//if the router isn't the master for this interface
+      if(skfd == walker->capturingSkfd && walker->isActive == 0)	//discard mdns packets
+        return;
     }
 
     if (pktAddr.sll_pkttype == PACKET_OUTGOING ||
@@ -621,7 +619,7 @@ void DoElection(int skfd, void *data __attribute__ ((unused)), unsigned int flag
 
   if (rcvPkt->ipFamily == AF_INET){
     listEntry = (struct RouterListEntry *)malloc(sizeof(struct RouterListEntry));
-    if(ParseElectionPacket(rcvPkt, listEntry)){
+    if(ParseElectionPacket(rcvPkt, listEntry, skfd)){
       OLSR_PRINTF(1,"processing ipv4 packet \n");
       if(UpdateRouterList(listEntry))
         free(listEntry);
@@ -633,7 +631,7 @@ void DoElection(int skfd, void *data __attribute__ ((unused)), unsigned int flag
   }
   else{
     listEntry6 = (struct RouterListEntry6 *)malloc(sizeof(struct RouterListEntry6));
-    if(ParseElectionPacket6(rcvPkt, listEntry6)){
+    if(ParseElectionPacket6(rcvPkt, listEntry6, skfd)){
       OLSR_PRINTF(1,"processing ipv6 packet");
       if(UpdateRouterList6(listEntry6))
         free(listEntry6);

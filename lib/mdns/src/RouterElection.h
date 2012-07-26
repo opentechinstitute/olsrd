@@ -19,6 +19,7 @@ struct RouterListEntry{
   struct in_addr router_id;
   uint8_t network_id;
   int ttl;
+  int skfd;
 
   struct list_entity list;
 };
@@ -27,16 +28,15 @@ struct RouterListEntry6{
   struct in6_addr router_id;
   uint8_t network_id;
   int ttl;
+  int skfd;
 
   struct list_entity list;
 };
 
-extern int ISMASTER;
-
 int UpdateRouterList (struct RouterListEntry *listEntry);	//update router list
 int UpdateRouterList6 (struct RouterListEntry6 *listEntry6);
-int ParseElectionPacket (struct RtElHelloPkt *rcvPkt, struct RouterListEntry *listEntry);	//used to parse a received packet into
-int ParseElectionPacket6 (struct RtElHelloPkt *rcvPkt, struct RouterListEntry6 *listEntry6);	//a list entry for ipv4/ipv6
+int ParseElectionPacket (struct RtElHelloPkt *rcvPkt, struct RouterListEntry *listEntry, int skfd);	//used to parse a received 
+int ParseElectionPacket6 (struct RtElHelloPkt *rcvPkt, struct RouterListEntry6 *listEntry6, int skfd);	//packet into a list entry
 int InitRouterList (void *foo __attribute__ ((unused)));
 void helloTimer (void *foo __attribute__ ((unused)));
 void electTimer (void *foo __attribute__ ((unused)));
