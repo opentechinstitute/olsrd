@@ -238,10 +238,10 @@ static void gw_default_update_handler(struct gateway_entry *gw) {
  * @param gw the gateway entry
  */
 static void gw_default_delete_handler(struct gateway_entry *gw) {
-  bool isv4 = (gw == olsr_get_ipv4_inet_gateway(NULL));
-  bool isv6 = (gw == olsr_get_ipv6_inet_gateway(NULL));
+  bool isv4 = gw && (gw == olsr_get_ipv4_inet_gateway(NULL));
+  bool isv6 = gw && (gw == olsr_get_ipv6_inet_gateway(NULL));
 
-  if (gw && (isv4 || isv6)) {
+  if (isv4 || isv6) {
     olsr_gw_default_lookup_gateway(isv4, isv6);
   }
 }
