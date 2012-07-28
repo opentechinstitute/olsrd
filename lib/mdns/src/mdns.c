@@ -78,8 +78,28 @@
 
 #define OLSR_FOR_ALL_FILTEREDNODES_ENTRIES(n, iterator) listbackport_for_each_element_safe(&ListOfFilteredHosts, n, list, iterator)
 
+#define IPH_HL(hdr) (((hdr)->ip_hl)*4)
+
 struct list_entity ListOfFilteredHosts;
 int FHListInit = 0;
+
+static uint16_t ip_checksum(char* data, int len)
+{
+    uint sum = 0;
+    if ((len & 1) == 0)
+        len = len >> 1;
+    else
+        len = (len >> 1) + 1;
+    while (len > 0) {
+        sum += *((ushort*)data);
+        data += sizeof(ushort);
+        len--;
+    }
+    sum = (sum >> 16) + (sum & 0xffff);
+    sum += (sum >> 16);
+    return(~sum);
+}
+
 
 /* -------------------------------------------------------------------------
  * Function   : PacketReceivedFromOLSR
@@ -98,6 +118,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
   //union olsr_ip_addr mcDst;            /* Multicast destination of the encapsulated packet */
   struct TBmfInterface *walker;
   int stripped_len = 0;
+  uint16_t csum_ip;
   ipHeader = (struct ip *)ARM_NOWARN_ALIGN(encapsulationUdpData);
   ip6Header = (struct ip6_hdr *)ARM_NOWARN_ALIGN(encapsulationUdpData);
 
@@ -121,6 +142,11 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
 	if(my_TTL_Check)
 		ipHeader->ip_ttl = (u_int8_t) 1; //setting up TTL to 1 to avoid mdns packets flood 
 	}
+	//Recalculate IP Checksum
+	ipHeader->ip_sum=0x0000;
+	csum_ip = ip_checksum((char*)ipHeader, IPH_HL(ipHeader));
+	ipHeader->ip_sum=csum_ip;
+
       if ((encapsulationUdpData[0] & 0xf0) == 0x60) {
         dest.sll_protocol = htons(ETH_P_IPV6);
         stripped_len = 40 + ntohs(ip6Header->ip6_plen); //IPv6 Header size (40) + payload_len 
