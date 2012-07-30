@@ -39,6 +39,24 @@ static struct olsr_gw_handler gw_def_handler = {
  */
 
 /**
+ * Calculate the threshold path cost.
+ *
+ * @param path_cost the path cost
+ * @return the threshold path cost
+ */
+static inline olsr_linkcost gw_default_calc_threshold(olsr_linkcost path_cost) {
+  olsr_linkcost path_cost_times_threshold;
+
+  if (olsr_cnf->smart_gw_thresh == 0) {
+    path_cost_times_threshold = path_cost;
+  } else {
+    path_cost_times_threshold = ((long long) path_cost * (long long) olsr_cnf->smart_gw_thresh + 50LL) / 100LL;
+  }
+
+  return path_cost_times_threshold;
+}
+
+/**
  * Look through the gateway list and select the best gateway
  * depending on the distance to this router
  */
@@ -70,11 +88,7 @@ static void gw_default_choose_gateway(void) {
     }
 
     /* determine the path costs threshold */
-    if (olsr_cnf->smart_gw_thresh == 0) {
-      path_cost_times_threshold = tc->path_cost;
-    } else {
-      path_cost_times_threshold = ((long long)tc->path_cost * (long long)olsr_cnf->smart_gw_thresh + 50LL) / 100LL;
-    }
+    path_cost_times_threshold = gw_default_calc_threshold(tc->path_cost);
 
     if (!gw_def_finished_ipv4 && gw->ipv4 && gw->ipv4nat == olsr_cnf->smart_gw_allow_nat && path_cost_times_threshold < cost_ipv4) {
       inet_ipv4 = gw;
