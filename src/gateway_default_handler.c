@@ -223,9 +223,9 @@ static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
  * @param gw the gateway entry
  */
 static void gw_default_update_handler(struct gateway_entry *gw) {
-  bool v4changed = (gw == olsr_get_ipv4_inet_gateway(NULL))
+  bool v4changed = gw && (gw == olsr_get_ipv4_inet_gateway(NULL))
       && (!gw->ipv4 || (gw->ipv4nat && !olsr_cnf->smart_gw_allow_nat));
-  bool v6changed = (gw == olsr_get_ipv6_inet_gateway(NULL)) && !gw->ipv6;
+  bool v6changed = gw && (gw == olsr_get_ipv6_inet_gateway(NULL)) && !gw->ipv6;
 
   if (v4changed || v6changed) {
     olsr_gw_default_lookup_gateway(v4changed, v6changed);
