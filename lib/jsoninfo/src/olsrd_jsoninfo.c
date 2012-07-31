@@ -1070,13 +1070,6 @@ ipc_print_interfaces(struct autobuf *abuf)
     const struct interface *const rifs = ifs->interf;
     abuf_json_open_array_entry(abuf);
     abuf_json_string(abuf, "name", ifs->name);
-    abuf_json_string(abuf, "nameFromKernel", ifs->interf->int_name);
-    abuf_json_int(abuf, "interfaceMode", ifs->interf->mode);
-    abuf_json_boolean(abuf, "emulatedHostClientInterface", ifs->interf->is_hcif);
-    abuf_json_boolean(abuf, "sendTcImmediately", ifs->interf->immediate_send_tc);
-    abuf_json_int(abuf, "fishEyeTtlIndex", ifs->interf->ttl_index);
-    abuf_json_int(abuf, "olsrForwardingTimeout", ifs->interf->fwdtimer);
-    abuf_json_int(abuf, "olsrMessageSequenceNumber", ifs->interf->olsr_seqnum);
 
     abuf_json_open_array(abuf, "linkQualityMultipliers");
     for (mult = ifs->cnf->lq_mult; mult != NULL; mult = mult->next) {
@@ -1092,6 +1085,13 @@ ipc_print_interfaces(struct autobuf *abuf)
       abuf_json_string(abuf, "state", "down");
     } else {
       abuf_json_string(abuf, "state", "up");
+      abuf_json_string(abuf, "nameFromKernel", rifs->int_name);
+      abuf_json_int(abuf, "interfaceMode", rifs->mode);
+      abuf_json_boolean(abuf, "emulatedHostClientInterface", rifs->is_hcif);
+      abuf_json_boolean(abuf, "sendTcImmediately", rifs->immediate_send_tc);
+      abuf_json_int(abuf, "fishEyeTtlIndex", rifs->ttl_index);
+      abuf_json_int(abuf, "olsrForwardingTimeout", rifs->fwdtimer);
+      abuf_json_int(abuf, "olsrMessageSequenceNumber", rifs->olsr_seqnum);
       abuf_json_int(abuf, "olsrInterfaceMetric", rifs->int_metric);
       abuf_json_int(abuf, "olsrMTU", rifs->int_mtu);
       abuf_json_int(abuf, "helloEmissionInterval", rifs->hello_etime);
@@ -1100,6 +1100,11 @@ ipc_print_interfaces(struct autobuf *abuf)
       abuf_json_int(abuf, "midValidityTime", rifs->valtimes.mid);
       abuf_json_int(abuf, "hnaValidityTime", rifs->valtimes.hna);
       abuf_json_boolean(abuf, "wireless", rifs->is_wireless);
+
+#ifdef __linux__
+      abuf_json_boolean(abuf, "icmpRedirect", rifs->nic_state.redirect);
+      abuf_json_boolean(abuf, "spoofFilter", rifs->nic_state.spoof);
+#endif
 
       if (olsr_cnf->ip_version == AF_INET) {
         struct ipaddr_str addrbuf, maskbuf, bcastbuf;
@@ -1118,9 +1123,6 @@ ipc_print_interfaces(struct autobuf *abuf)
       }
     }
 #ifdef __linux__
-    abuf_json_boolean(abuf, "icmpRedirect", rifs->nic_state.redirect);
-    abuf_json_boolean(abuf, "spoofFilter", rifs->nic_state.spoof);
-
     snprintf(path, PATH_MAX, "/sys/class/net/%s/device/driver/module", ifs->name);
     linklen = readlink(path, linkpath, PATH_MAX - 1);
     if (linkpath != NULL && linklen > 1) {
