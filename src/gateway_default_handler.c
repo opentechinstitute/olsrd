@@ -44,13 +44,13 @@ static struct olsr_gw_handler gw_def_handler = {
  * @param path_cost the path cost
  * @return the threshold path cost
  */
-static inline olsr_linkcost gw_default_calc_threshold(olsr_linkcost path_cost) {
-  olsr_linkcost path_cost_times_threshold;
+static inline uint64_t gw_default_calc_threshold(uint64_t path_cost) {
+  uint64_t path_cost_times_threshold;
 
   if (olsr_cnf->smart_gw_thresh == 0) {
     path_cost_times_threshold = path_cost;
   } else {
-    path_cost_times_threshold = ((long long) path_cost * (long long) olsr_cnf->smart_gw_thresh + 50LL) / 100LL;
+    path_cost_times_threshold = (path_cost * (uint64_t)olsr_cnf->smart_gw_thresh + (uint64_t)50) / (uint64_t)100;
   }
 
   return path_cost_times_threshold;
@@ -61,14 +61,14 @@ static inline olsr_linkcost gw_default_calc_threshold(olsr_linkcost path_cost) {
  * depending on the distance to this router
  */
 static void gw_default_choose_gateway(void) {
-  olsr_linkcost cost_ipv4_threshold = ROUTE_COST_BROKEN;
-  olsr_linkcost cost_ipv6_threshold = ROUTE_COST_BROKEN;
+  uint64_t cost_ipv4_threshold = UINT64_MAX;
+  uint64_t cost_ipv6_threshold = UINT64_MAX;
   bool eval_cost_ipv4_threshold = false;
   bool eval_cost_ipv6_threshold = false;
   struct gateway_entry *inet_ipv4 = NULL;
   struct gateway_entry *inet_ipv6 = NULL;
-  olsr_linkcost cost_ipv4 = ROUTE_COST_BROKEN;
-  olsr_linkcost cost_ipv6 = ROUTE_COST_BROKEN;
+  uint64_t cost_ipv4 = UINT64_MAX;
+  uint64_t cost_ipv6 = UINT64_MAX;
   struct gateway_entry *gw;
   struct tc_entry *tc;
   bool dual;
@@ -80,7 +80,7 @@ static void gw_default_choose_gateway(void) {
     if (gw) {
       tc = olsr_lookup_tc_entry(&gw->originator);
       if (tc) {
-        olsr_linkcost cost = tc->path_cost;
+        uint64_t cost = tc->path_cost;
         cost_ipv4_threshold = gw_default_calc_threshold(cost);
         eval_cost_ipv4_threshold = true;
       }
@@ -89,7 +89,7 @@ static void gw_default_choose_gateway(void) {
     if (gw) {
       tc = olsr_lookup_tc_entry(&gw->originator);
       if (tc) {
-        olsr_linkcost cost = tc->path_cost;
+        uint64_t cost = tc->path_cost;
         cost_ipv6_threshold = gw_default_calc_threshold(cost);
         eval_cost_ipv6_threshold = true;
       }
@@ -97,7 +97,7 @@ static void gw_default_choose_gateway(void) {
   }
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    olsr_linkcost path_cost;
+    uint64_t path_cost;
     tc = olsr_lookup_tc_entry(&gw->originator);
 
     if (!tc) {
