@@ -474,6 +474,43 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->smart_gw_thresh);
   abuf_puts(out,
     "\n"
+    "# The weighing factor for the gateway uplink bandwidth (exit link, uplink).\n"
+    "# See README-Olsr-Extensions for a description of smart gateways.\n"
+    "# (default is 1)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayWeightExitLinkUp  %d\n",
+      cnf->smart_gw_weight_exitlink_up == DEF_GW_WEIGHT_EXITLINK_UP ? "# " : "",
+      cnf->smart_gw_weight_exitlink_up);
+  abuf_puts(out,
+    "\n"
+    "# The weighing factor for the gateway downlink bandwidth (exit link, downlink).\n"
+    "# See README-Olsr-Extensions for a description of smart gateways.\n"
+    "# (default is 1)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayWeightExitLinkDown  %d\n",
+      cnf->smart_gw_weight_exitlink_down == DEF_GW_WEIGHT_EXITLINK_DOWN ? "# " : "",
+      cnf->smart_gw_weight_exitlink_down);
+  abuf_puts(out,
+    "\n"
+    "# The weighing factor for the ETX costs.\n"
+    "# See README-Olsr-Extensions for a description of smart gateways.\n"
+    "# (default is 1)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayWeightEtx  %d\n",
+      cnf->smart_gw_weight_etx == DEF_GW_WEIGHT_ETX ? "# " : "",
+      cnf->smart_gw_weight_etx);
+
+  abuf_puts(out,
+    "\n"
+    "# The divider for the ETX costs.\n"
+    "# See README-Olsr-Extensions for a description of smart gateways.\n"
+    "# (default is 0)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayDividerEtx  %d\n",
+      cnf->smart_gw_divider_etx == DEF_GW_DIVIDER_ETX ? "# " : "",
+      cnf->smart_gw_divider_etx);
+  abuf_puts(out,
+    "\n"
     "# Defines what kind of Uplink this node will publish as a\n"
     "# smartgateway. The existence of the uplink is detected by\n"
     "# a route to 0.0.0.0/0, ::ffff:0:0/96 and/or 2000::/3.\n"
