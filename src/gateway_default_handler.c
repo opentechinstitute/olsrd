@@ -57,6 +57,96 @@ static inline uint64_t gw_default_calc_threshold(uint64_t path_cost) {
 }
 
 /**
+ * Weigh the path costs and the gateway bandwidth.
+ *
+ * If the ETX divider is zero, then no weighing is performed and only the path
+ * costs are considered (classic behaviour).
+ *
+ * If either of the uplink or downlink bandwidths is zero, then UINT64_MAX is
+ * returned.
+ *
+ * @param path_cost the (ETX) path cost to the gateway
+ * @param exitUk the gateway exit link uplink bandwidth (in kbps)
+ * @param exitDk the gateway exit link downlink bandwidth (in kbps)
+ * @return the weighed path cost
+ */
+static inline uint64_t gw_default_weigh_costs(uint64_t path_cost, uint32_t exitUk, uint32_t exitDk) {
+	uint8_t WexitU = olsr_cnf->smart_gw_weight_exitlink_up;
+	uint8_t WexitD = olsr_cnf->smart_gw_weight_exitlink_down;
+	uint8_t Wetx = olsr_cnf->smart_gw_weight_etx;
+	uint8_t Detx = olsr_cnf->smart_gw_divider_etx;
+	uint64_t costU;
+	uint64_t costD;
+	uint64_t costE;
+
+	if (!Detx) {
+		/* only consider path costs (classic behaviour) */
+		return path_cost;
+	}
+
+	if (!exitUk || !exitDk) {
+		/* zero bandwidth */
+		return UINT64_MAX;
+	}
+
+	/*
+	 * Weighing of the path costs:
+	 *
+	 * exitUm = the gateway exit link uplink   bandwidth, in Mbps
+	 * exitDm = the gateway exit link downlink bandwidth, in Mbps
+	 * WexitU = the gateway exit link uplink   bandwidth weight   (configured)
+	 * WexitD = the gateway exit link downlink bandwidth weight   (configured)
+	 * Wetx   = the ETX path cost weight                          (configured)
+	 * Detx   = the ETX path cost divider                         (configured)
+	 *
+	 *                      WexitU   WexitD   Wetx
+	 * path_cost_weighed =  ------ + ------ + ---- * path_cost
+	 *                      exitUm   exitDm   Detx
+	 *
+	 * Since the gateway exit link bandwidths are in Kbps, the following formula
+	 * is used to convert them to the desired Mbps:
+	 *
+	 *       bwK
+	 * bwM = ----       bwK = bandwidth in Kbps
+	 *       1000       bwM = bandwidth in Mbps
+	 *
+	 * exitUm = the gateway exit link uplink   bandwidth, in Kbps
+	 * exitDm = the gateway exit link downlink bandwidth, in Kbps
+	 *
+	 *                      1000 * WexitU   1000 * WexitD   Wetx
+	 * path_cost_weighed =  ------------- + ------------- + ---- * path_cost
+	 *                          exitUk          exitDk      Detx
+	 *
+	 *
+	 * Analysis of the required bit width of the result:
+	 *
+	 * exitUk    = 29 bits = [1,   320,000,000]
+	 * exitDk    = 29 bits = [1,   320,000,000]
+	 * WexitU    =  8 bits = [1,           255]
+	 * WexitD    =  8 bits = [1,           255]
+	 * Wetx      =  8 bits = [1,           255]
+	 * Detx      =  8 bits = [1,           255]
+	 * path_cost = 32 bits = [1, 4,294,967,295]
+	 *
+	 *                          1000 * 255   1000 * 255   255
+	 * path_cost_weighed(max) = ---------- + ---------- + --- * 4,294,967,295
+	 *                               1             1       1
+	 *
+	 * path_cost_weighed(max) = 0x3E418    + 0x3E418    + 0xFEFFFFFF01
+	 * path_cost_weighed(max) = 0xFF0007C731
+	 *
+	 * Because we can multiply 0xFF0007C731 by 2^24 without overflowing a
+	 * 64 bits number, we do this to increase accuracy.
+	 */
+
+	costU = (((uint64_t)(1000 * WexitU   )) << 24) / exitUk;
+	costD = (((uint64_t)(1000 * WexitD   )) << 24) / exitDk;
+	costE = (((uint64_t)(Wetx * path_cost)) << 24) / Detx;
+
+	return (costU + costD + costE);
+}
+
+/**
  * Look through the gateway list and select the best gateway
  * depending on the distance to this router
  */
@@ -80,7 +170,7 @@ static void gw_default_choose_gateway(void) {
     if (gw) {
       tc = olsr_lookup_tc_entry(&gw->originator);
       if (tc) {
-        uint64_t cost = tc->path_cost;
+        uint64_t cost = gw_default_weigh_costs(tc->path_cost, gw->uplink, gw->downlink);
         cost_ipv4_threshold = gw_default_calc_threshold(cost);
         eval_cost_ipv4_threshold = true;
       }
@@ -89,7 +179,7 @@ static void gw_default_choose_gateway(void) {
     if (gw) {
       tc = olsr_lookup_tc_entry(&gw->originator);
       if (tc) {
-        uint64_t cost = tc->path_cost;
+        uint64_t cost = gw_default_weigh_costs(tc->path_cost, gw->uplink, gw->downlink);
         cost_ipv6_threshold = gw_default_calc_threshold(cost);
         eval_cost_ipv6_threshold = true;
       }
@@ -116,7 +206,7 @@ static void gw_default_choose_gateway(void) {
     }
 
     /* determine the path cost */
-    path_cost = tc->path_cost;
+    path_cost = gw_default_weigh_costs(tc->path_cost, gw->uplink, gw->downlink);
 
     if (!gw_def_finished_ipv4 && gw->ipv4 && gw->ipv4nat == olsr_cnf->smart_gw_allow_nat && path_cost < cost_ipv4 &&
         (!eval_cost_ipv4_threshold || (path_cost < cost_ipv4_threshold))) {
