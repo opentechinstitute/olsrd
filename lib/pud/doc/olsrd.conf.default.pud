@@ -474,6 +474,7 @@ LoadPlugin "./lib/p2pd/olsrd_p2pd.so.0.1.0"
 LoadPlugin "./lib/bmf/olsrd_bmf.so.1.7.0"
 {
   PlParam     "NonOlsrIf"  "lo"
+  PlParam     "BmfInterfacePersistent" "no"
 }
 
 LoadPlugin "./lib/watchdog/olsrd_watchdog.so.0.1"
