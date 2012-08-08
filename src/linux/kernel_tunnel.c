@@ -125,17 +125,17 @@ static int os_ip_tunnel(const char *name, void *target) {
 	int err;
 	void * p;
 	char buffer[INET6_ADDRSTRLEN];
-	const char * tunName;
 	struct ip_tunnel_parm p4;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
 	struct ip6_tnl_parm p6;
 #endif
 
+	assert (name != NULL);
+
 	memset(&ifr, 0, sizeof(ifr));
 
 	if (olsr_cnf->ip_version == AF_INET) {
 		p = &p4;
-		tunName = TUNNEL_ENDPOINT_IF;
 
 		memset(&p4, 0, sizeof(p4));
 		p4.iph.version = 4;
@@ -149,7 +149,6 @@ static int os_ip_tunnel(const char *name, void *target) {
 	} else {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
 		p = (void *) &p6;
-		tunName = TUNNEL_ENDPOINT_IF6;
 
 		memset(&p6, 0, sizeof(p6));
 		p6.proto = 0; /* any protocol */
@@ -162,7 +161,7 @@ static int os_ip_tunnel(const char *name, void *target) {
 #endif
 	}
 
-	strncpy(ifr.ifr_name, target != NULL ? tunName : name, IFNAMSIZ);
+	strncpy(ifr.ifr_name, name, IFNAMSIZ);
 	ifr.ifr_ifru.ifru_data = p;
 
 	if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {
