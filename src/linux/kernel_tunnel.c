@@ -57,14 +57,19 @@
 #include <linux/ip.h>
 #include <linux/if_tunnel.h>
 #include <linux/version.h>
+
 #if defined linux
-#if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
-#error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
-#else
+  #if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
+    #error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
+  #endif
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
+  #define LINUX_IPV6_TUNNEL
+#endif
+
+#ifdef LINUX_IPV6_TUNNEL
 #include <linux/ip6_tunnel.h>
-#endif
-#endif
 #endif
 
 //ifup includes
@@ -126,7 +131,7 @@ static int os_ip_tunnel(const char *name, void *target) {
 	void * p;
 	char buffer[INET6_ADDRSTRLEN];
 	struct ip_tunnel_parm p4;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
+#ifdef LINUX_IPV6_TUNNEL
 	struct ip6_tnl_parm p6;
 #endif
 
@@ -147,7 +152,7 @@ static int os_ip_tunnel(const char *name, void *target) {
 		}
 		strncpy(p4.name, name, IFNAMSIZ);
 	} else {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
+#ifdef LINUX_IPV6_TUNNEL
 		p = (void *) &p6;
 
 		memset(&p6, 0, sizeof(p6));
