@@ -121,8 +121,8 @@ void helloTimer (void *foo __attribute__ ((unused))){
 
       OLSR_PRINTF(1,"hello running \n");
 
-      OLSR_PRINTF(1,"%zd \n", sendto(walker->helloSkfd, (const char * ) hello, 
-			sizeof(struct RtElHelloPkt), 0, (struct sockaddr *)&dest, sizeof(dest)));
+      sendto(walker->helloSkfd, (const char * ) hello, 
+			sizeof(struct RtElHelloPkt), 0, (struct sockaddr *)&dest, sizeof(dest));
     }
     else{
       memset((char *) &dest6, 0, sizeof(dest6));
@@ -132,8 +132,8 @@ void helloTimer (void *foo __attribute__ ((unused))){
 
       OLSR_PRINTF(1,"hello running \n");
 
-      OLSR_PRINTF(1,"%i \n", (int) sendto(walker->helloSkfd, (const char * ) hello,  
-                        sizeof(struct RtElHelloPkt), 0, (struct sockaddr *)&dest6, sizeof(dest6)));
+      sendto(walker->helloSkfd, (const char * ) hello,  
+                        sizeof(struct RtElHelloPkt), 0, (struct sockaddr *)&dest6, sizeof(dest6));
     }
   }
   return;
