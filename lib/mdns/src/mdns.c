@@ -383,7 +383,7 @@ AddFilteredHost(const char *FilteredHost, void *data __attribute__ ((unused)),
 }
 
 int
-isInFilteredList(union olsr_ip_addr *src){//TODO: implement here check if IP is in filtered list
+isInFilteredList(union olsr_ip_addr *src){
 
   struct FilteredHost *tmp, *iterator;
   
