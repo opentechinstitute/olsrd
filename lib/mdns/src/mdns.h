@@ -77,7 +77,7 @@ struct FilteredHost{
 
 //extern int FanOutLimit;
 //extern int BroadcastRetransmitCount;
-
+int PreInitMDNS(void);
 void DoMDNS(int sd, void *x, unsigned int y);
 void DoElection(int skfd, void *x, unsigned int y);
 void BmfPError(const char *format, ...) __attribute__ ((format(printf, 1, 2)));

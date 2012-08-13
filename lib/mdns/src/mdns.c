@@ -81,8 +81,12 @@
 #define IPH_HL(hdr) (((hdr)->ip_hl)*4)
 
 struct list_entity ListOfFilteredHosts;
-int FHListInit = 0;
 
+int
+PreInitMDNS(void) {
+listbackport_init_head(&ListOfFilteredHosts);
+return 0;
+}
 static uint16_t ip_checksum(char* data, int len)
 {
     uint sum = 0;
@@ -359,11 +363,6 @@ AddFilteredHost(const char *FilteredHost, void *data __attribute__ ((unused)),
   tmp = (struct FilteredHost *) malloc(sizeof(struct FilteredHost));
   listbackport_init_node(&tmp->list);
 
-  if(FHListInit == 0){
-    listbackport_init_head(&ListOfFilteredHosts);
-    FHListInit = 1;
-  }
-
   if(olsr_cnf->ip_version == AF_INET){
     res = inet_pton(AF_INET, FilteredHost, &tmp->host.v4);
     if(res > 0){
@@ -388,12 +387,6 @@ isInFilteredList(union olsr_ip_addr *src){//TODO: implement here check if IP is 
 
   struct FilteredHost *tmp, *iterator;
   
-  if(FHListInit == 0){
-    listbackport_init_head(&ListOfFilteredHosts);
-    FHListInit = 1;
-  }
-
-
   if(listbackport_is_empty(&ListOfFilteredHosts))
     return 0;
 
