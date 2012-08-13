@@ -60,7 +60,6 @@ static void __attribute__ ((destructor)) my_fini(void);
 
 //static struct olsr_cookie_info *prune_packet_history_timer_cookie;
 
-
 void olsr_plugin_exit(void);
 
 /* -------------------------------------------------------------------------
@@ -105,7 +104,6 @@ olsrd_plugin_init(void)
   //                 &PrunePacketHistory, NULL, prune_packet_history_timer_cookie->ci_id);
 
 
-  PreInitMDNS();
   return InitMDNS(NULL);
 }
 
