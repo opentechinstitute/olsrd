@@ -214,6 +214,7 @@ void olsr_cleanup_gateways(void) {
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
   assert(gw_handler);
+  gw_handler = NULL;
 
   olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
 }
