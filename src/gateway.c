@@ -127,6 +127,7 @@ static void smartgw_tunnel_monitor(int if_index __attribute__ ((unused)),
  * @return 0 if successful, -1 otherwise
  */
 static int olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
+  assert(gw_handler);
   gw_handler->select_gateway(ipv4, ipv6);
   return ((ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL)) ? -1 : 0;
 }
@@ -194,7 +195,6 @@ int olsr_init_gateways(void) {
    * can be overwritten with olsr_set_inetgw_handler
    */
   olsr_gw_default_init();
-
   assert(gw_handler);
 
   return 0;
@@ -212,6 +212,9 @@ void olsr_cleanup_gateways(void) {
   }
 
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
+
+  assert(gw_handler);
+
   olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
 }
 
@@ -219,6 +222,7 @@ void olsr_cleanup_gateways(void) {
  * Triggers the first lookup of a gateway.
  */
 void olsr_trigger_inetgw_startup(void) {
+  assert(gw_handler);
   gw_handler->handle_startup();
 }
 
@@ -390,6 +394,7 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
   }
 
   /* call update handler */
+  assert(gw_handler);
   gw_handler->handle_update_gw(gw);
 }
 
@@ -428,6 +433,7 @@ void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen
       gw->ipv6 = false;
 
       /* handle gateway loss */
+      assert(gw_handler);
       gw_handler->handle_delete_gw(gw);
 
       /* cleanup gateway if necessary */
@@ -449,6 +455,7 @@ void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen
       /* remove gateway entry on a delayed schedule */
       olsr_set_timer(&gw->cleanup_timer, GW_CLEANUP_INTERVAL, 0, false, cleanup_gateway_handler, gw, NULL);
     } else if (change) {
+      assert(gw_handler);
       gw_handler->handle_update_gw(gw);
     }
   }
