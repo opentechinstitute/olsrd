@@ -279,7 +279,7 @@ static void gw_default_timer(void *unused __attribute__ ((unused))) {
  * @param ipv4 lookup new v4 gateway
  * @param ipv6 lookup new v6 gateway
  */
-static void olsr_gw_default_lookup_gateway(bool ipv4, bool ipv6) {
+static void gw_default_lookup_gateway(bool ipv4, bool ipv6) {
   if (ipv4) {
     /* get a new IPv4 gateway if we use OLSRv4 or NIIT */
     gw_def_finished_ipv4 = !(olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
@@ -349,7 +349,7 @@ static void gw_default_startup_handler(void) {
  * @param ipv6 lookup new v6 gateway
  */
 static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
-  olsr_gw_default_lookup_gateway(ipv4, ipv6);
+  gw_default_lookup_gateway(ipv4, ipv6);
 
   if (!(gw_def_finished_ipv4 && gw_def_finished_ipv6)) {
     gw_default_startup_handler();
@@ -367,7 +367,7 @@ static void gw_default_update_handler(struct gateway_entry *gw) {
   bool v6changed = gw && (gw == olsr_get_ipv6_inet_gateway()) && !gw->ipv6;
 
   if (v4changed || v6changed) {
-    olsr_gw_default_lookup_gateway(v4changed, v6changed);
+    gw_default_lookup_gateway(v4changed, v6changed);
   }
 }
 
@@ -381,7 +381,7 @@ static void gw_default_delete_handler(struct gateway_entry *gw) {
   bool isv6 = gw && (gw == olsr_get_ipv6_inet_gateway());
 
   if (isv4 || isv6) {
-    olsr_gw_default_lookup_gateway(isv4, isv6);
+    gw_default_lookup_gateway(isv4, isv6);
   }
 }
 #endif /* linux */
