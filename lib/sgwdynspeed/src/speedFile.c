@@ -5,6 +5,7 @@
 
 /* OLSRD includes */
 #include "olsr_cfg.h"
+#include "gateway.h"
 
 /* System includes */
 #include <stddef.h>
@@ -228,6 +229,9 @@ void readSpeedFile(char * fileName) {
 	}
 	if (downlinkSet) {
 		olsr_cnf->smart_gw_downlink = downlink;
+	}
+	if (uplinkSet || downlinkSet) {
+	  refresh_smartgw_netmask();
 	}
 
 	out: return;
