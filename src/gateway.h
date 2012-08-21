@@ -83,6 +83,7 @@ AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);
 /** the gateway tree */
 extern struct avl_tree gateway_tree;
 
+void refresh_smartgw_netmask(void);
 int olsr_init_gateways(void);
 void olsr_cleanup_gateways(void);
 void olsr_trigger_inetgw_startup(void);

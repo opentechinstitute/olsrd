@@ -131,7 +131,7 @@ static void smartgw_tunnel_monitor (int if_index __attribute__ ((unused)),
 /**
  * Setup the gateway netmask
  */
-static void refresh_smartgw_netmask(void) {
+void refresh_smartgw_netmask(void) {
   uint8_t *ip;
   memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
 
