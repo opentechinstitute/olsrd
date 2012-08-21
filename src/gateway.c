@@ -129,30 +129,6 @@ static void smartgw_tunnel_monitor (int if_index __attribute__ ((unused)),
 }
 
 /**
- * Setup the gateway netmask
- */
-void refresh_smartgw_netmask(void) {
-  uint8_t *ip;
-  memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
-
-  if (olsr_cnf->smart_gw_active) {
-    ip = (uint8_t *) &smart_gateway_netmask;
-
-    if (olsr_cnf->smart_gw_uplink > 0 && olsr_cnf->smart_gw_downlink > 0) {
-      /* the link is bi-directional with a non-zero bandwidth */
-      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_LINKSPEED;
-      ip[GW_HNA_DOWNLINK] = serialize_gw_speed(olsr_cnf->smart_gw_downlink);
-      ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gw_uplink);
-    }
-    if (olsr_cnf->ip_version == AF_INET6 && olsr_cnf->smart_gw_prefix.prefix_len > 0) {
-      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6PREFIX;
-      ip[GW_HNA_V6PREFIXLEN] = olsr_cnf->smart_gw_prefix.prefix_len;
-      memcpy(&ip[GW_HNA_V6PREFIX], &olsr_cnf->smart_gw_prefix.prefix, 8);
-    }
-  }
-}
-
-/**
  * Triggers an instant gateway selection based on the current data
  *
  * @param ipv4 trigger a ipv4 gateway lookup
@@ -197,6 +173,30 @@ static void cleanup_gateway_handler(void *ptr) {
 /*
  * Exported Functions
  */
+
+/**
+ * Setup the gateway netmask
+ */
+void refresh_smartgw_netmask(void) {
+  uint8_t *ip;
+  memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
+
+  if (olsr_cnf->smart_gw_active) {
+    ip = (uint8_t *) &smart_gateway_netmask;
+
+    if (olsr_cnf->smart_gw_uplink > 0 && olsr_cnf->smart_gw_downlink > 0) {
+      /* the link is bi-directional with a non-zero bandwidth */
+      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_LINKSPEED;
+      ip[GW_HNA_DOWNLINK] = serialize_gw_speed(olsr_cnf->smart_gw_downlink);
+      ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gw_uplink);
+    }
+    if (olsr_cnf->ip_version == AF_INET6 && olsr_cnf->smart_gw_prefix.prefix_len > 0) {
+      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6PREFIX;
+      ip[GW_HNA_V6PREFIXLEN] = olsr_cnf->smart_gw_prefix.prefix_len;
+      memcpy(&ip[GW_HNA_V6PREFIX], &olsr_cnf->smart_gw_prefix.prefix, 8);
+    }
+  }
+}
 
 /**
  * Initialize gateway system
