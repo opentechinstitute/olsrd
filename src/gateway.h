@@ -87,12 +87,12 @@ extern struct avl_tree gateway_tree;
  * The callback list for a gateway plugin
  */
 struct olsr_gw_handler {
-    void (*init_gw_plugin)(void); /**< the init callback */
-    void (*cleanup_gw_plugin)(void); /**< the cleanup callback */
-    void (*handle_startup)(void); /**< the startup callback */
-    void (*select_gateway)(bool ipv4, bool ipv6); /**< the gateway selection callback */
-    void (*handle_update_gw)(struct gateway_entry *); /**< the gateway update callback */
-    void (*handle_delete_gw)(struct gateway_entry *); /**< the gateway deletion callback */
+    void (*init)(void); /**< the init callback */
+    void (*cleanup)(void); /**< the cleanup callback */
+    void (*startup)(void); /**< the startup callback */
+    void (*choose)(bool ipv4, bool ipv6); /**< the gateway selection callback */
+    void (*update)(struct gateway_entry *); /**< the gateway update callback */
+    void (*delete)(struct gateway_entry *); /**< the gateway deletion callback */
 };
 
 /*
