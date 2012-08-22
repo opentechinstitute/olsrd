@@ -87,6 +87,8 @@ extern struct avl_tree gateway_tree;
  * The callback list for a gateway plugin
  */
 struct olsr_gw_handler {
+    void (*init_gw_plugin)(void); /**< the init callback */
+    void (*cleanup_gw_plugin)(void); /**< the cleanup callback */
     void (*handle_startup)(void); /**< the startup callback */
     void (*select_gateway)(bool ipv4, bool ipv6); /**< the gateway selection callback */
     void (*handle_update_gw)(struct gateway_entry *); /**< the gateway update callback */
@@ -127,7 +129,6 @@ void olsr_trigger_gatewayloss_check(void);
  * Gateway Plugin Functions
  */
 
-void olsr_set_inetgw_handler(struct olsr_gw_handler *l);
 bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6);
 struct gateway_entry *olsr_get_ipv4_inet_gateway(void);
 struct gateway_entry *olsr_get_ipv6_inet_gateway(void);

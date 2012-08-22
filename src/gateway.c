@@ -190,12 +190,9 @@ int olsr_init_gateways(void) {
 
   olsr_add_ifchange_handler(smartgw_tunnel_monitor);
 
-  /*
-   * initialize default gateway handler,
-   * can be overwritten with olsr_set_inetgw_handler
-   */
-  olsr_gw_default_init();
-  assert(gw_handler);
+  /* initialize default gateway handler */
+  gw_handler = &gw_def_handler;
+  gw_handler->init_gw_plugin();
 
   return 0;
 }
@@ -214,6 +211,7 @@ void olsr_cleanup_gateways(void) {
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
   assert(gw_handler);
+  gw_handler->cleanup_gw_plugin();
   gw_handler = NULL;
 
   olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
@@ -487,18 +485,6 @@ void olsr_trigger_gatewayloss_check(void) {
 /*
  * Gateway Plugin Functions
  */
-
-/**
- * Set a new gateway handler.
- * Only call this once: during startup (from a plugin to override the default
- * handler)
- *
- * @param h pointer to gateway handler struct
- */
-void olsr_set_inetgw_handler(struct olsr_gw_handler *h) {
-  assert(h);
-  gw_handler = h;
-}
 
 /**
  * Sets a new internet gateway.

@@ -19,6 +19,8 @@ static bool gw_def_finished_ipv6;
 static struct timer_entry *gw_def_timer;
 
 /* forward declarations */
+static void gw_default_init(void);
+static void gw_default_cleanup(void);
 static void gw_default_startup_handler(void);
 static void gw_default_choosegw_handler(bool ipv4, bool ipv6);
 static void gw_default_update_handler(struct gateway_entry *);
@@ -27,7 +29,9 @@ static void gw_default_delete_handler(struct gateway_entry *);
 /**
  * Callback list for the gateway (default) handler
  */
-static struct olsr_gw_handler gw_def_handler = {
+struct olsr_gw_handler gw_def_handler = {
+    &gw_default_init,
+    &gw_default_cleanup,
     &gw_default_startup_handler,
     &gw_default_choosegw_handler,
     &gw_default_update_handler,
@@ -294,24 +298,27 @@ static void olsr_gw_default_lookup_gateway(bool ipv4, bool ipv6) {
  * Exported functions
  */
 
+/*
+ * Handler functions
+ */
+
 /**
  * initialization of default gateway handler
  */
-void olsr_gw_default_init(void) {
+static void gw_default_init(void) {
   /* initialize values */
   gw_def_nodecount = 0;
   gw_def_stablecount = 0;
   gw_def_finished_ipv4 = false;
   gw_def_finished_ipv6 = false;
   gw_def_timer = NULL;
-
-  /* setup default handler */
-  olsr_set_inetgw_handler(&gw_def_handler);
 }
 
-/*
- * Handler functions
+/**
+ * Cleanup default gateway handler
  */
+static void gw_default_cleanup(void) {
+}
 
 /**
  * Handle gateway startup

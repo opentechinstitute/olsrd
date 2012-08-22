@@ -10,7 +10,7 @@
 
 #ifdef linux
 
-void olsr_gw_default_init(void);
+extern struct olsr_gw_handler gw_def_handler;
 
 #endif /* linux */
 #endif /* GATEWAY_DEFAULT_HANDLER_H_ */
