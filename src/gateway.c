@@ -124,19 +124,6 @@ static void smartgw_tunnel_monitor(int if_index __attribute__ ((unused)),
 }
 
 /**
- * Triggers an instant gateway selection based on the current data
- *
- * @param ipv4 trigger a ipv4 gateway lookup
- * @param ipv6 trigger a ipv6 gateway lookup
- * @return 0 if successful, -1 otherwise
- */
-static int olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
-  assert(gw_handler);
-  gw_handler->choose(ipv4, ipv6);
-  return ((ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL)) ? -1 : 0;
-}
-
-/**
  * Timer callback to remove and cleanup a gateway entry
  *
  * @param ptr
@@ -471,7 +458,8 @@ void olsr_trigger_gatewayloss_check(void) {
   }
 
   if (ipv4 || ipv6) {
-    olsr_trigger_inetgw_selection(ipv4, ipv6);
+    assert(gw_handler);
+    gw_handler->choose(ipv4, ipv6);
   }
 }
 
