@@ -84,15 +84,45 @@ AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);
 extern struct avl_tree gateway_tree;
 
 /**
- * The callback list for a gateway plugin
+ * Function pointer table for gateway plugin hooks.
  */
 struct olsr_gw_handler {
-    void (*init)(void); /**< the init callback */
-    void (*cleanup)(void); /**< the cleanup callback */
-    void (*startup)(void); /**< the startup callback */
-    void (*choose)(bool ipv4, bool ipv6); /**< the gateway selection callback */
-    void (*update)(struct gateway_entry *); /**< the gateway update callback */
-    void (*delete)(struct gateway_entry *); /**< the gateway deletion callback */
+    /**
+     * Called on olsrd startup to initialise the plugin.
+     */
+    void (*init)(void);
+
+    /**
+     * Called on olsrd shutdown to cleanup the plugin.
+     */
+    void (*cleanup)(void);
+
+    /**
+     * Called on olsrd startup to perform the initial gateway selection.
+     */
+    void (*startup)(void);
+
+    /**
+     * Called when a new gateway must be chosen.
+     *
+     * @param ipv4 true when an IPv4 gateway must be chosen
+     * @param ipv6 true when an IPv6 gateway must be chosen
+     */
+    void (*choose)(bool ipv4, bool ipv6);
+
+    /**
+     * Called when a gateway HNA is received.
+     *
+     * @param gw the gateway entry
+     */
+    void (*update)(struct gateway_entry * gw);
+
+    /**
+     * Called when a TC or a HNA is removed.
+     *
+     * @param gw the gateway entry
+     */
+    void (* delete)(struct gateway_entry * gw);
 };
 
 /*
