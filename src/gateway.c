@@ -106,6 +106,10 @@ static uint8_t serialize_gw_speed(uint32_t speed) {
   return ((speed - 1) << 3) | exp;
 }
 
+/*
+ * Callback Functions
+ */
+
 /**
  * Callback for tunnel interface monitoring which will set the route into the tunnel
  * when the interface comes up again.
@@ -130,17 +134,6 @@ static int olsr_trigger_inetgw_selection(bool ipv4, bool ipv6) {
   assert(gw_handler);
   gw_handler->choose(ipv4, ipv6);
   return ((ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL)) ? -1 : 0;
-}
-
-/**
- * Find the gateway entry that belongs to the specified originator
- *
- * @param originator the originator
- * @return gateway_entry for corresponding router, or NULL when not found
- */
-static inline struct gateway_entry *
-olsr_find_gateway_entry(union olsr_ip_addr *originator) {
-  return node2gateway(avl_find(&gateway_tree, originator));
 }
 
 /**
@@ -342,7 +335,7 @@ bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *ma
  * @param seqno the sequence number of the HNA
  */
 void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
-  struct gateway_entry *gw = olsr_find_gateway_entry(originator);
+  struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
   uint8_t *ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
 
   if (!gw) {
@@ -406,7 +399,7 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
  * @param prefixlen
  */
 void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
-  struct gateway_entry *gw = olsr_find_gateway_entry(originator);
+  struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
   bool change = false;
 
   if (gw && (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6)) {
@@ -511,7 +504,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
     current_ipv6_gw = NULL;
   }
 
-  entry = olsr_find_gateway_entry(originator);
+  entry = node2gateway(avl_find(&gateway_tree, originator));
   if (entry != NULL) {
     if (ipv4 && entry != current_ipv4_gw && entry->ipv4 && (!entry->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
       /* valid ipv4 gateway */
