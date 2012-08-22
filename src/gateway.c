@@ -171,32 +171,8 @@ static void cleanup_gateway_handler(void *ptr) {
 }
 
 /*
- * Exported Functions
+ * Main Interface
  */
-
-/**
- * Setup the gateway netmask
- */
-void refresh_smartgw_netmask(void) {
-  uint8_t *ip;
-  memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
-
-  if (olsr_cnf->smart_gw_active) {
-    ip = (uint8_t *) &smart_gateway_netmask;
-
-    if (olsr_cnf->smart_gw_uplink > 0 && olsr_cnf->smart_gw_downlink > 0) {
-      /* the link is bi-directional with a non-zero bandwidth */
-      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_LINKSPEED;
-      ip[GW_HNA_DOWNLINK] = serialize_gw_speed(olsr_cnf->smart_gw_downlink);
-      ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gw_uplink);
-    }
-    if (olsr_cnf->ip_version == AF_INET6 && olsr_cnf->smart_gw_prefix.prefix_len > 0) {
-      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6PREFIX;
-      ip[GW_HNA_V6PREFIXLEN] = olsr_cnf->smart_gw_prefix.prefix_len;
-      memcpy(&ip[GW_HNA_V6PREFIX], &olsr_cnf->smart_gw_prefix.prefix, 8);
-    }
-  }
-}
 
 /**
  * Initialize gateway system
@@ -261,25 +237,112 @@ olsr_trigger_inetgw_startup(void) {
 }
 
 /**
- * Triggers a check if the one of the gateways have been lost or has an
- * ETX = infinity
+ * Print debug information about gateway entries
  */
-void olsr_trigger_gatewayloss_check(void) {
-  bool ipv4 = false;
-  bool ipv6 = false;
+void
+olsr_print_gateway_entries(void) {
+#ifndef NODEBUG
+  struct ipaddr_str buf;
+  struct gateway_entry *gw;
+  const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
 
-  if (current_ipv4_gw) {
-	struct tc_entry *tc = olsr_lookup_tc_entry(&current_ipv4_gw->originator);
-	ipv4 = (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN);
+  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n",
+      olsr_wallclock_string());
+  OLSR_PRINTF(0, "%-*s %-6s %-9s %-9s %s\n", addrsize, "IP address", "Type", "Uplink", "Downlink",
+      olsr_cnf->ip_version == AF_INET ? "" : "External Prefix");
+
+  OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
+    OLSR_PRINTF(0, "%-*s %s%c%s%c%c %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
+        gw->ipv4nat ? "" : "   ",
+        gw->ipv4 ? '4' : ' ',
+        gw->ipv4nat ? "(N)" : "",
+        (gw->ipv4 && gw->ipv6) ? ',' : ' ',
+        gw->ipv6 ? '6' : ' ',
+        gw->uplink, gw->downlink,
+        gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));
+  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
+#endif
+}
+
+/*
+ * Tx Path Interface
+ */
+
+/**
+ * Apply the smart gateway modifications to an outgoing HNA
+ *
+ * @param mask pointer to netmask of the HNA
+ * @param prefixlen of the HNA
+ */
+void
+olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
+  uint8_t *ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
+
+  memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen/8);
+  if (olsr_cnf->has_ipv4_gateway) {
+    ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4;
+
+    if (olsr_cnf->smart_gw_uplink_nat) {
+      ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4_NAT;
+    }
   }
-  if (current_ipv6_gw) {
-	struct tc_entry *tc = olsr_lookup_tc_entry(&current_ipv6_gw->originator);
-	ipv6 = (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN);
+  if (olsr_cnf->has_ipv6_gateway) {
+    ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6;
+  }
+  if (!olsr_cnf->has_ipv6_gateway || prefixlen != ipv6_internet_route.prefix_len){
+    ptr[GW_HNA_FLAGS] &= ~GW_HNA_FLAG_IPV6PREFIX;
+  }
+}
+
+/*
+ * SgwDynSpeed Plugin Interface
+ */
+
+/**
+ * Setup the gateway netmask
+ */
+void refresh_smartgw_netmask(void) {
+  uint8_t *ip;
+  memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
+
+  if (olsr_cnf->smart_gw_active) {
+    ip = (uint8_t *) &smart_gateway_netmask;
+
+    if (olsr_cnf->smart_gw_uplink > 0 && olsr_cnf->smart_gw_downlink > 0) {
+      /* the link is bi-directional with a non-zero bandwidth */
+      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_LINKSPEED;
+      ip[GW_HNA_DOWNLINK] = serialize_gw_speed(olsr_cnf->smart_gw_downlink);
+      ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gw_uplink);
+    }
+    if (olsr_cnf->ip_version == AF_INET6 && olsr_cnf->smart_gw_prefix.prefix_len > 0) {
+      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6PREFIX;
+      ip[GW_HNA_V6PREFIXLEN] = olsr_cnf->smart_gw_prefix.prefix_len;
+      memcpy(&ip[GW_HNA_V6PREFIX], &olsr_cnf->smart_gw_prefix.prefix, 8);
+    }
+  }
+}
+
+/*
+ * TC/SPF/HNA Interface
+ */
+
+/**
+ * Checks if a HNA prefix/netmask combination is a smart gateway
+ *
+ * @param prefix
+ * @param mask
+ * @return true if is a valid smart gateway HNA, false otherwise
+ */
+bool
+olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *mask) {
+  uint8_t *ptr;
+
+  if (!is_prefix_inetgw(prefix)) {
+    return false;
   }
 
-  if (ipv4 || ipv6) {
-    olsr_trigger_inetgw_selection(ipv4, ipv6);
-  }
+  ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefix->prefix_len);
+  return ptr[GW_HNA_PAD] == 0 && ptr[GW_HNA_FLAGS] != 0;
 }
 
 /**
@@ -414,32 +477,30 @@ olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
 }
 
 /**
- * Print debug information about gateway entries
+ * Triggers a check if the one of the gateways have been lost or has an
+ * ETX = infinity
  */
-void
-olsr_print_gateway_entries(void) {
-#ifndef NODEBUG
-  struct ipaddr_str buf;
-  struct gateway_entry *gw;
-  const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
+void olsr_trigger_gatewayloss_check(void) {
+  bool ipv4 = false;
+  bool ipv6 = false;
 
-  OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n",
-      olsr_wallclock_string());
-  OLSR_PRINTF(0, "%-*s %-6s %-9s %-9s %s\n", addrsize, "IP address", "Type", "Uplink", "Downlink",
-      olsr_cnf->ip_version == AF_INET ? "" : "External Prefix");
+  if (current_ipv4_gw) {
+	struct tc_entry *tc = olsr_lookup_tc_entry(&current_ipv4_gw->originator);
+	ipv4 = (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN);
+  }
+  if (current_ipv6_gw) {
+	struct tc_entry *tc = olsr_lookup_tc_entry(&current_ipv6_gw->originator);
+	ipv6 = (tc == NULL || tc->path_cost == ROUTE_COST_BROKEN);
+  }
 
-  OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    OLSR_PRINTF(0, "%-*s %s%c%s%c%c %-9u %-9u %s\n", addrsize, olsr_ip_to_string(&buf, &gw->originator),
-        gw->ipv4nat ? "" : "   ",
-        gw->ipv4 ? '4' : ' ',
-        gw->ipv4nat ? "(N)" : "",
-        (gw->ipv4 && gw->ipv6) ? ',' : ' ',
-        gw->ipv6 ? '6' : ' ',
-        gw->uplink, gw->downlink,
-        gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));
-  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
-#endif
+  if (ipv4 || ipv6) {
+    olsr_trigger_inetgw_selection(ipv4, ipv6);
+  }
 }
+
+/*
+ * Gateway Plugin Functions
+ */
 
 /**
  * Set a new gateway handler.
@@ -548,51 +609,6 @@ struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *ext) {
     *ext = v6gw_choosen_external;
   }
   return current_ipv6_gw;
-}
-
-/**
- * Checks if a HNA prefix/netmask combination is a smart gateway
- *
- * @param prefix
- * @param mask
- * @return true if is a valid smart gateway HNA, false otherwise
- */
-bool
-olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *mask) {
-  uint8_t *ptr;
-
-  if (!is_prefix_inetgw(prefix)) {
-    return false;
-  }
-
-  ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefix->prefix_len);
-  return ptr[GW_HNA_PAD] == 0 && ptr[GW_HNA_FLAGS] != 0;
-}
-
-/**
- * Apply the smart gateway modifications to an outgoing HNA
- *
- * @param mask pointer to netmask of the HNA
- * @param prefixlen of the HNA
- */
-void
-olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
-  uint8_t *ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
-
-  memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen/8);
-  if (olsr_cnf->has_ipv4_gateway) {
-    ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4;
-
-    if (olsr_cnf->smart_gw_uplink_nat) {
-      ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4_NAT;
-    }
-  }
-  if (olsr_cnf->has_ipv6_gateway) {
-    ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6;
-  }
-  if (!olsr_cnf->has_ipv6_gateway || prefixlen != ipv6_internet_route.prefix_len){
-    ptr[GW_HNA_FLAGS] &= ~GW_HNA_FLAG_IPV6PREFIX;
-  }
 }
 
 #endif /* linux */
