@@ -29,36 +29,36 @@
 
 /** gateway HNA flags */
 enum gateway_hna_flags {
-  GW_HNA_FLAG_LINKSPEED  = 1<<0,
-  GW_HNA_FLAG_IPV4       = 1<<1,
-  GW_HNA_FLAG_IPV4_NAT   = 1<<2,
-  GW_HNA_FLAG_IPV6       = 1<<3,
-  GW_HNA_FLAG_IPV6PREFIX = 1<<4
+  GW_HNA_FLAG_LINKSPEED   = 1 << 0,
+  GW_HNA_FLAG_IPV4        = 1 << 1,
+  GW_HNA_FLAG_IPV4_NAT    = 1 << 2,
+  GW_HNA_FLAG_IPV6        = 1 << 3,
+  GW_HNA_FLAG_IPV6PREFIX  = 1 << 4
 };
 
 /** gateway HNA field byte offsets in the netmask field of the HNA */
 enum gateway_hna_fields {
-  GW_HNA_PAD         = 0,
-  GW_HNA_FLAGS       = 1,
-  GW_HNA_UPLINK      = 2,
-  GW_HNA_DOWNLINK    = 3,
-  GW_HNA_V6PREFIXLEN = 4,
-  GW_HNA_V6PREFIX    = 5
+  GW_HNA_PAD              = 0,
+  GW_HNA_FLAGS            = 1,
+  GW_HNA_UPLINK           = 2,
+  GW_HNA_DOWNLINK         = 3,
+  GW_HNA_V6PREFIXLEN      = 4,
+  GW_HNA_V6PREFIX         = 5
 };
 
 /** a gateway entry */
 struct gateway_entry {
-  struct avl_node node;
-  union olsr_ip_addr originator;
-  struct olsr_ip_prefix external_prefix;
-  uint32_t uplink;
-  uint32_t downlink;
-  bool ipv4;
-  bool ipv4nat;
-  bool ipv6;
+    struct avl_node node;
+    union olsr_ip_addr originator;
+    struct olsr_ip_prefix external_prefix;
+    uint32_t uplink;
+    uint32_t downlink;
+    bool ipv4;
+    bool ipv4nat;
+    bool ipv6;
 
-  struct timer_entry *cleanup_timer;
-  uint16_t seqno;
+    struct timer_entry *cleanup_timer;
+    uint16_t seqno;
 };
 
 /**
@@ -87,10 +87,10 @@ extern struct avl_tree gateway_tree;
  * The callback list for a gateway plugin
  */
 struct olsr_gw_handler {
-  void (* handle_startup)(void); /**< the startup callback */
-  void (* select_gateway) (bool ipv4, bool ipv6); /**< the gateway selection callback */
-  void (* handle_update_gw)(struct gateway_entry *); /**< the gateway update callback */
-  void (* handle_delete_gw)(struct gateway_entry *); /**< the gateway deletion callback */
+    void (*handle_startup)(void); /**< the startup callback */
+    void (*select_gateway)(bool ipv4, bool ipv6); /**< the gateway selection callback */
+    void (*handle_update_gw)(struct gateway_entry *); /**< the gateway update callback */
+    void (*handle_delete_gw)(struct gateway_entry *); /**< the gateway deletion callback */
 };
 
 /*
