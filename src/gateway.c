@@ -486,17 +486,20 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
   ipv6 = ipv6 && (olsr_cnf->ip_version == AF_INET6);
 
   entry = node2gateway(avl_find(&gateway_tree, originator));
+  if (!entry) {
+    return true;
+  }
 
   if (ipv4) {
     current_ipv4_gw = NULL;
-    if (entry != NULL && entry->ipv4 && (!entry->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
+    if (entry->ipv4 && (!entry->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
       /* valid ipv4 gateway */
       current_ipv4_gw = entry;
     }
   }
   if (ipv6) {
     current_ipv6_gw = NULL;
-    if (entry != NULL && entry->ipv6) {
+    if (entry->ipv6) {
       /* valid ipv6 gateway */
       current_ipv6_gw = entry;
     }
