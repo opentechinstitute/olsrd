@@ -509,7 +509,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
   }
 
   /* handle IPv4 */
-  if (oldV4 != current_ipv4_gw) {
+  if (current_ipv4_gw && oldV4 != current_ipv4_gw) {
     if ((v4gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv4_gw->originator, true)) != NULL) {
       olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
     } else {
@@ -521,7 +521,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
     }
   }
   /* handle IPv6 */
-  if (oldV6 != current_ipv6_gw) {
+  if (current_ipv6_gw && oldV6 != current_ipv6_gw) {
     if ((v6gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv6_gw->originator, false)) != NULL) {
       olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
     } else {
