@@ -494,11 +494,11 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
 
   entry = node2gateway(avl_find(&gateway_tree, originator));
   if (entry != NULL) {
-    if (ipv4 && entry != current_ipv4_gw && entry->ipv4 && (!entry->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
+    if (ipv4 && entry->ipv4 && (!entry->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
       /* valid ipv4 gateway */
       current_ipv4_gw = entry;
     }
-    if (ipv6 && entry != current_ipv6_gw && entry->ipv6) {
+    if (ipv6 && entry->ipv6) {
       /* valid ipv6 gateway */
       current_ipv6_gw = entry;
     }
