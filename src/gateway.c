@@ -485,21 +485,21 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
   ipv4 = ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
   ipv6 = ipv6 && (olsr_cnf->ip_version == AF_INET6);
 
+  entry = node2gateway(avl_find(&gateway_tree, originator));
+
   if (ipv4) {
     current_ipv4_gw = NULL;
+    if (entry != NULL && entry->ipv4 && (!entry->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
+      /* valid ipv4 gateway */
+      current_ipv4_gw = entry;
+    }
   }
   if (ipv6) {
     current_ipv6_gw = NULL;
-  }
-
-  entry = node2gateway(avl_find(&gateway_tree, originator));
-  if (entry != NULL && ipv4 && entry->ipv4 && (!entry->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
-    /* valid ipv4 gateway */
-    current_ipv4_gw = entry;
-  }
-  if (entry != NULL && ipv6 && entry->ipv6) {
-    /* valid ipv6 gateway */
-    current_ipv6_gw = entry;
+    if (entry != NULL && entry->ipv6) {
+      /* valid ipv6 gateway */
+      current_ipv6_gw = entry;
+    }
   }
 
   /* handle IPv4 */
