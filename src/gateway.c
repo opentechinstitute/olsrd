@@ -484,6 +484,9 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
 
   ipv4 = ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
   ipv6 = ipv6 && (olsr_cnf->ip_version == AF_INET6);
+  if (!ipv4 && !ipv6) {
+    return true;
+  }
 
   entry = node2gateway(avl_find(&gateway_tree, originator));
   if (!entry) {
