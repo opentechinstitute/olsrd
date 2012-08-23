@@ -43,17 +43,11 @@ static struct gateway_entry *current_ipv4_gw;
 /** the tunnel of the current IPv4  gateway */
 static struct olsr_iptunnel_entry *v4gw_tunnel;
 
-/** true if a change of the IPv4 gateway was triggered directly by a user */
-static bool v4gw_choosen_external;
-
 /** the current IPv6 gateway */
 static struct gateway_entry *current_ipv6_gw;
 
 /** the tunnel of the current IPv6  gateway */
 static struct olsr_iptunnel_entry *v6gw_tunnel;
-
-/** true if a change of the IPv6 gateway was triggered directly by a user */
-static bool v6gw_choosen_external;
 
 /*
  * Helper Functions
@@ -181,11 +175,9 @@ int olsr_init_gateways(void) {
 
   current_ipv4_gw = NULL;
   v4gw_tunnel = NULL;
-  v4gw_choosen_external = false;
 
   current_ipv6_gw = NULL;
   v6gw_tunnel = NULL;
-  v6gw_choosen_external = false;
 
   gw_handler = NULL;
 
@@ -506,11 +498,9 @@ void olsr_set_inetgw_handler(struct olsr_gw_handler *h) {
  * @param originator ip address of the node with the new gateway
  * @param ipv4 set ipv4 gateway
  * @param ipv6 set ipv6 gateway
- * @param external true if change was triggered directly by an user,
- *   false if triggered by automatic lookup.
  * @return true if an error happened, false otherwise
  */
-bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool external) {
+bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6) {
   struct gateway_entry *entry;
   struct gateway_entry *oldV4 = current_ipv4_gw;
   struct gateway_entry *oldV6 = current_ipv6_gw;
@@ -543,7 +533,6 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6,
   if (oldV4 != current_ipv4_gw) {
     if ((v4gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv4_gw->originator, true)) != NULL) {
       olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
-      v4gw_choosen_external = external;
     } else {
       /* adding the tunnel failed, we try again in the next cycle */
       current_ipv4_gw = NULL;
@@ -556,7 +545,6 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6,
   if (oldV6 != current_ipv6_gw) {
     if ((v6gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv6_gw->originator, false)) != NULL) {
       olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
-      v6gw_choosen_external = external;
     } else {
       /* adding the tunnel failed, we try again in the next cycle */
       current_ipv6_gw = NULL;
@@ -570,25 +558,17 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6,
 
 /**
  * @return a pointer to the gateway_entry of the current ipv4 internet gw or
- * NULL if not set. Also updates *ext (if not NULL) to indicate whether or not
- * the gw was chosen externally.
+ * NULL if not set.
  */
-struct gateway_entry *olsr_get_ipv4_inet_gateway(bool *ext) {
-  if (ext) {
-    *ext = v4gw_choosen_external;
-  }
+struct gateway_entry *olsr_get_ipv4_inet_gateway(void) {
   return current_ipv4_gw;
 }
 
 /**
  * @return a pointer to the gateway_entry of the current ipv4 internet gw or
- * NULL if not set. Also updates *ext (if not NULL) to indicate whether or not
- * the gw was chosen externally.
+ * NULL if not set.
  */
-struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *ext) {
-  if (ext) {
-    *ext = v6gw_choosen_external;
-  }
+struct gateway_entry *olsr_get_ipv6_inet_gateway(void) {
   return current_ipv6_gw;
 }
 

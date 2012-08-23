@@ -166,7 +166,7 @@ static void gw_default_choose_gateway(void) {
   if (olsr_cnf->smart_gw_thresh) {
     /* determine the path cost thresholds */
 
-    gw = olsr_get_ipv4_inet_gateway(NULL);
+    gw = olsr_get_ipv4_inet_gateway();
     if (gw) {
       tc = olsr_lookup_tc_entry(&gw->originator);
       if (tc) {
@@ -175,7 +175,7 @@ static void gw_default_choose_gateway(void) {
         eval_cost_ipv4_threshold = true;
       }
     }
-    gw = olsr_get_ipv6_inet_gateway(NULL);
+    gw = olsr_get_ipv6_inet_gateway();
     if (gw) {
       tc = olsr_lookup_tc_entry(&gw->originator);
       if (tc) {
@@ -229,11 +229,11 @@ static void gw_default_choose_gateway(void) {
 
   if (inet_ipv4) {
     /* we are dealing with an IPv4 or dual stack gateway */
-    olsr_set_inet_gateway(&inet_ipv4->originator, true, dual, false);
+    olsr_set_inet_gateway(&inet_ipv4->originator, true, dual);
   }
   if (inet_ipv6 && !dual) {
     /* we are dealing with an IPv6-only gateway */
-    olsr_set_inet_gateway(&inet_ipv6->originator, false, true, false);
+    olsr_set_inet_gateway(&inet_ipv6->originator, false, true);
   }
 
   if ((olsr_cnf->smart_gw_thresh == 0) && gw_def_finished_ipv4 && gw_def_finished_ipv6) {
@@ -355,9 +355,9 @@ static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
  * @param gw the gateway entry
  */
 static void gw_default_update_handler(struct gateway_entry *gw) {
-  bool v4changed = gw && (gw == olsr_get_ipv4_inet_gateway(NULL))
+  bool v4changed = gw && (gw == olsr_get_ipv4_inet_gateway())
       && (!gw->ipv4 || (gw->ipv4nat && !olsr_cnf->smart_gw_allow_nat));
-  bool v6changed = gw && (gw == olsr_get_ipv6_inet_gateway(NULL)) && !gw->ipv6;
+  bool v6changed = gw && (gw == olsr_get_ipv6_inet_gateway()) && !gw->ipv6;
 
   if (v4changed || v6changed) {
     olsr_gw_default_lookup_gateway(v4changed, v6changed);
@@ -370,8 +370,8 @@ static void gw_default_update_handler(struct gateway_entry *gw) {
  * @param gw the gateway entry
  */
 static void gw_default_delete_handler(struct gateway_entry *gw) {
-  bool isv4 = gw && (gw == olsr_get_ipv4_inet_gateway(NULL));
-  bool isv6 = gw && (gw == olsr_get_ipv6_inet_gateway(NULL));
+  bool isv4 = gw && (gw == olsr_get_ipv4_inet_gateway());
+  bool isv6 = gw && (gw == olsr_get_ipv6_inet_gateway());
 
   if (isv4 || isv6) {
     olsr_gw_default_lookup_gateway(isv4, isv6);

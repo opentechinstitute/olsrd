@@ -128,8 +128,8 @@ void olsr_trigger_gatewayloss_check(void);
  */
 
 void olsr_set_inetgw_handler(struct olsr_gw_handler *l);
-bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool external);
-struct gateway_entry *olsr_get_ipv4_inet_gateway(bool *);
-struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *);
+bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6);
+struct gateway_entry *olsr_get_ipv4_inet_gateway(void);
+struct gateway_entry *olsr_get_ipv6_inet_gateway(void);
 
 #endif /* GATEWAY_H_ */
