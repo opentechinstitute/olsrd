@@ -162,6 +162,10 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 		int r;
 		struct interface *ifn;
 		for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+			/* force the pending buffer out if there's not enough space for our message */
+			if ((int)pu_size > net_outbuffer_bytes_left(ifn)) {
+			  net_output(ifn);
+			}
 			r = net_outbuffer_push(ifn, pu, pu_size);
 			if (r != (int) pu_size) {
 				pudError(
