@@ -83,16 +83,6 @@ AVLNODE2STRUCT(node2gateway, struct gateway_entry, node);
 /** the gateway tree */
 extern struct avl_tree gateway_tree;
 
-void refresh_smartgw_netmask(void);
-int olsr_init_gateways(void);
-void olsr_cleanup_gateways(void);
-void olsr_trigger_inetgw_startup(void);
-void olsr_trigger_gatewayloss_check(void);
-
-void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno);
-void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen);
-void olsr_print_gateway_entries(void);
-
 /**
  * The callback list for a gateway plugin
  */
@@ -103,11 +93,43 @@ struct olsr_gw_handler {
   void (* handle_delete_gw)(struct gateway_entry *); /**< the gateway deletion callback */
 };
 
+/*
+ * Main Interface
+ */
+
+int olsr_init_gateways(void);
+void olsr_cleanup_gateways(void);
+void olsr_trigger_inetgw_startup(void);
+void olsr_print_gateway_entries(void);
+
+/*
+ * Tx Path Interface
+ */
+
+void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);
+
+/*
+ * Interface to adjust uplink/downlink speed
+ */
+
+void refresh_smartgw_netmask(void);
+
+/*
+ * TC/SPF/HNA Interface
+ */
+
+bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *net);
+void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno);
+void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen);
+void olsr_trigger_gatewayloss_check(void);
+
+/*
+ * Gateway Plugin Functions
+ */
+
 void olsr_set_inetgw_handler(struct olsr_gw_handler *l);
 bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6, bool external);
 struct gateway_entry *olsr_get_ipv4_inet_gateway(bool *);
 struct gateway_entry *olsr_get_ipv6_inet_gateway(bool *);
-bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *net);
-void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);
 
 #endif /* GATEWAY_H_ */
