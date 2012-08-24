@@ -232,6 +232,10 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 				int r;
 				struct interface *ifn;
 				for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+					/* force the pending buffer out if there's not enough space for our message */
+					if ((int)olsrMessageLength > net_outbuffer_bytes_left(ifn)) {
+					  net_output(ifn);
+					}
 					r = net_outbuffer_push(ifn, olsrMessage, olsrMessageLength);
 					if (r != (int) olsrMessageLength) {
 						pudError(
