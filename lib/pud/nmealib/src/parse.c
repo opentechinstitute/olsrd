@@ -192,7 +192,7 @@ static bool validateMode(char * c) {
  *
  * @param str
  * The string to check
- * @param strlen
+ * @param str_len
  * The length of the string to check
  * @param strName
  * The name of the string to report when invalid characters are encountered
@@ -206,7 +206,7 @@ static bool validateMode(char * c) {
  * - true when the string has invalid characters
  * - false otherwise
  */
-bool nmea_parse_sentence_has_invalid_chars(const char * str, const size_t strlen, const char * strName, char * report,
+bool nmea_parse_sentence_has_invalid_chars(const char * str, const size_t str_len, const char * strName, char * report,
 		const size_t reportSize) {
 	static const char invalidChars[] = { '$', '*', ',', '!', '\\', '^', '~' };
 	static const char * invalidCharsNames[] = { "sentence delimiter ($)", "checksum field delimiter (*)", "comma (,)",
@@ -215,11 +215,11 @@ bool nmea_parse_sentence_has_invalid_chars(const char * str, const size_t strlen
 	size_t i;
 	size_t j;
 
-	if (!str || !strlen) {
+	if (!str || !str_len) {
 		return false;
 	}
 
-	for (i = 0; i < strlen; i++) {
+	for (i = 0; i < str_len; i++) {
 		char c = str[i];
 
 		if (!((c >= 32) && (c <= 126))) {
