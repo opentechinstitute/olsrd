@@ -80,7 +80,7 @@
 #include "olsrd_dot_draw.h"
 #include "olsrd_plugin.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #define close(x) closesocket(x)
 #endif
 

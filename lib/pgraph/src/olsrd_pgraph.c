@@ -55,7 +55,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#ifdef WIN32
+#ifdef _WIN32
 #define close(x) closesocket(x)
 #endif
 

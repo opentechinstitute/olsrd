@@ -52,7 +52,7 @@
 #include <unistd.h>
 #include <assert.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #define close(x) closesocket(x)
 #endif
 
@@ -491,7 +491,7 @@ olsr_scheduler(void)
     /* Read incoming data and handle it immediiately */
     handle_fds(next_interval);
 
-#ifdef WIN32
+#ifdef _WIN32
     if (olsr_win32_end_request) {
       olsr_win32_end_flag = true;
     }

@@ -52,7 +52,7 @@
 
 #define OHS_OUT_OF_MEMORY(s) do { printf("ohsd: out of memory \"%s\"!\n", s); ohs_close(0); } while (0)
 
-#ifdef WIN32
+#ifdef _WIN32
 #define close(x) closesocket(x)
 int __stdcall ohs_close(unsigned long signal) __attribute__ ((noreturn));
 #else
@@ -84,7 +84,7 @@ extern struct ohs_connection *ohs_conns;
 #define LOG_CONNECT 0x2
 #define LOG_LINK    0x4
 
-#ifdef WIN32
+#ifdef _WIN32
 int __stdcall SignalHandler(unsigned long);
 #else
 void ohs_close(int);

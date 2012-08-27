@@ -40,7 +40,7 @@
 /* types */
 #include <sys/types.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 typedef unsigned char olsr_u8_t;
 typedef unsigned short olsr_u16_t;
 typedef unsigned int olsr_u32_t;

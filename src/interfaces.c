@@ -52,7 +52,7 @@
 #include "log.h"
 #include "parser.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winbase.h>
 #define close(x) closesocket(x)
 #endif

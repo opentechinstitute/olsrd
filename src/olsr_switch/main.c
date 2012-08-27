@@ -58,7 +58,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #undef errno
 #define errno WSAGetLastError()
 #undef strerror
@@ -91,13 +91,13 @@ static int ohs_init_connect_sockets(void);
 
 static int ohs_configure(void);
 
-#if !defined WIN32
+#if !defined _WIN32
 static void ohs_listen_loop(void) __attribute__ ((noreturn));
 #else
 static void ohs_listen_loop(void);
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 int __stdcall
 ohs_close(unsigned long signo __attribute__ ((unused)))
 #else
@@ -156,7 +156,7 @@ ohs_init_new_connection(int s)
     if (recv(oc->socket, (void *)addr, olsr_cnf->ipsize, 0) == (int)olsr_cnf->ipsize) {
       break;
     }
-#if defined WIN32
+#if defined _WIN32
     Sleep(100);
 #endif
   }
@@ -352,7 +352,7 @@ read_handler(struct ohs_connection *con)
 static void
 ohs_listen_loop(void)
 {
-#if !defined WIN32
+#if !defined _WIN32
   int n;
   fd_set ibits;
   int fn_stdin = fileno(stdin);
@@ -479,7 +479,7 @@ int
 main(void)
 {
 
-#ifdef WIN32
+#ifdef _WIN32
   WSADATA WsaData;
 
   if (WSAStartup(0x0202, &WsaData)) {

@@ -48,7 +48,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#ifdef WIN32
+#ifdef _WIN32
 #include <io.h>
 #else
 #include <netdb.h>
@@ -78,7 +78,7 @@
 #undef OS
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #define close(x) closesocket(x)
 #define OS "Windows"
 #endif
@@ -742,7 +742,7 @@ build_ipaddr_link(struct autobuf *abuf, const bool want_link, const union olsr_i
 {
   struct ipaddr_str ipaddrstr;
   const struct hostent *const hp =
-#ifndef WIN32
+#ifndef _WIN32
     resolve_ip_addresses ? gethostbyaddr((const void *)ipaddr, olsr_cnf->ipsize,
                                          olsr_cnf->ip_version) :
 #endif

@@ -359,7 +359,7 @@ extern "C" {
 
   struct olsrd_config *olsrd_get_default_cnf(void);
 
-#if defined WIN32
+#if defined _WIN32
   void win32_stdio_hack(unsigned int);
 
   void *win32_olsrd_malloc(size_t size);

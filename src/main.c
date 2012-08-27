@@ -68,7 +68,7 @@
 
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winbase.h>
 #define close(x) closesocket(x)
 int __stdcall SignalHandler(unsigned long signo) __attribute__ ((noreturn));
@@ -84,7 +84,7 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 #define DEFAULT_LOCKFILE_PREFIX "/data/local/olsrd"
 #elif defined linux || defined __FreeBSD__ || defined __NetBSD__ || defined __OpenBSD__
 #define DEFAULT_LOCKFILE_PREFIX "/var/run/olsrd"
-#elif defined WIN32
+#elif defined _WIN32
 #define DEFAULT_LOCKFILE_PREFIX "C:\\olsrd"
 #else
 #define DEFAULT_LOCKFILE_PREFIX "olsrd"
@@ -102,7 +102,7 @@ static int set_default_ifcnfs(struct olsr_if *, struct if_config_options *);
 static int olsr_process_arguments(int, char *[], struct olsrd_config *,
     struct if_config_options *);
 
-#ifndef WIN32
+#ifndef _WIN32
 static char **olsr_argv;
 #endif
 
@@ -111,7 +111,7 @@ static char
         "The olsr.org Optimized Link-State Routing daemon(olsrd) Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
 
 /* Data for OLSR locking */
-#ifndef WIN32
+#ifndef _WIN32
 static int lock_fd = 0;
 #endif
 static char lock_file_name[FILENAME_MAX];
@@ -127,7 +127,7 @@ struct olsr_cookie_info *def_timer_ci = NULL;
  * locking file.
  */
 static int olsr_create_lock_file(bool noExitOnFail) {
-#ifdef WIN32
+#ifdef _WIN32
     bool success;
     HANDLE lck;
 
@@ -245,7 +245,7 @@ int main(int argc, char *argv[]) {
   struct interface *ifn;
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
   WSADATA WsaData;
   size_t len;
 #endif
@@ -272,13 +272,13 @@ int main(int argc, char *argv[]) {
   }
 
   debug_handle = stdout;
-#ifndef WIN32
+#ifndef _WIN32
   olsr_argv = argv;
 #endif
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
-#ifndef WIN32
+#ifndef _WIN32
   /* Check if user is root */
   if (geteuid()) {
     fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
@@ -306,7 +306,7 @@ int main(int argc, char *argv[]) {
    * Set configfile name and
    * check if a configfile name was given as parameter
    */
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef WINCE
   GetWindowsDirectory(conf_file_name, FILENAME_MAX - 11);
 #else
@@ -416,7 +416,7 @@ int main(int argc, char *argv[]) {
    */
   olsr_cnf->ioctl_s = socket(olsr_cnf->ip_version, SOCK_DGRAM, 0);
   if (olsr_cnf->ioctl_s < 0) {
-#ifndef WIN32
+#ifndef _WIN32
     olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
 #endif
     olsr_exit(__func__, 0);
@@ -535,7 +535,7 @@ int main(int argc, char *argv[]) {
   olsr_init_tables();
 
   /* daemon mode */
-#ifndef WIN32
+#ifndef _WIN32
   if (olsr_cnf->debug_level == 0 && !olsr_cnf->no_fork) {
     printf("%s detaching from the current process...\n", olsrd_version);
     if (daemon(0, 0) < 0) {
@@ -609,7 +609,7 @@ int main(int argc, char *argv[]) {
    */
 
   /* ctrl-C and friends */
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef WINCE
   SetConsoleCtrlHandler(SignalHandler, true);
 #endif
@@ -641,7 +641,7 @@ int main(int argc, char *argv[]) {
  *
  *@param signal the signal that triggered this callback
  */
-#ifndef WIN32
+#ifndef _WIN32
 void olsr_reconfigure(int signo __attribute__ ((unused))) {
   /* if we are started with -nofork, we do not want to go into the
    * background here. So we can simply stop on -HUP
@@ -698,7 +698,7 @@ static void olsr_shutdown_messages(void) {
  *
  * @param signal the signal that triggered this call
  */
-#ifdef WIN32
+#ifdef _WIN32
 int __stdcall
 SignalHandler(unsigned long signo)
 #else
@@ -710,7 +710,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 
   OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signo);
 
-#ifdef WIN32
+#ifdef _WIN32
   OLSR_PRINTF(1, "Waiting for the scheduler to stop.\n");
 
   olsr_win32_end_request = TRUE;
@@ -888,7 +888,7 @@ static int olsr_process_arguments(int argc, char *argv[],
     struct olsrd_config *cnf, struct if_config_options *ifcnf) {
   while (argc > 1) {
     NEXT_ARG;
-#ifdef WIN32
+#ifdef _WIN32
     /*
      *Interface list
      */

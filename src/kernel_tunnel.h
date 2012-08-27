@@ -9,7 +9,7 @@
 #define KERNEL_TUNNEL_H_
 
 #include <net/if.h>
-#ifdef WIN32
+#ifdef _WIN32
 /* compat for win32 */
 #include <iprtrmib.h>
 #define IF_NAMESIZE MAX_INTERFACE_NAME_LEN

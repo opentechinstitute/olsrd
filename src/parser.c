@@ -55,7 +55,7 @@
 #include "net_olsr.h"
 #include "duplicate_handler.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #undef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #undef errno
@@ -456,7 +456,7 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     if (cc <= 0) {
       if (cc < 0 && errno != EWOULDBLOCK) {
         OLSR_PRINTF(1, "error recvfrom: %s", strerror(errno));
-#ifndef WIN32
+#ifndef _WIN32
         olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %m");
 #endif
       }

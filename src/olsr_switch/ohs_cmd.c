@@ -92,7 +92,7 @@ ohs_set_olsrd_path(const char *path)
   return 0;
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 int
 ohs_cmd_olsrd(const char *args __attribute__ ((unused)))
 {
@@ -484,14 +484,14 @@ ohs_parse_command(void)
   char *args;
   char cmd_token[20];
   int i;
-#if defined WIN32
+#if defined _WIN32
   char c;
   unsigned long Read;
   INPUT_RECORD InRec;
   KEY_EVENT_RECORD *KeyEventRec;
 #endif
 
-#if defined WIN32
+#if defined _WIN32
   if (!ReadConsoleInput(GetStdHandle(STD_INPUT_HANDLE), &InRec, sizeof(InRec), &Read)) {
     fprintf(stderr, "ReadConsoleInput failed: %s\n", strerror(GetLastError()));
     return;

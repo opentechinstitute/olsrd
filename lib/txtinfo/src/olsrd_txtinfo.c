@@ -51,7 +51,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#if !defined WIN32
+#if !defined _WIN32
 #include <sys/select.h>
 #endif
 #include <netinet/in.h>
@@ -83,7 +83,7 @@
 #include "olsrd_txtinfo.h"
 #include "olsrd_plugin.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #define close(x) closesocket(x)
 #endif
 

@@ -93,7 +93,7 @@ MD5_checksum(const uint8_t * data, const uint16_t data_len, uint8_t * hashbuf)
 #undef OS
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #define close(x) closesocket(x)
 #undef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
@@ -338,7 +338,7 @@ add_signature(uint8_t * pck, int *size)
 
   /* Add timestamp */
   msg->sig.timestamp = htonl(now.tv_sec);
-#ifndef WIN32
+#ifndef _WIN32
   olsr_printf(3, "[ENC]timestamp: %lld\n", (long long)now.tv_sec);
 #endif
   /* Set the new size */
@@ -490,7 +490,7 @@ one_checksum_SHA:
                 olsr_ip_to_string(&buf, (const union olsr_ip_addr *)&sig->originator));
     return 0;
   }
-#ifndef WIN32
+#ifndef _WIN32
   olsr_printf(1, "[ENC]Received timestamp %lld diff: %lld\n", (long long)rec_time, (long long)now.tv_sec - (long long)rec_time);
 #endif
   /* Remove signature message */
@@ -931,7 +931,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* set timestamp */
   /* but swap the byte order to the network order before sending!  2011/05/28 AE5AE */
   crmsg.timestamp = htonl(now.tv_sec);
-#ifndef WIN32
+#ifndef _WIN32
   /* Don't print htonl()'d time, use now.tv_sec 2011/05/31 AE5AE */
 /*   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)crmsg.timestamp); */
   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)now.tv_sec);
@@ -1005,7 +1005,7 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* But swap the byte order to the network order!  2011/05/28 AE5AE */
   rrmsg.timestamp = htonl(now.tv_sec);
 
-#ifndef WIN32
+#ifndef _WIN32
   /* olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)rrmsg.timestamp); */
   /* don't print htonl()'d time, use now. 2011/05/31 AE5AE */
   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)now.tv_sec);

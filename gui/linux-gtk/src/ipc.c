@@ -26,7 +26,7 @@
 #include "packet.h"
 #include "routes.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #define close(x) closesocket(x)
 #undef errno
 #define errno WSAGetLastError()
@@ -50,7 +50,7 @@ ipc_close()
 int
 ipc_connect(struct sockaddr_in *pin)
 {
-#ifdef WIN32
+#ifdef _WIN32
   int On = 1;
   unsigned long Len;
 #else
@@ -78,7 +78,7 @@ ipc_connect(struct sockaddr_in *pin)
 
     /* Setting socket non-blocking */
 
-#ifdef WIN32
+#ifdef _WIN32
     if (WSAIoctl(ipc_socket, FIONBIO, &On, sizeof(On), NULL, 0, &Len, NULL, NULL) < 0) {
       fprintf(stderr, "Error while making socket non-blocking!\n");
       exit(1);

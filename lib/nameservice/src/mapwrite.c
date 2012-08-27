@@ -189,11 +189,11 @@ mapwrite_work(FILE * fmap)
   OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 }
 
-#ifndef WIN32
+#ifndef _WIN32
 
 /*
  * Windows doesn't know fifo's AFAIK. We better write
- * to a file (done in nameservice.c, see #ifdef WIN32)
+ * to a file (done in nameservice.c, see #ifdef _WIN32)
  */
 
 static const char *the_fifoname = 0;

@@ -989,7 +989,7 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   }
 }
 
-#if defined WIN32
+#if defined _WIN32
 struct ioinfo {
   unsigned int handle;
   unsigned char attr;

@@ -88,7 +88,7 @@ autobuf_enlarge(struct autobuf *autobuf, int new_size)
     int roundUpSize = ROUND_UP_TO_POWER_OF_2(new_size, AUTOBUFCHUNK);
     p = realloc(autobuf->buf, roundUpSize);
     if (p == NULL) {
-#ifdef WIN32
+#ifdef _WIN32
       WSASetLastError(ENOMEM);
 #else
       errno = ENOMEM;
@@ -203,7 +203,7 @@ abuf_pull(struct autobuf * autobuf, int len) {
   newsize = ROUND_UP_TO_POWER_OF_2(autobuf->len + 1, AUTOBUFCHUNK);
   p = realloc(autobuf->buf, newsize);
   if (p == NULL) {
-#ifdef WIN32
+#ifdef _WIN32
     WSASetLastError(ENOMEM);
 #else
     errno = ENOMEM;

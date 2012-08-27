@@ -137,7 +137,7 @@ name_constructor(void)
 {
   int i;
 
-#ifdef WIN32
+#ifdef _WIN32
   int len;
 
   GetWindowsDirectory(my_hosts_file, MAX_FILE - 12);
@@ -536,7 +536,7 @@ olsr_expire_write_file_timer(void *context __attribute__ ((unused)))
   write_hosts_file();              /* if name_table_changed */
   write_services_file(false); /* if service_table_changed */
   write_services_file(true);  /* if mac_table_changed */
-#ifdef WIN32
+#ifdef _WIN32
   write_latlon_file();             /* if latlon_table_changed */
 #endif
 }
@@ -996,7 +996,7 @@ insert_new_name_in_list(union olsr_ip_addr *originator, struct list_node *this_l
   }
 }
 
-#ifndef WIN32
+#ifndef _WIN32
 static void
 send_sighup_to_pidfile(char *pid_file)
 {
@@ -1143,7 +1143,7 @@ write_hosts_file(void)
 
   fclose(hosts);
 
-#ifndef WIN32
+#ifndef _WIN32
   if (*my_sighup_pid_file)
     send_sighup_to_pidfile(my_sighup_pid_file);
 #endif
@@ -1635,7 +1635,7 @@ lookup_name_latlon(union olsr_ip_addr *ip)
   return "";
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 
 /**
  * write latlon positions to a javascript file

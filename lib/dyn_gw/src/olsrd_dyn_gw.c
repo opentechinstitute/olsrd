@@ -66,7 +66,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
-#ifndef WIN32
+#ifndef _WIN32
 #include <pthread.h>
 #else
 #define WIN32_LEAN_AND_MEAN
@@ -625,7 +625,7 @@ add_to_hna_group(struct hna_group *list_root)
 }
 
 
-#ifdef WIN32
+#ifdef _WIN32
 
 /*
  * Windows pthread compat stuff

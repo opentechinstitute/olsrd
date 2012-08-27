@@ -32,12 +32,12 @@ main(int argc, char *argv[])
   struct in_addr in;
   struct sockaddr_in pin;
 
-#ifdef WIN32
+#ifdef _WIN32
   WSADATA WsaData;
 #endif
   GtkWidget *main_window;
 
-#ifdef WIN32
+#ifdef _WIN32
   if (WSAStartup(0x0202, &WsaData)) {
     fprintf(stderr, "Could not initialize WinSock.\n");
     exit(1);
