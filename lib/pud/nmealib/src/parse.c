@@ -162,10 +162,22 @@ static bool validateNSEW(char * c, const bool ns) {
 }
 
 /**
- * Validate mode and uppercase it.
+ * Uppercase mode and validate it.
  * Expects:
  * <pre>
- *   c in { a, A, d, D, e, E, n, N, s, S }
+ *   c in { A, D, E, F, M, N, P, R, S }
+ *
+ *   A = Autonomous. Satellite system used in non-differential mode in position fix
+ *   D = Differential. Satellite system used in differential mode in position fix
+ *   E = Estimated (dead reckoning) mode
+ *   F = Float RTK. Satellite system used in real time kinematic mode with floating integers
+ *   M = Manual input mode
+ *   N = No fix. Satellite system not used in position fix, or fix not valid
+ *   P = Precise. Satellite system used in precision mode. Precision mode is defined
+ *       as no deliberate degradation (such as Selective Availability) and higher
+ *       resolution code (P-code) is used to compute position fix.
+ *   R = Real Time Kinematic. Satellite system used in RTK mode with fixed integers
+ *   S = Simulator mode
  * </pre>
  *
  * @param c a pointer to the character. The character will be converted to uppercase.
@@ -178,7 +190,8 @@ static bool validateMode(char * c) {
 
 	*c = toupper(*c);
 
-	if (!((*c == 'A') || (*c == 'D') || (*c == 'E') || (*c == 'N') || (*c == 'S'))) {
+	if (!((*c == 'A') || (*c == 'D') || (*c == 'E') || (*c == 'F') || (*c == 'M') || (*c == 'N') || (*c == 'P')
+			|| (*c == 'R') || (*c == 'S'))) {
 		nmea_error("Parse error: invalid mode (%c)", *c);
 		return false;
 	}
@@ -408,8 +421,8 @@ int nmea_parse_GPGGA(const char *s, const int len, nmeaGPGGA *pack) {
 		nmea_INFO_set_present(&pack->present, LON);
 	}
 	if (pack->sig != -1) {
-		if (!((pack->sig >= 0) && (pack->sig <= 8))) {
-			nmea_error("GPGGA parse error: invalid signal %d, expected [0, 8]", pack->sig);
+		if (!((pack->sig >= NMEA_SIG_FIRST) && (pack->sig <= NMEA_SIG_LAST))) {
+			nmea_error("GPGGA parse error: invalid signal %d, expected [%d, %d]", pack->sig, NMEA_SIG_FIRST, NMEA_SIG_LAST);
 			return 0;
 		}
 
@@ -485,8 +498,8 @@ int nmea_parse_GPGSA(const char *s, const int len, nmeaGPGSA *pack) {
 		return 0;
 	}
 	if (pack->fix_type != -1) {
-		if (!((pack->fix_type >= 1) && (pack->fix_type <= 3))) {
-			nmea_error("GPGSA parse error: invalid fix type %d, expected [1, 3]", pack->fix_type);
+		if (!((pack->fix_type >= NMEA_FIX_FIRST) && (pack->fix_type <= NMEA_FIX_LAST))) {
+			nmea_error("GPGSA parse error: invalid fix type %d, expected [%d, %d]", pack->fix_type, NMEA_FIX_FIRST, NMEA_FIX_LAST);
 			return 0;
 		}
 
@@ -561,7 +574,7 @@ int nmea_parse_GPGSV(const char *s, const int len, nmeaGPGSV *pack) {
 				nmea_error("GPGSV parse error: invalid sat %d id (%d)", sat_count + 1, pack->sat_data[sat_count].id);
 				return 0;
 			}
-			if ((pack->sat_data[sat_count].elv < 0) || (pack->sat_data[sat_count].elv > 90)) {
+			if ((pack->sat_data[sat_count].elv < -90) || (pack->sat_data[sat_count].elv > 90)) {
 				nmea_error("GPGSV parse error: invalid sat %d elevation (%d)", sat_count + 1, pack->sat_data[sat_count].elv);
 				return 0;
 			}

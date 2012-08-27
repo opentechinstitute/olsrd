@@ -54,6 +54,7 @@
  </pre>
  */
 
+#define NMEA_SIG_FIRST (NMEA_SIG_BAD)
 #define NMEA_SIG_BAD   (0)
 #define NMEA_SIG_LOW   (1)
 #define NMEA_SIG_MID   (2)
@@ -63,10 +64,13 @@
 #define NMEA_SIG_ESTIM (6)
 #define NMEA_SIG_MAN   (7)
 #define NMEA_SIG_SIM   (8)
+#define NMEA_SIG_LAST  (NMEA_SIG_SIM)
 
+#define NMEA_FIX_FIRST (NMEA_FIX_BAD)
 #define NMEA_FIX_BAD   (1)
 #define NMEA_FIX_2D    (2)
 #define NMEA_FIX_3D    (3)
+#define NMEA_FIX_LAST  (NMEA_FIX_3D)
 
 #define NMEA_MAXSAT    (64)
 #define NMEA_SATINPACK (4)
