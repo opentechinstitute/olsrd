@@ -479,8 +479,8 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
   struct gateway_entry *entry;
   struct gateway_entry *oldV4 = current_ipv4_gw;
   struct gateway_entry *oldV6 = current_ipv6_gw;
-  struct olsr_iptunnel_entry *tunnelV4 = v4gw_tunnel;
-  struct olsr_iptunnel_entry *tunnelV6 = v6gw_tunnel;
+  struct olsr_iptunnel_entry *oldV4Tunnel = v4gw_tunnel;
+  struct olsr_iptunnel_entry *oldV6Tunnel = v6gw_tunnel;
 
   ipv4 = ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
   ipv6 = ipv6 && (olsr_cnf->ip_version == AF_INET6);
@@ -507,7 +507,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
           current_ipv4_gw = NULL;
         }
         if (oldV4 != NULL) {
-          olsr_os_del_ipip_tunnel(tunnelV4);
+          olsr_os_del_ipip_tunnel(oldV4Tunnel);
         }
       }
     }
@@ -527,7 +527,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
           current_ipv6_gw = NULL;
         }
         if (oldV6 != NULL) {
-          olsr_os_del_ipip_tunnel(tunnelV6);
+          olsr_os_del_ipip_tunnel(oldV6Tunnel);
         }
       }
     }
