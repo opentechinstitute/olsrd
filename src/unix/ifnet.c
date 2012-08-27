@@ -560,7 +560,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   struct ifreq ifr;
   union olsr_ip_addr null_addr;
   size_t name_size;
-#ifdef linux
+#ifdef __linux__
   int precedence = IPTOS_PREC(olsr_cnf->tos);
   int tos_bits = olsr_cnf->tos;
 #endif
@@ -806,7 +806,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   add_olsr_socket(ifp->olsr_socket, &olsr_input, NULL, NULL, SP_PR_READ);
   add_olsr_socket(ifp->send_socket, &olsr_input, NULL, NULL, SP_PR_READ);
 
-#ifdef linux
+#ifdef __linux__
   /* Set TOS */
 
   if (setsockopt(ifp->send_socket, SOL_SOCKET, SO_PRIORITY, (char *)&precedence, sizeof(precedence)) < 0) {

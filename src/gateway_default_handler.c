@@ -4,7 +4,7 @@
  *  Created on: Jan 29, 2010
  *      Author: rogge
  */
-#ifdef linux
+#ifdef __linux__
 
 #include "gateway_default_handler.h"
 

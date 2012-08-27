@@ -40,7 +40,7 @@
  *
  */
 
-#if defined linux
+#ifdef __linux__
 
 #include "link.h"
 #include "plugin.h"
@@ -620,7 +620,7 @@ waitForSockets(struct fileId *sockIds[], int *flags[], int num)
   return 0;
 }
 
-#endif
+#endif /* __linux__ */
 
 /*
  * Local Variables:

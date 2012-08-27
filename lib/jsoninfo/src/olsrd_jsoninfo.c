@@ -753,7 +753,7 @@ ipc_print_mid(struct autobuf *abuf)
 static void
 ipc_print_gateways(struct autobuf *abuf)
 {
-#ifndef linux
+#ifndef __linux__
   abuf_json_string(abuf, "error", "Gateway mode is only supported in Linux");
 #else
 

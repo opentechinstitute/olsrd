@@ -40,7 +40,7 @@
  *
  */
 
-#if defined linux
+#ifdef __linux__
 
 #include <netinet/in.h>
 
@@ -92,7 +92,7 @@ extern int acceptConn(struct fileId **sockId, struct ipAddr **addr);
 extern void closeMainSocket(void);
 extern int waitForSockets(struct fileId *sockIds[], int *flags[], int num);
 
-#endif
+#endif /* __linux__ */
 
 /*
  * Local Variables:

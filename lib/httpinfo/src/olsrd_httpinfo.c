@@ -82,7 +82,7 @@
 #define close(x) closesocket(x)
 #define OS "Windows"
 #endif
-#ifdef linux
+#ifdef __linux__
 #define OS "GNU/Linux"
 #endif
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__
@@ -345,7 +345,7 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
   size_t header_length = 0;
   size_t c = 0;
   int r = 1;
-#ifdef linux
+#ifdef __linux__
   struct timeval timeout = { 0, 200 };
 #endif
 
@@ -361,7 +361,7 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
     goto close_connection;
   }
 
-#ifdef linux
+#ifdef __linux__
   if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
     olsr_printf(1, "(HTTPINFO)SO_RCVTIMEO failed %s\n", strerror(errno));
     goto close_connection;

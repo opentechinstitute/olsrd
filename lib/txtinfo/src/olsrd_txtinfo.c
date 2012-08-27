@@ -555,7 +555,7 @@ ipc_print_mid(struct autobuf *abuf)
 static void
 ipc_print_gateway(struct autobuf *abuf)
 {
-#ifndef linux
+#ifndef __linux__
   abuf_puts(abuf, "Gateway mode is only supported in linux\n");
 #else
   static const char IPV4[] = "ipv4";

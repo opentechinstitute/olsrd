@@ -52,8 +52,6 @@ REGEX_SRCS = \
 	android/regex/regfree.c
 REGEX_OBJS = $(REGEX_SRCS:.c=.o)
 
-CPPFLAGS += 	-Dlinux
-
 CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
 # bionic libc: missing declarations
 CPPFLAGS +=	-DINET_ADDRSTRLEN=16

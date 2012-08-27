@@ -8,7 +8,7 @@
 #ifndef GATEWAY_DEFAULT_HANDLER_H_
 #define GATEWAY_DEFAULT_HANDLER_H_
 
-#ifdef linux
+#ifdef __linux__
 
 extern struct olsr_gw_handler gw_def_handler;
 

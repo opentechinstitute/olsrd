@@ -99,7 +99,7 @@ MD5_checksum(const uint8_t * data, const uint16_t data_len, uint8_t * hashbuf)
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #define OS "Windows"
 #endif
-#ifdef linux
+#ifdef __linux__
 #define OS "GNU/Linux"
 #endif
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__

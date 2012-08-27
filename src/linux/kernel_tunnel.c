@@ -58,7 +58,7 @@
 #include <linux/if_tunnel.h>
 #include <linux/version.h>
 
-#if defined linux
+#ifdef __linux__
   #if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
     #error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
   #endif

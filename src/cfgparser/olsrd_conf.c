@@ -55,7 +55,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#ifdef linux
+#ifdef __linux__
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include <linux/version.h>
@@ -210,7 +210,7 @@ olsrd_print_interface_cnf(struct if_config_options *cnf, struct if_config_option
   printf("\tAutodetect changes       : %s%s\n", cnf->autodetect_chg ? "yes" : "no",DEFAULT_STR(autodetect_chg));
 }
 
-#ifdef linux
+#ifdef __linux__
 static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
   int prio;
 
@@ -521,7 +521,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     return -1;
   }
 
-#if defined linux
+#ifdef __linux__
 #if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
 #error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
 #else
@@ -530,15 +530,15 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     fprintf(stderr, "Smart gateways are not supported for linux kernel < 2.6.24 and ipv6\n");
     return -1;
   }
-#endif
-#endif
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24) */
+#endif /* !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION */
 
   /* this rtpolicy settings are also currently only used in Linux */
   if (olsrd_sanity_check_rtpolicy(cnf)) {
     return -1;
   }
 
-#endif
+#endif /* __linux__ */
 
   if (in == NULL) {
     fprintf(stderr, "No interfaces configured!\n");
@@ -800,7 +800,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->use_src_ip_routes = DEF_USE_SRCIP_ROUTES;
   cnf->set_ip_forward = true;
 
-#ifdef linux
+#ifdef __linux__
   cnf->rtnl_s = 0;
 #endif
 

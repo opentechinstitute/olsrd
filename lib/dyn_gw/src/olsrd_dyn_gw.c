@@ -60,7 +60,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <net/route.h>
-#ifdef linux
+#ifdef __linux__
 #include <linux/in_route.h>
 #endif
 #include <unistd.h>

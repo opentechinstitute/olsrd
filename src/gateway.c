@@ -5,7 +5,7 @@
  *      Author: henning
  */
 
-#ifdef linux
+#ifdef __linux__
 
 #include "common/avl.h"
 #include "defs.h"

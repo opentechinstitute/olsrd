@@ -493,7 +493,7 @@ olsr_calculate_routing_table(bool force)
       }
     }
   }
-#if defined linux
+#ifdef __linux__
   /* check gateway tunnels */
   olsr_trigger_gatewayloss_check();
 #endif

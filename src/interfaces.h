@@ -146,7 +146,7 @@ struct interface {
   struct timer_entry *mid_gen_timer;
   struct timer_entry *tc_gen_timer;
 
-#ifdef linux
+#ifdef __linux__
 
 /* Struct used to store original redirect/ingress setting */
   struct nic_state {

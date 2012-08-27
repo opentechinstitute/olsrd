@@ -306,7 +306,7 @@ struct olsrd_config {
   bool has_ipv4_gateway, has_ipv6_gateway;
 
   int ioctl_s;                         /* Socket used for ioctl calls */
-#ifdef linux
+#ifdef __linux__
   int rtnl_s;                          /* Socket used for rtnetlink messages */
   int rt_monitor_socket;
 #endif
