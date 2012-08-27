@@ -1119,6 +1119,8 @@ static inline bool nmea_INFO_has_field_local(uint32_t present, nmeaINFO_FIELD fi
 }
 
 static const char * NA_STRING = "N.A.";
+static const char * SAT_INUSE_COLOR = "lime";
+static const char * SAT_NOTINUSE_COLOR = "red";
 
 static void build_pud_body(struct autobuf *abuf) {
 	TransmitGpsInformation * txGpsInfo = olsr_cnf->pud_position;
@@ -1377,13 +1379,13 @@ static void build_pud_body(struct autobuf *abuf) {
 			for (satIndex = 0; satIndex < NMEA_MAXSAT; satIndex++) {
 				nmeaSATELLITE * sat = &txGpsInfo->txPosition.nmeaInfo.satinfo.sat[satIndex];
 				if (sat->id) {
+					bool inuse = false;
 					const char * inuseStr;
 
 					if (!nmea_INFO_has_field_local(txGpsInfo->txPosition.nmeaInfo.present, SATINUSE)) {
 						inuseStr = NA_STRING;
 					} else {
 						int inuseIndex;
-						bool inuse = false;
 						for (inuseIndex = 0; inuseIndex < NMEA_MAXSAT; inuseIndex++) {
 							if (txGpsInfo->txPosition.nmeaInfo.satinfo.in_use[inuseIndex] == sat->id) {
 								inuse = true;
@@ -1397,8 +1399,8 @@ static void build_pud_body(struct autobuf *abuf) {
 						}
 					}
 
-					abuf_appendf(abuf, "<tr><td>%02d</td><td>%s</td><td>%02d</td><td>%03d</td><td>%02d</td></tr>\n",
-							sat->id, inuseStr, sat->elv, sat->azimuth, sat->sig);
+					abuf_appendf(abuf, "<tr><td>%02d</td><td bgcolor=\"%s\">%s</td><td>%02d</td><td>%03d</td><td>%02d</td></tr>\n",
+							sat->id, inuse ? SAT_INUSE_COLOR : SAT_NOTINUSE_COLOR, inuseStr, sat->elv, sat->azimuth, sat->sig);
 					cnt++;
 				}
 			}
