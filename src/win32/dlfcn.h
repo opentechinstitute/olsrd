@@ -50,7 +50,7 @@ int dlclose(void *Handle);
 void *dlsym(void *Handle, const char *Name);
 char *dlerror(void);
 
-#endif
+#endif /* !defined TL_DLFCN_H_INCLUDED */
 
 /*
  * Local Variables:

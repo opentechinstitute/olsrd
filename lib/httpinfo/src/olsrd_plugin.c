@@ -52,7 +52,7 @@
 #include <netinet/in.h>
 #ifndef _WIN32
 #include <arpa/nameser.h>
-#endif
+#endif /* _WIN32 */
 
 #include "olsrd_httpinfo.h"
 

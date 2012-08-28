@@ -20,6 +20,6 @@ void olsr_setup_niit_routes(void);
 void olsr_cleanup_niit_routes(void);
 
 void olsr_niit_handle_route(const struct rt_entry *rt, bool set);
-#endif
+#endif /* __linux__ */
 
 #endif /* OLSR_NIIT_H_ */

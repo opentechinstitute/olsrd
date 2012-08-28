@@ -51,7 +51,7 @@ public:
   BOOL MprEntry::operator==(const class MprEntry &) const;
 };
 
-#endif
+#endif /* !defined TL_MPRENTRY_H */
 
 /*
  * Local Variables:

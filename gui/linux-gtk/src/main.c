@@ -34,7 +34,7 @@ main(int argc, char *argv[])
 
 #ifdef _WIN32
   WSADATA WsaData;
-#endif
+#endif /* _WIN32 */
   GtkWidget *main_window;
 
 #ifdef _WIN32
@@ -42,7 +42,7 @@ main(int argc, char *argv[])
     fprintf(stderr, "Could not initialize WinSock.\n");
     exit(1);
   }
-#endif
+#endif /* _WIN32 */
 
   /* Get IP */
   if ((hp = gethostbyname(argc > 1 ? argv[1] : "localhost")) == 0) {

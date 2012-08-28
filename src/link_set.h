@@ -140,7 +140,7 @@ void olsr_update_packet_loss_hello_int(struct link_entry *, olsr_reltime);
 void olsr_received_hello_handler(struct link_entry *entry);
 void olsr_print_link_set(void);
 
-#endif
+#endif /* _LINK_SET_H */
 
 /*
  * Local Variables:

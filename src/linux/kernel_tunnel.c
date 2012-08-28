@@ -61,16 +61,16 @@
 #ifdef __linux__
   #if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
     #error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
-  #endif
-#endif
+  #endif /* !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION */
+#endif /* __linux__ */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
   #define LINUX_IPV6_TUNNEL
-#endif
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24) */
 
 #ifdef LINUX_IPV6_TUNNEL
 #include <linux/ip6_tunnel.h>
-#endif
+#endif /* LINUX_IPV6_TUNNEL */
 
 //ifup includes
 #include <sys/socket.h>
@@ -133,7 +133,7 @@ static int os_ip_tunnel(const char *name, void *target) {
 	struct ip_tunnel_parm p4;
 #ifdef LINUX_IPV6_TUNNEL
 	struct ip6_tnl_parm p6;
-#endif
+#endif /* LINUX_IPV6_TUNNEL */
 
 	assert (name != NULL);
 
@@ -161,9 +161,9 @@ static int os_ip_tunnel(const char *name, void *target) {
 			p6.raddr = *((struct in6_addr *) target);
 		}
 		strncpy(p6.name, name, IFNAMSIZ);
-#else
+#else /* LINUX_IPV6_TUNNEL */
 		return 0;
-#endif
+#endif /* LINUX_IPV6_TUNNEL */
 	}
 
 	strncpy(ifr.ifr_name, name, IFNAMSIZ);

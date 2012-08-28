@@ -213,7 +213,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
 
 #ifdef OLSR_COOKIE_DEBUG
   bool reuse = false;
-#endif
+#endif /* OLSR_COOKIE_DEBUG */
 
   /*
    * Check first if we have reusable memory.
@@ -244,7 +244,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
     ci->ci_free_list_usage--;
 #ifdef OLSR_COOKIE_DEBUG
     reuse = true;
-#endif
+#endif /* OLSR_COOKIE_DEBUG */
   }
 
   /*
@@ -261,7 +261,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
 
 #ifdef OLSR_COOKIE_DEBUG
   OLSR_PRINTF(1, "MEMORY: alloc %s, %p, %u bytes%s\n", ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
-#endif
+#endif /* OLSR_COOKIE_DEBUG */
 
   return ptr;
 }
@@ -278,7 +278,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 
 #ifdef OLSR_COOKIE_DEBUG
   bool reuse = false;
-#endif
+#endif /* OLSR_COOKIE_DEBUG */
 
   branding = (struct olsr_cookie_mem_brand *)ARM_NOWARN_ALIGN(((unsigned char *)ptr + ci->ci_size));
 
@@ -304,7 +304,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
     ci->ci_free_list_usage++;
 #ifdef OLSR_COOKIE_DEBUG
     reuse = true;
-#endif
+#endif /* OLSR_COOKIE_DEBUG */
   } else {
 
     /*
@@ -318,7 +318,7 @@ olsr_cookie_free(struct olsr_cookie_info *ci, void *ptr)
 
 #ifdef OLSR_COOKIE_DEBUG
   OLSR_PRINTF(1, "MEMORY: free %s, %p, %u bytes%s\n", ci->ci_name, ptr, ci->ci_size, reuse ? ", reuse" : "");
-#endif
+#endif /* OLSR_COOKIE_DEBUG */
 
 }
 

@@ -90,9 +90,9 @@ autobuf_enlarge(struct autobuf *autobuf, int new_size)
     if (p == NULL) {
 #ifdef _WIN32
       WSASetLastError(ENOMEM);
-#else
+#else /* _WIN32 */
       errno = ENOMEM;
-#endif
+#endif /* _WIN32 */
       return -1;
     }
     autobuf->buf = p;
@@ -205,9 +205,9 @@ abuf_pull(struct autobuf * autobuf, int len) {
   if (p == NULL) {
 #ifdef _WIN32
     WSASetLastError(ENOMEM);
-#else
+#else /* _WIN32 */
     errno = ENOMEM;
-#endif
+#endif /* _WIN32 */
     return -1;
   }
   autobuf->buf = p;

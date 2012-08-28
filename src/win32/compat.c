@@ -149,7 +149,7 @@ StrError(unsigned int ErrNo)
 
 #if !defined WINCE
   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, ErrNo, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg, sizeof(Msg), NULL);
-#else
+#else /* !defined WINCE */
   short WideMsg[1000];
 
   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, ErrNo, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), WideMsg, sizeof(WideMsg) / 2,
@@ -157,7 +157,7 @@ StrError(unsigned int ErrNo)
 
   if (WideCharToMultiByte(CP_ACP, 0, WideMsg, -1, Msg, sizeof(Msg), NULL, NULL) == 0)
     strscpy(Msg, "[cannot convert string]", sizeof(Msg));
-#endif
+#endif /* !defined WINCE */
 
   return Msg;
 }
@@ -181,12 +181,12 @@ dlopen(char *Name, int Flags __attribute__ ((unused)))
 {
 #if !defined WINCE
   return (void *)LoadLibrary(Name);
-#else
+#else /* !defined WINCE */
   short WideName[1000];
 
   MultiByteToWideChar(CP_ACP, 0, Name, -1, WideName, sizeof(WideName));
   return (void *)LoadLibrary(WideName);
-#endif
+#endif /* !defined WINCE */
 }
 
 int
@@ -201,12 +201,12 @@ dlsym(void *Handle, const char *Name)
 {
 #if !defined WINCE
   return GetProcAddress((HMODULE) Handle, Name);
-#else
+#else /* !defined WINCE */
   short WideName[1000];
 
   MultiByteToWideChar(CP_ACP, 0, Name, -1, WideName, sizeof(WideName));
   return GetProcAddress((HMODULE) Handle, WideName);
-#endif
+#endif /* !defined WINCE */
 }
 
 char *
@@ -516,9 +516,9 @@ isatty(int fd)
   }
 
   return -1;
-#else
+#else /* !defined WINCE */
   return 0;
-#endif
+#endif /* !defined WINCE */
 }
 
 #define CHUNK_SIZE 512

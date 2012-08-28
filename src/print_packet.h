@@ -50,7 +50,7 @@ int8_t print_olsr_serialized_packet(FILE *, union olsr_packet *, uint16_t, union
 
 int8_t print_olsr_serialized_message(FILE *, union olsr_message *);
 
-#endif
+#endif /* _PRINT_PACKET */
 
 /*
  * Local Variables:

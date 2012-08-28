@@ -57,9 +57,9 @@
 
 #ifdef USE_OPENSSL
 #define SIGNATURE_SIZE 20
-#else
+#else /* USE_OPENSSL */
 #define SIGNATURE_SIZE 16
-#endif
+#endif /* USE_OPENSSL */
 
 #define KEYLENGTH      16
 
@@ -77,7 +77,7 @@ void secure_plugin_exit(void);
 
 int plugin_ipc_init(void);
 
-#endif
+#endif /* _OLSRD_SECURE_H */
 
 /*
  * Local Variables:

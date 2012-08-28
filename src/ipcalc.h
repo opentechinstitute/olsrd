@@ -207,7 +207,7 @@ ip_prefix_is_v6_inetgw(const struct olsr_ip_prefix *prefix) {
 
 extern bool is_prefix_inetgw(const struct olsr_ip_prefix *prefix);
 
-#endif
+#endif /* _IPCALC */
 
 /*
  * Local Variables:

@@ -44,7 +44,7 @@
 
 #if defined _MSC_VER && _MSC_VER > 1000
 #pragma once
-#endif
+#endif /* defined _MSC_VER && _MSC_VER > 1000 */
 
 class MyEdit:public CEdit {
 public:
@@ -66,7 +66,7 @@ protected:
 
 //{{AFX_INSERT_LOCATION}}
 
-#endif
+#endif /* !defined(AFX_MYEDIT_H__951EC391_AFE3_428F_865D_24CA55C68C7C__INCLUDED_) */
 
 /*
  * Local Variables:

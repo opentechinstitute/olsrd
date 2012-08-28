@@ -69,7 +69,7 @@ clear_console(void)
     return;
 
   SetConsoleCursorPosition(Hand, Home);
-#endif
+#endif /* !defined WINCE */
 }
 
 /*

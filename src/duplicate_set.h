@@ -79,7 +79,7 @@ void olsr_print_duplicate_table(void);
     dup = duptree2dupentry(dup_tree_node);
 #define OLSR_FOR_ALL_DUP_ENTRIES_END(dup) }}
 
-#endif /*DUPLICATE_SET_2_H_ */
+#endif /* DUPLICATE_SET_2_H_ */
 
 /*
  * Local Variables:

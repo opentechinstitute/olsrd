@@ -98,7 +98,7 @@ void olsr_print_hna_set(void);
 
 bool olsr_input_hna(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
-#endif
+#endif /* _OLSR_HNA */
 
 /*
  * Local Variables:

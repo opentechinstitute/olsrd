@@ -28,7 +28,7 @@ private:
   static TrayIcon *instance;
 };
 
-#endif // TRAYICON_H_171149531
+#endif /* TRAYICON_H_171149531 */
 
 /*
  * Local Variables:

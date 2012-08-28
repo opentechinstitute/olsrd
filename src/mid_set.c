@@ -107,7 +107,7 @@ olsr_expire_mid_entry(void *context)
 {
 #ifdef DEBUG
   struct ipaddr_str buf;
-#endif
+#endif /* DEBUG */
   struct mid_entry *mid;
 
   mid = (struct mid_entry *)context;
@@ -115,7 +115,7 @@ olsr_expire_mid_entry(void *context)
 
 #ifdef DEBUG
   OLSR_PRINTF(1, "MID info for %s timed out.. deleting it\n", olsr_ip_to_string(&buf, &mid->main_addr));
-#endif
+#endif /* DEBUG */
 
   olsr_delete_mid_entry(mid);
 }
@@ -574,7 +574,7 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
   }
 #ifdef DEBUG
   OLSR_PRINTF(5, "Processing MID from %s...\n", olsr_ip_to_string(&buf, &message.mid_origaddr));
-#endif
+#endif /* DEBUG */
   tmp_adr = message.mid_addr;
 
   /*
@@ -607,7 +607,7 @@ olsr_input_mid(union olsr_message *m, struct interface *in_if __attribute__ ((un
     if (stop) {
       continue;
     }
-#endif
+#endif /* NO_DUPLICATE_DETECTION_HANDLER */
     if (!mid_lookup_main_addr(&tmp_adr->alias_addr)) {
       OLSR_PRINTF(1, "MID new: (%s, ", olsr_ip_to_string(&buf, &message.mid_origaddr));
       OLSR_PRINTF(1, "%s)\n", olsr_ip_to_string(&buf, &tmp_adr->alias_addr));

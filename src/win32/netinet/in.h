@@ -48,7 +48,7 @@
 #include <ws2tcpip.h>
 #undef interface
 
-#endif
+#endif /* !defined TL_NETINET_IN_H_INCLUDED */
 
 /*
  * Local Variables:

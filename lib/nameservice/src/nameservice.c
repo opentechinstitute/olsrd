@@ -164,13 +164,13 @@ name_constructor(void)
   if (my_resolv_file[len - 1] != '\\')
     strscat(my_resolv_file, "\\", sizeof(my_resolv_file));
   strscat(my_resolv_file, "resolvconf_olsr", sizeof(my_resolv_file));
-#else
+#else /* _WIN32 */
   strscpy(my_hosts_file, "/var/run/hosts_olsr", sizeof(my_hosts_file));
   strscpy(my_services_file, "/var/run/services_olsr", sizeof(my_services_file));
   strscpy(my_macs_file, "/var/run/macs_olsr", sizeof(my_macs_file));
   strscpy(my_resolv_file, "/var/run/resolvconf_olsr", sizeof(my_resolv_file));
   *my_sighup_pid_file = 0;
-#endif
+#endif /* _WIN32 */
 
   my_suffix[0] = '\0';
   my_add_hosts[0] = '\0';
@@ -538,7 +538,7 @@ olsr_expire_write_file_timer(void *context __attribute__ ((unused)))
   write_services_file(true);  /* if mac_table_changed */
 #ifdef _WIN32
   write_latlon_file();             /* if latlon_table_changed */
-#endif
+#endif /* _WIN32 */
 }
 
 /*
@@ -1040,7 +1040,7 @@ send_sighup_to_pidfile(char *pid_file)
   }
 
 }
-#endif
+#endif /* _WIN32 */
 
 /**
  * write names to a file in /etc/hosts compatible format
@@ -1059,7 +1059,7 @@ write_hosts_file(void)
 
 #ifdef MID_ENTRIES
   struct mid_address *alias;
-#endif
+#endif /* MID_ENTRIES */
 
   if (!name_table_changed)
     return;
@@ -1132,7 +1132,7 @@ write_hosts_file(void)
             mid_num++;
           }
         }
-#endif
+#endif /* MID_ENTRIES */
       }
     }
   }
@@ -1146,7 +1146,7 @@ write_hosts_file(void)
 #ifndef _WIN32
   if (*my_sighup_pid_file)
     send_sighup_to_pidfile(my_sighup_pid_file);
-#endif
+#endif /* _WIN32 */
   name_table_changed = false;
 
   // Executes my_name_change_script after writing the hosts file
@@ -1270,7 +1270,7 @@ select_best_nameserver(struct rt_entry **rt)
 #ifndef NODEBUG
       struct ipaddr_str strbuf;
       struct lqtextbuffer lqbuffer;
-#endif
+#endif /* NODEBUG */
       /*
        * first is better, swap the pointers.
        */
@@ -1316,7 +1316,7 @@ write_resolv_file(void)
 #ifndef NODEBUG
         struct ipaddr_str strbuf;
         struct lqtextbuffer lqbuffer;
-#endif
+#endif /* NODEBUG */
         route = olsr_lookup_routing_table(&name->ip);
 
         OLSR_PRINTF(6, "NAME PLUGIN: check route for nameserver %s %s", olsr_ip_to_string(&strbuf, &name->ip),
@@ -1659,7 +1659,7 @@ write_latlon_file(void)
   fclose(fmap);
   latlon_table_changed = false;
 }
-#endif
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

@@ -151,7 +151,7 @@ void CheckAndUpdateLocalBroadcast(unsigned char *ipPacket, union olsr_ip_addr *b
 void AddMulticastRoute(void);
 void DeleteMulticastRoute(void);
 
-#endif /* _BMF_NETWORKINTERFACES_H */
+#endif /* _MDNS_NETWORKINTERFACES_H */
 
 /*
  * Local Variables:

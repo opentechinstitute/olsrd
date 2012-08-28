@@ -81,9 +81,9 @@ void olsr_plugin_exit(void);
 
 #if 0
 extern int netsprintf(char *str, const char *format, ...);
-#endif
+#endif /* 0 */
 
-#endif
+#endif /* _OLSRD_HTTP_INFO */
 
 /*
  * Local Variables:

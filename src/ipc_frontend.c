@@ -59,11 +59,11 @@
 #define close(x) closesocket(x)
 #define perror(x) WinSockPError(x)
 void WinSockPError(const char *);
-#endif
+#endif /* _WIN32 */
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
-#endif
+#endif /* MSG_NOSIGNAL */
 
 static int ipc_sock = -1;
 static int ipc_conn = -1;
@@ -202,7 +202,7 @@ ipc_input(int sock __attribute__ ((unused)))
   }
   return 1;
 }
-#endif
+#endif /* 0 */
 
 /**
  *Sends a olsr packet on the IPC socket.

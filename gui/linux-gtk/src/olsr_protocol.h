@@ -47,14 +47,14 @@ typedef unsigned int olsr_u32_t;
 typedef char olsr_8_t;
 typedef short olsr_16_t;
 typedef int olsr_32_t;
-#else
+#else /* _WIN32 */
 typedef u_int8_t olsr_u8_t;
 typedef u_int16_t olsr_u16_t;
 typedef u_int32_t olsr_u32_t;
 typedef int8_t olsr_8_t;
 typedef int16_t olsr_16_t;
 typedef int32_t olsr_32_t;
-#endif
+#endif /* _WIN32 */
 
 /* IPv6 address format in6_addr */
 #include <netinet/in.h>
@@ -378,7 +378,7 @@ union olsr_packet {
   struct olsr6 v6;
 };
 
-#endif
+#endif /* _PROTOCOLS_OLSR_H */
 
 /*
  * Local Variables:

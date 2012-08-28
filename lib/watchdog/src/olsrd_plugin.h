@@ -59,7 +59,7 @@ int
 int
   olsrd_plugin_interface_version(void);
 
-#endif
+#endif /* _OLSRD_PLUGIN_WATCHDOG_H */
 
 /*
  * Local Variables:

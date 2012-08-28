@@ -66,7 +66,7 @@
 #include <linux/rtnetlink.h>
 #include "kernel_routes.h"
 
-#endif
+#endif /* __linux__ */
 
 #ifdef _WIN32
 #include <winbase.h>
@@ -76,9 +76,9 @@ void ListInterfaces(void);
 void DisableIcmpRedirects(void);
 bool olsr_win32_end_request = false;
 bool olsr_win32_end_flag = false;
-#else
+#else /* _WIN32 */
 static void olsr_shutdown(int) __attribute__ ((noreturn));
-#endif
+#endif /* _WIN32 */
 
 #if defined __ANDROID__
 #define DEFAULT_LOCKFILE_PREFIX "/data/local/olsrd"
@@ -86,9 +86,9 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 #define DEFAULT_LOCKFILE_PREFIX "/var/run/olsrd"
 #elif defined _WIN32
 #define DEFAULT_LOCKFILE_PREFIX "C:\\olsrd"
-#else
+#else /* defined _WIN32 */
 #define DEFAULT_LOCKFILE_PREFIX "olsrd"
-#endif
+#endif /* defined _WIN32 */
 
 /*
  * Local function prototypes
@@ -104,7 +104,7 @@ static int olsr_process_arguments(int, char *[], struct olsrd_config *,
 
 #ifndef _WIN32
 static char **olsr_argv;
-#endif
+#endif /* _WIN32 */
 
 static char
     copyright_string[] __attribute__ ((unused)) =
@@ -113,7 +113,7 @@ static char
 /* Data for OLSR locking */
 #ifndef _WIN32
 static int lock_fd = 0;
-#endif
+#endif /* _WIN32 */
 static char lock_file_name[FILENAME_MAX];
 struct olsr_cookie_info *def_timer_ci = NULL;
 
@@ -172,7 +172,7 @@ static int olsr_create_lock_file(bool noExitOnFail) {
     olsr_exit("", EXIT_FAILURE);
   }
       
-#else
+#else /* _WIN32 */
   struct flock lck;
 
   /* create file for lock */
@@ -205,7 +205,7 @@ static int olsr_create_lock_file(bool noExitOnFail) {
         lock_file_name);
     olsr_exit("", EXIT_FAILURE);
   }
-#endif
+#endif /* _WIN32 */
   return 0;
 }
 
@@ -243,12 +243,12 @@ int main(int argc, char *argv[]) {
 
 #ifdef __linux__
   struct interface *ifn;
-#endif
+#endif /* __linux__ */
 
 #ifdef _WIN32
   WSADATA WsaData;
   size_t len;
-#endif
+#endif /* __linux__ */
 
   /* paranoia checks */
   assert(sizeof(uint8_t) == 1);
@@ -274,7 +274,7 @@ int main(int argc, char *argv[]) {
   debug_handle = stdout;
 #ifndef _WIN32
   olsr_argv = argv;
-#endif
+#endif /* _WIN32 */
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
@@ -284,14 +284,14 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "You must be root(uid = 0) to run olsrd!\nExiting\n\n");
     exit(EXIT_FAILURE);
   }
-#else
+#else /* _WIN32 */
   DisableIcmpRedirects();
 
   if (WSAStartup(0x0202, &WsaData)) {
     fprintf(stderr, "Could not initialize WinSock.\n");
     olsr_exit(__func__, EXIT_FAILURE);
   }
-#endif
+#endif /* _WIN32 */
 
   /* Open syslog */
   olsr_openlog("olsrd");
@@ -309,9 +309,9 @@ int main(int argc, char *argv[]) {
 #ifdef _WIN32
 #ifndef WINCE
   GetWindowsDirectory(conf_file_name, FILENAME_MAX - 11);
-#else
+#else /* WINCE */
   conf_file_name[0] = 0;
-#endif
+#endif /* WINCE */
 
   len = strlen(conf_file_name);
 
@@ -319,9 +319,9 @@ int main(int argc, char *argv[]) {
   conf_file_name[len++] = '\\';
 
   strscpy(conf_file_name + len, "olsrd.conf", sizeof(conf_file_name) - len);
-#else
+#else /* _WIN32 */
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
-#endif
+#endif /* _WIN32 */
 
   olsr_cnf = olsrd_get_default_cnf();
   for (i=1; i < argc-1;) {
@@ -394,9 +394,9 @@ int main(int argc, char *argv[]) {
     size_t l;
 #ifdef DEFAULT_LOCKFILE_PREFIX
     strscpy(lock_file_name, DEFAULT_LOCKFILE_PREFIX, sizeof(lock_file_name));
-#else
+#else /* DEFAULT_LOCKFILE_PREFIX */
     strscpy(lock_file_name, conf_file_name, sizeof(lock_file_name));
-#endif
+#endif /* DEFAULT_LOCKFILE_PREFIX */
     l = strlen(lock_file_name);
     snprintf(&lock_file_name[l], sizeof(lock_file_name) - l, "-ipv%d.lock",
         olsr_cnf->ip_version == AF_INET ? 4 : 6);
@@ -418,7 +418,7 @@ int main(int argc, char *argv[]) {
   if (olsr_cnf->ioctl_s < 0) {
 #ifndef _WIN32
     olsr_syslog(OLSR_LOG_ERR, "ioctl socket: %m");
-#endif
+#endif /* _WIN32 */
     olsr_exit(__func__, 0);
   }
 #ifdef __linux__
@@ -433,7 +433,7 @@ int main(int argc, char *argv[]) {
     olsr_syslog(OLSR_LOG_ERR, "rtmonitor socket: %m");
     olsr_exit(__func__, 0);
   }
-#endif
+#endif /* __linux__ */
 
   /*
    * create routing socket
@@ -444,7 +444,7 @@ int main(int argc, char *argv[]) {
     olsr_syslog(OLSR_LOG_ERR, "routing socket: %m");
     olsr_exit(__func__, 0);
   }
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__ */
 
 #ifdef __linux__
   /* initialize gateway system */
@@ -458,7 +458,7 @@ int main(int argc, char *argv[]) {
   if (olsr_cnf->use_niit) {
     olsr_init_niit();
   }
-#endif
+#endif /* __linux__ */
 
   /* Init empty TC timer */
   set_empty_tc_timer(GET_TIMESTAMP(0));
@@ -524,7 +524,7 @@ int main(int argc, char *argv[]) {
     olsr_start_timer(STDOUT_PULSE_INT, 0, OLSR_TIMER_PERIODIC,
         &generate_stdout_pulse, NULL, 0);
   }
-#endif
+#endif /* !defined WINCE */
 
   /* Initialize the IPC socket */
 
@@ -543,7 +543,7 @@ int main(int argc, char *argv[]) {
       exit(EXIT_FAILURE);
     }
   }
-#endif
+#endif /* _WIN32 */
 
   /*
    * Create locking file for olsrd, will be cleared after olsrd exits
@@ -599,7 +599,7 @@ int main(int argc, char *argv[]) {
   if (olsr_cnf->use_src_ip_routes) {
     olsr_os_localhost_if(&olsr_cnf->main_addr, true);
   }
-#endif
+#endif /* __linux__ */
 
   /* Start syslog entry */
   olsr_syslog(OLSR_LOG_INFO, "%s successfully started", olsrd_version);
@@ -612,8 +612,8 @@ int main(int argc, char *argv[]) {
 #ifdef _WIN32
 #ifndef WINCE
   SetConsoleCtrlHandler(SignalHandler, true);
-#endif
-#else
+#endif /* WINCE */
+#else /* _WIN32 */
   signal(SIGHUP, olsr_reconfigure);
   signal(SIGINT, olsr_shutdown);
   signal(SIGQUIT, olsr_shutdown);
@@ -625,7 +625,7 @@ int main(int argc, char *argv[]) {
   // Ignoring SIGUSR1 and SIGUSR1 by default to be able to use them in plugins
   signal(SIGUSR1, SIG_IGN);
   signal(SIGUSR2, SIG_IGN);
-#endif
+#endif /* _WIN32 */
 
   link_changes = false;
 
@@ -670,7 +670,7 @@ void olsr_reconfigure(int signo __attribute__ ((unused))) {
   }
   olsr_shutdown(0);
 }
-#endif
+#endif /* _WIN32 */
 
 static void olsr_shutdown_messages(void) {
   struct interface *ifn;
@@ -701,9 +701,9 @@ static void olsr_shutdown_messages(void) {
 #ifdef _WIN32
 int __stdcall
 SignalHandler(unsigned long signo)
-#else
+#else /* _WIN32 */
 static void olsr_shutdown(int signo __attribute__ ((unused)))
-#endif
+#endif /* _WIN32 */
 {
   struct interface *ifn;
   int exit_value;
@@ -719,7 +719,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   sleep(1);
 
   OLSR_PRINTF(1, "Scheduler stopped.\n");
-#endif
+#endif /* _WIN32 */
 
   /* clear all links and send empty hellos/tcs */
   olsr_reset_all_links();
@@ -760,7 +760,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   if (olsr_cnf->use_src_ip_routes) {
     olsr_os_localhost_if(&olsr_cnf->main_addr, false);
   }
-#endif
+#endif /* __linux__ */
 
   olsr_destroy_parser();
 
@@ -781,7 +781,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
       olsr_os_policy_rule(olsr_cnf->ip_version, olsr_cnf->rt_table_default,
           olsr_cnf->rt_table_defaultolsr_pri, ifn->int_name, false);
     }
-#endif
+#endif /* __linux__ */
   }
 
   /* Closing plug-ins */
@@ -808,12 +808,12 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   }
   close(olsr_cnf->rtnl_s);
   close (olsr_cnf->rt_monitor_socket);
-#endif
+#endif /* __linux__ */
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
   /* routing socket */
   close(olsr_cnf->rts);
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__ */
 
   /* Free cookies and memory pools attached. */
   OLSR_PRINTF(0, "Free all memory...\n");
@@ -896,7 +896,7 @@ static int olsr_process_arguments(int argc, char *argv[],
       ListInterfaces();
       exit(0);
     }
-#endif
+#endif /* _WIN32 */
 
     /*
      *Configfilename

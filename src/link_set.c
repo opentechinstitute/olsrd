@@ -146,7 +146,7 @@ lookup_link_status(const struct link_entry *entry)
 #ifndef NODEBUG
       struct ipaddr_str buf;
       OLSR_PRINTF(3, "HYST[%s]: Setting to HIDE\n", olsr_ip_to_string(&buf, &entry->neighbor_iface_addr));
-#endif
+#endif /* NODEBUG */
       return HIDE_LINK;
     }
 
@@ -543,7 +543,7 @@ add_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *remote
     struct ipaddr_str localbuf, rembuf;
     OLSR_PRINTF(1, "Adding %s=>%s to link set\n", olsr_ip_to_string(&localbuf, local), olsr_ip_to_string(&rembuf, remote));
   }
-#endif
+#endif /* DEBUG */
 
   /* a new tuple is created with... */
   new_link = olsr_malloc_link_entry("new link entry");
@@ -609,7 +609,7 @@ add_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *remote
 #ifdef DEBUG
     struct ipaddr_str buf;
     OLSR_PRINTF(3, "ADDING NEW NEIGHBOR ENTRY %s FROM LINK SET\n", olsr_ip_to_string(&buf, remote_main));
-#endif
+#endif /* DEBUG */
     neighbor = olsr_insert_neighbor_table(remote_main);
   }
 
@@ -817,7 +817,7 @@ olsr_print_link_set(void)
     		(double)walker->L_link_quality, get_link_entry_text(walker, '/', &lqbuffer1), get_linkcost_text(walker->linkcost,
                                                                                                         false, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
-#endif
+#endif /* NODEBUG */
 }
 
 /*

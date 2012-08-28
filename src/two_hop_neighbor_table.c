@@ -136,7 +136,7 @@ olsr_insert_two_hop_neighbor_table(struct neighbor_2_entry *two_hop_neighbor)
 
 #if 0
   printf("Adding 2 hop neighbor %s\n", olsr_ip_to_string(&buf, &two_hop_neighbor->neighbor_2_addr));
-#endif
+#endif /* 0 */
 
   /* Queue */
   QUEUE_ELEM(two_hop_neighbortable[hash], two_hop_neighbor);
@@ -238,7 +238,7 @@ olsr_print_two_hop_neighbor_table(void)
       }
     }
   }
-#endif
+#endif /* NODEBUG */
 }
 
 /*

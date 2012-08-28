@@ -208,7 +208,7 @@ olsr_print_duplicate_table(void)
     OLSR_PRINTF(1, "%-*s %08x %s\n", ipwidth, olsr_ip_to_string(&addrbuf, (union olsr_ip_addr *)(entry->avl.key)),
                 entry->array, olsr_clock_string(entry->valid_until));
   } OLSR_FOR_ALL_DUP_ENTRIES_END(entry);
-#endif
+#endif /* NODEBUG */
 }
 
 /*

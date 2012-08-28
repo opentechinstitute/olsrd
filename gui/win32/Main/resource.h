@@ -64,8 +64,8 @@
 #define _APS_NEXT_COMMAND_VALUE         32779
 #define _APS_NEXT_CONTROL_VALUE         1036
 #define _APS_NEXT_SYMED_VALUE           101
-#endif
-#endif
+#endif /* APSTUDIO_READONLY_SYMBOLS */
+#endif /* APSTUDIO_INVOKED */
 
 /*
  * Local Variables:

@@ -59,7 +59,7 @@
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include <linux/version.h>
-#endif
+#endif /* __linux__ */
 
 extern FILE *yyin;
 extern int yyparse(void);
@@ -120,11 +120,11 @@ main(int argc, char *argv[])
   return 0;
 }
 
-#else
+#else /* MAKEBIN */
 
 /* Build as part of olsrd */
 
-#endif
+#endif /* MAKEBIN */
 
 int
 olsrd_parse_cnf(const char *filename)
@@ -346,7 +346,7 @@ static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
   return 0;
 }
 
-#endif
+#endif /* __linux__ */
 
 
 static 
@@ -524,7 +524,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 #ifdef __linux__
 #if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
 #error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
-#else
+#else /* !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
   if (cnf->ip_version == AF_INET6 && cnf->smart_gw_active) {
     fprintf(stderr, "Smart gateways are not supported for linux kernel < 2.6.24 and ipv6\n");
@@ -802,15 +802,15 @@ set_default_cnf(struct olsrd_config *cnf)
 
 #ifdef __linux__
   cnf->rtnl_s = 0;
-#endif
+#endif /* __linux__ */
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
   cnf->rts = 0;
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__ */
 
 #ifdef HTTPINFO_PUD
   cnf->pud_position = NULL;
-#endif
+#endif /* HTTPINFO_PUD */
 }
 
 struct if_config_options *
@@ -1032,7 +1032,7 @@ win32_olsrd_free(void *ptr)
 {
   free(ptr);
 }
-#endif
+#endif /* defined _WIN32 */
 
 static void update_has_gateway_fields(void) {
   struct ip_prefix_list *h;

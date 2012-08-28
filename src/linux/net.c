@@ -67,7 +67,7 @@
  */
 #ifdef IPTOS_CLASS
 #undef IPTOS_CLASS
-#endif
+#endif /* IPTOS_CLASS */
 #define IPTOS_CLASS(class)    ((class) & IPTOS_CLASS_MASK)
 
 #define IPV6_ADDR_LOOPBACK      0x0010U
@@ -108,7 +108,7 @@ static char orig_global_rp_filter;
 static char orig_tunnel_rp_filter;
 #if 0 // should not be necessary for IPv6 */
 static char orig_tunnel6_rp_filter;
-#endif
+#endif /* 0 */
 
 /**
  *Bind a socket to a device
@@ -253,7 +253,7 @@ net_os_set_global_ifoptions(void) {
         olsr_startup_sleep(3);
       }
     }
-#endif
+#endif /* 0 */
   }
 
   if (olsr_cnf->ip_version == AF_INET) {
@@ -343,7 +343,7 @@ net_os_restore_ifoptions(void)
         OLSR_PRINTF(0, "WARNING! Could not restore the IP spoof filter for tunnel6!\n");
       }
     }
-#endif
+#endif /* 0 */
   }
 
   if (olsr_cnf->ip_version == AF_INET) {
@@ -441,7 +441,7 @@ getsocket(int bufspace, struct interface *ifp)
     close(sock);
     return -1;
   }
-#endif
+#endif /* SO_BROADCAST */
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
     perror("SO_REUSEADDR failed");
@@ -460,7 +460,7 @@ getsocket(int bufspace, struct interface *ifp)
       }
     }
   }
-#endif
+#endif /* SO_RCVBUF */
 
   /*
    * WHEN USING KERNEL 2.6 THIS MUST HAPPEN PRIOR TO THE PORT BINDING!!!!
@@ -522,7 +522,7 @@ getsocket6(int bufspace, struct interface *ifp)
     perror("setsockopt(IPV6_V6ONLY)");
     syslog(LOG_ERR, "setsockopt(IPV6_V6ONLY): %m");
   }
-#endif
+#endif /* IPV6_V6ONLY */
 
   //#ifdef SO_BROADCAST
   /*
@@ -534,7 +534,7 @@ getsocket6(int bufspace, struct interface *ifp)
      return (-1);
      }
    */
-  //#endif
+  //#endif /* SO_BROADCAST */
 
 #ifdef SO_RCVBUF
   if(bufspace > 0) {
@@ -548,7 +548,7 @@ getsocket6(int bufspace, struct interface *ifp)
       }
     }
   }
-#endif
+#endif /* SO_RCVBUF */
 
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
     perror("SO_REUSEADDR failed");
@@ -616,18 +616,18 @@ join_mcast(struct interface *ifs, int sock)
     perror("Join multicast");
     return -1;
   }
-#else
+#else /* !defined __FreeBSD__ && !defined __FreeBSD_kernel__ && !defined __APPLE__ && !defined __NetBSD__ */
 #warning implement IPV6_ADD_MEMBERSHIP
-#endif
+#endif /* !defined __FreeBSD__ && !defined __FreeBSD_kernel__ && !defined __APPLE__ && !defined __NetBSD__ */
 
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
   /* Join receiver group */
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
-#else
+#else /* IPV6_JOIN_GROUP */
   /* Join receiver group */
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
-#endif
+#endif /* IPV6_JOIN_GROUP */
   {
     perror("Join multicast send");
     return -1;
@@ -853,13 +853,13 @@ is_if_link_up(char *ifname)
   }
 }
 
-#else
+#else /* 0 */
 int
 calculate_if_metric(char *ifname)
 {
   return check_wireless_interface(ifname);
 }
-#endif
+#endif /* 0 */
 
 bool olsr_if_isup(const char * dev)
 {

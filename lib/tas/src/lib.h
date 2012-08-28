@@ -58,7 +58,7 @@ extern void chomp(char *line, int len);
 extern char *intToString(char *buff, unsigned int val);
 extern int stringToInt(unsigned int *val, const char *buff);
 
-#endif
+#endif /* _OLSRD_TAS_LIB_H */
 
 /*
  * Local Variables:

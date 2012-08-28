@@ -65,4 +65,4 @@ void MarkRecentPacket(u_int32_t crc32);
 int CheckAndMarkRecentPacket(u_int32_t crc32);
 void PrunePacketHistory(void*);
 
-#endif /* _BMF_PACKETHISTORY_H */
+#endif /* _P2PD_PACKETHISTORY_H */

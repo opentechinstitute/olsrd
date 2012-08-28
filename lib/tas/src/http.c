@@ -1669,7 +1669,7 @@ httpService(int freq)
 #ifdef TAS_BLOCK
   struct fileId *waitIds[MAX_CONN];
   int *waitFlags[MAX_CONN];
-#endif
+#endif /* TAS_BLOCK */
   unsigned int micro, microLimit;
   struct tasMessage *tasMsg;
 
@@ -1688,7 +1688,7 @@ httpService(int freq)
 
   if (waitForSockets(waitIds, waitFlags, numConn) < 0)
     return 0;
-#endif
+#endif /* TAS_BLOCK */
 
   while (numConn < MAX_CONN) {
     if (acceptConn(&sockId, &addr) < 0)

@@ -69,7 +69,7 @@
 #define CHECKSUM SHA1
 #define SCHEME   SHA1_INCLUDING_KEY
 
-#else
+#else /* USE_OPENSSL */
 
 /* Homebrewn checksuming */
 #include "md5.h"
@@ -87,28 +87,28 @@ MD5_checksum(const uint8_t * data, const uint16_t data_len, uint8_t * hashbuf)
 #define CHECKSUM MD5_checksum
 #define SCHEME   MD5_INCLUDING_KEY
 
-#endif
+#endif /* USE_OPENSSL */
 
 #ifdef OS
 #undef OS
-#endif
+#endif /* OS */
 
 #ifdef _WIN32
 #define close(x) closesocket(x)
 #undef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #define OS "Windows"
-#endif
+#endif /* _WIN32 */
 #ifdef __linux__
 #define OS "GNU/Linux"
-#endif
+#endif /* __linux__ */
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__
 #define OS "FreeBSD"
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ */
 
 #ifndef OS
 #define OS "Undefined"
-#endif
+#endif /* OS */
 
 static struct timeval now;
 
@@ -139,7 +139,7 @@ char aes_key[16];
 /* Event function to register with the sceduler */
 #if 0
 static void olsr_event(void);
-#endif
+#endif /* 0 */
 static int send_challenge(struct interface *olsr_if, const union olsr_ip_addr *);
 static int send_cres(struct interface *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t, struct stamp *);
 static int send_rres(struct interface *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t);
@@ -149,7 +149,7 @@ static int parse_rres(char *);
 static int check_auth(struct interface *olsr_if, char *, int *);
 #if 0
 static int ipc_send(char *, int);
-#endif
+#endif /* 0 */
 static int add_signature(uint8_t *, int *);
 static int validate_packet(struct interface *olsr_if, const char *, int *);
 static char *secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr, int *length);
@@ -227,7 +227,7 @@ olsr_event(void)
 {
 
 }
-#endif
+#endif /* 0 */
 
 #if 0
 static int
@@ -235,7 +235,7 @@ ipc_send(char *data __attribute__ ((unused)), int size __attribute__ ((unused)))
 {
   return 1;
 }
-#endif
+#endif /* 0 */
 
 static char *
 secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr, int *length)
@@ -313,7 +313,7 @@ add_signature(uint8_t * pck, int *size)
   unsigned int i;
   int j;
   const uint8_t *sigmsg;
-#endif
+#endif /* DEBUG */
 
   olsr_printf(2, "[ENC]Adding signature for packet size %d\n", *size);
   fflush(stdout);
@@ -340,7 +340,7 @@ add_signature(uint8_t * pck, int *size)
   msg->sig.timestamp = htonl(now.tv_sec);
 #ifndef _WIN32
   olsr_printf(3, "[ENC]timestamp: %lld\n", (long long)now.tv_sec);
-#endif
+#endif /* _WIN32 */
   /* Set the new size */
   *size += sizeof(struct s_olsrmsg);
 
@@ -370,7 +370,7 @@ add_signature(uint8_t * pck, int *size)
       j = 0;
     }
   }
-#endif
+#endif /* DEBUG */
 
   olsr_printf(3, "[ENC] Message signed\n");
 
@@ -389,7 +389,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
   unsigned int i;
   int j;
   const uint8_t *sigmsg;
-#endif
+#endif /* DEBUG */
 
   /* Find size - signature message */
   packetsize = *size - sizeof(struct s_olsrmsg);
@@ -415,7 +415,7 @@ validate_packet(struct interface *olsr_if, const char *pck, int *size)
       j = 0;
     }
   }
-#endif
+#endif /* DEBUG */
 
   /* Sanity check first */
   if ((sig->olsr_msgtype != MESSAGE_TYPE) || (sig->olsr_vtime != 0)
@@ -474,7 +474,7 @@ one_checksum_SHA:
     olsr_printf(1, " %3i", sigmsg[i]);
   }
   olsr_printf(1, "\n");
-#endif
+#endif /* DEBUG */
 
   if (memcmp(sha1_hash, sig->sig.signature, SIGNATURE_SIZE) != 0) {
     olsr_printf(1, "[ENC]Signature missmatch\n");
@@ -492,7 +492,7 @@ one_checksum_SHA:
   }
 #ifndef _WIN32
   olsr_printf(1, "[ENC]Received timestamp %lld diff: %lld\n", (long long)rec_time, (long long)now.tv_sec - (long long)rec_time);
-#endif
+#endif /* _WIN32 */
   /* Remove signature message */
   *size = packetsize;
   return 1;
@@ -935,7 +935,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* Don't print htonl()'d time, use now.tv_sec 2011/05/31 AE5AE */
 /*   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)crmsg.timestamp); */
   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)now.tv_sec);
-#endif
+#endif /* _WIN32 */
 
   /* Fill subheader */
   memcpy(&crmsg.destination, to, olsr_cnf->ipsize);
@@ -1009,7 +1009,7 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)rrmsg.timestamp); */
   /* don't print htonl()'d time, use now. 2011/05/31 AE5AE */
   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)now.tv_sec);
-#endif
+#endif /* _WIN32 */
   /* Fill subheader */
   memcpy(&rrmsg.destination, to, olsr_cnf->ipsize);
 

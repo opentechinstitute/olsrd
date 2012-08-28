@@ -52,7 +52,7 @@ public:
   BOOL HnaEntry::operator==(const class HnaEntry &) const;
 };
 
-#endif
+#endif /* !defined TL_HNAENTRY_H */
 
 /*
  * Local Variables:

@@ -108,7 +108,7 @@ void olsr_update_neighbor_main_addr(struct neighbor_entry *, const union olsr_ip
 
 int update_neighbor_status(struct neighbor_entry *, int);
 
-#endif
+#endif /* _OLSR_NEIGH_TBL */
 
 /*
  * Local Variables:

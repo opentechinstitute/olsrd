@@ -13,7 +13,7 @@
 /* compat for win32 */
 #include <iprtrmib.h>
 #define IF_NAMESIZE MAX_INTERFACE_NAME_LEN
-#endif
+#endif /* _WIN32 */
 
 #include "defs.h"
 #include "olsr_types.h"

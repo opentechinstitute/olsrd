@@ -46,9 +46,9 @@
 #ifdef _MSC_VER
 #include <WS2tcpip.h>
 #undef interface
-#else
+#else /* _MSC_VER */
 #include <sys/socket.h>
-#endif
+#endif /* _MSC_VER */
 #include <time.h>
 
 #include "olsr_types.h"
@@ -156,7 +156,7 @@ struct interface {
     /* The original state of the IP spoof filter */
     char spoof;
   } nic_state;
-#endif
+#endif /* __linux__ */
 
   olsr_reltime hello_etime;
   struct vtimes valtimes;
@@ -223,7 +223,7 @@ extern struct olsr_cookie_info *tc_gen_timer_cookie;
 extern struct olsr_cookie_info *mid_gen_timer_cookie;
 extern struct olsr_cookie_info *hna_gen_timer_cookie;
 
-#endif
+#endif /* _OLSR_INTERFACE */
 
 /*
  * Local Variables:

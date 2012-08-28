@@ -164,9 +164,9 @@ fpmldiv(fpm a, fpm b)
   r = (fpm) fpmldiv_def((sfpm) a, (sfpm) b);
   return r;
 }
-#endif
+#endif /* 0 */
 
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 fpm
 atofpm(const char *s)

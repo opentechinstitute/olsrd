@@ -384,4 +384,4 @@ static void gw_default_delete_handler(struct gateway_entry *gw) {
     gw_default_lookup_gateway(isv4, isv6);
   }
 }
-#endif /* linux */
+#endif /* __linux__ */

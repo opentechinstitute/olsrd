@@ -57,7 +57,7 @@
 #if 0
 #define sprintf netsprintf
 #define NETDIRECT
-#endif
+#endif /* 0 */
 
 static const char admin_basic_setting_int[] =
   "<td><strong>%s</strong></td><td><input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%d\"></td>\n";
@@ -329,7 +329,7 @@ process_param(char *key, char *value)
   {
   1, admin_basic_setting_string, "TOS:", "tos", 6, "TBD"}
   ,
-#endif
+#endif /* 0 */
 }
 
 int
@@ -377,7 +377,7 @@ process_set_values(char *data, uint32_t data_size, char *buf, uint32_t bufsize _
 
   return size;
 }
-#endif
+#endif /* ADMIN_INTERFACE */
 
 /*
  * Local Variables:

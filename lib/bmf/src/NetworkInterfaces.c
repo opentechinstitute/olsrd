@@ -446,7 +446,7 @@ void FindNeighbors(
 {
 #ifndef NODEBUG
   struct ipaddr_str buf;
-#endif
+#endif /* NODEBUG */
   int i;
 
   /* Initialize */
@@ -702,7 +702,7 @@ void FindNeighbors(
 #ifndef NODEBUG
               struct ipaddr_str neighbor_iface_buf, forw_buf;
               olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
-#endif
+#endif /* NODEBUG */
               OLSR_PRINTF(
                 9,
                 "%s: ----> not forwarding to %s: I am not an MPR between %s and %s, direct link costs %5.2f\n",
@@ -855,7 +855,7 @@ void FindNeighbors(
 #ifndef NODEBUG
           struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
           struct lqtextbuffer lqbuffer;
-#endif
+#endif /* NODEBUG */
           OLSR_PRINTF(
             9,
             "%s: ----> not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
@@ -873,7 +873,7 @@ void FindNeighbors(
 #ifndef NODEBUG
         struct ipaddr_str forwardedByBuf, niaBuf;
         struct lqtextbuffer lqbuffer;
-#endif
+#endif /* NODEBUG */
         OLSR_PRINTF(
           9,
           "%s: ----> 2-hop path from %s via me to %s will cost ETX %s\n",
@@ -906,7 +906,7 @@ void FindNeighbors(
               struct ipaddr_str neighbor_iface_buf, forw_buf;
               struct lqtextbuffer lqbuffer;
               olsr_ip_to_string(&neighbor_iface_buf, &walker->neighbor_iface_addr);
-#endif
+#endif /* NODEBUG */
               OLSR_PRINTF(
                 9,
                 "%s: ----> not forwarding to %s: I am not an MPR between %s and %s, direct link costs %s\n",

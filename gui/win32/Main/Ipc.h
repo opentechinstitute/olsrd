@@ -125,7 +125,7 @@ struct IpcConfig {
 
 #pragma pack (pop, BeforeIpcMessages)
 
-#endif
+#endif /* !defined TL_IPC_H */
 
 /*
  * Local Variables:

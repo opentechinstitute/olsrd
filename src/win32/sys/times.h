@@ -49,7 +49,7 @@ struct tms {
 
 long times(struct tms *);
 
-#endif
+#endif /* !defined TL_SYS_TIMES_H_INCLUDED */
 
 /*
  * Local Variables:

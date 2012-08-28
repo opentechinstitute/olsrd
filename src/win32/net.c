@@ -41,7 +41,7 @@
 
 #if defined WINCE
 #include <sys/types.h>          // for time_t
-#endif
+#endif /* defined WINCE */
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -59,9 +59,9 @@
 
 #if defined WINCE
 #define WIDE_STRING(s) L##s
-#else
+#else /* defined WINCE */
 #define WIDE_STRING(s) TEXT(s)
-#endif
+#endif /* defined WINCE */
 
 void WinSockPError(const char *Str);
 void PError(const char *);
@@ -302,9 +302,9 @@ SetEnableRedirKey(unsigned long New)
 
   RegCloseKey(Key);
   return Old;
-#else
+#else /* !defined WINCE */
   return 0;
-#endif
+#endif /* !defined WINCE */
 }
 
 void
@@ -327,7 +327,7 @@ DisableIcmpRedirects(void)
 
     return;
   }
-#endif
+#endif /* 0 */
 
   fprintf(stderr, "I have disabled ICMP redirect processing in the registry for you.\n");
   fprintf(stderr, "REBOOT NOW, so that these changes take effect. Exiting...\n\n");
@@ -357,10 +357,10 @@ join_mcast(struct interface *Nic, int Sock)
 #ifdef IPV6_JOIN_GROUP
   /* Join receiver group */
   if (setsockopt(Sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&McastReq, sizeof(struct ipv6_mreq)) < 0)
-#else
+#else /* IPV6_JOIN_GROUP */
   /* Join receiver group */
   if (setsockopt(Sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&McastReq, sizeof(struct ipv6_mreq)) < 0)
-#endif
+#endif /* IPV6_JOIN_GROUP */
   {
     perror("Join multicast send");
     return -1;
@@ -412,7 +412,7 @@ olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, s
   else {
     return select(nfds, readfds, writefds, exceptfds, timeout);
   }
-#else
+#else /* _WIN32 */
   return select(nfds, readfds, writefds, exceptfds, timeout);
 #endif /* _WIN32 */
 }

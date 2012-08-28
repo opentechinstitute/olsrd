@@ -792,7 +792,7 @@ bool startReceiver(void) {
 
 #ifdef HTTPINFO_PUD
 	olsr_cnf->pud_position = &transmitGpsInformation;
-#endif
+#endif /* HTTPINFO_PUD */
 	initPositionAverageList(&positionAverageList, getAverageDepth());
 
 	if (!initOlsrTxTimer()) {

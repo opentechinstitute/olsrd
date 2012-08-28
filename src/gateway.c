@@ -231,7 +231,7 @@ void olsr_print_gateway_entries(void) {
         gw->downlink,
         gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
-#endif
+#endif /* NODEBUG */
 }
 
 /*
@@ -552,4 +552,4 @@ struct gateway_entry *olsr_get_ipv6_inet_gateway(void) {
   return current_ipv6_gw;
 }
 
-#endif /* linux */
+#endif /* __linux__ */

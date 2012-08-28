@@ -171,7 +171,7 @@ int update_timer_mpr(union olsr_ip_addr *, union olsr_ip_addr *, olsr_u8_t);
 
 int time_out_mprs(union olsr_ip_addr *);
 
-#endif
+#endif /* _OLSRD_FORNTEND_COMMON */
 
 /*
  * Local Variables:

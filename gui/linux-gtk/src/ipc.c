@@ -33,7 +33,7 @@
 #undef strerror
 #define strerror(x) StrError(x)
 #define perror(x) WinSockPError(x)
-#endif
+#endif /* _WIN32 */
 
 int ipc_socket = 0;
 
@@ -53,9 +53,9 @@ ipc_connect(struct sockaddr_in *pin)
 #ifdef _WIN32
   int On = 1;
   unsigned long Len;
-#else
+#else /* _WIN32 */
   int flags;
-#endif
+#endif /* _WIN32 */
 
   connected = 0;
 
@@ -83,7 +83,7 @@ ipc_connect(struct sockaddr_in *pin)
       fprintf(stderr, "Error while making socket non-blocking!\n");
       exit(1);
     }
-#else
+#else /* _WIN32 */
     if ((flags = fcntl(ipc_socket, F_GETFL, 0)) < 0) {
       fprintf(stderr, "Error getting socket flags!\n");
       exit(1);
@@ -93,7 +93,7 @@ ipc_connect(struct sockaddr_in *pin)
       fprintf(stderr, "Error setting socket flags!\n");
       exit(1);
     }
-#endif
+#endif /* _WIN32 */
     connected = 1;
 
     return 1;

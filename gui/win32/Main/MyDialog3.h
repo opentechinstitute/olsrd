@@ -44,7 +44,7 @@
 
 #if defined _MSC_VER && _MSC_VER > 1000
 #pragma once
-#endif
+#endif /* defined _MSC_VER && _MSC_VER > 1000 */
 
 #include "NodeEntry.h"
 
@@ -91,7 +91,7 @@ protected:
 
 //{{AFX_INSERT_LOCATION}}
 
-#endif
+#endif /* !defined(AFX_MYDIALOG3_H__1A381668_A36B_4C51_9B79_643BC2A59D88__INCLUDED_) */
 
 /*
  * Local Variables:

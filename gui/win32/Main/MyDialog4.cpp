@@ -46,7 +46,7 @@
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
-#endif
+#endif /* _DEBUG */
 
 MyDialog4::MyDialog4(CWnd* pParent)
 	: CDialog(MyDialog4::IDD, pParent)

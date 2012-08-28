@@ -94,9 +94,9 @@ struct olsrd_plugin_parameters {
  */
 void olsrd_get_plugin_parameters(const struct olsrd_plugin_parameters **params, int *size);
 
-#endif
+#endif /* 1 */
 
-#endif
+#endif /* _OLSRD_PLUGIN */
 
 /*
  * Local Variables:

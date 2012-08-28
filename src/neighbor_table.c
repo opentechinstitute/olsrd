@@ -385,7 +385,7 @@ olsr_print_neighbor_table(void)
   /* The whole function doesn't do anything else. */
 #ifndef NODEBUG
   const int iplen = olsr_cnf->ip_version == AF_INET ? 15 : 39;
-#endif
+#endif /* NODEBUG */
   int idx;
   OLSR_PRINTF(1,
               "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n"
@@ -405,7 +405,7 @@ olsr_print_neighbor_table(void)
       }
     }
   }
-#endif
+#endif /* NODEBUG */
 }
 
 /*

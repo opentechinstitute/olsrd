@@ -522,7 +522,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
         olsr_ip_to_string(&buf1, &nexthop->gateway),
         olsr_ip_to_string(&buf2, &rt->rt_dst.prefix));
   }
-#endif
+#endif /* 0 */
 
   /* get src ip */
   if (olsr_cnf->use_src_ip_routes) {

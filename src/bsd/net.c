@@ -41,7 +41,7 @@
 
 #if defined __FreeBSD_kernel__
 #define _GNU_SOURCE 1
-#endif
+#endif /* defined __FreeBSD_kernel__ */
 
 #include "../defs.h"
 #include "../net_os.h"
@@ -72,16 +72,16 @@
 #include <selectLib.h>
 #include <logLib.h>
 #define syslog(a, b) fdprintf(a, b);
-#else
+#else /* _WRS_KERNEL */
 #include <sys/param.h>
-#endif
+#endif /* _WRS_KERNEL */
 
 #ifdef __NetBSD__
 #include <net/if_ether.h>
 #include <netinet6/in6_var.h>   /* For struct in6_ifreq */
 #include <net80211/ieee80211_ioctl.h>
 #include <ifaddrs.h>
-#endif
+#endif /* __NetBSD__ */
 
 #ifdef __OpenBSD__
 #include <netinet/if_ether.h>
@@ -95,7 +95,7 @@
 #include <sys/uio.h>
 #include <net80211/ieee80211.h>
 #include <net80211/ieee80211_ioctl.h>
-#endif
+#endif /* __OpenBSD__ */
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__
 #include <net/if_var.h>
@@ -105,15 +105,15 @@
 #ifndef FBSD_NO_80211
 #include <net80211/ieee80211.h>
 #include <net80211/ieee80211_ioctl.h>
-#endif
-#endif
+#endif /* FBSD_NO_80211 */
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ */
 
 #ifdef __APPLE__
 #include <ifaddrs.h>
 #include <net/if_var.h>
 #include <net/ethernet.h>
 #include <netinet/in_var.h>
-#endif
+#endif /* __APPLE__ */
 
 #include <net/if_dl.h>
 #ifdef SPOOF
@@ -123,7 +123,7 @@
 #if 0
 #define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)    /* generic IF get op */
 #define SIOCGWAVELAN SIOCGIFGENERIC
-#endif
+#endif /* 0 */
 
 #include <sys/sysctl.h>
 
@@ -137,9 +137,9 @@ set_sysctl_int(const char *name, int new)
   int old;
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__) || defined(__OpenBSD__) || defined(__NetBSD__)
   size_t len = sizeof(old);
-#else
+#else /* defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__) || defined(__OpenBSD__) || defined(__NetBSD__) */
   unsigned int len = sizeof(old);
-#endif
+#endif /* defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__) || defined(__OpenBSD__) || defined(__NetBSD__) */
 
 #ifdef __OpenBSD__
   int mib[4];
@@ -169,11 +169,11 @@ set_sysctl_int(const char *name, int new)
 
   if (sysctl(mib, 4, &old, &len, &new, sizeof(new)) < 0)
     return -1;
-#else
+#else /* __OpenBSD__ */
 
   if (sysctlbyname((const char *)name, &old, &len, &new, sizeof(new)) < 0)
     return -1;
-#endif
+#endif /* __OpenBSD__ */
 
   return old;
 }
@@ -205,14 +205,14 @@ net_os_set_global_ifoptions(void) {
     name = "net.inet6.icmp6.rediraccept";
     ignore_redir = set_sysctl_int(name, 0);
   }
-#else
+#else /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ */
   if (olsr_cnf->ip_version == AF_INET)
     name = "net.inet.icmp.drop_redirect";
   else
     name = "net.inet6.icmp6.drop_redirect";
 
   ignore_redir = set_sysctl_int(name, 1);
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ */
 
   if (ignore_redir < 0) {
     fprintf(stderr,
@@ -252,9 +252,9 @@ net_os_restore_ifoptions(void) {
   name = olsr_cnf->ip_version == AF_INET ? "net.inet.icmp.rediraccept" : "net.inet6.icmp6.rediraccept";
 #elif defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__
   name = olsr_cnf->ip_version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.rediraccept";
-#else
+#else /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ */
   name = olsr_cnf->ip_version == AF_INET ? "net.inet.icmp.drop_redirect" : "net.inet6.icmp6.drop_redirect";
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ */
   set_sysctl_int(name, ignore_redir);
 
   /* reset outgoing ICMP redirects */
@@ -425,7 +425,7 @@ getsocket6(int bufspace, struct interface *ifp __attribute__ ((unused)))
     close(sock);
     return -1;
   }
-#endif
+#endif /* defined IPV6_PKTINFO */
 
   memset(&sin, 0, sizeof(sin));
   sin.sin6_family = AF_INET6;
@@ -461,7 +461,7 @@ join_mcast(struct interface *ifs, int sock)
   struct ipv6_mreq mcastreq;
 #ifdef IPV6_USE_MIN_MTU
   int on;
-#endif
+#endif /* IPV6_USE_MIN_MTU */
 
   mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
@@ -475,10 +475,10 @@ join_mcast(struct interface *ifs, int sock)
 #ifdef IPV6_JOIN_GROUP
     /* Join receiver group */
     if (setsockopt(sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
-#else /* rfc 2133, obsoleted */
+#else /* IPV6_JOIN_GROUP */ /* rfc 2133, obsoleted */
     /* Join receiver group */
     if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
-#endif
+#endif /* IPV6_JOIN_GROUP */
     {
       perror("Join multicast send");
       return -1;
@@ -501,7 +501,7 @@ join_mcast(struct interface *ifs, int sock)
     close(sock);
     return -1;
   }
-#endif
+#endif /* IPV6_USE_MIN_MTU */
 
   OLSR_PRINTF(3, "OK\n");
   return 0;
@@ -652,9 +652,9 @@ olsr_sendto(int s, const void *buf, size_t len, int flags __attribute__ ((unused
 
   return (len);
 
-#else
+#else /* SPOOF */
   return sendto(s, buf, len, flags, (const struct sockaddr *)to, tolen);
-#endif
+#endif /* SPOOF */
 }
 
 /**
@@ -727,7 +727,7 @@ olsr_recvfrom(int s, void *buf, size_t len, int flags __attribute__ ((unused)), 
   if (strcmp(ifc->int_name, iname) != 0) {
     return (0);
   }
-#endif
+#endif /* __NetBSD__ */
 
   return (count);
 }
@@ -774,10 +774,10 @@ check_wireless_interface(char *ifname)
   if(ret == 0)
 	  return 1;
   return 0;
-#else
+#else /* defined __NetBSD__ */
   ifname = NULL;                /* squelsh compiler warning */
   return 0;
-#endif
+#endif /* defined __NetBSD__ */
 }
 
 #include <sys/sockio.h>
@@ -803,7 +803,7 @@ calculate_if_metric(char *ifname)
     }
 
     OLSR_PRINTF(1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
-#endif
+#endif /* 0 */
     return WEIGHT_ETHERNET_DEFAULT;
   }
 }

@@ -251,7 +251,7 @@ mapwrite_exit(void)
     the_fifoname = 0;
   }
 }
-#endif
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

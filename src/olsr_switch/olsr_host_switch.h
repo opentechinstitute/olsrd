@@ -55,9 +55,9 @@
 #ifdef _WIN32
 #define close(x) closesocket(x)
 int __stdcall ohs_close(unsigned long signal) __attribute__ ((noreturn));
-#else
+#else /* _WIN32 */
 void ohs_close(int) __attribute__ ((noreturn));
-#endif
+#endif /* _WIN32 */
 
 struct ohs_ip_link {
   union olsr_ip_addr dst;
@@ -86,15 +86,15 @@ extern struct ohs_connection *ohs_conns;
 
 #ifdef _WIN32
 int __stdcall SignalHandler(unsigned long);
-#else
+#else /* _WIN32 */
 void ohs_close(int);
-#endif
+#endif /* _WIN32 */
 
 struct ohs_connection *get_client_by_addr(const union olsr_ip_addr *);
 
 int ohs_delete_connection(struct ohs_connection *);
 
-#endif
+#endif /* _OLSR_HOST_SWITCH */
 
 /*
  * Local Variables:

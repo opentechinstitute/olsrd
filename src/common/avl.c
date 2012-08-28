@@ -478,7 +478,7 @@ avl_local_max(struct avl_node *node)
 
   return node;
 }
-#endif
+#endif /* 0 */
 
 static void
 avl_delete_worker(struct avl_tree *tree, struct avl_node *node)

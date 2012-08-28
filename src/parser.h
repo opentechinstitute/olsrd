@@ -94,4 +94,4 @@ int olsr_packetparser_remove_function(packetparser_function * function);
 
 void parse_packet(struct olsr *, int, struct interface *, union olsr_ip_addr *);
 
-#endif
+#endif /* _OLSR_MSG_PARSER */

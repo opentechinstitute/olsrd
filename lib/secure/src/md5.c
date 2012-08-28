@@ -111,10 +111,10 @@ MD5_memset(POINTER output, int value, unsigned int len)
   for (i = 0; i < len; i++)
     ((char *)output)[i] = (char)value;
 }
-#else
+#else /* 0 */
 #define MD5_memcpy(dst, src, len) memcpy((dst), (src), (len))
 #define MD5_memset(dst, val, len) memset((dst), (val), (len))
-#endif
+#endif /* 0 */
 
 /* Encodes input (UINT4) into output (unsigned char). Assumes len is
      a multiple of 4.

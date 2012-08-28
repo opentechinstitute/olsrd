@@ -149,7 +149,7 @@ void AddMulticastRoute(void);
 void DeleteMulticastRoute(void);
 int CreateCaptureSocket(const char *ifName);
 
-#endif /* _BMF_NETWORKINTERFACES_H */
+#endif /* _P2PD_NETWORKINTERFACES_H */
 
 /*
  * Local Variables:

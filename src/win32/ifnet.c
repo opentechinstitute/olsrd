@@ -356,11 +356,11 @@ GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
 #if !defined OID_802_11_CONFIGURATION
 #define OID_802_11_CONFIGURATION 0x0d010211
-#endif
+#endif /* !defined OID_802_11_CONFIGURATION */
 
 #if !defined IOCTL_NDIS_QUERY_GLOBAL_STATS
 #define IOCTL_NDIS_QUERY_GLOBAL_STATS 0x00170002
-#endif
+#endif /* !defined IOCTL_NDIS_QUERY_GLOBAL_STATS */
 
 static int
 IsWireless(char *IntName)
@@ -412,7 +412,7 @@ IsWireless(char *IntName)
   }
 
   CloseHandle(DevHand);
-#endif
+#endif /* !defined WINCE */
   return 1;
 }
 
@@ -568,7 +568,7 @@ add_hemu_if(struct olsr_if *iface)
       fprintf(stderr, "Could not initialize socket... exiting!\n\n");
       exit(1);
     }
-#endif
+#endif /* 0 */
   }
 
   /* Send IP as first 4/16 bytes on socket */
@@ -633,7 +633,7 @@ chk_if_changed(struct olsr_if *IntConf)
   }
 #ifdef DEBUG
   OLSR_PRINTF(3, "Checking if %s is set down or changed\n", IntConf->name);
-#endif
+#endif /* DEBUG */
 
   Int = IntConf->interf;
 
@@ -679,7 +679,7 @@ chk_if_changed(struct olsr_if *IntConf)
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "\tAddress: %s\n", olsr_ip_to_string(&buf, &NewVal));
-#endif
+#endif /* DEBUG */
 
   if (NewVal.v4.s_addr != OldVal.v4.s_addr) {
     OLSR_PRINTF(1, "\tAddress change.\n");
@@ -711,7 +711,7 @@ chk_if_changed(struct olsr_if *IntConf)
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "\tNetmask: %s\n", olsr_ip_to_string(&buf, &NewVal));
-#endif
+#endif /* DEBUG */
 
   if (NewVal.v4.s_addr != OldVal.v4.s_addr) {
     OLSR_PRINTF(1, "\tNetmask change.\n");
@@ -735,7 +735,7 @@ chk_if_changed(struct olsr_if *IntConf)
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "\tBroadcast address: %s\n", olsr_ip_to_string(&buf, &NewVal));
-#endif
+#endif /* DEBUG */
 
   if (NewVal.v4.s_addr != OldVal.v4.s_addr) {
     OLSR_PRINTF(1, "\tBroadcast address change.\n");
@@ -919,7 +919,7 @@ check_interface_updates(void *dummy __attribute__ ((unused)))
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "Checking for updates in the interface set\n");
-#endif
+#endif /* DEBUG */
 
   for (IntConf = olsr_cnf->interfaces; IntConf != NULL; IntConf = IntConf->next) {
     if (IntConf->host_emul)

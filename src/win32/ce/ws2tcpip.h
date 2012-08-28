@@ -32,7 +32,7 @@ struct ipv6_mreq {
   unsigned int ipv6mr_interface;
 };
 
-#endif
+#endif /* !defined TL_WS2TCPIP_INCLUDED */
 
 /*
  * Local Variables:

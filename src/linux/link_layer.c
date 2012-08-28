@@ -368,7 +368,7 @@ iw_get_range_info(char *ifname, struct iw_range *range)
   return 1;
 }
 
-#endif
+#endif /* 0 */
 
 /*
  * Local Variables:

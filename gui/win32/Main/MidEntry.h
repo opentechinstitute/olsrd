@@ -51,7 +51,7 @@ public:
   BOOL MidEntry::operator==(const class MidEntry &) const;
 };
 
-#endif
+#endif /* !defined TL_MIDENTRY_H */
 
 /*
  * Local Variables:

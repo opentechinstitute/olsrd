@@ -57,7 +57,7 @@ int check_gw(union olsr_ip_addr *net, union olsr_ip_addr *mask);
 /* Event function to register with the scheduler */
 void olsr_event(void *foo);
 
-#endif
+#endif /* _OLSRD_DYNGWPLAIN_H */
 
 /*
  * Local Variables:

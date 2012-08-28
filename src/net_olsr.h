@@ -81,7 +81,7 @@ bool olsr_validate_address(const union olsr_ip_addr *);
 
 void olsr_add_invalid_address(const union olsr_ip_addr *);
 
-#endif
+#endif /* _NET_OLSR */
 
 /*
  * Local Variables:

@@ -47,7 +47,7 @@
 #define RTF_HOST 2
 #define RTF_GATEWAY 4
 
-#endif
+#endif /* !defined TL_NET_ROUTE_H_INCLUDED */
 
 /*
  * Local Variables:

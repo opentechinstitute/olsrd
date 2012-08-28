@@ -45,7 +45,7 @@
 
 #define MSG_NOSIGNAL 0
 
-#endif
+#endif /* !defined TL_SYS_SOCKET_H_INCLUDED */
 
 /*
  * Local Variables:

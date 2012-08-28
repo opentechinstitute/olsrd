@@ -54,7 +54,7 @@
 
 #ifdef _WIN32
 #define close(x) closesocket(x)
-#endif
+#endif /* _WIN32 */
 
 /* Timer data, global. Externed in scheduler.h */
 uint32_t now_times;                    /* relative time compared to startup (in milliseconds */
@@ -495,7 +495,7 @@ olsr_scheduler(void)
     if (olsr_win32_end_request) {
       olsr_win32_end_flag = true;
     }
-#endif
+#endif /* _WIN32 */
   }
 }
 

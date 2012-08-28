@@ -23,7 +23,7 @@
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/stat.h>

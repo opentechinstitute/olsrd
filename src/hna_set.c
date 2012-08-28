@@ -130,7 +130,7 @@ olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
 
 #if 0
   OLSR_PRINTF(5, "HNA: lookup entry\n");
-#endif
+#endif /* 0 */
   /* Check for registered entry */
 
   for (tmp_hna = hna_set[hash].next; tmp_hna != &hna_set[hash]; tmp_hna = tmp_hna->next) {
@@ -212,7 +212,7 @@ static bool
 olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
 #ifdef DEBUG
   struct ipaddr_str buf1, buf2;
-#endif
+#endif /* DEBUG */
   struct hna_entry *hna_gw;
   bool removed_entry = false;
 
@@ -221,7 +221,7 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
     /* modify smart gateway entry if necessary */
     olsr_delete_gateway_entry(&net_to_delete->hna_gw->A_gateway_addr, net_to_delete->hna_prefix.prefix_len);
   }
-#endif
+#endif /* __linux__ */
 
   olsr_stop_timer(net_to_delete->hna_net_timer);
   net_to_delete->hna_net_timer = NULL;  /* be pedandic */
@@ -231,7 +231,7 @@ olsr_delete_hna_net_entry(struct hna_net *net_to_delete) {
   OLSR_PRINTF(5, "HNA: timeout %s via hna-gw %s\n",
       olsr_ip_prefix_to_string(&net_to_delete->hna_prefix),
               olsr_ip_to_string(&buf2, &hna_gw->A_gateway_addr));
-#endif
+#endif /* DEBUG */
 
   /*
    * Delete the rt_path for the entry.
@@ -352,7 +352,7 @@ olsr_print_hna_set(void)
       tmp_hna = tmp_hna->next;
     }
   }
-#endif
+#endif /* NODEBUG */
 }
 
 /**
@@ -381,7 +381,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
   struct ipaddr_str buf;
 #ifdef DEBUG
   OLSR_PRINTF(5, "Processing HNA\n");
-#endif
+#endif /* DEBUG */
 
   /* Check if everyting is ok */
   if (!m) {
@@ -448,13 +448,13 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     if (olsr_cnf->smart_gw_active && olsr_is_smart_gateway(&prefix, &mask)) {
       olsr_update_gateway_entry(&originator, &mask, prefix.prefix_len, msg_seq_number);
     }
-#endif
+#endif /* __linux__ */
 
 #ifdef MAXIMUM_GATEWAY_PREFIX_LENGTH
     if (olsr_cnf->smart_gw_active && prefix.prefix_len > 0 && prefix.prefix_len <= MAXIMUM_GATEWAY_PREFIX_LENGTH) {
       continue;
     }
-#endif
+#endif /* MAXIMUM_GATEWAY_PREFIX_LENGTH */
 
 #ifndef NO_DUPLICATE_DETECTION_HANDLER
     for (ifs = ifnet; ifs != NULL; ifs = ifs->int_next) {
@@ -468,7 +468,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     if (stop) {
       continue;
     }
-#endif
+#endif /* NO_DUPLICATE_DETECTION_HANDLER */
     entry = ip_prefix_list_find(olsr_cnf->hna_entries, &prefix.prefix, prefix.prefix_len);
     if (entry == NULL) {
       /* only update if it's not from us */

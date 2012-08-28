@@ -167,7 +167,7 @@ bool olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *);
 void olsr_set_tc_edge_timer(struct tc_edge_entry *, unsigned int);
 // static bool olsr_etx_significant_change(float, float);
 
-#endif
+#endif /* _OLSR_TOP_SET */
 
 /*
  * Local Variables:

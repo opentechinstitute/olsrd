@@ -46,7 +46,7 @@ void olsr_calculate_mpr(void);
 
 void olsr_print_mpr_set(void);
 
-#endif
+#endif /* _OLSR_MPR */
 
 /*
  * Local Variables:

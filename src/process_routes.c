@@ -58,7 +58,7 @@
 char *StrError(unsigned int ErrNo);
 #undef strerror
 #define strerror(x) StrError(x)
-#endif
+#endif /* _WIN32 */
 
 static struct list_node chg_kernel_list;
 
@@ -183,7 +183,7 @@ olsr_delete_kernel_route(struct rt_entry *rt)
     if (olsr_cnf->use_niit) {
       olsr_niit_handle_route(rt, false);
     }
-#endif
+#endif /* __linux__ */
   }
   return 0;
 }
@@ -224,7 +224,7 @@ olsr_add_kernel_route(struct rt_entry *rt)
       if (olsr_cnf->use_niit) {
         olsr_niit_handle_route(rt, true);
       }
-#endif
+#endif /* __linux__ */
     }
   }
 }
@@ -266,10 +266,10 @@ olsr_chg_kernel_routes(struct list_node *head_node)
         && (rt->rt_nexthop.iif_index > -1)) {
       olsr_delete_kernel_route(rt);
     }
-#else
+#else /* __linux__ */
     /*no rtnetlink we have to delete routes*/
     if (rt->rt_nexthop.iif_index > -1) olsr_delete_kernel_route(rt);
-#endif /* linux */
+#endif /* __linux__ */
 
     olsr_add_kernel_route(rt);
 
@@ -421,7 +421,7 @@ olsr_update_kernel_routes(void)
 
 #if defined DEBUG && DEBUG
   olsr_print_routing_table(&routingtree);
-#endif
+#endif /* defined DEBUG && DEBUG */
 }
 
 void

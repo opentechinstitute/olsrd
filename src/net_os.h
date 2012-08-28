@@ -85,7 +85,7 @@ int join_mcast(struct interface *, int);
 
 bool olsr_if_isup(const char * dev);
 int olsr_if_set_state(const char *dev, bool up);
-#endif
+#endif /* _OLSR_NET_OS_H */
 
 /*
  * Local Variables:

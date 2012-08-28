@@ -225,7 +225,7 @@ void olsr_delete_rt_path(struct rt_path *);
 
 struct rt_entry *olsr_lookup_routing_table(const union olsr_ip_addr *);
 
-#endif
+#endif /* _OLSR_ROUTING_TABLE */
 
 /*
  * Local Variables:

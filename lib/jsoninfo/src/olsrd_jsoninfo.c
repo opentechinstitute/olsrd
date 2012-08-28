@@ -53,7 +53,7 @@
 #include <sys/socket.h>
 #ifndef _WIN32
 #include <sys/select.h>
-#endif
+#endif /* _WIN32 */
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
@@ -69,7 +69,7 @@
 
 #ifdef __linux__
 #include <fcntl.h>
-#endif
+#endif /* __linux__ */
 
 #include "ipcalc.h"
 #include "olsr.h"
@@ -91,7 +91,7 @@
 
 #ifdef _WIN32
 #define close(x) closesocket(x)
-#endif
+#endif /* _WIN32 */
 
 static int ipc_socket;
 
@@ -354,13 +354,13 @@ plugin_ipc_init(void)
   if ((ipc_socket = socket(olsr_cnf->ip_version, SOCK_STREAM, 0)) == -1) {
 #ifndef NODEBUG
     olsr_printf(1, "(JSONINFO) socket()=%s\n", strerror(errno));
-#endif
+#endif /* NODEBUG */
     return 0;
   } else {
     if (setsockopt(ipc_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
 #ifndef NODEBUG
       olsr_printf(1, "(JSONINFO) setsockopt()=%s\n", strerror(errno));
-#endif
+#endif /* NODEBUG */
       return 0;
     }
 #if (defined __FreeBSD__ || defined __FreeBSD_kernel__) && defined SO_NOSIGPIPE
@@ -368,7 +368,7 @@ plugin_ipc_init(void)
       perror("SO_REUSEADDR failed");
       return 0;
     }
-#endif
+#endif /* (defined __FreeBSD__ || defined __FreeBSD_kernel__) && defined SO_NOSIGPIPE */
     /* Bind the socket */
 
     /* complete the socket structure */
@@ -378,7 +378,7 @@ plugin_ipc_init(void)
       addrlen = sizeof(struct sockaddr_in);
 #ifdef SIN6_LEN
       sst.in4.sin_len = addrlen;
-#endif
+#endif /* SIN6_LEN */
       sst.in4.sin_addr.s_addr = jsoninfo_listen_ip.v4.s_addr;
       sst.in4.sin_port = htons(ipc_port);
     } else {
@@ -386,7 +386,7 @@ plugin_ipc_init(void)
       addrlen = sizeof(struct sockaddr_in6);
 #ifdef SIN6_LEN
       sst.in6.sin6_len = addrlen;
-#endif
+#endif /* SIN6_LEN */
       sst.in6.sin6_addr = jsoninfo_listen_ip.v6;
       sst.in6.sin6_port = htons(ipc_port);
     }
@@ -395,7 +395,7 @@ plugin_ipc_init(void)
     if (bind(ipc_socket, &sst.in, addrlen) == -1) {
 #ifndef NODEBUG
       olsr_printf(1, "(JSONINFO) bind()=%s\n", strerror(errno));
-#endif
+#endif /* NODEBUG */
       return 0;
     }
 
@@ -403,7 +403,7 @@ plugin_ipc_init(void)
     if (listen(ipc_socket, 1) == -1) {
 #ifndef NODEBUG
       olsr_printf(1, "(JSONINFO) listen()=%s\n", strerror(errno));
-#endif
+#endif /* NODEBUG */
       return 0;
     }
 
@@ -412,7 +412,7 @@ plugin_ipc_init(void)
 
 #ifndef NODEBUG
     olsr_printf(2, "(JSONINFO) listening on port %d\n", ipc_port);
-#endif
+#endif /* NODEBUG */
   }
   return 1;
 }
@@ -465,7 +465,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
   if ((ipc_connection = accept(fd, &pin.in, &addrlen)) == -1) {
 #ifndef NODEBUG
     olsr_printf(1, "(JSONINFO) accept()=%s\n", strerror(errno));
-#endif
+#endif /* NODEBUG */
     return;
   }
 
@@ -476,13 +476,13 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
     if (!ip4equal(&pin.in4.sin_addr, &jsoninfo_accept_ip.v4) && jsoninfo_accept_ip.v4.s_addr != INADDR_ANY) {
 #ifdef JSONINFO_ALLOW_LOCALHOST
       if (pin.in4.sin_addr.s_addr != INADDR_LOOPBACK) {
-#endif
+#endif /* JSONINFO_ALLOW_LOCALHOST */
         olsr_printf(1, "(JSONINFO) From host(%s) not allowed!\n", addr);
         close(ipc_connection);
         return;
 #ifdef JSONINFO_ALLOW_LOCALHOST
       }
-#endif
+#endif /* JSONINFO_ALLOW_LOCALHOST */
     }
   } else {
     if (inet_ntop(olsr_cnf->ip_version, &pin.in6.sin6_addr, addr, INET6_ADDRSTRLEN) == NULL)
@@ -497,7 +497,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 
 #ifndef NODEBUG
   olsr_printf(2, "(JSONINFO) Connect from %s\n", addr);
-#endif
+#endif /* NODEBUG */
 
   /* purge read buffer to prevent blocking on linux */
   FD_ZERO(&rfds);
@@ -755,7 +755,7 @@ ipc_print_gateways(struct autobuf *abuf)
 {
 #ifndef __linux__
   abuf_json_string(abuf, "error", "Gateway mode is only supported in Linux");
-#else
+#else /* __linux__ */
 
   struct ipaddr_str buf;
   struct gateway_entry *gw;
@@ -814,7 +814,7 @@ ipc_print_gateways(struct autobuf *abuf)
   }
   OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
   abuf_json_close_array(abuf);
-#endif
+#endif /* __linux__ */
 }
 
 
@@ -1021,11 +1021,11 @@ ipc_print_config(struct autobuf *abuf)
 #ifdef __linux__
   abuf_json_int(abuf, "routeNetlinkSocket", olsr_cnf->rtnl_s);
   abuf_json_int(abuf, "routeMonitorSocket", olsr_cnf->rt_monitor_socket);
-#endif
+#endif /* __linux__ */
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
   abuf_json_int(abuf, "routeChangeSocket", olsr_cnf->rts);
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__ */
   abuf_json_float(abuf, "linkQualityNatThreshold", olsr_cnf->lq_nat_thresh);
 
   abuf_json_string(abuf, "olsrdVersion", olsrd_version);
@@ -1046,9 +1046,9 @@ ipc_print_config(struct autobuf *abuf)
   abuf_json_string(abuf, "os", "OpenBSD");
 #elif defined __FreeBSD__ || defined __FreeBSD_kernel__
   abuf_json_string(abuf, "os", "FreeBSD");
-#else
+#else /* OS detection */
   abuf_json_string(abuf, "os", "Undefined");
-#endif
+#endif /* OS detection */
 
   abuf_json_int(abuf, "startTime", start_time.tv_sec);
 
@@ -1061,7 +1061,7 @@ ipc_print_interfaces(struct autobuf *abuf)
 #ifdef __linux__
   int linklen;
   char path[PATH_MAX], linkpath[PATH_MAX];
-#endif
+#endif /* __linux__ */
   char ipv6_buf[INET6_ADDRSTRLEN];                  /* buffer for IPv6 inet_htop */
   struct olsr_lq_mult *mult;
   const struct olsr_if *ifs;
@@ -1104,7 +1104,7 @@ ipc_print_interfaces(struct autobuf *abuf)
 #ifdef __linux__
       abuf_json_boolean(abuf, "icmpRedirect", rifs->nic_state.redirect);
       abuf_json_boolean(abuf, "spoofFilter", rifs->nic_state.spoof);
-#endif
+#endif /* __linux__ */
 
       if (olsr_cnf->ip_version == AF_INET) {
         struct ipaddr_str addrbuf, maskbuf, bcastbuf;
@@ -1173,7 +1173,7 @@ ipc_print_interfaces(struct autobuf *abuf)
     abuf_json_sys_class_net(abuf, "nwid", ifs->name, "wireless/nwid");
     abuf_json_sys_class_net(abuf, "wirelessRetries", ifs->name, "wireless/retries");
     abuf_json_sys_class_net(abuf, "wirelessStatus", ifs->name, "wireless/status");
-#endif
+#endif /* __linux__ */
     abuf_json_close_array_entry(abuf);
   }
   abuf_json_close_array(abuf);

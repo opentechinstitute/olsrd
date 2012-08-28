@@ -62,13 +62,13 @@
 #include <net/route.h>
 #ifdef __linux__
 #include <linux/in_route.h>
-#endif
+#endif /* __linux__ */
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
 #ifndef _WIN32
 #include <pthread.h>
-#else
+#else /* _WIN32 */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef interface
@@ -88,7 +88,7 @@ struct ThreadPara {
   void *(*Func) (void *);
   void *Arg;
 };
-#endif
+#endif /* _WIN32 */
 
 static int hna_check_interval	= DEFAULT_HNA_CHECK_INTERVAL;
 /* set default interval, in case none is given in the config file */
@@ -709,7 +709,7 @@ pthread_mutex_unlock(HANDLE * Hand)
   return 0;
 }
 
-#endif
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

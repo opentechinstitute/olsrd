@@ -395,7 +395,7 @@ static const struct luaL_reg tasLib[] = {
   {"get_parameters", tasGetParameters},
 #ifdef TAS_EXTRA_FUNCTIONS
   TAS_EXTRA_FUNCTIONS
-#endif
+#endif /* TAS_EXTRA_FUNCTIONS */
   {NULL, NULL}
 };
 

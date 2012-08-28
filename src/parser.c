@@ -63,7 +63,7 @@
 char *StrError(unsigned int ErrNo);
 #undef strerror
 #define strerror(x) StrError(x)
-#endif
+#endif /* _WIN32 */
 
     /* Sven-Ola: On very slow devices used in huge networks
  * the amount of lq_tc messages is so high, that the
@@ -393,12 +393,12 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
       struct ipaddr_str buf;
       OLSR_PRINTF(3, "Not processing message originating from %s!\n",
                   olsr_ip_to_string(&buf, (union olsr_ip_addr *)&m->v4.originator));
-#endif
+#endif /* DEBUG */
 #ifndef NO_DUPLICATE_DETECTION_HANDLER
       if (validated) {
         olsr_test_originator_collision(m->v4.olsr_msgtype, seqno);
       }
-#endif
+#endif /* NO_DUPLICATE_DETECTION_HANDLER */
       continue;
     }
 
@@ -458,7 +458,7 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         OLSR_PRINTF(1, "error recvfrom: %s", strerror(errno));
 #ifndef _WIN32
         olsr_syslog(OLSR_LOG_ERR, "error recvfrom: %m");
-#endif
+#endif /* _WIN32 */
       }
       break;
     }
@@ -475,7 +475,7 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
 #ifdef DEBUG
     OLSR_PRINTF(5, "Received a packet from %s\n",
         olsr_ip_to_string(&buf, &from_addr));
-#endif
+#endif /* DEBUG */
 
     if ((olsr_cnf->ip_version == AF_INET) && (fromlen != sizeof(struct sockaddr_in)))
       break;

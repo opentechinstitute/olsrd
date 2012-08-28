@@ -55,7 +55,7 @@
 #ifdef _WIN32
 #include <winbase.h>
 #define close(x) closesocket(x)
-#endif
+#endif /* _WIN32 */
 
 /* The interface linked-list */
 struct interface *ifnet;
@@ -414,7 +414,7 @@ olsr_remove_interface(struct olsr_if * iface)
       olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
     }
   }
-#endif
+#endif /* 0 */
   /*
    * Deregister functions for periodic message generation
    */

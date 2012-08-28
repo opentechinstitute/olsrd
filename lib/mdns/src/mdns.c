@@ -272,7 +272,7 @@ BmfPError(const char *format, ...)
 
 #if !defined REMOVE_LOG_DEBUG
   //char *stringErr = strerror(errno);
-#endif
+#endif /* !defined REMOVE_LOG_DEBUG */
   /* Rely on short-circuit boolean evaluation */
   if (format == NULL || *format == '\0') {
     //OLSR_DEBUG(LOG_PLUGINS, "%s: %s\n", PLUGIN_NAME, stringErr);

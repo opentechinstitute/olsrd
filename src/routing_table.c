@@ -525,7 +525,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr 
 {
 #ifdef DEBUG
   struct ipaddr_str dstbuf, origbuf;
-#endif
+#endif /* DEBUG */
   struct tc_entry *tc;
   struct rt_path *rtp;
   struct avl_node *node;
@@ -564,7 +564,7 @@ olsr_insert_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr 
 #ifdef DEBUG
     OLSR_PRINTF(1, "RIB: add prefix %s/%u from %s\n", olsr_ip_to_string(&dstbuf, dst), plen,
                 olsr_ip_to_string(&origbuf, originator));
-#endif
+#endif /* DEBUG */
 
     /* overload the hna change bit for flagging a prefix change */
     changes_hna = true;
@@ -584,7 +584,7 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr 
 {
 #ifdef DEBUG
   struct ipaddr_str dstbuf, origbuf;
-#endif
+#endif /* DEBUG */
 
   struct tc_entry *tc;
   struct rt_path *rtp;
@@ -618,7 +618,7 @@ olsr_delete_routing_table(union olsr_ip_addr *dst, int plen, union olsr_ip_addr 
 #ifdef DEBUG
     OLSR_PRINTF(1, "RIB: del prefix %s/%u from %s\n", olsr_ip_to_string(&dstbuf, dst), plen,
                 olsr_ip_to_string(&origbuf, originator));
-#endif
+#endif /* DEBUG */
 
     /* overload the hna change bit for flagging a prefix change */
     changes_hna = true;
@@ -694,7 +694,7 @@ olsr_print_routing_table(struct avl_tree *tree)
                   if_ifwithindex_name(rt->rt_nexthop.iif_index), rtp->rtp_version);
     }
   }
-#endif
+#endif /* NODEBUG */
   tree = NULL;                  /* squelch compiler warnings */
 }
 

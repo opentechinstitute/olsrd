@@ -83,7 +83,7 @@ struct neighbor_2_entry *olsr_lookup_two_hop_neighbor_table_mid(const union olsr
 
 void olsr_print_two_hop_neighbor_table(void);
 
-#endif
+#endif /* _OLSR_TWO_HOP_TABLE */
 
 /*
  * Local Variables:

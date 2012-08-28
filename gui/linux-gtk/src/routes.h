@@ -59,7 +59,7 @@ int add_route_entry(struct route_entry *);
 
 int del_route_entry(struct route_entry *);
 
-#endif
+#endif /* _OLSRD_FRONTEND_ROUTE */
 
 /*
  * Local Variables:

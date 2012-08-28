@@ -44,11 +44,11 @@
 
 #if defined _MSC_VER && _MSC_VER > 1000
 #pragma once
-#endif
+#endif /* defined _MSC_VER && _MSC_VER > 1000 */
 
 #ifndef __AFXWIN_H__
 #error include 'stdafx.h' before including this file for PCH
-#endif
+#endif /* __AFXWIN_H__ */
 
 #include "resource.h"
 
@@ -75,7 +75,7 @@ public:
 
 //{{AFX_INSERT_LOCATION}}
 
-#endif
+#endif /* !defined(AFX_FRONTEND_H__8033A41F_6FDC_4054_A582_AB7B6AC5EEAE__INCLUDED_) */
 
 /*
  * Local Variables:

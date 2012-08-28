@@ -47,7 +47,7 @@
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
-#endif
+#endif /* _DEBUG */
 
 BEGIN_MESSAGE_MAP(CFrontendApp, CWinApp)
 	//{{AFX_MSG_MAP(CFrontendApp)

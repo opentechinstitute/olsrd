@@ -404,7 +404,7 @@ static void BmfPacketCaptured(
   struct TEncapHeader* encapHdr;
 #ifndef NODEBUG
   struct ipaddr_str srcBuf, dstBuf;
-#endif
+#endif /* NODEBUG */
   ipHeader = GetIpHeader(encapsulationUdpData);
 
   dst.v4 = ipHeader->ip_dst;
@@ -551,7 +551,7 @@ static void BmfPacketCaptured(
         {
 #ifndef NODEBUG
           struct ipaddr_str buf;
-#endif
+#endif /* NODEBUG */
           OLSR_PRINTF(
             8,
             "%s: --> not encap-forwarding on \"%s\": I am not selected as MPR by neighbor %s\n",
@@ -642,7 +642,7 @@ static void BmfEncapsulationPacketReceived(
   struct TBmfInterface* walker;
 #ifndef NODEBUG
   struct ipaddr_str mcSrcBuf, mcDstBuf, forwardedByBuf, forwardedToBuf;
-#endif
+#endif /* NODEBUG */
   /* Are we talking to ourselves? */
   if (if_ifwithaddr(forwardedBy) != NULL)
   {
@@ -777,7 +777,7 @@ static void BmfEncapsulationPacketReceived(
     {
 #ifndef NODEBUG
       struct ipaddr_str buf;
-#endif
+#endif /*NODEBUG */
       /* 'walker' is an OLSR interface, but I am not selected as MPR. In that
        * case, don't forward. */
       OLSR_PRINTF(
@@ -814,7 +814,7 @@ static void BmfTunPacketCaptured(unsigned char* encapsulationUdpData)
   struct TEncapHeader* encapHdr;
 #ifndef NODEBUG
   struct ipaddr_str srcIpBuf, dstIpBuf;
-#endif
+#endif /* NODEBUG */
   ipPacket = GetIpPacket(encapsulationUdpData);
   ipPacketLen = GetIpTotalLength(ipPacket);
   ipHeader = GetIpHeader(encapsulationUdpData);

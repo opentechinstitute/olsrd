@@ -92,7 +92,7 @@ static int iterIndex;
 static struct interface *iterIntTab = NULL;
 static struct mid_entry *iterMidTab = NULL;
 static struct hna_entry *iterHnaTab = NULL;
-#endif
+#endif /* 0 */
 
 static struct link_entry *iterLinkTab = NULL;
 static struct neighbor_entry *iterNeighTab = NULL;

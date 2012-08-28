@@ -63,7 +63,7 @@ public:
   BOOL NodeEntry::operator==(const class NodeEntry &) const;
 };
 
-#endif
+#endif /* !defined TL_NODEENTRY_H */
 
 /*
  * Local Variables:

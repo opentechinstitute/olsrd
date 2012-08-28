@@ -59,7 +59,7 @@ int getpid(void);
 
 int isatty(int fd);
 
-#endif
+#endif /* !defined TL_UNISTD_H_INCLUDED */
 
 /*
  * Local Variables:

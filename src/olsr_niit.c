@@ -127,4 +127,4 @@ static void handle_niit_ifchange (int if_index, struct interface *iface __attrib
   }
 
 }
-#endif
+#endif /* __linux__ */

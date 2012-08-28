@@ -88,7 +88,7 @@ static u_int16_t CalcCrcCcitt(unsigned char* buffer, ssize_t len)
   }
   return crc;
 } /* CalcCrcCcitt */
-#endif
+#endif /* 0 */
 
 /* -------------------------------------------------------------------------
  * Function   : GenerateCrc32Table

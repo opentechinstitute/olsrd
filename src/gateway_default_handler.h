@@ -12,5 +12,5 @@
 
 extern struct olsr_gw_handler gw_def_handler;
 
-#endif /* linux */
+#endif /* __linux__ */
 #endif /* GATEWAY_DEFAULT_HANDLER_H_ */

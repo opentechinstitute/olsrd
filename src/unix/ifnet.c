@@ -41,7 +41,7 @@
 
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__
 #define ifr_netmask ifr_addr
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ || defined __APPLE__ || defined __NetBSD__ || defined __OpenBSD__ */
 
 #include "ifnet.h"
 #include "ipcalc.h"
@@ -73,7 +73,7 @@
  */
 #ifdef IPTOS_CLASS
 #undef IPTOS_CLASS
-#endif
+#endif /* IPTOS_CLASS */
 #define IPTOS_CLASS(class)    ((class) & IPTOS_CLASS_MASK)
 
 #define BUFSPACE  (127*1024)    /* max. input buffer size to request */
@@ -115,7 +115,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "Checking for updates in the interface set\n");
-#endif
+#endif /* DEBUG */
 
   for (tmp_if = olsr_cnf->interfaces; tmp_if != NULL; tmp_if = tmp_if->next) {
     if (tmp_if->host_emul)
@@ -128,7 +128,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
 #ifdef DEBUG
       /* Don't check this interface */
       OLSR_PRINTF(3, "Not checking interface %s\n", tmp_if->name);
-#endif
+#endif /* DEBUG */
       continue;
     }
 
@@ -160,7 +160,7 @@ chk_if_changed(struct olsr_if *iface)
 
 #ifdef DEBUG
   OLSR_PRINTF(3, "Checking if %s is set down or changed\n", iface->name);
-#endif
+#endif /* DEBUG */
 
   if (iface->host_emul)
     return -1;
@@ -255,7 +255,7 @@ chk_if_changed(struct olsr_if *iface)
 
 #ifdef DEBUG
     OLSR_PRINTF(3, "\tAddress: %s\n", ip6_to_string(&buf, &iface->cnf->ipv6_multicast.v6));
-#endif
+#endif /* DEBUG */
 
     if (memcmp(&tmp_saddr6.sin6_addr, &ifp->int6_addr.sin6_addr, olsr_cnf->ipsize) != 0) {
       OLSR_PRINTF(1, "New IP address for %s:\n", ifr.ifr_name);
@@ -269,7 +269,7 @@ chk_if_changed(struct olsr_if *iface)
         /* Update main addr */
         memcpy(&olsr_cnf->main_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
       }
-#endif
+#endif /* 0 */
       /* Update address */
       memcpy(&ifp->int6_addr.sin6_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
       memcpy(&ifp->ip_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
@@ -293,7 +293,7 @@ chk_if_changed(struct olsr_if *iface)
     }
 #ifdef DEBUG
     OLSR_PRINTF(3, "\tAddress:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
-#endif
+#endif /* DEBUG */
 
     if (memcmp
         (&((struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifp->int_addr))->sin_addr.s_addr, &((struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifr.ifr_addr))->sin_addr.s_addr,
@@ -311,7 +311,7 @@ chk_if_changed(struct olsr_if *iface)
         olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
         memcpy(&olsr_cnf->main_addr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, olsr_cnf->ipsize);
       }
-#endif
+#endif /* 0 */
       memcpy(&ifp->ip_addr, &((struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifr.ifr_addr))->sin_addr.s_addr, olsr_cnf->ipsize);
 
       /* we have to make sure that olsrd uses the new source address of this interface */
@@ -327,7 +327,7 @@ chk_if_changed(struct olsr_if *iface)
     }
 #ifdef DEBUG
     OLSR_PRINTF(3, "\tNetmask:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_netmask));
-#endif
+#endif /* DEBUG */
 
     if (memcmp
         (&((struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifp->int_netmask))->sin_addr.s_addr, &((struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifr.ifr_netmask))->sin_addr.s_addr,
@@ -350,7 +350,7 @@ chk_if_changed(struct olsr_if *iface)
       }
 #ifdef DEBUG
       OLSR_PRINTF(3, "\tBroadcast address:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_broadaddr));
-#endif
+#endif /* DEBUG */
 
       if (ifp->int_broadaddr.sin_addr.s_addr != ((struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr))->sin_addr.s_addr) {
         /* New address */
@@ -482,7 +482,7 @@ add_hemu_if(struct olsr_if *iface)
       olsr_cnf->exit_value = EXIT_FAILURE;
       kill(getpid(), SIGINT);
     }
-#endif
+#endif /* 0 */
   }
 
   /* Send IP as first 4/16 bytes on socket */
@@ -563,7 +563,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 #ifdef __linux__
   int precedence = IPTOS_PREC(olsr_cnf->tos);
   int tos_bits = olsr_cnf->tos;
-#endif
+#endif /* __linux__ */
 
   if (iface->host_emul)
     return -1;
@@ -630,7 +630,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 
 #ifdef __APPLE__
     ifs.int6_multaddr.sin6_scope_id = 0;
-#endif
+#endif /* __APPLE__ */
 
     OLSR_PRINTF(debuglvl, "\tMulticast: %s\n", ip6_to_string(&buf, &ifs.int6_multaddr.sin6_addr));
 
@@ -817,7 +817,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
     perror("setsockopt(IP_TOS)");
     olsr_syslog(OLSR_LOG_ERR, "setsockopt(IP_TOS) error %m");
   }
-#endif
+#endif /* __linux__ */
 
   /*
    *Initialize sequencenumber as a random 16bit value

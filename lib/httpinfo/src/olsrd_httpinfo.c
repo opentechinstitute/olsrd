@@ -50,9 +50,9 @@
 #include <errno.h>
 #ifdef _WIN32
 #include <io.h>
-#else
+#else /* _WIN32 */
 #include <netdb.h>
-#endif
+#endif /* _WIN32 */
 
 #include "olsr.h"
 #include "olsr_cfg.h"
@@ -68,7 +68,7 @@
   #include <pud/src/pud.h>
   #include <nmea/info.h>
   #include <nmea/sentence.h>
-#endif
+#endif /* HTTPINFO_PUD */
 
 #include "olsrd_httpinfo.h"
 #include "admin_interface.h"
@@ -76,22 +76,22 @@
 
 #ifdef OS
 #undef OS
-#endif
+#endif /* OS */
 
 #ifdef _WIN32
 #define close(x) closesocket(x)
 #define OS "Windows"
-#endif
+#endif /* _WIN32 */
 #ifdef __linux__
 #define OS "GNU/Linux"
-#endif
+#endif /* __linux__ */
 #if defined __FreeBSD__ || defined __FreeBSD_kernel__
 #define OS "FreeBSD"
-#endif
+#endif /* defined __FreeBSD__ || defined __FreeBSD_kernel__ */
 
 #ifndef OS
 #define OS "Undefined"
-#endif
+#endif /* OS */
 
 static char copyright_string[] __attribute__ ((unused)) =
   "olsr.org HTTPINFO plugin Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org) All rights reserved.";
@@ -186,7 +186,7 @@ static void build_all_body(struct autobuf *);
 
 #ifdef HTTPINFO_PUD
 static void build_pud_body(struct autobuf *);
-#endif
+#endif /* HTTPINFO_PUD */
 
 static void build_about_body(struct autobuf *);
 
@@ -220,7 +220,7 @@ static int netsprintf_direct = 0;
 static int netsprintf_error = 0;
 #define sprintf netsprintf
 #define NETDIRECT
-#endif
+#endif /* 0 */
 
 static const struct tab_entry tab_entries[] = {
   {"Configuration", "config", build_config_body, true},
@@ -228,11 +228,11 @@ static const struct tab_entry tab_entries[] = {
   {"Links/Topology", "nodes", build_nodes_body, true},
 #ifdef HTTPINFO_PUD
   {"Position", "position", build_pud_body, true},
-#endif
+#endif /* HTTPINFO_PUD */
   {"All", "all", build_all_body, true},
 #ifdef ADMIN_INTERFACE
   {"Admin", "admin", build_admin_body, true},
-#endif
+#endif /* ADMIN_INTERFACE */
   {"About", "about", build_about_body, true},
   {"FOO", "cfgfile", build_cfgfile_body, false},
   {NULL, NULL, NULL, false}
@@ -258,7 +258,7 @@ static const struct dynamic_file_entry dynamic_files[] = {
   {"set_values", process_set_values},
   {NULL, NULL}
 };
-#endif
+#endif /* ADMIN_INTERFACE */
 
 static int
 get_http_socket(int port)
@@ -347,7 +347,7 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
   int r = 1;
 #ifdef __linux__
   struct timeval timeout = { 0, 200 };
-#endif
+#endif /* __linux__ */
 
   if (outbuffer_count >= MAX_CLIENTS) {
     olsr_printf(1, "(HTTPINFO) maximum number of connection reached\n");
@@ -371,7 +371,7 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
     olsr_printf(1, "(HTTPINFO)SO_SNDTIMEO failed %s\n", strerror(errno));
     goto close_connection;
   }
-#endif
+#endif /* __linux__ */
   if (!check_allowed_ip(allowed_nets, (union olsr_ip_addr *)&pin.sin_addr.s_addr)) {
     struct ipaddr_str strbuf;
     olsr_printf(0, "HTTP request from non-allowed host %s!\n",
@@ -429,7 +429,7 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
       }
       i++;
     }
-#endif
+#endif /* ADMIN_INTERFACE */
     /* We only support GET */
     abuf_puts(&body_abuf, HTTP_400_MSG);
     stats.ill_hits++;
@@ -485,7 +485,7 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
       }
       netsprintf_error = 0;
       netsprintf_direct = 1;
-#endif
+#endif /* NETDIRECT */
       abuf_appendf(&body_abuf,
                  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n" "<head>\n"
                  "<meta http-equiv=\"Content-type\" content=\"text/html; charset=ISO-8859-1\">\n"
@@ -512,10 +512,10 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
 #ifdef NETDIRECT
       netsprintf_direct = 1;
       goto close_connection;
-#else
+#else /* NETDIRECT */
       header_length = build_http_header(HTTP_OK, true, body_abuf.len, header_buf, sizeof(header_buf));
       goto send_http_data;
-#endif
+#endif /* NETDIRECT */
     }
 
     stats.ill_hits++;
@@ -745,7 +745,7 @@ build_ipaddr_link(struct autobuf *abuf, const bool want_link, const union olsr_i
 #ifndef _WIN32
     resolve_ip_addresses ? gethostbyaddr((const void *)ipaddr, olsr_cnf->ipsize,
                                          olsr_cnf->ip_version) :
-#endif
+#endif /* _WIN32 */
     NULL;
   /* Print the link only if there is no prefix_len and ip_version is AF_INET */
   const int print_link = want_link && (prefix_len == -1 || prefix_len == olsr_cnf->maxplen) && (olsr_cnf->ip_version == AF_INET);
@@ -1102,7 +1102,7 @@ build_all_body(struct autobuf *abuf)
   build_mid_body(abuf);
 #ifdef HTTPINFO_PUD
   build_pud_body(abuf);
-#endif
+#endif /* HTTPINFO_PUD */
 }
 
 #ifdef HTTPINFO_PUD
@@ -1445,7 +1445,7 @@ static void build_pud_body(struct autobuf *abuf) {
 		);
 	}
 }
-#endif
+#endif /* HTTPINFO_PUD */
 
 static void
 build_about_body(struct autobuf *abuf)
@@ -1455,7 +1455,7 @@ build_about_body(struct autobuf *abuf)
                   "Compiled "
 #ifdef ADMIN_INTERFACE
                   "<em>with experimental admin interface</em> "
-#endif
+#endif /* ADMIN_INTERFACE */
                   "%s at %s<hr/>\n" "This plugin implements a HTTP server that supplies\n"
                   "the client with various dynamic web pages representing\n"
                   "the current olsrd status.<br/>The different pages include:\n"
@@ -1480,7 +1480,7 @@ build_about_body(struct autobuf *abuf)
                   "the future possibilities of httpinfo. This is to be a interface to\n"
                   "changing olsrd settings in realtime. These settings include various\n"
                   "\"basic\" settings and local HNA settings.</li>\n"
-#endif
+#endif /* ADMIN_INTERFACE */
                   "<li><strong>About</strong> - this help page.</li>\n</ul>" "<hr/>\n" "Send questions or comments to\n"
                   "<a href=\"mailto:olsr-users@olsr.org\">olsr-users@olsr.org</a> or\n"
                   "<a href=\"mailto:andreto-at-olsr.org\">andreto-at-olsr.org</a><br/>\n"
@@ -1500,7 +1500,7 @@ build_cfgfile_body(struct autobuf *abuf)
 
 #if 0
   printf("RETURNING %d\n", size);
-#endif
+#endif /* 0 */
 }
 
 static int
