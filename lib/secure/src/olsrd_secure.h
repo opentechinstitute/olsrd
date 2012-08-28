@@ -39,8 +39,8 @@
  * Dynamic linked library example for UniK OLSRd
  */
 
-#ifndef _OLSRD_PLUGIN_TEST
-#define _OLSRD_PLUGIN_TEST
+#ifndef _OLSRD_SECURE_H
+#define _OLSRD_SECURE_H
 
 #include "secure_messages.h"
 

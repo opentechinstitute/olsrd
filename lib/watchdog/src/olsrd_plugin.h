@@ -43,8 +43,8 @@
  * Dynamic linked library for the olsr.org olsr daemon
  */
 
-#ifndef _OLSRD_PLUGIN_MINI
-#define _OLSRD_PLUGIN_MINI
+#ifndef _OLSRD_PLUGIN_WATCHDOG_H
+#define _OLSRD_PLUGIN_WATCHDOG_H
 
 
 /****************************************************************************

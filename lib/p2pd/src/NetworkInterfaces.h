@@ -39,8 +39,8 @@
  */
 
 
-#ifndef _NETWORKINTERFACES_H
-#define _NETWORKINTERFACES_H
+#ifndef _P2PD_NETWORKINTERFACES_H
+#define _P2PD_NETWORKINTERFACES_H
 
 /* System includes */
 #include <netinet/in.h>         /* struct in_addr */

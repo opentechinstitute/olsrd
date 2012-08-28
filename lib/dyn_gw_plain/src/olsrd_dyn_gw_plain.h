@@ -38,8 +38,8 @@
  * the copyright holders.
  */
 
-#ifndef _OLSRD_PLUGIN_TEST
-#define _OLSRD_PLUGIN_TEST
+#ifndef _OLSRD_DYNGWPLAIN_H
+#define _OLSRD_DYNGWPLAIN_H
 
 #include "olsrd_plugin.h"
 #include "olsr.h"

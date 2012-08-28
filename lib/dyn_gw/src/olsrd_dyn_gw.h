@@ -39,8 +39,8 @@
  *
  */
 
-#ifndef _OLSRD_PLUGIN_TEST
-#define _OLSRD_PLUGIN_TEST
+#ifndef _OLSRD_DYNGW_H
+#define _OLSRD_DYNGW_H
 
 #include "olsrd_plugin.h"
 #include "plugin_util.h"

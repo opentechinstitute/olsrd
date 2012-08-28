@@ -1,5 +1,5 @@
-#ifndef _BMF_PACKETHISTORY_H
-#define _BMF_PACKETHISTORY_H
+#ifndef _P2PD_PACKETHISTORY_H
+#define _P2PD_PACKETHISTORY_H
 
 /*
  * OLSR Basic Multicast Forwarding (BMF) plugin.

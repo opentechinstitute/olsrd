@@ -39,8 +39,8 @@
  */
 
 
-#ifndef _BMF_NETWORKINTERFACES_H
-#define _BMF_NETWORKINTERFACES_H
+#ifndef _MDNS_NETWORKINTERFACES_H
+#define _MDNS_NETWORKINTERFACES_H
 
 /* System includes */
 #include <netinet/in.h>         /* struct in_addr */
