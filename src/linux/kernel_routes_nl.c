@@ -513,17 +513,6 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
   hostRoute = rt->rt_dst.prefix_len == olsr_cnf->ipsize * 8
       && ipequal(&nexthop->gateway, &rt->rt_dst.prefix);
 
-#if 0
-  {
-    struct ipaddr_str buf1, buf2;
-    olsr_syslog(OLSR_LOG_INFO, "hostroute (%s) = %d == %d && %s == %s",
-        hostRoute ? "true" : "false",
-        rt->rt_dst.prefix_len, (int)(olsr_cnf->ipsize * 8),
-        olsr_ip_to_string(&buf1, &nexthop->gateway),
-        olsr_ip_to_string(&buf2, &rt->rt_dst.prefix));
-  }
-#endif /* 0 */
-
   /* get src ip */
   if (olsr_cnf->use_src_ip_routes) {
     src = &olsr_cnf->unicast_src_ip;

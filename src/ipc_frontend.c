@@ -179,31 +179,6 @@ ipc_check_allowed_ip(const union olsr_ip_addr *addr)
   return false;
 }
 
-#if 0
-
-/**
- *Read input from the IPC socket. Not in use.
- *
- *@todo for future use
- *@param sock the IPC socket
- *@return 1
- */
-int
-ipc_input(int sock __attribute__ ((unused)))
-{
-  union {
-    char buf[MAXPACKETSIZE + 1];
-    struct olsr olsr;
-  } inbuf;
-
-  if (recv(sock, dir, sizeof(dir), 0) == -1) {
-    perror("recv");
-    exit(1);
-  }
-  return 1;
-}
-#endif /* 0 */
-
 /**
  *Sends a olsr packet on the IPC socket.
  *

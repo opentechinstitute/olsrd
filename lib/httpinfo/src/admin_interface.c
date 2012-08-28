@@ -54,11 +54,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#if 0
-#define sprintf netsprintf
-#define NETDIRECT
-#endif /* 0 */
-
 static const char admin_basic_setting_int[] =
   "<td><strong>%s</strong></td><td><input type=\"text\" name=\"%s\" maxlength=\"%d\" class=\"input_text\" value=\"%d\"></td>\n";
 static const char admin_basic_setting_float[] =
@@ -325,11 +320,6 @@ process_param(char *key, char *value)
   }
 
   return 0;
-#if 0
-  {
-  1, admin_basic_setting_string, "TOS:", "tos", 6, "TBD"}
-  ,
-#endif /* 0 */
 }
 
 int

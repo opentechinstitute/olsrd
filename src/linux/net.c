@@ -106,9 +106,6 @@ static char orig_fwd_state;
 static char orig_global_redirect_state;
 static char orig_global_rp_filter;
 static char orig_tunnel_rp_filter;
-#if 0 // should not be necessary for IPv6 */
-static char orig_tunnel6_rp_filter;
-#endif /* 0 */
 
 /**
  *Bind a socket to a device
@@ -242,18 +239,6 @@ net_os_set_global_ifoptions(void) {
         olsr_startup_sleep(3);
       }
     }
-
-#if 0 // should not be necessary for IPv6
-    if (olsr_cnf->ip_version == AF_INET6) {
-      snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF6);
-      if (writeToProc(procfile, &orig_tunnel6_rp_filter, OLSRD_SPOOF_VALUE)) {
-        OLSR_PRINTF(0, "WARNING! Could not disable the IP spoof filter for tunnel6!\n"
-            "you should manually ensure that IP spoof filtering is disabled!\n\n");
-
-        olsr_startup_sleep(3);
-      }
-    }
-#endif /* 0 */
   }
 
   if (olsr_cnf->ip_version == AF_INET) {
@@ -335,15 +320,6 @@ net_os_restore_ifoptions(void)
     if (restoreProc(procfile, orig_tunnel_rp_filter, OLSRD_SPOOF_VALUE)) {
       OLSR_PRINTF(0, "WARNING! Could not restore the IP spoof filter for tunnel!\n");
     }
-
-#if 0 // should not be necessary for IPv6
-    if (olsr_cnf->ip_version == AF_INET6) {
-      snprintf(procfile, sizeof(procfile), PROC_IF_SPOOF, TUNNEL_ENDPOINT_IF6);
-      if (restoreProc(procfile, orig_tunnel6_rp_filter, OLSRD_SPOOF_VALUE)) {
-        OLSR_PRINTF(0, "WARNING! Could not restore the IP spoof filter for tunnel6!\n");
-      }
-    }
-#endif /* 0 */
   }
 
   if (olsr_cnf->ip_version == AF_INET) {
@@ -724,142 +700,11 @@ check_wireless_interface(char *ifname)
   return (ioctl(olsr_cnf->ioctl_s, SIOCGIWNAME, &ifr) >= 0) ? 1 : 0;
 }
 
-#if 0
-
-#include <linux/sockios.h>
-#include <linux/types.h>
-
-/* This data structure is used for all the MII ioctl's */
-struct mii_data {
-  __u16 phy_id;
-  __u16 reg_num;
-  __u16 val_in;
-  __u16 val_out;
-};
-
-/* Basic Mode Control Register */
-#define MII_BMCR		0x00
-#define  MII_BMCR_RESET		0x8000
-#define  MII_BMCR_LOOPBACK	0x4000
-#define  MII_BMCR_100MBIT	0x2000
-#define  MII_BMCR_AN_ENA	0x1000
-#define  MII_BMCR_ISOLATE	0x0400
-#define  MII_BMCR_RESTART	0x0200
-#define  MII_BMCR_DUPLEX	0x0100
-#define  MII_BMCR_COLTEST	0x0080
-
-/* Basic Mode Status Register */
-#define MII_BMSR		0x01
-#define  MII_BMSR_CAP_MASK	0xf800
-#define  MII_BMSR_100BASET4	0x8000
-#define  MII_BMSR_100BASETX_FD	0x4000
-#define  MII_BMSR_100BASETX_HD	0x2000
-#define  MII_BMSR_10BASET_FD	0x1000
-#define  MII_BMSR_10BASET_HD	0x0800
-#define  MII_BMSR_NO_PREAMBLE	0x0040
-#define  MII_BMSR_AN_COMPLETE	0x0020
-#define  MII_BMSR_REMOTE_FAULT	0x0010
-#define  MII_BMSR_AN_ABLE	0x0008
-#define  MII_BMSR_LINK_VALID	0x0004
-#define  MII_BMSR_JABBER	0x0002
-#define  MII_BMSR_EXT_CAP	0x0001
-
-int
-calculate_if_metric(char *ifname)
-{
-  if (check_wireless_interface(ifname)) {
-    struct ifreq ifr;
-    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-
-    /* Get bit rate */
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGIWRATE, &ifr) < 0) {
-      OLSR_PRINTF(1, "Not able to find rate for WLAN interface %s\n", ifname);
-      return WEIGHT_WLAN_11MB;
-    }
-
-    OLSR_PRINTF(1, "Bitrate %d\n", ifr.ifr_ifru.ifru_ivalue);
-
-    //WEIGHT_WLAN_LOW,          /* <11Mb WLAN     */
-    //WEIGHT_WLAN_11MB,         /* 11Mb 802.11b   */
-    //WEIGHT_WLAN_54MB,         /* 54Mb 802.11g   */
-    return WEIGHT_WLAN_LOW;
-  } else {
-    /* Ethernet */
-    /* Mii wizardry */
-    struct ifreq ifr;
-    struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
-    int bmcr;
-    memset(&ifr, 0, sizeof(ifr));
-    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
-      if (errno != ENODEV)
-        OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n", ifr.ifr_name, strerror(errno));
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-
-    mii->reg_num = MII_BMCR;
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
-      OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name, strerror(errno));
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-    bmcr = mii->val_out;
-
-    OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
-    OLSR_PRINTF(1, "%s Mbit, %s duplex\n", (bmcr & MII_BMCR_100MBIT) ? "100" : "10", (bmcr & MII_BMCR_DUPLEX) ? "full" : "half");
-
-    is_if_link_up(ifname);
-
-    if (mii->val_out & MII_BMCR_100MBIT)
-      return WEIGHT_ETHERNET_100MB;
-    else
-      return WEIGHT_ETHERNET_10MB;
-    //WEIGHT_ETHERNET_1GB,      /* Ethernet 1Gb   */
-
-  }
-}
-
-bool
-is_if_link_up(char *ifname)
-{
-  if (check_wireless_interface(ifname)) {
-    /* No link checking on wireless devices */
-    return true;
-  } else {
-    /* Mii wizardry */
-    struct ifreq ifr;
-    struct mii_data *mii = (struct mii_data *)&ifr.ifr_data;
-    int bmsr;
-    memset(&ifr, 0, sizeof(ifr));
-    strscpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIPHY, &ifr) < 0) {
-      if (errno != ENODEV)
-        OLSR_PRINTF(1, "SIOCGMIIPHY on '%s' failed: %s\n", ifr.ifr_name, strerror(errno));
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-    mii->reg_num = MII_BMSR;
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGMIIREG, &ifr) < 0) {
-      OLSR_PRINTF(1, "SIOCGMIIREG on %s failed: %s\n", ifr.ifr_name, strerror(errno));
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-    bmsr = mii->val_out;
-
-    OLSR_PRINTF(1, "%s: ", ifr.ifr_name);
-    OLSR_PRINTF(1, "%s\n", (bmsr & MII_BMSR_LINK_VALID) ? "link ok " : "no link ");
-
-    return (bmsr & MII_BMSR_LINK_VALID);
-
-  }
-}
-
-#else /* 0 */
 int
 calculate_if_metric(char *ifname)
 {
   return check_wireless_interface(ifname);
 }
-#endif /* 0 */
 
 bool olsr_if_isup(const char * dev)
 {

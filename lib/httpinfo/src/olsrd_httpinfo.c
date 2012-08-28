@@ -214,14 +214,6 @@ static int outbuffer_count;
 
 static struct timer_entry *writetimer_entry;
 
-#if 0
-int netsprintf(char *str, const char *format, ...) __attribute__ ((format(printf, 2, 3)));
-static int netsprintf_direct = 0;
-static int netsprintf_error = 0;
-#define sprintf netsprintf
-#define NETDIRECT
-#endif /* 0 */
-
 static const struct tab_entry tab_entries[] = {
   {"Configuration", "config", build_config_body, true},
   {"Routes", "routes", build_routes_body, true},
@@ -1497,10 +1489,6 @@ build_cfgfile_body(struct autobuf *abuf)
   olsrd_write_cnf_autobuf(abuf, olsr_cnf);
 
   abuf_puts(abuf, "</pre>\n<hr/>\n");
-
-#if 0
-  printf("RETURNING %d\n", size);
-#endif /* 0 */
 }
 
 static int

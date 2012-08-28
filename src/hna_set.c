@@ -128,9 +128,6 @@ olsr_lookup_hna_gw(const union olsr_ip_addr *gw)
   struct hna_entry *tmp_hna;
   uint32_t hash = olsr_ip_hashing(gw);
 
-#if 0
-  OLSR_PRINTF(5, "HNA: lookup entry\n");
-#endif /* 0 */
   /* Check for registered entry */
 
   for (tmp_hna = hna_set[hash].next; tmp_hna != &hna_set[hash]; tmp_hna = tmp_hna->next) {

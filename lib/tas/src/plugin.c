@@ -86,13 +86,6 @@ static struct hna_entry *hnaTab = NULL;
 static struct olsrd_config *config = NULL;
 
 static int iterIndex;
-#if 0
-
-/* not used */
-static struct interface *iterIntTab = NULL;
-static struct mid_entry *iterMidTab = NULL;
-static struct hna_entry *iterHnaTab = NULL;
-#endif /* 0 */
 
 static struct link_entry *iterLinkTab = NULL;
 static struct neighbor_entry *iterNeighTab = NULL;

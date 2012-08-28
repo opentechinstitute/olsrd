@@ -120,11 +120,6 @@
 #include <libnet.h>
 #endif /* SPOOF */
 
-#if 0
-#define	SIOCGIFGENERIC	_IOWR('i', 58, struct ifreq)    /* generic IF get op */
-#define SIOCGWAVELAN SIOCGIFGENERIC
-#endif /* 0 */
-
 #include <sys/sysctl.h>
 
 static int ignore_redir;
@@ -790,20 +785,6 @@ calculate_if_metric(char *ifname)
     return 1;
   } else {
     /* Ethernet */
-#if 0
-    /* Andreas: Perhaps SIOCGIFMEDIA is the way to do this? */
-    struct ifmediareq ifm;
-
-    memset(&ifm, 0, sizeof(ifm));
-    strscpy(ifm.ifm_name, ifname, sizeof(ifm.ifm_name));
-
-    if (ioctl(olsr_cnf->ioctl_s, SIOCGIFMEDIA, &ifm) < 0) {
-      OLSR_PRINTF(1, "Error SIOCGIFMEDIA(%s)\n", ifm.ifm_name);
-      return WEIGHT_ETHERNET_DEFAULT;
-    }
-
-    OLSR_PRINTF(1, "%s: STATUS 0x%08x\n", ifm.ifm_name, ifm.ifm_status);
-#endif /* 0 */
     return WEIGHT_ETHERNET_DEFAULT;
   }
 }

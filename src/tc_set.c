@@ -280,10 +280,6 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 {
   struct tc_edge_entry *tc_edge;
   struct rt_path *rtp;
-#if 0
-  struct ipaddr_str buf;
-  OLSR_PRINTF(1, "TC: del entry %s\n", olsr_ip_to_string(&buf, &tc->addr));
-#endif /* 0 */
 
   /* delete gateway if available */
 #ifdef __linux__
@@ -323,10 +319,6 @@ struct tc_entry *
 olsr_lookup_tc_entry(union olsr_ip_addr *adr)
 {
   struct avl_node *node;
-
-#if 0
-  OLSR_PRINTF(1, "TC: lookup entry\n");
-#endif /* 0 */
 
   node = avl_find(&tc_tree, adr);
 
@@ -545,10 +537,6 @@ olsr_delete_outdated_tc_edges(struct tc_entry *tc)
   struct tc_edge_entry *tc_edge;
   bool retval = false;
 
-#if 0
-  OLSR_PRINTF(5, "TC: deleting outdated TC-edge entries\n");
-#endif /* 0 */
-
   OLSR_FOR_ALL_TC_EDGE_ENTRIES(tc, tc_edge) {
     if (SEQNO_GREATER_THAN(tc->ansn, tc_edge->ansn)) {
       olsr_delete_tc_edge_entry(tc_edge);
@@ -573,10 +561,6 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_a
 {
   struct tc_edge_entry *tc_edge;
   int retval = 0;
-
-#if 0
-  OLSR_PRINTF(5, "TC: deleting MPRS\n");
-#endif /* 0 */
 
   bool passedLowerBorder = false;
 
@@ -689,10 +673,6 @@ struct tc_edge_entry *
 olsr_lookup_tc_edge(struct tc_entry *tc, union olsr_ip_addr *edge_addr)
 {
   struct avl_node *edge_node;
-
-#if 0
-  OLSR_PRINTF(1, "TC: lookup dst\n");
-#endif /* 0 */
 
   edge_node = avl_find(&tc->edge_tree, edge_addr);
 

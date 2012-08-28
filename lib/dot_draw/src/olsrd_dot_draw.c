@@ -239,9 +239,6 @@ plugin_ipc_init(void)
   }
 
   /* Register with olsrd */
-#if 0
-  printf("Adding socket with olsrd\n");
-#endif /* 0 */
   add_olsr_socket(ipc_socket, &ipc_action, NULL, NULL, SP_PR_READ);
 
   return 1;

@@ -262,14 +262,6 @@ chk_if_changed(struct olsr_if *iface)
       OLSR_PRINTF(1, "\tOld: %s\n", ip6_to_string(&buf, &ifp->int6_addr.sin6_addr));
       OLSR_PRINTF(1, "\tNew: %s\n", ip6_to_string(&buf, &tmp_saddr6.sin6_addr));
 
-      /* deactivated to prevent change of originator IP */
-#if 0
-      /* Check main addr */
-      if (memcmp(&olsr_cnf->main_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize) == 0) {
-        /* Update main addr */
-        memcpy(&olsr_cnf->main_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
-      }
-#endif /* 0 */
       /* Update address */
       memcpy(&ifp->int6_addr.sin6_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
       memcpy(&ifp->ip_addr, &tmp_saddr6.sin6_addr, olsr_cnf->ipsize);
@@ -304,14 +296,6 @@ chk_if_changed(struct olsr_if *iface)
       OLSR_PRINTF(1, "\tNew:%s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
 
       ifp->int_addr = *(struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifr.ifr_addr);
-      /* deactivated to prevent change of originator IP */
-#if 0
-      if (memcmp(&olsr_cnf->main_addr, &ifp->ip_addr, olsr_cnf->ipsize) == 0) {
-        OLSR_PRINTF(1, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
-        olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", sockaddr4_to_string(&buf, &ifr.ifr_addr));
-        memcpy(&olsr_cnf->main_addr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr, olsr_cnf->ipsize);
-      }
-#endif /* 0 */
       memcpy(&ifp->ip_addr, &((struct sockaddr_in *)ARM_NOWARN_ALIGN(&ifr.ifr_addr))->sin_addr.s_addr, olsr_cnf->ipsize);
 
       /* we have to make sure that olsrd uses the new source address of this interface */
@@ -464,25 +448,6 @@ add_hemu_if(struct olsr_if *iface)
   } else {
     /* IP version 6 */
     memcpy(&ifp->ip_addr, &iface->hemu_ip, olsr_cnf->ipsize);
-
-#if 0
-    /*
-     *We create one socket for each interface and bind
-     *the socket to it. This to ensure that we can control
-     *on what interface the message is transmitted
-     */
-
-    ifp->olsr_socket = gethcsocket6(&addrsock6, BUFSPACE, ifp->int_name);
-
-    join_mcast(ifp, ifp->olsr_socket);
-
-    if (ifp->olsr_socket < 0) {
-      fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-      olsr_syslog(OLSR_LOG_ERR, "Could not initialize socket... exiting!\n\n");
-      olsr_cnf->exit_value = EXIT_FAILURE;
-      kill(getpid(), SIGINT);
-    }
-#endif /* 0 */
   }
 
   /* Send IP as first 4/16 bytes on socket */

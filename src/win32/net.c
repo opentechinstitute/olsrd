@@ -319,16 +319,6 @@ DisableIcmpRedirects(void)
 
   fprintf(stderr, "\n*** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT *** IMPORTANT ***\n\n");
 
-#if 0
-  if (Res < 0) {
-    fprintf(stderr, "Cannot disable ICMP redirect processing in the registry.\n");
-    fprintf(stderr, "Please disable it manually. Continuing in 3 seconds...\n");
-    Sleep(3000);
-
-    return;
-  }
-#endif /* 0 */
-
   fprintf(stderr, "I have disabled ICMP redirect processing in the registry for you.\n");
   fprintf(stderr, "REBOOT NOW, so that these changes take effect. Exiting...\n\n");
 

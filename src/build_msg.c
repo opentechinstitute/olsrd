@@ -1162,9 +1162,6 @@ serialize_hna6(struct interface *ifp)
   m->v6.seqno = htons(get_msg_seqno());
 
   net_outbuffer_push(ifp, msg_buffer, curr_size);
-#if 0
-  printf("Sending HNA (%d bytes)...\n", outputsize);
-#endif /* 0 */
   return false;
 
 }

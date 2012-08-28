@@ -552,23 +552,6 @@ add_hemu_if(struct olsr_if *iface)
   } else {
     /* IP version 6 */
     memcpy(&ifp->ip_addr, &iface->hemu_ip, olsr_cnf->ipsize);
-
-#if 0
-    /*
-     *We create one socket for each interface and bind
-     *the socket to it. This to ensure that we can control
-     *on what interface the message is transmitted
-     */
-
-    ifp->olsr_socket = gethcsocket6(&addrsock6, bufspace, ifp->int_name);
-
-    join_mcast(ifp, ifp->olsr_socket);
-
-    if (ifp->olsr_socket < 0) {
-      fprintf(stderr, "Could not initialize socket... exiting!\n\n");
-      exit(1);
-    }
-#endif /* 0 */
   }
 
   /* Send IP as first 4/16 bytes on socket */

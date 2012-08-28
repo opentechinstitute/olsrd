@@ -137,9 +137,6 @@ char keyfile[FILENAME_MAX + 1];
 char aes_key[16];
 
 /* Event function to register with the sceduler */
-#if 0
-static void olsr_event(void);
-#endif /* 0 */
 static int send_challenge(struct interface *olsr_if, const union olsr_ip_addr *);
 static int send_cres(struct interface *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t, struct stamp *);
 static int send_rres(struct interface *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t);
@@ -147,9 +144,6 @@ static int parse_challenge(struct interface *olsr_if, char *);
 static int parse_cres(struct interface *olsr_if, char *);
 static int parse_rres(char *);
 static int check_auth(struct interface *olsr_if, char *, int *);
-#if 0
-static int ipc_send(char *, int);
-#endif /* 0 */
 static int add_signature(uint8_t *, int *);
 static int validate_packet(struct interface *olsr_if, const char *, int *);
 static char *secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr, int *length);
@@ -216,26 +210,6 @@ secure_plugin_exit(void)
 {
   olsr_preprocessor_remove_function(&secure_preprocessor);
 }
-
-#if 0
-
-/**
- *Scheduled event
- */
-static void
-olsr_event(void)
-{
-
-}
-#endif /* 0 */
-
-#if 0
-static int
-ipc_send(char *data __attribute__ ((unused)), int size __attribute__ ((unused)))
-{
-  return 1;
-}
-#endif /* 0 */
 
 static char *
 secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr, int *length)

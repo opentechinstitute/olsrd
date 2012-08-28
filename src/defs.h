@@ -197,10 +197,6 @@ extern bool olsr_win32_end_flag;
 
 int ipc_init(void);
 
-#if 0
-int ipc_input(int);
-#endif /* 0 */
-
 int shutdown_ipc(void);
 
 int ipc_output(struct olsr *);

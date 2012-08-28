@@ -469,17 +469,6 @@ avl_local_min(struct avl_node *node)
   return node;
 }
 
-#if 0
-static struct avl_node *
-avl_local_max(struct avl_node *node)
-{
-  while (node->right != NULL)
-    node = node->right;
-
-  return node;
-}
-#endif /* 0 */
-
 static void
 avl_delete_worker(struct avl_tree *tree, struct avl_node *node)
 {

@@ -79,10 +79,6 @@ extern union olsr_ip_addr httpinfo_listen_ip;
 void olsr_plugin_exit(void);
 void olsr_plugin_exit(void);
 
-#if 0
-extern int netsprintf(char *str, const char *format, ...);
-#endif /* 0 */
-
 #endif /* _OLSRD_HTTP_INFO */
 
 /*

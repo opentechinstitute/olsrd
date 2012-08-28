@@ -146,26 +146,6 @@ fpmidiv(fpm a, int b)
   return r;
 }
 
-#if 0
-fpm
-fpmlmul(fpm a, fpm b)
-{
-  fpm r;
-  assert((0 < (sfpm) a) != (0 < (sfpm) b) || ((double)(sfpm) a * (double)(sfpm) b / FPM_NUM) <= (double)FPM_INT_MAX);
-  assert((0 < (sfpm) a) == (0 < (sfpm) b) || ((double)(sfpm) a * (double)(sfpm) b / FPM_NUM) >= (double)FPM_INT_MIN);
-  r = (fpm) fpmlmul_def((sfpm) a, (sfpm) b);
-  return r;
-}
-
-fpm
-fpmldiv(fpm a, fpm b)
-{
-  fpm r;
-  r = (fpm) fpmldiv_def((sfpm) a, (sfpm) b);
-  return r;
-}
-#endif /* 0 */
-
 #endif /* NDEBUG */
 
 fpm

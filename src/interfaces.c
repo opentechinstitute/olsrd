@@ -399,22 +399,6 @@ olsr_remove_interface(struct olsr_if * iface)
   /* Remove output buffer */
   net_remove_buffer(ifp);
 
-  /* Check main addr */
-  /* deactivated to prevent change of originator IP */
-#if 0
-  if (ipequal(&olsr_cnf->main_addr, &ifp->ip_addr)) {
-    if (ifnet == NULL) {
-      /* No more interfaces */
-      memset(&olsr_cnf->main_addr, 0, olsr_cnf->ipsize);
-      OLSR_PRINTF(1, "No more interfaces...\n");
-    } else {
-      struct ipaddr_str buf;
-      olsr_cnf->main_addr = ifnet->ip_addr;
-      OLSR_PRINTF(1, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
-      olsr_syslog(OLSR_LOG_INFO, "New main address: %s\n", olsr_ip_to_string(&buf, &olsr_cnf->main_addr));
-    }
-  }
-#endif /* 0 */
   /*
    * Deregister functions for periodic message generation
    */
