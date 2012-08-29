@@ -579,7 +579,7 @@ ipc_print_gateway(struct autobuf *abuf)
       continue;
     }
 
-    if (gw == olsr_get_ipv4_inet_gateway()) {
+    if (gw == olsr_get_inet_gateway(false)) {
       v4 = autoV4 ? 'a' : 's';
     }
     else if (gw->ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)
@@ -587,7 +587,7 @@ ipc_print_gateway(struct autobuf *abuf)
       v4 = 'u';
     }
 
-    if (gw == olsr_get_ipv6_inet_gateway()) {
+    if (gw == olsr_get_inet_gateway(true)) {
       v6 = autoV6 ? 'a' : 's';
     }
     else if (gw->ipv6 && olsr_cnf->ip_version == AF_INET6) {

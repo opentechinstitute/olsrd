@@ -771,14 +771,14 @@ ipc_print_gateways(struct autobuf *abuf)
       continue;
     }
 
-    if (gw == olsr_get_ipv4_inet_gateway()) {
+    if (gw == olsr_get_inet_gateway(false)) {
       v4 = autoV4 ? "auto" : "s";
     } else if (gw->ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)
                && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat)) {
       v4 = "u";
     }
 
-    if (gw == olsr_get_ipv6_inet_gateway()) {
+    if (gw == olsr_get_inet_gateway(true)) {
       v6 = autoV6 ? "auto" : "s";
     } else if (gw->ipv6 && olsr_cnf->ip_version == AF_INET6) {
       v6 = "u";

@@ -537,19 +537,17 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
 }
 
 /**
+ * @param if set to true then the IPv6 gateway is returned, otherwise the IPv4
+ * gateway is returned
  * @return a pointer to the gateway_entry of the current ipv4 internet gw or
  * NULL if not set.
  */
-struct gateway_entry *olsr_get_ipv4_inet_gateway(void) {
-  return current_ipv4_gw;
-}
+struct gateway_entry *olsr_get_inet_gateway(bool ipv6) {
+	if (ipv6) {
+		return current_ipv6_gw;
+	}
 
-/**
- * @return a pointer to the gateway_entry of the current ipv4 internet gw or
- * NULL if not set.
- */
-struct gateway_entry *olsr_get_ipv6_inet_gateway(void) {
-  return current_ipv6_gw;
+	return current_ipv4_gw;
 }
 
 #endif /* __linux__ */

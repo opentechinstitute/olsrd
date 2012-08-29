@@ -160,7 +160,6 @@ void olsr_trigger_gatewayloss_check(void);
  */
 
 bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6);
-struct gateway_entry *olsr_get_ipv4_inet_gateway(void);
-struct gateway_entry *olsr_get_ipv6_inet_gateway(void);
+struct gateway_entry *olsr_get_inet_gateway(bool ipv6);
 
 #endif /* GATEWAY_H_ */

@@ -170,7 +170,7 @@ static void gw_default_choose_gateway(void) {
   if (olsr_cnf->smart_gw_thresh) {
     /* determine the path cost thresholds */
 
-    gw = olsr_get_ipv4_inet_gateway();
+    gw = olsr_get_inet_gateway(false);
     if (gw) {
       tc = olsr_lookup_tc_entry(&gw->originator);
       if (tc) {
@@ -179,7 +179,7 @@ static void gw_default_choose_gateway(void) {
         eval_cost_ipv4_threshold = true;
       }
     }
-    gw = olsr_get_ipv6_inet_gateway();
+    gw = olsr_get_inet_gateway(true);
     if (gw) {
       tc = olsr_lookup_tc_entry(&gw->originator);
       if (tc) {
@@ -362,9 +362,9 @@ static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
  * @param gw the gateway entry
  */
 static void gw_default_update_handler(struct gateway_entry *gw) {
-  bool v4changed = gw && (gw == olsr_get_ipv4_inet_gateway())
+  bool v4changed = gw && (gw == olsr_get_inet_gateway(false))
       && (!gw->ipv4 || (gw->ipv4nat && !olsr_cnf->smart_gw_allow_nat));
-  bool v6changed = gw && (gw == olsr_get_ipv6_inet_gateway()) && !gw->ipv6;
+  bool v6changed = gw && (gw == olsr_get_inet_gateway(true)) && !gw->ipv6;
 
   if (v4changed || v6changed) {
     gw_default_lookup_gateway(v4changed, v6changed);
@@ -377,8 +377,8 @@ static void gw_default_update_handler(struct gateway_entry *gw) {
  * @param gw the gateway entry
  */
 static void gw_default_delete_handler(struct gateway_entry *gw) {
-  bool isv4 = gw && (gw == olsr_get_ipv4_inet_gateway());
-  bool isv6 = gw && (gw == olsr_get_ipv6_inet_gateway());
+  bool isv4 = gw && (gw == olsr_get_inet_gateway(false));
+  bool isv6 = gw && (gw == olsr_get_inet_gateway(true));
 
   if (isv4 || isv6) {
     gw_default_lookup_gateway(isv4, isv6);
