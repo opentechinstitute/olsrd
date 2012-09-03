@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef LINUX_NL80211 /* Optional - not supported on all platforms */
+
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -61,8 +63,6 @@
 #include "log.h"
 #include "fpm.h"
 
-/* Don't build unless LINUX_NL80211 is defined */
-#ifdef LINUX_NL80211
 
 // Static values for testing
 #define REFERENCE_BANDWIDTH_MBIT_SEC 54

@@ -40,6 +40,8 @@
  *
  */
 
+#ifdef LINUX_NL80211 /* Optional - not supported on all platforms */
+
 #include "lq_plugin_ffeth_nl80211.h"
 #include "tc_set.h"
 #include "link_set.h"
@@ -513,6 +515,8 @@ lq_print_cost_ffeth_nl80211(olsr_linkcost cost, struct lqtextbuffer *buffer)
   snprintf(buffer->buf, sizeof(buffer->buf), "%s", fpmtoa(cost));
   return buffer->buf;
 }
+
+#endif /* LINUX_NL80211 */
 
 /*
  * Local Variables:
