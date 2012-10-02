@@ -149,7 +149,7 @@ Interface "GUI" {
     # If not defined the broadcastaddress
     # every card is configured with is used
     # The second useful value would be to
-    # specify the peer adress of an ptp-tunnel.
+    # specify the peer address of an ptp-tunnel.
     # another name of this parameter is "IPv4Multicast"
  
     # Ip4Broadcast      255.255.255.255

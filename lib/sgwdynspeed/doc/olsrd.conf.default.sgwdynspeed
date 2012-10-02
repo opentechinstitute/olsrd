@@ -529,7 +529,7 @@ Interface "em1"
     # IPv4 broadcast address for outgoing OLSR packets.
     # One usefull example would be 255.255.255.255
     # The second useful value would be to
-    # specify the peer adress of an ptp-tunnel.
+    # specify the peer address of an ptp-tunnel.
     # another name of this parameter is "IPv4Multicast"
     # (default is 0.0.0.0, which triggers the usage of the
     # interface broadcast IP)

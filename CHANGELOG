@@ -175,7 +175,7 @@ OLSR network.
 - Add detection for vanishing interfaces to Linux netlink code
 - fix incorret route sorting on new neighbours. use only delete and add/change avl tree,
   instead of 3 trees
-- learn neighbours interface alias adress from received hellos
+- learn neighbours interface alias address from received hellos
 
 PATCHES from Hannes Gredler <hannes@gredler.at>:
 - add small valgrind howto
@@ -721,7 +721,7 @@ saves a noteworthy amount of CPU time. To quote him:
 
    rather than tracking the previous node in olsr_relax()
    i have changed that model and pre-populate all one-hop neighbors
-   with their own IP adress as 'next-hop' and pull that
+   with their own IP address as 'next-hop' and pull that
    pointer up once new paths are explored.
 
    as a result no walker for counting hops and extracting next-hops

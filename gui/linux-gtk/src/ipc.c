@@ -309,8 +309,8 @@ ipc_eval_net_info(struct netmsg *msg)
 
   /*
      printf("\tMain address: %s\n", ip_to_string(&msg->main_addr));
-     printf("\tMid adresses: %d\n", msg->mids);
-     printf("\tHna adresses: %d\n", msg->hnas);
+     printf("\tMid addresses: %d\n", msg->mids);
+     printf("\tHna addresses: %d\n", msg->hnas);
      printf("\tHELLO interval: %f\n", (float)(ntohs(msg->hello_int)));
      printf("\tHELLO LAN interval: %f\n", (float)(ntohs(msg->hello_lan_int)));
      printf("\tTC interval: %d\n", ntohs(msg->tc_int));

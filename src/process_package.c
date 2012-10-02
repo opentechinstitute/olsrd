@@ -427,7 +427,7 @@ olsr_hello_tap(struct hello_message *message, struct interface *in_if, const uni
       else
       {
         struct ipaddr_str srcbuf, origbuf;
-        olsr_syslog(OLSR_LOG_INFO, "got hello with invalid from and originator adress pair (%s, %s) Duplicate Ips?\n",
+        olsr_syslog(OLSR_LOG_INFO, "got hello with invalid from and originator address pair (%s, %s) Duplicate Ips?\n",
                     olsr_ip_to_string(&origbuf,&message->source_addr),
                     olsr_ip_to_string(&srcbuf,from_addr));
       }

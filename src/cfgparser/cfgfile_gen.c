@@ -120,7 +120,7 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
     "    # IPv4 broadcast address for outgoing OLSR packets.\n"
     "    # One usefull example would be 255.255.255.255\n"
     "    # The second useful value would be to\n"
-    "    # specify the peer adress of an ptp-tunnel.\n"
+    "    # specify the peer address of an ptp-tunnel.\n"
     "    # another name of this parameter is \"IPv4Multicast\"\n"
     "    # (default is 0.0.0.0, which triggers the usage of the\n"
     "    # interface broadcast IP)\n"
