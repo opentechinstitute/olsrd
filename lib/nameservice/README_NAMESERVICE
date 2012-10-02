@@ -177,7 +177,7 @@ UNIX VARIANTS:
 
         to your nameservice plugin configuration.
 
-        This is especially usefull for infrastructure mesh networks that
+        This is especially useful for infrastructure mesh networks that
         can't afford to run olsrd on all the clients but wish to provide
         DNS to them. This is solved by running dnsmasq and olsrd with
         this setup on "edge" nodes that provide connectivity.

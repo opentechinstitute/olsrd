@@ -886,7 +886,7 @@ Interface "em1"
     # Mode "mesh"
 
     # IPv4 broadcast address for outgoing OLSR packets.
-    # One usefull example would be 255.255.255.255
+    # One useful example would be 255.255.255.255
     # The second useful value would be to
     # specify the peer address of an ptp-tunnel.
     # another name of this parameter is "IPv4Multicast"

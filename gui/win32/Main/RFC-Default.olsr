@@ -145,7 +145,7 @@ Interface "GUI" {
     # Mode "mesh"
 
     # IPv4 broadcast address to use. The
-    # one usefull example would be 255.255.255.255
+    # one useful example would be 255.255.255.255
     # If not defined the broadcastaddress
     # every card is configured with is used
     # The second useful value would be to
