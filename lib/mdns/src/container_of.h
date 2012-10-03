@@ -1,6 +1,6 @@
 /*
- * The olsr.org Optimized Link-State Routing daemon(olsrd)
- * Copyright (c) 2004-2009, the olsr.org team - see HISTORY file
+ * PacketBB handler library (see RFC 5444)
+ * Copyright (c) 2010 Henning Rogge <hrogge@googlemail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,26 +30,49 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Visit http://www.olsr.org for more information.
+ * Visit http://www.olsr.org/git for more information.
  *
  * If you find this software useful feel free to make a donation
  * to the project. For more information see the website or contact
  * the copyright holders.
- *
  */
 
+#ifndef CONTAINER_OF_H_
+#define CONTAINER_OF_H_
 
-#ifndef _MDNS_ADDRESS_H
-#define _MDNS_ADDRESS_H
+#include <stddef.h>
 
-#include "olsr_types.h"         /* olsr_ip_addr */
-#include "olsrd_plugin.h"             /* union set_plugin_parameter_addon */
-#include "interfaces.h"         /* struct interface */
+/* allow compilation with c99 mode */
+#ifndef typeof
+#define typeof(x) __typeof__(x)
+#endif
 
-#include "list_backport.h"
+/**
+ * casts an embedded node of a list/tree into the surrounding struct
+ * this macro returns bad results if ptr is NULL
+ * @param ptr pointer to node
+ * @param type data type of surrounding struct
+ * @param member name of node inside struct
+ * @return pointer to surrounding struct
+ */
+#define container_of(ptr, type, member) ((type *)( (char *)(ptr) - offsetof(type,member) ))
 
-struct TBmfInterface;
+/**
+ * Helper function for NULL safe container_of macro
+ */
+static inline void *
+__container_of_if_notnull(void *ptr, size_t offset) {
+  return ptr == NULL ? NULL : (((char *)ptr) - offset);
+}
 
-int IsMulticast(union olsr_ip_addr *ipAddress);
+/**
+ * casts an embedded node of a list/tree into the surrounding struct
+ * this macro returns bad results if ptr is NULL
+ * @param ptr pointer to node
+ * @param type data type of surrounding struct
+ * @param member name of node inside struct
+ * @return pointer to surrounding struct
+ */
+#define container_of_if_notnull(ptr, type, member) ((type *)__container_of_if_notnull(ptr, offsetof(type, member)))
 
-#endif /* _MDNS_ADDRESS_H */
+#endif /* CONTAINER_OF_H_ */
