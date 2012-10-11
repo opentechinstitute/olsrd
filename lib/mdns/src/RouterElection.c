@@ -174,7 +174,7 @@ void electTimer (void *foo __attribute__ ((unused))){
     else{
       ROUTER_ELECTION_ENTRIES(tmp6, iterator6){
         if(tmp6->network_id == NETWORK_ID)
-          if(tmp->skfd == walker->electionSkfd)
+          if(tmp6->skfd == walker->electionSkfd)
             if(memcmp(&tmp6->router_id, &ROUTER_ID.v6, sizeof(struct in6_addr)) < 0)
               walker->isActive = 0;
         tmp6->ttl = ((tmp6->ttl)- 1);
