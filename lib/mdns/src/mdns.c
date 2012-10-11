@@ -402,13 +402,12 @@ isInFilteredList(union olsr_ip_addr *src){
   }
 
   OLSR_FOR_ALL_FILTEREDNODES_ENTRIES(tmp, iterator){
+    OLSR_PRINTF(2, "Checking host: %s against list entry: %s\n", olsr_ip_to_string(&buf1, src), olsr_ip_to_string(&buf2, &tmp->host) );
     if(olsr_cnf->ip_version == AF_INET){
-      OLSR_PRINTF(2, "Checking host: %s against list entry: %s\n", olsr_ip_to_string(&buf1, &src->v4), olsr_ip_to_string(&buf2, &tmp->host.v4) );
       if(memcmp(&tmp->host.v4, &src->v4, sizeof(struct in_addr)) == 0)
         return 1;
     }
     else{
-      OLSR_PRINTF(2, "Checking host: %s against list entry: %s\n", olsr_ip_to_string(&buf1, &src->v6), olsr_ip_to_string(&buf2, &tmp->host.v6) );
       if(memcmp(&tmp->host.v6, &src->v6, sizeof(struct in6_addr)) == 0)
         return 1;
     }
