@@ -1,7 +1,8 @@
 CC ?=	gcc
 
-CFLAGS += -Wall `pkg-config --cflags gtk+-2.0`
-LDFLAGS +=
+# hardening flags: -fPIE -Wl,-z,now -pie
+CFLAGS += -O2 -Wall `pkg-config --cflags gtk+-2.0` -fPIE
+LDFLAGS += -Wl,-z,now -pie
 LIBS := `pkg-config --libs gtk+-2.0` -lm
 
 OBJS=	src/main.o src/interface.o src/callbacks.o src/ipc.o \
