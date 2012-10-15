@@ -200,7 +200,7 @@ void initTimer (void *foo __attribute__ ((unused))){
   memcpy(&ROUTER_ID, &olsr_cnf->main_addr, sizeof(union olsr_ip_addr));
   hello = (struct RtElHelloPkt *) malloc(sizeof(struct RtElHelloPkt));
   OLSR_PRINTF(1,"initialization running step 1\n");
-  strcpy(hello->head, "$REP");
+  strncpy(hello->head, "$REP", 4);
   if(olsr_cnf->ip_version == AF_INET)
     hello->ipFamily = AF_INET;
   else
