@@ -95,6 +95,7 @@ WARNINGS +=	-Wsequence-point
 WARNINGS +=	-Wcast-align
 WARNINGS +=	-Wformat-security
 WARNINGS +=	-Wformat-y2k
+WARNINGS +=     -Werror=format-security
 WARNINGS +=	-Winit-self
 WARNINGS +=	-Wswitch-default
 WARNINGS +=	-Wsync-nand
@@ -210,6 +211,9 @@ CPPFLAGS +=	-DDEBUG
 CFLAGS +=	-ggdb
 else
 CPPFLAGS +=	-DNDEBUG
+ifeq ($(OPTIMIZE),)
+OPTIMIZE += -O2 -D_FORTIFY_SOURCE=2 
+endif
 endif
 ifeq ($(NO_DEBUG_MESSAGES),1)
 CPPFLAGS +=	-DNODEBUG
