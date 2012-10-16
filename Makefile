@@ -63,9 +63,12 @@ TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
 default_target: $(EXENAME)
 
 $(EXENAME):	$(OBJS) src/builddata.o
+ifeq ($(VERBOSE),0)
 		@echo "[LD] $@"
 		@$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
-
+else
+		$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+endif
 cfgparser:	$(CFGDEPS) src/builddata.o
 		$(MAKE) -C $(CFGDIR)
 
