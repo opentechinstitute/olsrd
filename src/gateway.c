@@ -50,6 +50,12 @@ static struct gateway_entry *current_ipv6_gw;
 static struct olsr_iptunnel_entry *v6gw_tunnel;
 
 /*
+ * Forward Declarations
+ */
+
+static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t prefixlen, bool immediate);
+
+/*
  * Helper Functions
  */
 
@@ -390,7 +396,18 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
  * gateway tree immediately, else it is removed on a delayed schedule.
  */
 void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen, bool immediate) {
-  struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
+  olsr_delete_gateway_tree_entry(node2gateway(avl_find(&gateway_tree, originator)), prefixlen, immediate);
+}
+
+/**
+ * Delete a gateway entry .
+ *
+ * @param gw a gateway entry from the gateway tree
+ * @param prefixlen
+ * @param immediate when set to true then the gateway is removed from the
+ * gateway tree immediately, else it is removed on a delayed schedule.
+ */
+static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t prefixlen, bool immediate) {
   bool change = false;
 
   if (!gw) {
