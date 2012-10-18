@@ -164,15 +164,15 @@ int olsr_init_gateways(void) {
 
   refresh_smartgw_netmask();
 
+  /* initialize default gateway handler */
+  gw_handler = &gw_def_handler;
+  gw_handler->init();
+
   if (olsr_os_init_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6)) {
     return 1;
   }
 
   olsr_add_ifchange_handler(smartgw_tunnel_monitor);
-
-  /* initialize default gateway handler */
-  gw_handler = &gw_def_handler;
-  gw_handler->init();
 
   return 0;
 }
