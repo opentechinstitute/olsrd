@@ -386,13 +386,20 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
  *
  * @param originator
  * @param prefixlen
+ * @param immediate when set to true then the gateway is removed from the
+ * gateway tree immediately, else it is removed on a delayed schedule.
  */
-void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen) {
+void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen, bool immediate) {
   struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
   bool change = false;
 
   if (!gw) {
     return;
+  }
+
+  if (immediate && gw->cleanup_timer) {
+    /* stop timer if we have to remove immediately */
+    olsr_set_timer(&gw->cleanup_timer, 0, 0, false, NULL, NULL, NULL);
   }
 
   if (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6) {
@@ -437,8 +444,12 @@ void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen
         v6gw_tunnel = NULL;
       }
 
-      /* remove gateway entry on a delayed schedule */
-      olsr_set_timer(&gw->cleanup_timer, GW_CLEANUP_INTERVAL, 0, false, cleanup_gateway_handler, gw, NULL);
+      if (!immediate) {
+        /* remove gateway entry on a delayed schedule */
+        olsr_set_timer(&gw->cleanup_timer, GW_CLEANUP_INTERVAL, 0, false, cleanup_gateway_handler, gw, NULL);
+      } else {
+        cleanup_gateway_handler(gw);
+      }
     } else if (change) {
       assert(gw_handler);
       gw_handler->update(gw);

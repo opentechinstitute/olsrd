@@ -283,7 +283,7 @@ olsr_delete_tc_entry(struct tc_entry *tc)
 
   /* delete gateway if available */
 #ifdef __linux__
-  olsr_delete_gateway_entry(&tc->addr, FORCE_DELETE_GW_ENTRY);
+  olsr_delete_gateway_entry(&tc->addr, FORCE_DELETE_GW_ENTRY, false);
 #endif /* __linux__ */
   /*
    * Delete the rt_path for ourselves.
