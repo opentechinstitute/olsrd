@@ -181,6 +181,10 @@ int olsr_init_gateways(void) {
  * Cleanup gateway tunnel system
  */
 void olsr_cleanup_gateways(void) {
+  olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
+
+  olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
+
   if (current_ipv4_gw) {
     olsr_os_del_ipip_tunnel(v4gw_tunnel);
   }
@@ -188,13 +192,9 @@ void olsr_cleanup_gateways(void) {
     olsr_os_del_ipip_tunnel(v6gw_tunnel);
   }
 
-  olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
-
   assert(gw_handler);
   gw_handler->cleanup();
   gw_handler = NULL;
-
-  olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
 
   olsr_free_cookie(gw_mem_cookie);
 }
