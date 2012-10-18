@@ -195,6 +195,8 @@ void olsr_cleanup_gateways(void) {
   gw_handler = NULL;
 
   olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
+
+  olsr_free_cookie(gw_mem_cookie);
 }
 
 /**
