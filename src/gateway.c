@@ -391,7 +391,11 @@ void olsr_delete_gateway_entry(union olsr_ip_addr *originator, uint8_t prefixlen
   struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
   bool change = false;
 
-  if (gw && (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6)) {
+  if (!gw) {
+    return;
+  }
+
+  if (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6) {
     /* found a gw and it wasn't deleted yet */
 
     if (olsr_cnf->ip_version == AF_INET && prefixlen == 0) {
