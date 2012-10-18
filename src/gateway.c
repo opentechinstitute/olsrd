@@ -187,15 +187,14 @@ int olsr_init_gateways(void) {
  * Cleanup gateway tunnel system
  */
 void olsr_cleanup_gateways(void) {
+  struct avl_node * avlnode = NULL;
+
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
   olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
 
-  if (current_ipv4_gw) {
-    olsr_os_del_ipip_tunnel(v4gw_tunnel);
-  }
-  if (current_ipv6_gw) {
-    olsr_os_del_ipip_tunnel(v6gw_tunnel);
+  while ((avlnode = avl_walk_first(&gateway_tree))) {
+    olsr_delete_gateway_tree_entry(node2gateway(avlnode), FORCE_DELETE_GW_ENTRY, true);
   }
 
   assert(gw_handler);
