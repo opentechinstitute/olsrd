@@ -844,7 +844,7 @@ static void print_usage(bool error) {
         "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
         "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n"
         "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n",
-        error ? "An error occured somwhere between your keyboard and your chair!\n" : "");
+        error ? "Error in command line parameters!\n" : "");
 }
 
 /**
