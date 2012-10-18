@@ -43,6 +43,8 @@
 #define _GNU_SOURCE 1
 #endif /* defined __FreeBSD_kernel__ */
 
+#define __APPLE_USE_RFC_2292
+
 #include "../defs.h"
 #include "../net_os.h"
 #include "../ipcalc.h"
