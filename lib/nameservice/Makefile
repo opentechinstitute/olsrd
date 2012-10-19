@@ -51,8 +51,7 @@ ifeq ($(OS),android)
 # On Android Google forgot to include regex engine code for Froyo version (but also there was
 # no support in older versions for it) so we have here this missing code.
 # http://groups.google.com/group/android-ndk/browse_thread/thread/5ea6f0650f0e3fc
-SRCS +=     $(wildcard $(TOPDIR)/android/regex/reg*.c)
-HDRS +=     $(wildcard $(TOPDIR)/android/regex/*.h)
+OBJS +=     $(REGEX_LIB)
 CFLAGS += -D__POSIX_VISIBLE
 endif
 
@@ -69,6 +68,6 @@ install:	$(PLUGIN_FULLNAME)
 uninstall:
 		$(UNINSTALL_LIB)
 
-clean:
+clean:		$(REGEX_CLEAN)
 		rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME)
 endif

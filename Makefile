@@ -191,7 +191,6 @@ libs:
 
 libs_clean clean_libs:
 		-for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) clean;rm -f lib/$$dir/*.so lib/$$dir/*.dll;done
-		-rm -f $(REGEX_OBJS)
 
 libs_install install_libs:
 		@set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) install;done
@@ -307,7 +306,7 @@ mdns_uninstall:
 # nameserver uses regex, which was only recently added to Android.  On
 # Android, $(REGEX_OBJS) will have all of the files needed, on all
 # other platforms, it'll be empty and therefore ignored.
-nameservice: $(REGEX_OBJS)
+nameservice:
 		@$(MAKECMD) -C lib/nameservice clean
 		@$(MAKECMD) -C lib/nameservice
 

@@ -44,14 +44,6 @@ SHAREDIR = $(DESTDIR)$(datarootdir)
 SRCS += $(wildcard src/unix/*.c src/linux/*.c)
 HDRS += $(wildcard src/unix/*.h src/linux/*.h)
 
-# Android didn't add regex until android-8 so include this one
-REGEX_SRCS = \
-	android/regex/regcomp.c \
-	android/regex/regerror.c \
-	android/regex/regexec.c \
-	android/regex/regfree.c
-REGEX_OBJS = $(REGEX_SRCS:.c=.o)
-
 CPPFLAGS +=	-DOLSRD_GLOBAL_CONF_FILE=\"$(CFGFILE)\"
 # bionic libc: missing declarations
 CPPFLAGS +=	-DINET_ADDRSTRLEN=16
@@ -116,18 +108,20 @@ ifeq ($(DEBUG),0)
 STRIP = $(CROSS_COMPILE)strip
 endif
 
+# Android didn't add regex until android-8 so include this one
+REGEX_LIB = $(TOPDIR)/android/regex/libregex.a
+REGEX_CLEAN = regex_clean
+$(REGEX_LIB):
+	@$(MAKE) -C $(TOPDIR)/android/regex/ REGEX_LIB=$(REGEX_LIB) VERBOSE=$(VERBOSE) \
+		NDK_TOOLCHAIN_BASE="$(NDK_TOOLCHAIN_BASE)" \
+		NDK_PLATFORM_VERSION="$(NDK_PLATFORM_VERSION)" \
+		NDK_SYSROOT="$(NDK_SYSROOT)" \
+		CROSS_COMPILE="$(CROSS_COMPILE)" \
+		CC="$(CC)" LD="$(LD)" AR="$(AR)" STRIP="$(STRIP)" \
+		CPPFLAGS="$(CPPFLAGS)"
 
-# The Android NDK didn't add proper regex support until android-8
-# (2.2), so we include the Android files here, and build with
-# -DPOSIX_MISTAKE like Android does.
-$(REGEX_OBJS): $(REGEX_SRCS)
-	@echo "[CC] $<"
-	@$(CC) $(CFLAGS) $(CPPFLAGS) -DPOSIX_MISTAKE -c -o $@ $<
-
-regex: $(REGEX_OBJS)
-
-regex_clean:
-	rm -f $(REGEX_OBJS)
+$(REGEX_CLEAN):
+	@$(MAKE) -C $(TOPDIR)/android/regex/ clean REGEX_LIB=$(REGEX_LIB)
 
 # Local Variables:
 # mode: makefile
