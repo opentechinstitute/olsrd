@@ -60,8 +60,10 @@ else
 default_target: $(PLUGIN_FULLNAME)
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
+ifeq ($(VERBOSE),0)
 		@echo "[LD] $@"
-		@$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
+endif
+		$(MAKECMDPREFIX)$(CC) $(LDFLAGS) -o $(PLUGIN_FULLNAME) $(OBJS) $(LIBS)
 
 # this is not nice but there is no nicer solution
 src/lua/lapi.o src/lua/ltable.o:  CFLAGS += -Wno-cast-qual

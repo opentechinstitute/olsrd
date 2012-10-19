@@ -10,13 +10,14 @@ all: $(REGEX_LIB)
 .c.o:
 ifeq ($(VERBOSE),0)
 	@echo "[CC] $<"
-	@$(CC) $(INCLUDES) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
-else
-	$(CC) $(INCLUDES) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 endif
+	$(MAKECMDPREFIX)$(CC) $(INCLUDES) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(REGEX_LIB): $(OBJ)
-	$(AR) rcs $(REGEX_LIB) $(OBJ)
+ifeq ($(VERBOSE),0)
+	@echo "[AR] $<"
+endif
+	$(MAKECMDPREFIX)$(AR) rcs $(REGEX_LIB) $(OBJ)
 
 clean:
 	rm -f $(OBJ) $(REGEX_LIB)

@@ -20,6 +20,12 @@ MUDFLAP ?= 0
 # shows full compiler/linker calls if activated
 VERBOSE ?= 0
 
+ifeq ($(VERBOSE),0)
+MAKECMDPREFIX = @
+else
+MAKECMDPREFIX =
+endif
+
 # OS detection
 ifeq ($(OS),Windows_NT)
 OS := win32
@@ -231,15 +237,13 @@ quote = $(subst .,\.,$(subst /,\/,$1))
 
 # fully automatic and working dependency generation
 %.d: %.c
-	@$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc) /g' >"$@"
+	$(MAKECMDPREFIX)$(filter-out $(CCACHE),$(CC)) -M $(strip $(CPPFLAGS)) "$<" | sed -e '1s/\($(call quote,$(*F))\.o\)[ :]*/$(call quote,$(*D)/\1 $@: Makefile $(TOPDIR)$(if $(TOPDIR),/)Makefile.inc) /g' >"$@"
 
 %.o: %.c
 ifeq ($(VERBOSE),0)
 	@echo "[CC] $<"
-	@$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-else
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 endif
+	$(MAKECMDPREFIX)$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 # we always need the includes and defines
 # for legacy since now
