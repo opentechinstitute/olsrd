@@ -215,7 +215,7 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			}
 
 			ipv6 = getUplinkMessageIPv6(&msg->header);
-			if (unlikely(ipv6 && (olsr_cnf->ip_version != AF_INET6))) {
+			if (unlikely(!ipv6 && (olsr_cnf->ip_version == AF_INET6)) || unlikely(ipv6 && (olsr_cnf->ip_version == AF_INET))) {
 				pudError(false, "Received wrong IPv6 status (%s) in %s,"
 						" ignoring message.", (ipv6 ? "true" : "false"),
 						__func__);
