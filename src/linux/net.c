@@ -642,7 +642,9 @@ get_ipv6_address(char *ifname, struct sockaddr_in6 *saddr6, struct olsr_ip_prefi
         OLSR_PRINTF(5, "\tinet6 addr: %s\n", addr6);
         OLSR_PRINTF(5, "\tScope: %d\n", scope);
 
-        inet_pton(AF_INET6, addr6, &tmp_ip.v6);
+        if (inet_pton(AF_INET6, addr6, &tmp_ip.v6)) {
+          continue;
+        }
 
         isNetWide = (scope != IPV6_ADDR_LOOPBACK) && (scope != IPV6_ADDR_LINKLOCAL) && (scope != IPV6_ADDR_SITELOCAL);
 
