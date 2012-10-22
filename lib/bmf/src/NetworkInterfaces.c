@@ -861,7 +861,7 @@ void FindNeighbors(
             "%s: ----> not forwarding to %s: \"%s\" gives a better link to this neighbor, costing %s\n",
             PLUGIN_NAME_SHORT,
             olsr_ip_to_string(&buf, &walker->neighbor_iface_addr),
-            bestIntf->int_name,
+            bestIntf ? bestIntf->int_name : "NULL",
             get_linkcost_text(bestLinkToNeighbor->linkcost, false, &lqbuffer));
         }
 
