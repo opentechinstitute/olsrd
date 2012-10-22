@@ -305,7 +305,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	out: if (fp) {
 		fclose(fp);
 	}
-	if (fd) {
+	if (fd >= 0) {
 		close(fd);
 	}
 	return retval;
