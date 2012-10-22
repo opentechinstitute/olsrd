@@ -101,6 +101,7 @@ int rtnetlink_register_socket(int rtnl_mgrp)
 
   if (bind(sock,(struct sockaddr *)&addr,sizeof(addr))<0) {
     OLSR_PRINTF(1,"could not bind rtnetlink socket! %s (%d)",strerror(errno), errno);
+    close (sock);
     return -1;
   }
 
