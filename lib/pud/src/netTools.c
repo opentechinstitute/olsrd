@@ -7,6 +7,8 @@
 
 /* System includes */
 #include <sys/ioctl.h>
+#include <errno.h>
+#include <string.h>
 
 /**
  Get the hardware address (MAC) of an interface
@@ -33,6 +35,10 @@ unsigned char * getHardwareAddress(const char * ifName, int family,
 	assert(ifr != NULL);
 
 	fd = socket(family, SOCK_DGRAM, 0);
+	if (fd < 0) {
+		pudError(true, "%s@%u: socket error: %s", __FILE__, __LINE__, strerror(errno));
+		return NULL;
+	}
 
 	ifr->ifr_addr.sa_family = family;
 	memset(ifr->ifr_name, 0, sizeof(ifr->ifr_name));
