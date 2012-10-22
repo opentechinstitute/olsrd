@@ -168,9 +168,9 @@ int nmea_gen_GPGSV(char *s, const int len, const nmeaGPGSV *pack) {
 	char sCount[2];
 	char sIndex[2];
 	char sSatCount[4];
-	char sSatInfo[64];
+	char sSatInfo[(NMEA_SATINPACK * 4) + 1];
 	char * psSatInfo = &sSatInfo[0];
-	int ssSatInfo = sizeof(sSatInfo);
+	int ssSatInfo = sizeof(sSatInfo) - 1;
 	bool satinview = nmea_INFO_is_present(pack->present, SATINVIEW);
 	int i;
 
