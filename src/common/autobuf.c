@@ -116,6 +116,7 @@ abuf_vappendf(struct autobuf *autobuf, const char *format, va_list ap)
   if (min_size >= autobuf->size) {
     if (autobuf_enlarge(autobuf, min_size) < 0) {
       autobuf->buf[autobuf->len] = '\0';
+      va_end(ap2);
       return -1;
     }
     vsnprintf(autobuf->buf + autobuf->len, autobuf->size - autobuf->len, format, ap2);
