@@ -325,39 +325,37 @@ ipc_send_all_routes(int fd)
 static int
 ipc_send_net_info(int fd)
 {
-  struct ipc_net_msg *net_msg;
+  struct ipc_net_msg net_msg;
 
-  net_msg = olsr_malloc(sizeof(struct ipc_net_msg), "send net info");
+  memset(&net_msg, 0, sizeof(net_msg));
 
   OLSR_PRINTF(1, "Sending net-info to front end...\n");
 
-  memset(net_msg, 0, sizeof(struct ipc_net_msg));
-
   /* Message size */
-  net_msg->size = htons(sizeof(struct ipc_net_msg));
+  net_msg.size = htons(sizeof(struct ipc_net_msg));
   /* Message type */
-  net_msg->msgtype = NET_IPC;
+  net_msg.msgtype = NET_IPC;
 
   /* MIDs */
   /* XXX fix IPC MIDcnt */
-  net_msg->mids = (ifnet != NULL && ifnet->int_next != NULL) ? 1 : 0;
+  net_msg.mids = (ifnet != NULL && ifnet->int_next != NULL) ? 1 : 0;
 
   /* HNAs */
-  net_msg->hnas = olsr_cnf->hna_entries == NULL ? 0 : 1;
+  net_msg.hnas = olsr_cnf->hna_entries == NULL ? 0 : 1;
 
   /* Different values */
   /* Temporary fixes */
   /* XXX fix IPC intervals */
-  net_msg->hello_int = 0;       //htons((uint16_t)hello_int);
-  net_msg->hello_lan_int = 0;   //htons((uint16_t)hello_int_nw);
-  net_msg->tc_int = 0;          //htons((uint16_t)tc_int);
-  net_msg->neigh_hold = 0;      //htons((uint16_t)neighbor_hold_time);
-  net_msg->topology_hold = 0;   //htons((uint16_t)topology_hold_time);
+  net_msg.hello_int = 0;       //htons((uint16_t)hello_int);
+  net_msg.hello_lan_int = 0;   //htons((uint16_t)hello_int_nw);
+  net_msg.tc_int = 0;          //htons((uint16_t)tc_int);
+  net_msg.neigh_hold = 0;      //htons((uint16_t)neighbor_hold_time);
+  net_msg.topology_hold = 0;   //htons((uint16_t)topology_hold_time);
 
-  net_msg->ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
+  net_msg.ipv6 = olsr_cnf->ip_version == AF_INET ? 0 : 1;
 
   /* Main addr */
-  net_msg->main_addr = olsr_cnf->main_addr;
+  net_msg.main_addr = olsr_cnf->main_addr;
 
   /*
   {
@@ -379,13 +377,12 @@ ipc_send_net_info(int fd)
   }
   */
 
-  if (send(fd, (char *)net_msg, sizeof(struct ipc_net_msg), MSG_NOSIGNAL) < 0) {
+  if (send(fd, (char *)&net_msg, sizeof(struct ipc_net_msg), MSG_NOSIGNAL) < 0) {
     OLSR_PRINTF(1, "(NETINFO)IPC connection lost!\n");
     CLOSE(ipc_conn);
     return -1;
   }
 
-  free(net_msg);
   return 0;
 }
 
