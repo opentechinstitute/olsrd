@@ -781,7 +781,7 @@ int nmea_parse_GPVTG(const char *s, const int len, nmeaGPVTG *pack) {
 	if (!isnan(pack->track) && (pack->track_t)) {
 		pack->track_t = toupper(pack->track_t);
 		if (pack->track_t != 'T') {
-			nmea_error("GPVTG parse error: invalid track unit, got %C, expected T", pack->track_t);
+			nmea_error("GPVTG parse error: invalid track unit, got %c, expected T", pack->track_t);
 			return 0;
 		}
 
@@ -790,7 +790,7 @@ int nmea_parse_GPVTG(const char *s, const int len, nmeaGPVTG *pack) {
 	if (!isnan(pack->mtrack) && (pack->mtrack_m)) {
 		pack->mtrack_m = toupper(pack->mtrack_m);
 		if (pack->mtrack_m != 'M') {
-			nmea_error("GPVTG parse error: invalid mtrack unit, got %C, expected M", pack->mtrack_m);
+			nmea_error("GPVTG parse error: invalid mtrack unit, got %c, expected M", pack->mtrack_m);
 			return 0;
 		}
 
@@ -799,7 +799,7 @@ int nmea_parse_GPVTG(const char *s, const int len, nmeaGPVTG *pack) {
 	if (!isnan(pack->spn) && (pack->spn_n)) {
 		pack->spn_n = toupper(pack->spn_n);
 		if (pack->spn_n != 'N') {
-			nmea_error("GPVTG parse error: invalid knots speed unit, got %C, expected N", pack->spn_n);
+			nmea_error("GPVTG parse error: invalid knots speed unit, got %c, expected N", pack->spn_n);
 			return 0;
 		}
 
@@ -813,7 +813,7 @@ int nmea_parse_GPVTG(const char *s, const int len, nmeaGPVTG *pack) {
 	if (!isnan(pack->spk) && (pack->spk_k)) {
 		pack->spk_k = toupper(pack->spk_k);
 		if (pack->spk_k != 'K') {
-			nmea_error("GPVTG parse error: invalid kph speed unit, got %C, expected K", pack->spk_k);
+			nmea_error("GPVTG parse error: invalid kph speed unit, got %c, expected K", pack->spk_k);
 			return 0;
 		}
 
