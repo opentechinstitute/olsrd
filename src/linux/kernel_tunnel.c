@@ -150,7 +150,7 @@ static int os_ip_tunnel(const char *name, void *target) {
 		if (target) {
 			p4.iph.daddr = *((in_addr_t *) target);
 		}
-		strncpy(p4.name, name, IFNAMSIZ);
+		strscpy(p4.name, name, IFNAMSIZ);
 	} else {
 #ifdef LINUX_IPV6_TUNNEL
 		p = (void *) &p6;
@@ -160,13 +160,13 @@ static int os_ip_tunnel(const char *name, void *target) {
 		if (target) {
 			p6.raddr = *((struct in6_addr *) target);
 		}
-		strncpy(p6.name, name, IFNAMSIZ);
+		strscpy(p6.name, name, IFNAMSIZ);
 #else /* LINUX_IPV6_TUNNEL */
 		return 0;
 #endif /* LINUX_IPV6_TUNNEL */
 	}
 
-	strncpy(ifr.ifr_name, name, IFNAMSIZ);
+	strscpy(ifr.ifr_name, name, IFNAMSIZ);
 	ifr.ifr_ifru.ifru_data = p;
 
 	if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {
@@ -234,7 +234,7 @@ struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, 
     memcpy(&t->target, target, sizeof(*target));
     t->node.key = &t->target;
 
-    strncpy(t->if_name, name, IFNAMSIZ);
+    strscpy(t->if_name, name, IFNAMSIZ);
     t->if_index = if_idx;
 
     avl_insert(&tunnel_tree, &t->node, AVL_DUP_NO);
