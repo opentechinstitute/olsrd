@@ -1419,7 +1419,6 @@ static int CreateInterface(
     listeningSkfd = CreateListeningSocket(ifName);
     if (listeningSkfd < 0)
     {
-      close(listeningSkfd);
       close(encapsulatingSkfd); /* no problem if 'encapsulatingSkfd' is -1 */
       free(newIf);
       return 0;
