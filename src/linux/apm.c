@@ -271,9 +271,15 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
 
   ainfo->ac_line_status = ac_power_on ? OLSR_AC_POWERED : OLSR_BATTERY_POWERED;
 
-  result = bat_val * 100 / bat_max;
+  if (bat_max == 0) {
+    /* protection against stupid acpi data */
+    ainfo->battery_percentage = 0;
+  }
+  else {
+    result = bat_val * 100 / bat_max;
 
-  ainfo->battery_percentage = result > 100 ? 100 : result;
+    ainfo->battery_percentage = result > 100 ? 100 : result;
+  }
 
   return 1;
 }
