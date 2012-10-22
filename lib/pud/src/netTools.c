@@ -79,6 +79,10 @@ struct in_addr * getIPv4Address(const char * ifName, struct ifreq *ifr) {
 	assert(ifr != NULL);
 
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd < 0) {
+		pudError(true, "%s@%u: socket error: %s", __FILE__, __LINE__, strerror(errno));
+		return NULL;
+	}
 
 	ifr->ifr_addr.sa_family = AF_INET;
 	memset(ifr->ifr_name, 0, sizeof(ifr->ifr_name));
