@@ -362,7 +362,7 @@ int DeactivateSpoofFilter(void)
     return 0;
   }
 
-  EthTapSpoofState = fgetc(procSpoof);
+  EthTapSpoofState = (char)fgetc(procSpoof);
   fclose(procSpoof);
 
   /* Open procfile for writing */
