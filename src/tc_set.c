@@ -725,7 +725,7 @@ olsr_calculate_tc_border(uint8_t lower_border, union olsr_ip_addr *lower_border_
     return 0;
   }
   if (lower_border == 0xff) {
-    memset(lower_border_ip, 0, sizeof(lower_border_ip));
+    memset(lower_border_ip, 0, sizeof(*lower_border_ip));
   } else {
     int i;
 
@@ -738,7 +738,7 @@ olsr_calculate_tc_border(uint8_t lower_border, union olsr_ip_addr *lower_border_
   }
 
   if (upper_border == 0xff) {
-    memset(upper_border_ip, 0xff, sizeof(upper_border_ip));
+    memset(upper_border_ip, 0xff, sizeof(*upper_border_ip));
   } else {
     int i;
 
