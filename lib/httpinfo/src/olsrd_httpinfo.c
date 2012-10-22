@@ -542,7 +542,9 @@ send_http_data:
 
 close_connection:
   abuf_free(&body_abuf);
-  close(client_socket);
+  if (client_socket >= 0) {
+    close(client_socket);
+  }
 }
 
 static void
