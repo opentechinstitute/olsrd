@@ -99,13 +99,13 @@ int nmea_gen_GPGSA(char *s, const int len, const nmeaGPGSA *pack) {
 	int i;
 	char sFixMode[2];
 	char sFixType[2];
-	char sSatPrn[64];
+	char sSatPrn[(NMEA_MAXSAT * 4) + 1];
 	char sPdop[16];
 	char sHdop[16];
 	char sVdop[16];
 
 	char * psSatPrn = &sSatPrn[0];
-	int ssSatPrn = sizeof(sSatPrn);
+	int ssSatPrn = sizeof(sSatPrn) - 1;
 
 	bool satinuse = nmea_INFO_is_present(pack->present, SATINUSE);
 
