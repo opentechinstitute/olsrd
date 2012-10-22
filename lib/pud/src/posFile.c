@@ -282,6 +282,7 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	}
 
 	fclose(fd);
+	fd = 0;
 
 	result.smask = POSFILE_DEFAULT_SMASK;
 	nmea_INFO_set_present(&result.present, SMASK);
@@ -292,5 +293,8 @@ bool readPositionFile(char * fileName, nmeaINFO * nmeaInfo) {
 	memcpy(nmeaInfo, &result, sizeof(result));
 	retval = true;
 
-	out: return retval;
+	out: if (fd) {
+		fclose(fd);
+	}
+	return retval;
 }
