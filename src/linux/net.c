@@ -137,25 +137,22 @@ static int writeToProc(const char *file, char *old, char value) {
 
   if (read(fd, &rv, 1) != 1) {
     OLSR_PRINTF(0, "Error, cannot read proc entry %s: %s (%d)\n", file, strerror(errno), errno);
-    return -1;
+    goto writeToProcError;
   }
 
   if (rv != value && value != 0) {
     if (lseek(fd, SEEK_SET, 0) == -1) {
       OLSR_PRINTF(0, "Error, cannot rewind proc entry %s: %s (%d)\n", file, strerror(errno), errno);
-      return -1;
+      goto writeToProcError;
     }
 
     if (write(fd, &value, 1) != 1) {
       OLSR_PRINTF(0, "Error, cannot write proc entry %s: %s (%d)\n", file, strerror(errno), errno);
-      return -1;
+      goto writeToProcError;
     }
   }
 
-  if (close(fd) != 0) {
-    OLSR_PRINTF(0, "Error while closing proc entry %s: %s (%d)\n", file, strerror(errno), errno);
-    return -1;
-  }
+  close(fd);
 
   if (old) {
     *old = rv;
@@ -165,6 +162,10 @@ static int writeToProc(const char *file, char *old, char value) {
     olsr_syslog(OLSR_LOG_INFO, "Writing '%c' (was %c) to %s", value, rv, file);
   }
   return 0;
+
+writeToProcError:
+  close (fd);
+  return -1;
 }
 
 /* write new value to proc file if current value is different*/
