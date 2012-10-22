@@ -76,7 +76,7 @@ void getBestUplinkGateway(union olsr_ip_addr * bestGateway) {
 
 		if (eval4 || eval6) {
 			unsigned long long gw_value = gw_speed(gw);
-			if (gw_value > gw_best_value) {
+			if (!gw_best || (gw_value > gw_best_value)) {
 				gw_best = gw;
 				gw_best_value = gw_value;
 			} else if (gw_value == gw_best_value) {
