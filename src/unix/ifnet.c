@@ -58,6 +58,7 @@
 #include "log.h"
 #include "link_set.h"
 
+#include <assert.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <net/if.h>
@@ -443,6 +444,9 @@ add_hemu_if(struct olsr_if *iface)
       olsr_syslog(OLSR_LOG_ERR, "Could not initialize socket... exiting!\n\n");
       olsr_cnf->exit_value = EXIT_FAILURE;
       kill(getpid(), SIGINT);
+
+      /* the kill command should not come back, just to be sure */
+      exit(1);
     }
 
   } else {
