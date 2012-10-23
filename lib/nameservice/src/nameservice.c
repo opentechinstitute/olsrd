@@ -1092,8 +1092,8 @@ write_hosts_file(void)
       fprintf(hosts, "### contents from '%s' ###\n\n", my_add_hosts);
       while ((c = getc(add_hosts)) != EOF)
         putc(c, hosts);
+      fclose(add_hosts);
     }
-    fclose(add_hosts);
     fprintf(hosts, "\n### olsr names ###\n\n");
   }
   // write own names
