@@ -603,6 +603,9 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   while (in) {
     struct olsr_lq_mult *mult, *mult_orig;
 
+    assert(in->cnf);
+    assert(in->cnfi);
+
     io = in->cnf;
 
     olsrd_print_interface_cnf(in->cnf, in->cnfi, false);
@@ -618,8 +621,6 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       /*save interface specific lqmults, as they are merged togehter later*/
       mult_orig = io->lq_mult;
 
-      assert(in->cnf);
-      assert(in->cnfi);
       for (pos = 0; pos < sizeof(*in->cnf); pos++) {
         if (cnfptr[pos] != cnfiptr[pos]) {
           cnfptr[pos] = defptr[pos]; cnfiptr[pos]=0x00;
