@@ -913,6 +913,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
 #endif /* _WIN32 */
 
   /* Fill subheader */
+  assert(olsr_cnf->ipsize == sizeof(crmsg.destination));
   memcpy(&crmsg.destination, to, olsr_cnf->ipsize);
   crmsg.challenge = htonl(challenge);
 
