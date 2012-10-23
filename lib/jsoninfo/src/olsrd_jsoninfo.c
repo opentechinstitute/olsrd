@@ -1129,7 +1129,7 @@ ipc_print_interfaces(struct autobuf *abuf)
 #ifdef __linux__
     snprintf(path, PATH_MAX, "/sys/class/net/%s/device/driver/module", ifs->name);
     linklen = readlink(path, linkpath, PATH_MAX - 1);
-    if (linkpath != NULL && linklen > 1) {
+    if (linklen > 1) {
       linkpath[linklen] = '\0';
       abuf_json_string(abuf, "kernelModule", basename(linkpath));
     }
