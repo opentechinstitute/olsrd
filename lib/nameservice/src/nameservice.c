@@ -865,7 +865,7 @@ decap_namemsg(struct name *from_packet, struct name_entry **to, bool * this_tabl
   //if not yet known entry
   tmp = olsr_malloc(sizeof(struct name_entry), "new name_entry");
   tmp->type = ntohs(from_packet->type);
-  tmp->len = len_of_name > MAX_NAME ? MAX_NAME : ntohs(from_packet->len);
+  tmp->len = ntohs(from_packet->len);
   tmp->name = olsr_malloc(tmp->len + 1, "new name_entry name");
   tmp->ip = from_packet->ip;
   strscpy(tmp->name, name, tmp->len + 1);
