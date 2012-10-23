@@ -464,7 +464,6 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
     electionSkfd = CreateRouterElectionSocket(ifName);
     helloSkfd = CreateHelloSocket(ifName);
     if (capturingSkfd < 0 || electionSkfd < 0 || helloSkfd < 0) {
-      close(encapsulatingSkfd);
       close(capturingSkfd);
       close(electionSkfd);
       close(helloSkfd);
@@ -486,7 +485,6 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   if (ioctl(ioctlSkfd, SIOCGIFHWADDR, &ifr) < 0) {
     BmfPError("ioctl(SIOCGIFHWADDR) error for interface \"%s\"", ifName);
     close(capturingSkfd);
-    close(encapsulatingSkfd);
     close(electionSkfd);
     close(helloSkfd);
     free(newIf);
