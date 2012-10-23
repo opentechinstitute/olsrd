@@ -913,7 +913,6 @@ AddUdpDestPort(const char *value,
       return -1;
     }
     break;
-  case AF_INET:
   default:
     res = inet_pton(AF_INET, destAddr, &addr4.sin_addr);
     if (!is_broadcast(addr4) && !is_multicast(addr4)) {
@@ -942,7 +941,6 @@ AddUdpDestPort(const char *value,
            sizeof(addr6.sin6_addr.s6_addr));
     break;
   default:
-  case AF_INET:
     new->address.v4.s_addr = addr4.sin_addr.s_addr;
     break;
   }
