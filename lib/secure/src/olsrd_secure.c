@@ -1009,12 +1009,12 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
     uint8_t checksum_cache[1512 + KEYLENGTH];
     /* Create packet + key cache */
     /* First the OLSR packet + signature message - digest */
-    memcpy(checksum_cache, &rrmsg, sizeof(struct r_respmsg) - SIGNATURE_SIZE);
+    memcpy(checksum_cache, &rrmsg, sizeof(rrmsg) - sizeof(rrmsg.signature));
     /* Then the key */
-    memcpy(&checksum_cache[sizeof(struct r_respmsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
+    memcpy(&checksum_cache[sizeof(rrmsg) - sizeof(rrmsg.signature)], aes_key, KEYLENGTH);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + KEYLENGTH, rrmsg.signature);
+    CHECKSUM(checksum_cache, (sizeof(rrmsg) - sizeof(rrmsg.signature)) + KEYLENGTH, rrmsg.signature);
   }
 
   olsr_printf(3, "[ENC]Sending response response to %s\n", olsr_ip_to_string(&buf, to));
