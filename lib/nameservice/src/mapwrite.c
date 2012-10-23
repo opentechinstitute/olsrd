@@ -209,17 +209,20 @@ mapwrite_poll(void *context __attribute__ ((unused)))
     int fd = open(the_fifoname, O_WRONLY | O_NONBLOCK);
     if (0 <= fd) {
       /*
-       * Change to blocking, otherwhise expect fprintf errors
+       * Change to blocking, otherwise expect fprintf errors
        */
-      fcntl(fd, F_SETFL, O_WRONLY);
-      fout = fdopen(fd, "w");
-      if (0 != fout) {
-        mapwrite_work(fout);
-        fclose(fout);
-        /* Give pipe reader cpu slot to detect EOF */
-        usleep(1);
-      } else {
+      if (fcntl(fd, F_SETFL, O_WRONLY) == -1) {
         close(fd);
+      } else {
+        fout = fdopen(fd, "w");
+        if (0 != fout) {
+          mapwrite_work(fout);
+          fclose(fout);
+          /* Give pipe reader cpu slot to detect EOF */
+          usleep(1);
+        } else {
+          close(fd);
+        }
       }
     }
   }
