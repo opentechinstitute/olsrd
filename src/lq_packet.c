@@ -41,6 +41,8 @@
  *
  */
 
+#include <assert.h>
+
 #include "ipcalc.h"
 #include "olsr_protocol.h"
 #include "defs.h"
@@ -424,6 +426,7 @@ serialize_lq_hello(struct lq_hello_message *lq_hello, struct interface *outif)
 
           // finalize the info header
 
+          assert(info_head);
           info_head->size = ntohs(buff + size - (unsigned char *)info_head);
 
           // output packet
