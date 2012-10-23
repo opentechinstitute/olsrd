@@ -1404,7 +1404,9 @@ static int CreateInterface(
     capturingSkfd = CreateCaptureSocket(ifName);
     if (capturingSkfd < 0)
     {
-      close(encapsulatingSkfd);
+      if (encapsulatingSkfd >= 0) {
+        close(encapsulatingSkfd);
+      }
       free(newIf);
       return 0;
     }
@@ -1419,7 +1421,9 @@ static int CreateInterface(
     listeningSkfd = CreateListeningSocket(ifName);
     if (listeningSkfd < 0)
     {
-      close(encapsulatingSkfd); /* no problem if 'encapsulatingSkfd' is -1 */
+      if (encapsulatingSkfd >= 0) {
+        close(encapsulatingSkfd); /* no problem if 'encapsulatingSkfd' is -1 */
+      }
       free(newIf);
       return 0;
     }
@@ -1438,8 +1442,12 @@ static int CreateInterface(
   if (ioctl(ioctlSkfd, SIOCGIFHWADDR, &ifr) < 0)
   {
     BmfPError("ioctl(SIOCGIFHWADDR) error for interface \"%s\"", ifName);
-    close(capturingSkfd);
-    close(encapsulatingSkfd);
+    if (capturingSkfd >= 0) {
+      close(capturingSkfd);
+    }
+    if (encapsulatingSkfd >= 0) {
+      close(encapsulatingSkfd);
+    }
     free(newIf);
     return 0;
   }
