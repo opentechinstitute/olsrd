@@ -1137,7 +1137,8 @@ static int olsr_process_arguments(int argc, char *argv[],
 
       ifa->cnf = get_default_if_config();
       ifa->host_emul = true;
-      memcpy(&ifa->hemu_ip, &in, sizeof(union olsr_ip_addr));
+      memset(&ifa->hemu_ip, 0, sizeof(ifa->hemu_ip));
+      memcpy(&ifa->hemu_ip, &in, sizeof(in));
       cnf->host_emul = true;
 
       continue;
