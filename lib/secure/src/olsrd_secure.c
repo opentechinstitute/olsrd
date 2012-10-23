@@ -995,12 +995,12 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
     uint8_t checksum_cache[1512 + KEYLENGTH];
     /* Create packet + key cache */
     /* First the challenge received */
-    memcpy(checksum_cache, &chal_in, 4);
+    memcpy(checksum_cache, &chal_in, sizeof(chal_in));
     /* Then the local IP */
-    memcpy(&checksum_cache[sizeof(uint32_t)], from, olsr_cnf->ipsize);
+    memcpy(&checksum_cache[sizeof(chal_in)], from, olsr_cnf->ipsize);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, sizeof(uint32_t) + olsr_cnf->ipsize, rrmsg.res_sig);
+    CHECKSUM(checksum_cache, sizeof(chal_in) + olsr_cnf->ipsize, rrmsg.res_sig);
   }
 
   /* Now create the digest of the message and the key */
