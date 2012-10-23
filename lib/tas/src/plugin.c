@@ -412,6 +412,8 @@ sendMessage(const char *service, const char *string)
       net_outbuffer_push(inter, mess, len);
     }
   }
+
+  freeMem(mess);
 }
 
 static void
