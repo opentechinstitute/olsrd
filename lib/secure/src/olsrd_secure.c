@@ -548,6 +548,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
   cmsg.seqno = htons(get_msg_seqno());
 
   /* Fill subheader */
+  assert(olsr_cnf->ipsize == sizeof(cmsg.destination));
   memcpy(&cmsg.destination, new_host, olsr_cnf->ipsize);
   cmsg.challenge = htonl(challenge);
 
