@@ -555,7 +555,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
   olsr_printf(3, "[ENC]Size: %lu\n", (unsigned long)sizeof(struct challengemsg));
 
   {
-    uint8_t checksum_cache[1512 + KEYLENGTH];
+    uint8_t checksum_cache[(sizeof(cmsg) - sizeof(cmsg.signature)) + KEYLENGTH];
     /* Create packet + key cache */
     /* First the OLSR packet + signature message - digest */
     memcpy(checksum_cache, &cmsg, sizeof(cmsg) - sizeof(cmsg.signature));
