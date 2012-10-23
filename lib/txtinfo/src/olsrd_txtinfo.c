@@ -571,7 +571,6 @@ ipc_print_gateway(struct autobuf *abuf)
   abuf_puts(abuf, "Table: Gateways\nStatus\tGateway IP\tETX\tHopcnt\tUplink\tDownlnk\tIPv4\tIPv6\tPrefix\n");
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
     char v4 = '-', v6 = '-';
-    bool autoV4 = false, autoV6 = false;
     const char *v4type = NONE, *v6type = NONE;
     struct tc_entry *tc;
 
@@ -580,7 +579,7 @@ ipc_print_gateway(struct autobuf *abuf)
     }
 
     if (gw == olsr_get_inet_gateway(false)) {
-      v4 = autoV4 ? 'a' : 's';
+      v4 = 's';
     }
     else if (gw->ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit)
         && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat)) {
@@ -588,7 +587,7 @@ ipc_print_gateway(struct autobuf *abuf)
     }
 
     if (gw == olsr_get_inet_gateway(true)) {
-      v6 = autoV6 ? 'a' : 's';
+      v6 = 's';
     }
     else if (gw->ipv6 && olsr_cnf->ip_version == AF_INET6) {
       v6 = 'u';
