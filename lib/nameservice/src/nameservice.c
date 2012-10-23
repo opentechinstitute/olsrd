@@ -1010,7 +1010,7 @@ send_sighup_to_pidfile(char *pid_file)
   fd = open(pid_file, O_RDONLY);
   if (fd < 0) {
     OLSR_PRINTF(2, "NAME PLUGIN: can't open file %s\n", pid_file);
-    return;
+    goto out;
   }
 
   while (i < 19) {
@@ -1021,15 +1021,17 @@ send_sighup_to_pidfile(char *pid_file)
       i += result;
     } else if (errno != EINTR && errno != EAGAIN) {
       OLSR_PRINTF(2, "NAME PLUGIN: can't read file %s\n", pid_file);
-      return;
+      goto out;
     }
   }
   line[i] = 0;
   close(fd);
+  fd = -1;
+
   ipid = strtol(line, &endptr, 0);
   if (endptr == line) {
     OLSR_PRINTF(2, "NAME PLUGIN: invalid pid at file %s\n", pid_file);
-    return;
+    goto out;;
   }
 
   result = kill(ipid, SIGHUP);
@@ -1039,6 +1041,9 @@ send_sighup_to_pidfile(char *pid_file)
     OLSR_PRINTF(2, "NAME PLUGIN: failed to send SIGHUP to pid %i\n", ipid);
   }
 
+  out: if (fd >= 0) {
+    close(fd);
+  }
 }
 #endif /* _WIN32 */
 
