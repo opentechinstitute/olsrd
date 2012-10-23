@@ -157,7 +157,7 @@ static size_t outbuffer_written[MAX_CLIENTS];
 static int outbuffer_socket[MAX_CLIENTS];
 static int outbuffer_count;
 
-char uuid[UUIDLEN];
+char uuid[UUIDLEN + 1];
 char uuidfile[FILENAME_MAX];
 
 static struct timeval start_time;
@@ -423,8 +423,9 @@ read_uuid_from_file(const char *file)
   FILE *f;
   char* end;
   int r = 0;
+  size_t chars;
 
-  *uuid = 0;
+  memset(uuid, 0, sizeof(uuid));
 
   f = fopen(file, "r");
   olsr_printf(1, "(JSONINFO) Reading UUID from '%s'\n", file);
@@ -433,7 +434,10 @@ read_uuid_from_file(const char *file)
                 file, strerror(errno));
     return -1;
   }
-  if (fread(uuid, 1, UUIDLEN, f) > 0) {
+  chars = fread(uuid, 1, UUIDLEN, f);
+  if (chars > 0) {
+    uuid[chars] = '\0'; /* null-terminate the string */
+
     /* we only use the first line of the file */
     end = strchr(uuid, '\n');
     if(end)

@@ -55,7 +55,7 @@
 /* #define JSONINFO_ALLOW_LOCALHOST */
 
 #define UUIDLEN 256
-extern char uuid[UUIDLEN];
+extern char uuid[UUIDLEN + 1];
 extern char uuidfile[FILENAME_MAX];
 
 extern union olsr_ip_addr jsoninfo_accept_ip;
