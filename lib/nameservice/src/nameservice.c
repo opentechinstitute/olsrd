@@ -1605,7 +1605,7 @@ lookup_defhna_latlon(union olsr_ip_addr *ip)
   struct avl_node *rt_tree_node;
   struct olsr_ip_prefix prefix;
 
-  memset(ip, 0, sizeof(ip));
+  memset(ip, 0, sizeof(*ip));
   memset(&prefix, 0, sizeof(prefix));
 
   if (NULL != (rt_tree_node = avl_find(&routingtree, &prefix))) {
