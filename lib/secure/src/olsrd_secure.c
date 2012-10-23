@@ -558,12 +558,12 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
     uint8_t checksum_cache[1512 + KEYLENGTH];
     /* Create packet + key cache */
     /* First the OLSR packet + signature message - digest */
-    memcpy(checksum_cache, &cmsg, sizeof(struct challengemsg) - SIGNATURE_SIZE);
+    memcpy(checksum_cache, &cmsg, sizeof(cmsg) - sizeof(cmsg.signature));
     /* Then the key */
-    memcpy(&checksum_cache[sizeof(struct challengemsg) - SIGNATURE_SIZE], aes_key, KEYLENGTH);
+    memcpy(&checksum_cache[sizeof(cmsg) - sizeof(cmsg.signature)], aes_key, KEYLENGTH);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (sizeof(struct challengemsg) - SIGNATURE_SIZE) + KEYLENGTH, cmsg.signature);
+    CHECKSUM(checksum_cache, (sizeof(cmsg) - sizeof(cmsg.signature)) + KEYLENGTH, cmsg.signature);
   }
   olsr_printf(3, "[ENC]Sending timestamp request to %s challenge 0x%x\n",
 	      olsr_ip_to_string(&buf, new_host), challenge);
