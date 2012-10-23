@@ -53,6 +53,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include <assert.h>
 
 #include "defs.h"
 #include "ipcalc.h"
@@ -985,6 +986,7 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   olsr_printf(3, "[ENC]Timestamp %lld\n", (long long)now.tv_sec);
 #endif /* _WIN32 */
   /* Fill subheader */
+  assert(olsr_cnf->ipsize == sizeof(rrmsg.destination));
   memcpy(&rrmsg.destination, to, olsr_cnf->ipsize);
 
   /* Create digest of received challenge + IP */
