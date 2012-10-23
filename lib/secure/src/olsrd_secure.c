@@ -894,13 +894,14 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
 
   olsr_printf(3, "[ENC]Challenge-response: 0x%x\n", challenge);
 
+  /* initialise rrmsg */
+  memset(&crmsg, 0, sizeof(crmsg));
+
   /* Fill challengemessage */
   crmsg.olsr_msgtype = TYPE_CRESPONSE;
-  crmsg.olsr_vtime = 0;
   crmsg.olsr_msgsize = htons(sizeof(struct c_respmsg));
   memcpy(&crmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
   crmsg.ttl = 1;
-  crmsg.hopcnt = 0;
   crmsg.seqno = htons(get_msg_seqno());
 
   /* set timestamp */
