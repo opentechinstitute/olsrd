@@ -538,13 +538,14 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
   challenge = rand() << 16;
   challenge |= rand();
 
+  /* initialise rrmsg */
+  memset(&cmsg, 0, sizeof(cmsg));
+
   /* Fill challengemessage */
   cmsg.olsr_msgtype = TYPE_CHALLENGE;
-  cmsg.olsr_vtime = 0;
   cmsg.olsr_msgsize = htons(sizeof(struct challengemsg));
   memcpy(&cmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
   cmsg.ttl = 1;
-  cmsg.hopcnt = 0;
   cmsg.seqno = htons(get_msg_seqno());
 
   /* Fill subheader */
