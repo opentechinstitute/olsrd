@@ -163,6 +163,7 @@ ohs_init_new_connection(int s)
 
   if (i == 20) {
     printf("Failed to fetch IP address! (%s)\n", strerror(errno));
+    free(oc);
     return -1;
   }
 
