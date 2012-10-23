@@ -978,8 +978,9 @@ ifnick: TOK_STRING
     memset(in->cnf, 0x00, sizeof(*in->cnf));
 
     in->cnfi = malloc(sizeof(*in->cnfi));
-    if (in->cnf == NULL) {
+    if (in->cnfi == NULL) {
       fprintf(stderr, "Out of memory(ADD IFRULE)\n");
+      free (in->cnf);
       free(in);
       YYABORT;
     }
