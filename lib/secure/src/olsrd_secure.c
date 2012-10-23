@@ -934,7 +934,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* Now create the digest of the message and the key */
 
   {
-    uint8_t checksum_cache[1512 + KEYLENGTH];
+    uint8_t checksum_cache[(sizeof(crmsg) - sizeof(crmsg.signature)) + KEYLENGTH];
     /* Create packet + key cache */
     /* First the OLSR packet + signature message - digest */
     memcpy(checksum_cache, &crmsg, sizeof(crmsg) - sizeof(crmsg.signature));
