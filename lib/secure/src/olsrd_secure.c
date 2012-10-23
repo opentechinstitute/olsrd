@@ -1006,7 +1006,7 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* Now create the digest of the message and the key */
 
   {
-    uint8_t checksum_cache[1512 + KEYLENGTH];
+    uint8_t checksum_cache[(sizeof(rrmsg) - sizeof(rrmsg.signature)) + KEYLENGTH];
     /* Create packet + key cache */
     /* First the OLSR packet + signature message - digest */
     memcpy(checksum_cache, &rrmsg, sizeof(rrmsg) - sizeof(rrmsg.signature));
