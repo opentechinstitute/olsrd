@@ -262,9 +262,8 @@ CreateRouterElectionSocket(const char *ifName)
 	errno = 0;
 	if (setsockopt(rxSocket, ipProtoSetting, ipMcLoopSetting, &mcLoopValue,
 			sizeof(mcLoopValue)) < 0) {
-		BmfPError("Could not %s multicast loopback on the"
-			" receive socket for interface %s", mcLoopValue ? "enable"
-				: "disable", ifName);
+		BmfPError("Could not enable multicast loopback on the"
+			" receive socket for interface %s", ifName);
 		goto bail;
 	}
 
@@ -393,9 +392,8 @@ static int CreateHelloSocket(const char *ifName) {
 	errno = 0;
 	if (setsockopt(txSocket, ipProtoSetting, ipMcLoopSetting, &mcLoopValue,
 			sizeof(mcLoopValue)) < 0) {
-		BmfPError("Could not %s multicast loopback on the"
-			" transmit socket for interface %s", mcLoopValue ? "enable"
-				: "disable", ifName);
+		BmfPError("Could not disable multicast loopback on the"
+			" transmit socket for interface %s", ifName);
 		goto bail;
 	}
 
