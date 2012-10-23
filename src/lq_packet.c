@@ -574,6 +574,7 @@ serialize_lq_tc(struct lq_tc_message *lq_tc, struct interface *outif)
     // force signed comparison
     if ((int)(size + olsr_cnf->ipsize + olsr_sizeof_tc_lqdata()) > rem) {
       head->lower_border = left_border_flag;
+      assert(last_ip);
       head->upper_border = calculate_border_flag(last_ip, &neigh->address);
       left_border_flag = head->upper_border;
 
