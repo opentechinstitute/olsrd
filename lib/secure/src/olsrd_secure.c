@@ -920,7 +920,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* Create digest of received challenge + IP */
 
   {
-    uint8_t checksum_cache[1512 + KEYLENGTH];
+    uint8_t checksum_cache[sizeof(chal_in) + olsr_cnf->ipsize];
     /* Create packet + key cache */
     /* First the challenge received */
     memcpy(checksum_cache, &chal_in, sizeof(chal_in));
