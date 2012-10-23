@@ -464,9 +464,15 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
     electionSkfd = CreateRouterElectionSocket(ifName);
     helloSkfd = CreateHelloSocket(ifName);
     if (capturingSkfd < 0 || electionSkfd < 0 || helloSkfd < 0) {
-      close(capturingSkfd);
-      close(electionSkfd);
-      close(helloSkfd);
+      if (capturingSkfd >= 0) {
+        close(capturingSkfd);
+      }
+      if (electionSkfd >= 0) {
+        close(electionSkfd);
+      }
+      if (helloSkfd >= 0) {
+        close(helloSkfd);
+      }
       free(newIf);
       return 0;
     }
@@ -484,9 +490,15 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   ifr.ifr_name[IFNAMSIZ - 1] = '\0';    /* Ensures null termination */
   if (ioctl(ioctlSkfd, SIOCGIFHWADDR, &ifr) < 0) {
     BmfPError("ioctl(SIOCGIFHWADDR) error for interface \"%s\"", ifName);
-    close(capturingSkfd);
-    close(electionSkfd);
-    close(helloSkfd);
+    if (capturingSkfd >= 0) {
+      close(capturingSkfd);
+    }
+    if (electionSkfd >= 0) {
+      close(electionSkfd);
+    }
+    if (helloSkfd >= 0) {
+      close(helloSkfd);
+    }
     free(newIf);
     return 0;
   }
