@@ -967,13 +967,14 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
 
   olsr_printf(1, "[ENC]Building RRESPONSE message\n");
 
+  /* initialise rrmsg */
+  memset(&rrmsg, 0, sizeof(rrmsg));
+
   /* Fill challengemessage */
   rrmsg.olsr_msgtype = TYPE_RRESPONSE;
-  rrmsg.olsr_vtime = 0;
   rrmsg.olsr_msgsize = htons(sizeof(struct r_respmsg));
   memcpy(&rrmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
   rrmsg.ttl = 1;
-  rrmsg.hopcnt = 0;
   rrmsg.seqno = htons(get_msg_seqno());
 
   /* set timestamp */
