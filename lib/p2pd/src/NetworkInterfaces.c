@@ -213,7 +213,9 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   ifr.ifr_name[IFNAMSIZ - 1] = '\0';    /* Ensures null termination */
   if (ioctl(ioctlSkfd, SIOCGIFHWADDR, &ifr) < 0) {
     P2pdPError("ioctl(SIOCGIFHWADDR) error for interface \"%s\"", ifName);
-    close(capturingSkfd);
+    if (capturingSkfd >= 0) {
+      close(capturingSkfd);
+    }
     free(newIf);
     return 0;
   }
