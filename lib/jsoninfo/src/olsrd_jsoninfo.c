@@ -422,6 +422,7 @@ read_uuid_from_file(const char *file)
 {
   FILE *f;
   char* end;
+  int r = 0;
 
   *uuid = 0;
 
@@ -433,20 +434,19 @@ read_uuid_from_file(const char *file)
     return -1;
   }
   if (fread(uuid, 1, UUIDLEN, f) > 0) {
-    fclose(f);
     /* we only use the first line of the file */
     end = strchr(uuid, '\n');
     if(end)
       *end = 0;
-    return 0;
+    r = 0;
   } else {
     olsr_printf(1, "(JSONINFO) Could not read UUID from '%s': %s\n",
                 file, strerror(errno));
-    return -1;
+    r = -1;
   }
 
   fclose(f);
-  return 1;
+  return r;
 }
 
 static void
