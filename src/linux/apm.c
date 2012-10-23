@@ -168,7 +168,7 @@ apm_read_apm(struct olsr_apm_info *ainfo)
   if (fgets(buffer, sizeof(buffer), apm_procfile) == NULL) {
     fclose(apm_procfile);
     /* Try re-opening the file */
-    if ((apm_procfile = fopen(APM_PROC, "r")) != NULL)
+    if ((apm_procfile = fopen(APM_PROC, "r")) == NULL)
       return 0;
 
     if (fgets(buffer, sizeof(buffer), apm_procfile) == NULL) {
