@@ -121,8 +121,10 @@ void helloTimer (void *foo __attribute__ ((unused))){
 
       OLSR_PRINTF(1,"hello running \n");
 
-      sendto(walker->helloSkfd, (const char * ) hello, 
-			sizeof(struct RtElHelloPkt), 0, (struct sockaddr *)&dest, sizeof(dest));
+      if (sendto(walker->helloSkfd, (const char * ) hello,
+			sizeof(struct RtElHelloPkt), 0, (struct sockaddr *)&dest, sizeof(dest)) < 0) {
+        BmfPError("Could not send to interface %s", walker->olsrIntf->int_name);
+      }
     }
     else{
       memset((char *) &dest6, 0, sizeof(dest6));
@@ -132,8 +134,10 @@ void helloTimer (void *foo __attribute__ ((unused))){
 
       OLSR_PRINTF(1,"hello running \n");
 
-      sendto(walker->helloSkfd, (const char * ) hello,  
-                        sizeof(struct RtElHelloPkt), 0, (struct sockaddr *)&dest6, sizeof(dest6));
+      if (sendto(walker->helloSkfd, (const char * ) hello,
+                        sizeof(struct RtElHelloPkt), 0, (struct sockaddr *)&dest6, sizeof(dest6)) < 0) {
+        BmfPError("Could not send to interface %s", walker->olsrIntf->int_name);
+      }
     }
   }
   return;
