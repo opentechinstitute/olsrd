@@ -218,7 +218,6 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
   FILE *fd;
   int bat_max = 5000;                  /* Find some sane value */
   int bat_val = 0;
-  int result;
 
   /* reporbe in case ac status changed */
   fd_index = acpi_probe();
@@ -271,14 +270,19 @@ apm_read_acpi(struct olsr_apm_info *ainfo)
 
   ainfo->ac_line_status = ac_power_on ? OLSR_AC_POWERED : OLSR_BATTERY_POWERED;
 
+  /* sanitise ACPI battery data */
+  bat_max = abs(bat_max);
+  bat_val = abs(bat_val);
+  if (bat_val > bat_max) {
+    bat_val = bat_max;
+  }
+
   if (bat_max == 0) {
     /* protection against stupid acpi data */
     ainfo->battery_percentage = 0;
   }
   else {
-    result = bat_val * 100 / bat_max;
-
-    ainfo->battery_percentage = result > 100 ? 100 : result;
+    ainfo->battery_percentage = (bat_val >= bat_max) ? 100 : (bat_val * 100 / bat_max);
   }
 
   return 1;
