@@ -99,5 +99,5 @@ struct in_addr * getIPv4Address(const char * ifName, struct ifreq *ifr) {
 
 	close(fd);
 
-	return &((struct sockaddr_in *) &ifr->ifr_addr)->sin_addr;
+	return &((struct sockaddr_in *)(void *) &ifr->ifr_addr)->sin_addr;
 }
