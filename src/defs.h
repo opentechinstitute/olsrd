@@ -138,13 +138,16 @@ strscpy(char *dest, const char *src, size_t size)
   if (NULL == src)
     fprintf(stderr, "Warning: src is NULL in strscpy!\n");
 #endif /* !defined(NODEBUG) && defined(DEBUG) */
-  if (NULL != dest && NULL != src) {
-    /* src does not need to be null terminated */
-    if (0 < size--)
-      while (l < size && 0 != src[l])
-        l++;
-    dest[l] = 0;
+  if (!dest || !src) {
+    return NULL;
   }
+
+  /* src does not need to be null terminated */
+  if (0 < size--)
+    while (l < size && 0 != src[l])
+      l++;
+  dest[l] = 0;
+
   return strncpy(dest, src, l);
 }
 
