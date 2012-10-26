@@ -231,6 +231,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
       olsr_syslog(OLSR_LOG_ERR, "olsrd: out of memory!: %s\n", err_msg);
       olsr_exit(ci->ci_name, EXIT_FAILURE);
     }
+    assert(ptr);
   } else {
 
     /*
