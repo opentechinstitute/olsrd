@@ -1,3 +1,4 @@
+
 /*
 ** $Id: ldo.h,v 1.56 2002/12/04 17:29:32 roberto Exp $
 ** Stack and Call structure of Lua
@@ -12,11 +13,11 @@
 #include "lstate.h"
 #include "lzio.h"
 
-#include "defs.h" /* ARM_NOWARN_ALIGN */
+#include "defs.h"               /* ARM_NOWARN_ALIGN */
 
 /*
 ** macro to control inclusion of some hard tests on stack reallocation
-*/ 
+*/
 #ifndef HARDSTACKTESTS
 #define condhardstacktests(x)	{ /* empty */ }
 #else
@@ -40,22 +41,21 @@
 
 
 /* type of protected functions, to be ran by `runprotected' */
-typedef void (*Pfunc) (lua_State *L, void *ud);
+typedef void (*Pfunc) (lua_State * L, void *ud);
 
-void luaD_resetprotection (lua_State *L);
-int luaD_protectedparser (lua_State *L, ZIO *z, int bin);
-void luaD_callhook (lua_State *L, int event, int line);
-StkId luaD_precall (lua_State *L, StkId func);
-void luaD_call (lua_State *L, StkId func, int nResults);
-int luaD_pcall (lua_State *L, Pfunc func, void *u,
-                ptrdiff_t oldtop, ptrdiff_t ef);
-void luaD_poscall (lua_State *L, int wanted, StkId firstResult);
-void luaD_reallocCI (lua_State *L, int newsize);
-void luaD_reallocstack (lua_State *L, int newsize);
-void luaD_growstack (lua_State *L, int n);
+void luaD_resetprotection(lua_State * L);
+int luaD_protectedparser(lua_State * L, ZIO * z, int bin);
+void luaD_callhook(lua_State * L, int event, int line);
+StkId luaD_precall(lua_State * L, StkId func);
+void luaD_call(lua_State * L, StkId func, int nResults);
+int luaD_pcall(lua_State * L, Pfunc func, void *u, ptrdiff_t oldtop, ptrdiff_t ef);
+void luaD_poscall(lua_State * L, int wanted, StkId firstResult);
+void luaD_reallocCI(lua_State * L, int newsize);
+void luaD_reallocstack(lua_State * L, int newsize);
+void luaD_growstack(lua_State * L, int n);
 
-void luaD_throw (lua_State *L, int errcode) __attribute__((noreturn));
-int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud);
+void luaD_throw(lua_State * L, int errcode) __attribute__ ((noreturn));
+int luaD_rawrunprotected(lua_State * L, Pfunc f, void *ud);
 
 
 #endif

@@ -1,3 +1,4 @@
+
 /*
 ** $Id: llex.h,v 1.47 2003/02/28 17:19:47 roberto Exp $
 ** Lexical Analyzer
@@ -39,7 +40,7 @@ enum RESERVED {
 typedef union {
   lua_Number r;
   TString *ts;
-} SemInfo;  /* semantics information */
+} SemInfo;                             /* semantics information */
 
 
 typedef struct Token {
@@ -49,27 +50,27 @@ typedef struct Token {
 
 
 typedef struct LexState {
-  int current;  /* current character (charint) */
-  int linenumber;  /* input line counter */
-  int lastline;  /* line of last token `consumed' */
-  Token t;  /* current token */
-  Token lookahead;  /* look ahead token */
-  struct FuncState *fs;  /* `FuncState' is private to the parser */
+  int current;                         /* current character (charint) */
+  int linenumber;                      /* input line counter */
+  int lastline;                        /* line of last token `consumed' */
+  Token t;                             /* current token */
+  Token lookahead;                     /* look ahead token */
+  struct FuncState *fs;                /* `FuncState' is private to the parser */
   struct lua_State *L;
-  ZIO *z;  /* input stream */
-  Mbuffer *buff;  /* buffer for tokens */
-  TString *source;  /* current source name */
-  int nestlevel;  /* level of nested non-terminals */
+  ZIO *z;                              /* input stream */
+  Mbuffer *buff;                       /* buffer for tokens */
+  TString *source;                     /* current source name */
+  int nestlevel;                       /* level of nested non-terminals */
 } LexState;
 
 
-void luaX_init (lua_State *L);
-void luaX_setinput (lua_State *L, LexState *LS, ZIO *z, TString *source);
-int luaX_lex (LexState *LS, SemInfo *seminfo);
-void luaX_checklimit (LexState *ls, int val, int limit, const char *msg);
-void luaX_syntaxerror (LexState *ls, const char *s) __attribute__((noreturn));
-void luaX_errorline (LexState *ls, const char *s, const char *token, int line) __attribute__((noreturn));
-const char *luaX_token2str (LexState *ls, int token);
+void luaX_init(lua_State * L);
+void luaX_setinput(lua_State * L, LexState * LS, ZIO * z, TString * source);
+int luaX_lex(LexState * LS, SemInfo * seminfo);
+void luaX_checklimit(LexState * ls, int val, int limit, const char *msg);
+void luaX_syntaxerror(LexState * ls, const char *s) __attribute__ ((noreturn));
+void luaX_errorline(LexState * ls, const char *s, const char *token, int line) __attribute__ ((noreturn));
+const char *luaX_token2str(LexState * ls, int token);
 
 
 #endif
