@@ -537,6 +537,8 @@ send_http_data:
       writetimer_entry = olsr_start_timer(100, 0, OLSR_TIMER_PERIODIC, &httpinfo_write_data, NULL, 0);
     }
   }
+  abuf_free(&body_abuf);
+  return;
 
 close_connection:
   abuf_free(&body_abuf);
