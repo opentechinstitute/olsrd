@@ -139,7 +139,7 @@ static const char KEY_HOOK = 'h';
 static void hookf (lua_State *L, lua_Debug *ar) {
   static const char *const hooknames[] =
     {"call", "return", "line", "count", "tail return"};
-  lua_pushlightuserdata(L, (void *)&KEY_HOOK);
+  lua_pushlightuserdata(L, &KEY_HOOK);
   lua_rawget(L, LUA_REGISTRYINDEX);
   if (lua_isfunction(L, -1)) {
     lua_pushstring(L, hooknames[(int)ar->event]);
@@ -185,7 +185,7 @@ static int sethook (lua_State *L) {
     luaL_checktype(L, 1, LUA_TFUNCTION);
     lua_sethook(L, hookf, makemask(smask, count), count);
   }
-  lua_pushlightuserdata(L, (void *)&KEY_HOOK);
+  lua_pushlightuserdata(L, &KEY_HOOK);
   lua_pushvalue(L, 1);
   lua_rawset(L, LUA_REGISTRYINDEX);  /* set new hook */
   return 0;
@@ -199,7 +199,7 @@ static int gethook (lua_State *L) {
   if (hook != NULL && hook != hookf)  /* external hook? */
     lua_pushliteral(L, "external hook");
   else {
-    lua_pushlightuserdata(L, (void *)&KEY_HOOK);
+    lua_pushlightuserdata(L, &KEY_HOOK);
     lua_rawget(L, LUA_REGISTRYINDEX);   /* get hook */
   }
   lua_pushstring(L, unmakemask(mask, buff));
