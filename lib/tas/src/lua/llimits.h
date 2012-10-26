@@ -11,7 +11,7 @@
 #include <stddef.h>
 
 #include "lua.h"
-#include "defs.h" /* ARM_NOWARN_ALIGN */
+#include "defs.h"               /* ARM_NOWARN_ALIGN */
 
 /*
 ** try to find number of bits in an integer

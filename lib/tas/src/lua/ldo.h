@@ -11,7 +11,7 @@
 #include "lstate.h"
 #include "lzio.h"
 
-#include "defs.h" /* ARM_NOWARN_ALIGN */
+#include "defs.h"               /* ARM_NOWARN_ALIGN */
 
 /*
 ** macro to control inclusion of some hard tests on stack reallocation
