@@ -538,6 +538,10 @@ send_http_data:
     }
   }
   abuf_free(&body_abuf);
+  /*
+   * client_socket is stored in outbuffer_socket[outbuffer_count] and closed
+   * by the httpinfo_write_data timer callback, so don't close it here
+   */
   return;
 
 close_connection:
