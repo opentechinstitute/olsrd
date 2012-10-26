@@ -253,7 +253,7 @@ olsr_cookie_malloc(struct olsr_cookie_info *ci)
    * When the block is freed to detect corruption.
    */
   branding = (struct olsr_cookie_mem_brand *)ARM_NOWARN_ALIGN(((unsigned char *)ptr + ci->ci_size));
-  memcpy(&branding->cmb_sig, "cookie", 6);
+  memcpy(&branding->cmb_sig[0], "cookie", 6);
   branding->cmb_id = ci->ci_id;
 
   /* Stats keeping */
