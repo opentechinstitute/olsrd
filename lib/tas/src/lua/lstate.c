@@ -50,7 +50,7 @@ static lua_State *mallocstate (lua_State *L) {
   if (block == NULL) return NULL;
   else {
     block += EXTRASPACE;
-    return cast(lua_State *, block);
+    return cast_align(lua_State *, block);
   }
 }
 
