@@ -53,7 +53,7 @@ void luaD_reallocCI (lua_State *L, int newsize);
 void luaD_reallocstack (lua_State *L, int newsize);
 void luaD_growstack (lua_State *L, int n);
 
-void luaD_throw (lua_State *L, int errcode);
+void luaD_throw (lua_State *L, int errcode) __attribute__((noreturn));
 int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud);
 
 

@@ -24,6 +24,8 @@
 
 #define next(LS) (LS->current = zgetc(LS->z))
 
+static void luaX_error (LexState *ls, const char *s, const char *token) __attribute__((noreturn));
+static void luaX_lexerror (LexState *ls, const char *s, int token) __attribute__((noreturn));
 
 
 /* ORDER RESERVED */

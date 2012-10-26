@@ -213,7 +213,7 @@ LUA_API void  lua_setgcthreshold (lua_State *L, int newthreshold);
 
 LUA_API const char *lua_version (void);
 
-LUA_API int   lua_error (lua_State *L);
+LUA_API int   lua_error (lua_State *L) __attribute__((noreturn));
 
 LUA_API int   lua_next (lua_State *L, int idx);
 

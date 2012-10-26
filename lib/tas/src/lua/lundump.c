@@ -26,6 +26,8 @@ typedef struct {
  const char* name;
 } LoadState;
 
+static void unexpectedEOZ (LoadState* S) __attribute__((noreturn));
+
 static void unexpectedEOZ (LoadState* S)
 {
  luaG_runerror(S->L,"unexpected end of file in %s",S->name);

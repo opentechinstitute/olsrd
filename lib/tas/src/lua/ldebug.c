@@ -547,7 +547,6 @@ int luaG_ordererror (lua_State *L, const TObject *p1, const TObject *p2) {
     luaG_runerror(L, "attempt to compare two %s values", t1);
   else
     luaG_runerror(L, "attempt to compare %s with %s", t1, t2);
-  return 0;
 }
 
 

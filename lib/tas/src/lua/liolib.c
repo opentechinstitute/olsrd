@@ -50,6 +50,7 @@
 
 
 
+static int io_exit (lua_State *L) __attribute__((noreturn));
 
 /*
 ** {======================================================
@@ -555,10 +556,15 @@ static int io_rename (lua_State *L) {
 }
 
 
+#if !USE_TMPNAME
+static int io_tmpname (lua_State *L) __attribute__((noreturn));
+#else
+static int io_tmpname (lua_State *L);
+#endif
+
 static int io_tmpname (lua_State *L) {
 #if !USE_TMPNAME
   luaL_error(L, "`tmpname' not supported");
-  return 0;
 #else
   char buff[L_tmpnam];
   if (tmpnam(buff) != buff)
@@ -714,7 +720,6 @@ static int io_setloc (lua_State *L) {
 
 static int io_exit (lua_State *L) {
   exit(luaL_optint(L, 1, EXIT_SUCCESS));
-  return 0;  /* to avoid warnings */
 }
 
 static const luaL_reg syslib[] = {
