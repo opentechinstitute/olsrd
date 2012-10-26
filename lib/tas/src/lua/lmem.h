@@ -1,5 +1,6 @@
 
 /*
+** $Id: lmem.h,v 1.26 2002/05/01 20:40:42 roberto Exp $
 ** Interface to Memory Manager
 ** See Copyright Notice in lua.h
 */
@@ -7,12 +8,14 @@
 #ifndef lmem_h
 #define lmem_h
 
+
 #include <stddef.h>
 
 #include "llimits.h"
 #include "lua.h"
 
 #define MEMERRMSG	"not enough memory"
+
 
 void *luaM_realloc(lua_State * L, void *oldblock, lu_mem oldsize, lu_mem size);
 
@@ -36,11 +39,5 @@ void *luaM_growaux(lua_State * L, void *block, int *size, int size_elem, int lim
    ((v)=cast(t *, luaM_realloc(L, v,cast(lu_mem, oldn)*cast(lu_mem, sizeof(t)), \
                                     cast(lu_mem, n)*cast(lu_mem, sizeof(t)))))
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

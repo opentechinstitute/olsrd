@@ -1,14 +1,17 @@
 
 /*
+** $Id: lauxlib.c,v 1.100 2003/04/07 14:35:00 roberto Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */
+
 
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
 
 /* This file uses only the official API of Lua.
 ** Any function declared here could be written as an application function.
@@ -20,6 +23,7 @@
 
 #include "lauxlib.h"
 
+
 /* number of prereserved references (for internal use) */
 #define RESERVED_REFS	2
 
@@ -27,15 +31,18 @@
 #define FREELIST_REF	1       /* free list of references */
 #define ARRAYSIZE_REF	2       /* array sizes */
 
+
 /* convert a stack index to positive */
 #define abs_index(L, i)		((i) > 0 || (i) <= LUA_REGISTRYINDEX ? (i) : \
 					lua_gettop(L) + (i) + 1)
+
 
 /*
 ** {======================================================
 ** Error-report functions
 ** =======================================================
 */
+
 
 LUALIB_API int
 luaL_argerror(lua_State * L, int narg, const char *extramsg)
@@ -53,15 +60,15 @@ luaL_argerror(lua_State * L, int narg, const char *extramsg)
   luaL_error(L, "bad argument #%d to `%s' (%s)", narg, ar.name, extramsg);
 }
 
+
 LUALIB_API int
 luaL_typerror(lua_State * L, int narg, const char *tname)
 {
   const char *msg = lua_pushfstring(L, "%s expected, got %s",
-                                    tname, lua_typename(L,
-                                                        lua_type(L,
-                                                                 narg)));
+                                    tname, lua_typename(L, lua_type(L, narg)));
   luaL_argerror(L, narg, msg);
 }
+
 
 static void tag_error(lua_State * L, int narg, int tag) __attribute__ ((noreturn));
 static void
@@ -69,6 +76,7 @@ tag_error(lua_State * L, int narg, int tag)
 {
   luaL_typerror(L, narg, lua_typename(L, tag));
 }
+
 
 LUALIB_API void
 luaL_where(lua_State * L, int level)
@@ -84,6 +92,7 @@ luaL_where(lua_State * L, int level)
   lua_pushliteral(L, "");       /* else, no information available... */
 }
 
+
 LUALIB_API int
 luaL_error(lua_State * L, const char *fmt, ...)
 {
@@ -98,6 +107,7 @@ luaL_error(lua_State * L, const char *fmt, ...)
 
 /* }====================================================== */
 
+
 LUALIB_API int
 luaL_findstring(const char *name, const char *const list[])
 {
@@ -107,6 +117,7 @@ luaL_findstring(const char *name, const char *const list[])
       return i;
   return -1;                    /* name not found */
 }
+
 
 LUALIB_API int
 luaL_newmetatable(lua_State * L, const char *tname)
@@ -126,12 +137,14 @@ luaL_newmetatable(lua_State * L, const char *tname)
   return 1;
 }
 
+
 LUALIB_API void
 luaL_getmetatable(lua_State * L, const char *tname)
 {
   lua_pushstring(L, tname);
   lua_rawget(L, LUA_REGISTRYINDEX);
 }
+
 
 LUALIB_API void *
 luaL_checkudata(lua_State * L, int ud, const char *tname)
@@ -150,12 +163,14 @@ luaL_checkudata(lua_State * L, int ud, const char *tname)
   }
 }
 
+
 LUALIB_API void
 luaL_checkstack(lua_State * L, int space, const char *mes)
 {
   if (!lua_checkstack(L, space))
     luaL_error(L, "stack overflow (%s)", mes);
 }
+
 
 LUALIB_API void
 luaL_checktype(lua_State * L, int narg, int t)
@@ -164,12 +179,14 @@ luaL_checktype(lua_State * L, int narg, int t)
     tag_error(L, narg, t);
 }
 
+
 LUALIB_API void
 luaL_checkany(lua_State * L, int narg)
 {
   if (lua_type(L, narg) == LUA_TNONE)
     luaL_argerror(L, narg, "value expected");
 }
+
 
 LUALIB_API const char *
 luaL_checklstring(lua_State * L, int narg, size_t * len)
@@ -182,6 +199,7 @@ luaL_checklstring(lua_State * L, int narg, size_t * len)
   return s;
 }
 
+
 LUALIB_API const char *
 luaL_optlstring(lua_State * L, int narg, const char *def, size_t * len)
 {
@@ -193,6 +211,7 @@ luaL_optlstring(lua_State * L, int narg, const char *def, size_t * len)
     return luaL_checklstring(L, narg, len);
 }
 
+
 LUALIB_API lua_Number
 luaL_checknumber(lua_State * L, int narg)
 {
@@ -202,6 +221,7 @@ luaL_checknumber(lua_State * L, int narg)
   return d;
 }
 
+
 LUALIB_API lua_Number
 luaL_optnumber(lua_State * L, int narg, lua_Number def)
 {
@@ -210,6 +230,7 @@ luaL_optnumber(lua_State * L, int narg, lua_Number def)
   else
     return luaL_checknumber(L, narg);
 }
+
 
 LUALIB_API int
 luaL_getmetafield(lua_State * L, int obj, const char *event)
@@ -227,6 +248,7 @@ luaL_getmetafield(lua_State * L, int obj, const char *event)
   }
 }
 
+
 LUALIB_API int
 luaL_callmeta(lua_State * L, int obj, const char *event)
 {
@@ -237,6 +259,7 @@ luaL_callmeta(lua_State * L, int obj, const char *event)
   lua_call(L, 1, 1);
   return 1;
 }
+
 
 LUALIB_API void
 luaL_openlib(lua_State * L, const char *libname, const luaL_reg * l, int nup)
@@ -264,6 +287,8 @@ luaL_openlib(lua_State * L, const char *libname, const luaL_reg * l, int nup)
   lua_pop(L, nup);              /* remove upvalues */
 }
 
+
+
 /*
 ** {======================================================
 ** getn-setn: size for arrays
@@ -279,6 +304,7 @@ checkint(lua_State * L, int topop)
   lua_pop(L, topop);
   return n;
 }
+
 
 static void
 getsizes(lua_State * L)
@@ -296,6 +322,7 @@ getsizes(lua_State * L)
     lua_rawseti(L, LUA_REGISTRYINDEX, ARRAYSIZE_REF);   /* store in register */
   }
 }
+
 
 void
 luaL_setn(lua_State * L, int t, int n)
@@ -315,6 +342,7 @@ luaL_setn(lua_State * L, int t, int n)
     lua_pop(L, 1);              /* remove `sizes' */
   }
 }
+
 
 int
 luaL_getn(lua_State * L, int t)
@@ -342,16 +370,20 @@ luaL_getn(lua_State * L, int t)
 
 /* }====================================================== */
 
+
+
 /*
 ** {======================================================
 ** Generic Buffer manipulation
 ** =======================================================
 */
 
+
 #define bufflen(B)	((B)->p - (B)->buffer)
 #define bufffree(B)	((size_t)(LUAL_BUFFERSIZE - bufflen(B)))
 
 #define LIMIT	(LUA_MINSTACK/2)
+
 
 static int
 emptybuffer(luaL_Buffer * B)
@@ -367,6 +399,7 @@ emptybuffer(luaL_Buffer * B)
   }
 }
 
+
 static void
 adjuststack(luaL_Buffer * B)
 {
@@ -381,12 +414,12 @@ adjuststack(luaL_Buffer * B)
         toget++;
       } else
         break;
-    }
-    while (toget < B->lvl);
+    } while (toget < B->lvl);
     lua_concat(L, toget);
     B->lvl = B->lvl - toget + 1;
   }
 }
+
 
 LUALIB_API char *
 luaL_prepbuffer(luaL_Buffer * B)
@@ -396,6 +429,7 @@ luaL_prepbuffer(luaL_Buffer * B)
   return B->buffer;
 }
 
+
 LUALIB_API void
 luaL_addlstring(luaL_Buffer * B, const char *s, size_t l)
 {
@@ -403,11 +437,13 @@ luaL_addlstring(luaL_Buffer * B, const char *s, size_t l)
     luaL_putchar(B, *s++);
 }
 
+
 LUALIB_API void
 luaL_addstring(luaL_Buffer * B, const char *s)
 {
   luaL_addlstring(B, s, strlen(s));
 }
+
 
 LUALIB_API void
 luaL_pushresult(luaL_Buffer * B)
@@ -416,6 +452,7 @@ luaL_pushresult(luaL_Buffer * B)
   lua_concat(B->L, B->lvl);
   B->lvl = 1;
 }
+
 
 LUALIB_API void
 luaL_addvalue(luaL_Buffer * B)
@@ -434,6 +471,7 @@ luaL_addvalue(luaL_Buffer * B)
   }
 }
 
+
 LUALIB_API void
 luaL_buffinit(lua_State * L, luaL_Buffer * B)
 {
@@ -443,6 +481,7 @@ luaL_buffinit(lua_State * L, luaL_Buffer * B)
 }
 
 /* }====================================================== */
+
 
 LUALIB_API int
 luaL_ref(lua_State * L, int t)
@@ -470,6 +509,7 @@ luaL_ref(lua_State * L, int t)
   return ref;
 }
 
+
 LUALIB_API void
 luaL_unref(lua_State * L, int t, int ref)
 {
@@ -482,6 +522,8 @@ luaL_unref(lua_State * L, int t, int ref)
   }
 }
 
+
+
 /*
 ** {======================================================
 ** Load functions
@@ -492,6 +534,7 @@ typedef struct LoadF {
   FILE *f;
   char buff[LUAL_BUFFERSIZE];
 } LoadF;
+
 
 static const char *
 getF(lua_State * L, void *ud, size_t * size)
@@ -504,6 +547,7 @@ getF(lua_State * L, void *ud, size_t * size)
   return (*size > 0) ? lf->buff : NULL;
 }
 
+
 static int
 errfile(lua_State * L, int fnameindex)
 {
@@ -512,6 +556,7 @@ errfile(lua_State * L, int fnameindex)
   lua_remove(L, fnameindex);
   return LUA_ERRFILE;
 }
+
 
 LUALIB_API int
 luaL_loadfile(lua_State * L, const char *filename)
@@ -548,10 +593,12 @@ luaL_loadfile(lua_State * L, const char *filename)
   return status;
 }
 
+
 typedef struct LoadS {
   const char *s;
   size_t size;
 } LoadS;
+
 
 static const char *
 getS(lua_State * L, void *ud, size_t * size)
@@ -565,6 +612,7 @@ getS(lua_State * L, void *ud, size_t * size)
   return ls->s;
 }
 
+
 LUALIB_API int
 luaL_loadbuffer(lua_State * L, const char *buff, size_t size, const char *name)
 {
@@ -576,11 +624,13 @@ luaL_loadbuffer(lua_State * L, const char *buff, size_t size, const char *name)
 
 /* }====================================================== */
 
+
 /*
 ** {======================================================
 ** compatibility code
 ** =======================================================
 */
+
 
 static void
 callalert(lua_State * L, int status)
@@ -597,6 +647,7 @@ callalert(lua_State * L, int status)
   }
 }
 
+
 static int
 aux_do(lua_State * L, int status)
 {
@@ -607,17 +658,20 @@ aux_do(lua_State * L, int status)
   return status;
 }
 
+
 LUALIB_API int
 lua_dofile(lua_State * L, const char *filename)
 {
   return aux_do(L, luaL_loadfile(L, filename));
 }
 
+
 LUALIB_API int
 lua_dobuffer(lua_State * L, const char *buff, size_t size, const char *name)
 {
   return aux_do(L, luaL_loadbuffer(L, buff, size, name));
 }
+
 
 LUALIB_API int
 lua_dostring(lua_State * L, const char *str)
@@ -626,10 +680,3 @@ lua_dostring(lua_State * L, const char *str)
 }
 
 /* }====================================================== */
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

@@ -1,8 +1,10 @@
 
 /*
+** $Id: lvm.c,v 1.284b 2003/04/03 13:35:34 roberto Exp $
 ** Lua virtual machine
 ** See Copyright Notice in lua.h
 */
+
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -27,13 +29,17 @@
 #include "ltm.h"
 #include "lvm.h"
 
+
+
 /* function to convert a lua_Number to a string */
 #ifndef lua_number2str
 #define lua_number2str(s,n)     sprintf((s), LUA_NUMBER_FMT, (n))
 #endif
 
+
 /* limit for table tag-method chains (to avoid loops) */
 #define MAXTAGLOOP	100
+
 
 const TObject *
 luaV_tonumber(const TObject * obj, TObject * n)
@@ -48,6 +54,7 @@ luaV_tonumber(const TObject * obj, TObject * n)
     return NULL;
 }
 
+
 int
 luaV_tostring(lua_State * L, StkId obj)
 {
@@ -60,6 +67,7 @@ luaV_tostring(lua_State * L, StkId obj)
     return 1;
   }
 }
+
 
 static void
 traceexec(lua_State * L)
@@ -92,6 +100,7 @@ traceexec(lua_State * L)
   }
 }
 
+
 static void
 callTMres(lua_State * L, const TObject * f, const TObject * p1, const TObject * p2)
 {
@@ -104,6 +113,8 @@ callTMres(lua_State * L, const TObject * f, const TObject * p1, const TObject * 
   L->top--;                     /* result will be in L->top */
 }
 
+
+
 static void
 callTM(lua_State * L, const TObject * f, const TObject * p1, const TObject * p2, const TObject * p3)
 {
@@ -115,6 +126,7 @@ callTM(lua_State * L, const TObject * f, const TObject * p1, const TObject * p2,
   L->top += 4;
   luaD_call(L, L->top - 4, 0);
 }
+
 
 static const TObject *
 luaV_index(lua_State * L, const TObject * t, TObject * key, int loop)
@@ -142,6 +154,7 @@ luaV_getnotable(lua_State * L, const TObject * t, TObject * key, int loop)
     return luaV_gettable(L, tm, key, loop);
 }
 
+
 /*
 ** Function to index a table.
 ** Receives the table at `t' and the key at `key'.
@@ -162,6 +175,7 @@ luaV_gettable(lua_State * L, const TObject * t, TObject * key, int loop)
   } else
     return luaV_getnotable(L, t, key, loop + 1);
 }
+
 
 /*
 ** Receives table at `t', key at `key' and value at `val'.
@@ -188,10 +202,10 @@ luaV_settable(lua_State * L, const TObject * t, TObject * key, StkId val)
       return;
     }
     t = tm;                     /* else repeat with `tm' */
-  }
-  while (++loop <= MAXTAGLOOP);
+  } while (++loop <= MAXTAGLOOP);
   luaG_runerror(L, "loop in settable");
 }
+
 
 static int
 call_binTM(lua_State * L, const TObject * p1, const TObject * p2, StkId res, TMS event)
@@ -207,6 +221,7 @@ call_binTM(lua_State * L, const TObject * p1, const TObject * p2, StkId res, TMS
   setobjs2s(res, L->top);
   return 1;
 }
+
 
 static const TObject *
 get_compTM(lua_State * L, Table * mt1, Table * mt2, TMS event)
@@ -225,6 +240,7 @@ get_compTM(lua_State * L, Table * mt1, Table * mt2, TMS event)
   return NULL;
 }
 
+
 static int
 call_orderTM(lua_State * L, const TObject * p1, const TObject * p2, TMS event)
 {
@@ -238,6 +254,7 @@ call_orderTM(lua_State * L, const TObject * p1, const TObject * p2, TMS event)
   callTMres(L, tm1, p1, p2);
   return !l_isfalse(L->top);
 }
+
 
 static int
 luaV_strcmp(const TString * ls, const TString * rs)
@@ -266,6 +283,7 @@ luaV_strcmp(const TString * ls, const TString * rs)
   }
 }
 
+
 int
 luaV_lessthan(lua_State * L, const TObject * l, const TObject * r)
 {
@@ -280,6 +298,7 @@ luaV_lessthan(lua_State * L, const TObject * l, const TObject * r)
     return res;
   return luaG_ordererror(L, l, r);
 }
+
 
 static int
 luaV_lessequal(lua_State * L, const TObject * l, const TObject * r)
@@ -298,6 +317,7 @@ luaV_lessequal(lua_State * L, const TObject * l, const TObject * r)
   return luaG_ordererror(L, l, r);
 }
 
+
 int
 luaV_equalval(lua_State * L, const TObject * t1, const TObject * t2)
 {
@@ -312,15 +332,13 @@ luaV_equalval(lua_State * L, const TObject * t1, const TObject * t2)
     return bvalue(t1) == bvalue(t2);    /* true must be 1 !! */
   case LUA_TLIGHTUSERDATA:
     return pvalue(t1) == pvalue(t2);
-  case LUA_TUSERDATA:
-    {
+  case LUA_TUSERDATA:{
       if (uvalue(t1) == uvalue(t2))
         return 1;
       tm = get_compTM(L, uvalue(t1)->uv.metatable, uvalue(t2)->uv.metatable, TM_EQ);
       break;                    /* will try TM */
     }
-  case LUA_TTABLE:
-    {
+  case LUA_TTABLE:{
       if (hvalue(t1) == hvalue(t2))
         return 1;
       tm = get_compTM(L, hvalue(t1)->metatable, hvalue(t2)->metatable, TM_EQ);
@@ -335,6 +353,7 @@ luaV_equalval(lua_State * L, const TObject * t1, const TObject * t2)
   return !l_isfalse(L->top);
 }
 
+
 void
 luaV_concat(lua_State * L, int total, int last)
 {
@@ -346,8 +365,7 @@ luaV_concat(lua_State * L, int total, int last)
         luaG_concaterror(L, top - 2, top - 1);
     } else if (tsvalue(top - 1)->tsv.len > 0) { /* if len=0, do nothing */
       /* at least two string values; get as many as possible */
-      lu_mem tl = cast(lu_mem, tsvalue(top - 1)->tsv.len) + cast(lu_mem,
-                                                                 tsvalue(top - 2)->tsv.len);
+      lu_mem tl = cast(lu_mem, tsvalue(top - 1)->tsv.len) + cast(lu_mem, tsvalue(top - 2)->tsv.len);
       char *buffer;
       int i;
       while (n < total && tostring(L, top - n - 1)) {   /* collect total length */
@@ -367,9 +385,9 @@ luaV_concat(lua_State * L, int total, int last)
     }
     total -= n - 1;             /* got `n' strings to create 1 new */
     last -= n - 1;
-  }
-  while (total > 1);            /* repeat until only 1 result left */
+  } while (total > 1);          /* repeat until only 1 result left */
 }
+
 
 static void
 Arith(lua_State * L, StkId ra, const TObject * rb, const TObject * rc, TMS op)
@@ -390,8 +408,7 @@ Arith(lua_State * L, StkId ra, const TObject * rb, const TObject * rc, TMS op)
     case TM_DIV:
       setnvalue(ra, nvalue(b) / nvalue(c));
       break;
-    case TM_POW:
-      {
+    case TM_POW:{
         const TObject *f = luaH_getstr(hvalue(gt(L)), G(L)->tmname[TM_POW]);
         ptrdiff_t res = savestack(L, ra);
         if (!ttisfunction(f))
@@ -409,6 +426,8 @@ Arith(lua_State * L, StkId ra, const TObject * rb, const TObject * rc, TMS op)
     luaG_aritherror(L, rb, rc);
 }
 
+
+
 /*
 ** some macros for common tasks in `luaV_execute'
 */
@@ -425,7 +444,9 @@ Arith(lua_State * L, StkId ra, const TObject * rb, const TObject * rc, TMS op)
 #define RKC(i)	((GETARG_C(i) < MAXSTACK) ? RC(i) : k+GETARG_C(i)-MAXSTACK)
 #define KBx(i)	(k+GETARG_Bx(i))
 
+
 #define dojump(pc, i)	((pc) += (i))
+
 
 StkId
 luaV_execute(lua_State * L)
@@ -463,43 +484,37 @@ retentry:                      /* entry point when returning to old functions */
     lua_assert(L->ci->state & CI_HASFRAME);
     lua_assert(base == L->ci->base);
     lua_assert(L->top <= L->stack + L->stacksize && L->top >= base);
-    lua_assert(L->top == L->ci->top || GET_OPCODE(i) == OP_CALL || GET_OPCODE(i) == OP_TAILCALL || GET_OPCODE(i) == OP_RETURN
-               || GET_OPCODE(i) == OP_SETLISTO);
+    lua_assert(L->top == L->ci->top ||
+               GET_OPCODE(i) == OP_CALL || GET_OPCODE(i) == OP_TAILCALL ||
+               GET_OPCODE(i) == OP_RETURN || GET_OPCODE(i) == OP_SETLISTO);
     switch (GET_OPCODE(i)) {
-    case OP_MOVE:
-      {
+    case OP_MOVE:{
         setobjs2s(ra, RB(i));
         break;
       }
-    case OP_LOADK:
-      {
+    case OP_LOADK:{
         setobj2s(ra, KBx(i));
         break;
       }
-    case OP_LOADBOOL:
-      {
+    case OP_LOADBOOL:{
         setbvalue(ra, GETARG_B(i));
         if (GETARG_C(i))
           pc++;                 /* skip next instruction (if C) */
         break;
       }
-    case OP_LOADNIL:
-      {
+    case OP_LOADNIL:{
         TObject *rb = RB(i);
         do {
           setnilvalue(rb--);
-        }
-        while (rb >= ra);
+        } while (rb >= ra);
         break;
       }
-    case OP_GETUPVAL:
-      {
+    case OP_GETUPVAL:{
         int b = GETARG_B(i);
         setobj2s(ra, cl->upvals[b]->v);
         break;
       }
-    case OP_GETGLOBAL:
-      {
+    case OP_GETGLOBAL:{
         TObject *rb = KBx(i);
         const TObject *v;
         lua_assert(ttisstring(rb) && ttistable(&cl->g));
@@ -510,8 +525,7 @@ retentry:                      /* entry point when returning to old functions */
           setobj2s(XRA(i), luaV_index(L, &cl->g, rb, 0));
         break;
       }
-    case OP_GETTABLE:
-      {
+    case OP_GETTABLE:{
         StkId rb = RB(i);
         TObject *rc = RKC(i);
         if (ttistable(rb)) {
@@ -524,33 +538,28 @@ retentry:                      /* entry point when returning to old functions */
           setobj2s(XRA(i), luaV_getnotable(L, rb, rc, 0));
         break;
       }
-    case OP_SETGLOBAL:
-      {
+    case OP_SETGLOBAL:{
         lua_assert(ttisstring(KBx(i)) && ttistable(&cl->g));
         luaV_settable(L, &cl->g, KBx(i), ra);
         break;
       }
-    case OP_SETUPVAL:
-      {
+    case OP_SETUPVAL:{
         int b = GETARG_B(i);
         setobj(cl->upvals[b]->v, ra);   /* write barrier */
         break;
       }
-    case OP_SETTABLE:
-      {
+    case OP_SETTABLE:{
         luaV_settable(L, ra, RKB(i), RKC(i));
         break;
       }
-    case OP_NEWTABLE:
-      {
+    case OP_NEWTABLE:{
         int b = GETARG_B(i);
         b = fb2int(b);
         sethvalue(ra, luaH_new(L, b, GETARG_C(i)));
         luaC_checkGC(L);
         break;
       }
-    case OP_SELF:
-      {
+    case OP_SELF:{
         StkId rb = RB(i);
         TObject *rc = RKC(i);
         runtime_check(L, ttisstring(rc));
@@ -565,8 +574,7 @@ retentry:                      /* entry point when returning to old functions */
           setobj2s(XRA(i), luaV_getnotable(L, rb, rc, 0));
         break;
       }
-    case OP_ADD:
-      {
+    case OP_ADD:{
         TObject *rb = RKB(i);
         TObject *rc = RKC(i);
         if (ttisnumber(rb) && ttisnumber(rc)) {
@@ -575,8 +583,7 @@ retentry:                      /* entry point when returning to old functions */
           Arith(L, ra, rb, rc, TM_ADD);
         break;
       }
-    case OP_SUB:
-      {
+    case OP_SUB:{
         TObject *rb = RKB(i);
         TObject *rc = RKC(i);
         if (ttisnumber(rb) && ttisnumber(rc)) {
@@ -585,8 +592,7 @@ retentry:                      /* entry point when returning to old functions */
           Arith(L, ra, rb, rc, TM_SUB);
         break;
       }
-    case OP_MUL:
-      {
+    case OP_MUL:{
         TObject *rb = RKB(i);
         TObject *rc = RKC(i);
         if (ttisnumber(rb) && ttisnumber(rc)) {
@@ -595,8 +601,7 @@ retentry:                      /* entry point when returning to old functions */
           Arith(L, ra, rb, rc, TM_MUL);
         break;
       }
-    case OP_DIV:
-      {
+    case OP_DIV:{
         TObject *rb = RKB(i);
         TObject *rc = RKC(i);
         if (ttisnumber(rb) && ttisnumber(rc)) {
@@ -605,13 +610,11 @@ retentry:                      /* entry point when returning to old functions */
           Arith(L, ra, rb, rc, TM_DIV);
         break;
       }
-    case OP_POW:
-      {
+    case OP_POW:{
         Arith(L, ra, RKB(i), RKC(i), TM_POW);
         break;
       }
-    case OP_UNM:
-      {
+    case OP_UNM:{
         const TObject *rb = RB(i);
         TObject temp;
         if (tonumber(rb, &temp)) {
@@ -623,14 +626,12 @@ retentry:                      /* entry point when returning to old functions */
         }
         break;
       }
-    case OP_NOT:
-      {
+    case OP_NOT:{
         int res = l_isfalse(RB(i));    /* next assignment may change this value */
         setbvalue(ra, res);
         break;
       }
-    case OP_CONCAT:
-      {
+    case OP_CONCAT:{
         int b = GETARG_B(i);
         int c = GETARG_C(i);
         luaV_concat(L, c - b + 1, c);   /* may change `base' (and `ra') */
@@ -639,37 +640,32 @@ retentry:                      /* entry point when returning to old functions */
         luaC_checkGC(L);
         break;
       }
-    case OP_JMP:
-      {
+    case OP_JMP:{
         dojump(pc, GETARG_sBx(i));
         break;
       }
-    case OP_EQ:
-      {
+    case OP_EQ:{
         if (equalobj(L, RKB(i), RKC(i)) != GETARG_A(i))
           pc++;
         else
           dojump(pc, GETARG_sBx(*pc) + 1);
         break;
       }
-    case OP_LT:
-      {
+    case OP_LT:{
         if (luaV_lessthan(L, RKB(i), RKC(i)) != GETARG_A(i))
           pc++;
         else
           dojump(pc, GETARG_sBx(*pc) + 1);
         break;
       }
-    case OP_LE:
-      {
+    case OP_LE:{
         if (luaV_lessequal(L, RKB(i), RKC(i)) != GETARG_A(i))
           pc++;
         else
           dojump(pc, GETARG_sBx(*pc) + 1);
         break;
       }
-    case OP_TEST:
-      {
+    case OP_TEST:{
         TObject *rb = RB(i);
         if (l_isfalse(rb) == GETARG_C(i))
           pc++;
@@ -680,8 +676,7 @@ retentry:                      /* entry point when returning to old functions */
         break;
       }
     case OP_CALL:
-    case OP_TAILCALL:
-      {
+    case OP_TAILCALL:{
         StkId firstResult;
         int b = GETARG_B(i);
         int nresults;
@@ -724,8 +719,7 @@ retentry:                      /* entry point when returning to old functions */
         }
         break;
       }
-    case OP_RETURN:
-      {
+    case OP_RETURN:{
         CallInfo *ci = L->ci - 1;      /* previous function frame */
         int b = GETARG_B(i);
         if (b != 0)
@@ -750,8 +744,7 @@ retentry:                      /* entry point when returning to old functions */
           goto retentry;
         }
       }
-    case OP_FORLOOP:
-      {
+    case OP_FORLOOP:{
         lua_Number step, idx, limit;
         const TObject *plimit = ra + 1;
         const TObject *pstep = ra + 2;
@@ -770,8 +763,7 @@ retentry:                      /* entry point when returning to old functions */
         }
         break;
       }
-    case OP_TFORLOOP:
-      {
+    case OP_TFORLOOP:{
         int nvar = GETARG_C(i) + 1;
         StkId cb = ra + nvar + 2;      /* call base */
         setobjs2s(cb, ra);
@@ -785,16 +777,14 @@ retentry:                      /* entry point when returning to old functions */
         do {                    /* move results to proper positions */
           nvar--;
           setobjs2s(ra + nvar, cb + nvar);
-        }
-        while (nvar > 0);
+        } while (nvar > 0);
         if (ttisnil(ra))        /* break loop? */
           pc++;                 /* skip jump (break loop) */
         else
           dojump(pc, GETARG_sBx(*pc) + 1);      /* jump back */
         break;
       }
-    case OP_TFORPREP:
-      {                         /* for compatibility only */
+    case OP_TFORPREP:{         /* for compatibility only */
         if (ttistable(ra)) {
           setobjs2s(ra + 1, ra);
           setobj2s(ra, luaH_getstr(hvalue(gt(L)), luaS_new(L, "next")));
@@ -803,8 +793,7 @@ retentry:                      /* entry point when returning to old functions */
         break;
       }
     case OP_SETLIST:
-    case OP_SETLISTO:
-      {
+    case OP_SETLISTO:{
         int bc;
         int n;
         Table *h;
@@ -822,13 +811,11 @@ retentry:                      /* entry point when returning to old functions */
           setobj2t(luaH_setnum(L, h, bc + n), ra + n);  /* write barrier */
         break;
       }
-    case OP_CLOSE:
-      {
+    case OP_CLOSE:{
         luaF_close(L, ra);
         break;
       }
-    case OP_CLOSURE:
-      {
+    case OP_CLOSURE:{
         Proto *p;
         Closure *ncl;
         int nup, j;
@@ -851,10 +838,3 @@ retentry:                      /* entry point when returning to old functions */
     }
   }
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

@@ -1,5 +1,6 @@
 
 /*
+** $Id: lundump.h,v 1.30 2003/04/07 20:34:20 lhf Exp $
 ** load pre-compiled Lua chunks
 ** See Copyright Notice in lua.h
 */
@@ -33,10 +34,3 @@ void luaU_print(const Proto * Main);
 #define	TEST_NUMBER	((lua_Number)3.14159265358979323846E7)
 
 #endif
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

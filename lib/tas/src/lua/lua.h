@@ -1,10 +1,12 @@
 
 /*
+** $Id: lua.h,v 1.175b 2003/03/18 12:31:39 roberto Exp $
 ** Lua - An Extensible Extension Language
 ** Tecgraf: Computer Graphics Technology Group, PUC-Rio, Brazil
 ** http://www.lua.org	mailto:info@lua.org
 ** See Copyright Notice at the end of this file
 */
+
 
 #ifndef lua_h
 #define lua_h
@@ -12,12 +14,16 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+
 #define LUA_VERSION	"Lua 5.0.2"
 #define LUA_COPYRIGHT	"Copyright (C) 1994-2004 Tecgraf, PUC-Rio"
 #define LUA_AUTHORS 	"R. Ierusalimschy, L. H. de Figueiredo & W. Celes"
 
+
+
 /* option for multiple returns in `lua_pcall' and `lua_call' */
 #define LUA_MULTRET	(-1)
+
 
 /*
 ** pseudo-indices
@@ -26,6 +32,7 @@
 #define LUA_GLOBALSINDEX	(-10001)
 #define lua_upvalueindex(i)	(LUA_GLOBALSINDEX-(i))
 
+
 /* error codes for `lua_load' and `lua_pcall' */
 #define LUA_ERRRUN	1
 #define LUA_ERRFILE	2
@@ -33,9 +40,11 @@
 #define LUA_ERRMEM	4
 #define LUA_ERRERR	5
 
+
 typedef struct lua_State lua_State;
 
 typedef int (*lua_CFunction) (lua_State * L);
+
 
 /*
 ** functions that read/write blocks when loading/dumping Lua chunks
@@ -43,6 +52,7 @@ typedef int (*lua_CFunction) (lua_State * L);
 typedef const char *(*lua_Chunkreader) (lua_State * L, void *ud, size_t * sz);
 
 typedef int (*lua_Chunkwriter) (lua_State * L, const void *p, size_t sz, void *ud);
+
 
 /*
 ** basic types
@@ -59,8 +69,10 @@ typedef int (*lua_Chunkwriter) (lua_State * L, const void *p, size_t sz, void *u
 #define LUA_TUSERDATA	7
 #define LUA_TTHREAD	8
 
+
 /* minimum Lua stack available to a C function */
 #define LUA_MINSTACK	20
+
 
 /*
 ** generic extra include file
@@ -69,6 +81,7 @@ typedef int (*lua_Chunkwriter) (lua_State * L, const void *p, size_t sz, void *u
 #include LUA_USER_H
 #endif
 
+
 /* type of numbers in Lua */
 #ifndef LUA_NUMBER
 typedef double lua_Number;
@@ -76,10 +89,12 @@ typedef double lua_Number;
 typedef LUA_NUMBER lua_Number;
 #endif
 
+
 /* mark for all API functions */
 #ifndef LUA_API
 #define LUA_API		extern
 #endif
+
 
 /*
 ** state manipulation
@@ -89,6 +104,7 @@ LUA_API void lua_close(lua_State * L);
 LUA_API lua_State *lua_newthread(lua_State * L);
 
 LUA_API lua_CFunction lua_atpanic(lua_State * L, lua_CFunction panicf);
+
 
 /*
 ** basic stack manipulation
@@ -102,6 +118,7 @@ LUA_API void lua_replace(lua_State * L, int idx);
 LUA_API int lua_checkstack(lua_State * L, int sz);
 
 LUA_API void lua_xmove(lua_State * from, lua_State * to, int n);
+
 
 /*
 ** access functions (stack -> C)
@@ -127,6 +144,7 @@ LUA_API void *lua_touserdata(lua_State * L, int idx);
 LUA_API lua_State *lua_tothread(lua_State * L, int idx);
 LUA_API const void *lua_topointer(lua_State * L, int idx);
 
+
 /*
 ** push functions (C -> stack)
 */
@@ -140,6 +158,7 @@ LUA_API void lua_pushcclosure(lua_State * L, lua_CFunction fn, int n);
 LUA_API void lua_pushboolean(lua_State * L, int b);
 LUA_API void lua_pushlightuserdata(lua_State * L, const void *p);
 
+
 /*
 ** get functions (Lua -> stack)
 */
@@ -151,6 +170,7 @@ LUA_API void *lua_newuserdata(lua_State * L, size_t sz);
 LUA_API int lua_getmetatable(lua_State * L, int objindex);
 LUA_API void lua_getfenv(lua_State * L, int idx);
 
+
 /*
 ** set functions (stack -> Lua)
 */
@@ -159,6 +179,7 @@ LUA_API void lua_rawset(lua_State * L, int idx);
 LUA_API void lua_rawseti(lua_State * L, int idx, int n);
 LUA_API int lua_setmetatable(lua_State * L, int objindex);
 LUA_API int lua_setfenv(lua_State * L, int idx);
+
 
 /*
 ** `load' and `call' functions (load and run Lua code)
@@ -169,6 +190,7 @@ LUA_API int lua_cpcall(lua_State * L, lua_CFunction func, void *ud);
 LUA_API int lua_load(lua_State * L, lua_Chunkreader reader, void *dt, const char *chunkname);
 
 LUA_API int lua_dump(lua_State * L, lua_Chunkwriter writer, void *data);
+
 
 /*
 ** coroutine functions
@@ -194,6 +216,8 @@ LUA_API int lua_error(lua_State * L) __attribute__ ((noreturn));
 LUA_API int lua_next(lua_State * L, int idx);
 
 LUA_API void lua_concat(lua_State * L, int n);
+
+
 
 /*
 ** ===============================================================
@@ -226,9 +250,12 @@ LUA_API void lua_concat(lua_State * L, int n);
 #define lua_pushliteral(L, s)	\
 	lua_pushlstring(L, "" s, (sizeof(s)/sizeof(char))-1)
 
+
+
 /*
 ** compatibility macros and functions
 */
+
 
 LUA_API int lua_pushupvalues(lua_State * L);
 
@@ -238,6 +265,7 @@ LUA_API int lua_pushupvalues(lua_State * L);
 
 #define lua_getglobal(L,s)	\
 		(lua_pushstring(L, s), lua_gettable(L, LUA_GLOBALSINDEX))
+
 
 /* compatibility with ref system */
 
@@ -251,6 +279,8 @@ LUA_API int lua_pushupvalues(lua_State * L);
 #define lua_unref(L,ref)	luaL_unref(L, LUA_REGISTRYINDEX, (ref))
 
 #define lua_getref(L,ref)	lua_rawgeti(L, LUA_REGISTRYINDEX, ref)
+
+
 
 /*
 ** {======================================================================
@@ -269,11 +299,13 @@ LUA_API int lua_pushupvalues(lua_State * L);
 
 /* }====================================================================== */
 
+
 /*
 ** {======================================================================
 ** Debug API
 ** =======================================================================
 */
+
 
 /*
 ** Event codes
@@ -283,6 +315,7 @@ LUA_API int lua_pushupvalues(lua_State * L);
 #define LUA_HOOKLINE	2
 #define LUA_HOOKCOUNT	3
 #define LUA_HOOKTAILRET 4
+
 
 /*
 ** Event masks
@@ -296,6 +329,7 @@ typedef struct lua_Debug lua_Debug;    /* activation record */
 
 typedef void (*lua_Hook) (lua_State * L, lua_Debug * ar);
 
+
 LUA_API int lua_getstack(lua_State * L, int level, lua_Debug * ar);
 LUA_API int lua_getinfo(lua_State * L, const char *what, lua_Debug * ar);
 LUA_API const char *lua_getlocal(lua_State * L, const lua_Debug * ar, int n);
@@ -307,6 +341,7 @@ LUA_API int lua_sethook(lua_State * L, lua_Hook func, int mask, int count);
 LUA_API lua_Hook lua_gethook(lua_State * L);
 LUA_API int lua_gethookmask(lua_State * L);
 LUA_API int lua_gethookcount(lua_State * L);
+
 
 #define LUA_IDSIZE	60
 
@@ -325,6 +360,7 @@ struct lua_Debug {
 };
 
 /* }====================================================================== */
+
 
 /******************************************************************************
 * Copyright (C) 1994-2004 Tecgraf, PUC-Rio.  All rights reserved.
@@ -349,11 +385,5 @@ struct lua_Debug {
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

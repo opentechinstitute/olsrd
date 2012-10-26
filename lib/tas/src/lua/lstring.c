@@ -1,8 +1,10 @@
 
 /*
+** $Id: lstring.c,v 1.78 2002/12/04 17:38:31 roberto Exp $
 ** String table (keeps all strings handled by Lua)
 ** See Copyright Notice in lua.h
 */
+
 
 #include <string.h>
 
@@ -15,12 +17,15 @@
 #include "lstate.h"
 #include "lstring.h"
 
+
+
 void
 luaS_freeall(lua_State * L)
 {
   lua_assert(G(L)->strt.nuse == 0);
   luaM_freearray(L, G(L)->strt.hash, G(L)->strt.size, TString *);
 }
+
 
 void
 luaS_resize(lua_State * L, int newsize)
@@ -48,6 +53,7 @@ luaS_resize(lua_State * L, int newsize)
   tb->hash = newhash;
 }
 
+
 static TString *
 newlstr(lua_State * L, const char *str, size_t l, lu_hash h)
 {
@@ -70,6 +76,7 @@ newlstr(lua_State * L, const char *str, size_t l, lu_hash h)
   return ts;
 }
 
+
 TString *
 luaS_newlstr(lua_State * L, const char *str, size_t l)
 {
@@ -87,6 +94,7 @@ luaS_newlstr(lua_State * L, const char *str, size_t l)
   return newlstr(L, str, l, h); /* not found */
 }
 
+
 Udata *
 luaS_newudata(lua_State * L, size_t s)
 {
@@ -101,10 +109,3 @@ luaS_newudata(lua_State * L, size_t s)
   G(L)->rootudata = valtogco(u);
   return u;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

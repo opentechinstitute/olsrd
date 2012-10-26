@@ -1,5 +1,6 @@
 
 /*
+** $Id: lobject.c,v 1.97 2003/04/03 13:35:34 roberto Exp $
 ** Some generic functions over Lua objects
 ** See Copyright Notice in lua.h
 */
@@ -20,12 +21,15 @@
 #include "lstring.h"
 #include "lvm.h"
 
+
 /* function to convert a string to a lua_Number */
 #ifndef lua_str2number
 #define lua_str2number(s,p)     strtod((s), (p))
 #endif
 
+
 const TObject luaO_nilobject = { LUA_TNIL, {NULL} };
+
 
 /*
 ** converts an integer to a "floating point byte", represented as
@@ -42,10 +46,9 @@ luaO_int2fb(unsigned int x)
   return (m << 3) | cast(int, x);
 }
 
+
 /* *INDENT-OFF* */
-int
-luaO_log2(unsigned int x)
-{
+int luaO_log2 (unsigned int x) {
   static const lu_byte log_8[255] = {
     0,
     1,1,
@@ -61,19 +64,17 @@ luaO_log2(unsigned int x)
     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
   };
   if (x >= 0x00010000) {
-    if (x >= 0x01000000)
-      return log_8[((x >> 24) & 0xff) - 1] + 24;
-    else
-      return log_8[((x >> 16) & 0xff) - 1] + 16;
-  } else {
-    if (x >= 0x00000100)
-      return log_8[((x >> 8) & 0xff) - 1] + 8;
-    else if (x)
-      return log_8[(x & 0xff) - 1];
-    return -1;                  /* special `log' for 0 */
+    if (x >= 0x01000000) return log_8[((x>>24) & 0xff) - 1]+24;
+    else return log_8[((x>>16) & 0xff) - 1]+16;
+  }
+  else {
+    if (x >= 0x00000100) return log_8[((x>>8) & 0xff) - 1]+8;
+    else if (x) return log_8[(x & 0xff) - 1];
+    return -1;  /* special `log' for 0 */
   }
 }
 /* *INDENT-ON* */
+
 
 int
 luaO_rawequalObj(const TObject * t1, const TObject * t2)
@@ -96,6 +97,7 @@ luaO_rawequalObj(const TObject * t1, const TObject * t2)
     }
 }
 
+
 int
 luaO_str2d(const char *s, lua_Number * result)
 {
@@ -111,12 +113,15 @@ luaO_str2d(const char *s, lua_Number * result)
   return 1;
 }
 
+
+
 static void
 pushstr(lua_State * L, const char *str)
 {
   setsvalue2s(L->top, luaS_new(L, str));
   incr_top(L);
 }
+
 
 /* this function handles only `%d', `%c', %f, and `%s' formats */
 const char *
@@ -134,8 +139,7 @@ luaO_pushvfstring(lua_State * L, const char *fmt, va_list argp)
     case 's':
       pushstr(L, va_arg(argp, char *));
       break;
-    case 'c':
-      {
+    case 'c':{
         char buff[2];
         buff[0] = cast(char, va_arg(argp, int));
         buff[1] = '\0';
@@ -165,6 +169,7 @@ luaO_pushvfstring(lua_State * L, const char *fmt, va_list argp)
   return svalue(L->top - 1);
 }
 
+
 const char *
 luaO_pushfstring(lua_State * L, const char *fmt, ...)
 {
@@ -175,6 +180,7 @@ luaO_pushfstring(lua_State * L, const char *fmt, ...)
   va_end(argp);
   return msg;
 }
+
 
 void
 luaO_chunkid(char *out, const char *source, int bufflen)
@@ -209,10 +215,3 @@ luaO_chunkid(char *out, const char *source, int bufflen)
     }
   }
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

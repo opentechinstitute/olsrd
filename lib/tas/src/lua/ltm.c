@@ -1,8 +1,10 @@
 
 /*
+** $Id: ltm.c,v 1.106 2003/04/03 13:35:34 roberto Exp $
 ** Tag methods
 ** See Copyright Notice in lua.h
 */
+
 
 #include <string.h>
 
@@ -16,10 +18,13 @@
 #include "ltable.h"
 #include "ltm.h"
 
+
+
 const char *const luaT_typenames[] = {
   "nil", "boolean", "userdata", "number",
   "string", "table", "function", "userdata", "thread"
 };
+
 
 void
 luaT_init(lua_State * L)
@@ -38,6 +43,7 @@ luaT_init(lua_State * L)
   }
 }
 
+
 /*
 ** function to be used with macro "fasttm": optimized for absence of
 ** tag methods
@@ -54,6 +60,7 @@ luaT_gettm(Table * events, TMS event, TString * ename)
     return tm;
 }
 
+
 const TObject *
 luaT_gettmbyobj(lua_State * L, const TObject * o, TMS event)
 {
@@ -67,10 +74,3 @@ luaT_gettmbyobj(lua_State * L, const TObject * o, TMS event)
     return &luaO_nilobject;
   }
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

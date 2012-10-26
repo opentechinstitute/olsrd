@@ -1,8 +1,11 @@
 
 /*
+** $Id: lbaselib.c,v 1.130b 2003/04/03 13:35:34 roberto Exp $
 ** Basic library
 ** See Copyright Notice in lua.h
 */
+
+
 
 #include <ctype.h>
 #include <stdio.h>
@@ -15,6 +18,9 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+
+
+
 
 /*
 ** If your system does not support `stdout', you can just remove this function.
@@ -45,6 +51,7 @@ luaB_print(lua_State * L)
   return 0;
 }
 
+
 static int
 luaB_tonumber(lua_State * L)
 {
@@ -74,6 +81,7 @@ luaB_tonumber(lua_State * L)
   return 1;
 }
 
+
 static int luaB_error(lua_State * L) __attribute__ ((noreturn));
 static int
 luaB_error(lua_State * L)
@@ -90,6 +98,7 @@ luaB_error(lua_State * L)
   lua_error(L);
 }
 
+
 static int
 luaB_getmetatable(lua_State * L)
 {
@@ -101,6 +110,7 @@ luaB_getmetatable(lua_State * L)
   luaL_getmetafield(L, 1, "__metatable");
   return 1;                     /* returns either __metatable field (if present) or metatable */
 }
+
 
 static int
 luaB_setmetatable(lua_State * L)
@@ -114,6 +124,7 @@ luaB_setmetatable(lua_State * L)
   lua_setmetatable(L, 1);
   return 1;
 }
+
 
 static void
 getfunc(lua_State * L)
@@ -132,6 +143,7 @@ getfunc(lua_State * L)
   }
 }
 
+
 static int
 aux_getfenv(lua_State * L)
 {
@@ -141,6 +153,7 @@ aux_getfenv(lua_State * L)
   return !lua_isnil(L, -1);
 }
 
+
 static int
 luaB_getfenv(lua_State * L)
 {
@@ -149,6 +162,7 @@ luaB_getfenv(lua_State * L)
     lua_pop(L, 1);              /* remove it, to return real environment */
   return 1;
 }
+
 
 static int
 luaB_setfenv(lua_State * L)
@@ -167,6 +181,7 @@ luaB_setfenv(lua_State * L)
   return 0;
 }
 
+
 static int
 luaB_rawequal(lua_State * L)
 {
@@ -175,6 +190,7 @@ luaB_rawequal(lua_State * L)
   lua_pushboolean(L, lua_rawequal(L, 1, 2));
   return 1;
 }
+
 
 static int
 luaB_rawget(lua_State * L)
@@ -195,6 +211,7 @@ luaB_rawset(lua_State * L)
   return 1;
 }
 
+
 static int
 luaB_gcinfo(lua_State * L)
 {
@@ -203,12 +220,14 @@ luaB_gcinfo(lua_State * L)
   return 2;
 }
 
+
 static int
 luaB_collectgarbage(lua_State * L)
 {
   lua_setgcthreshold(L, luaL_optint(L, 1, 0));
   return 0;
 }
+
 
 static int
 luaB_type(lua_State * L)
@@ -217,6 +236,7 @@ luaB_type(lua_State * L)
   lua_pushstring(L, lua_typename(L, lua_type(L, 1)));
   return 1;
 }
+
 
 static int
 luaB_next(lua_State * L)
@@ -231,6 +251,7 @@ luaB_next(lua_State * L)
   }
 }
 
+
 static int
 luaB_pairs(lua_State * L)
 {
@@ -241,6 +262,7 @@ luaB_pairs(lua_State * L)
   lua_pushnil(L);               /* and initial value */
   return 3;
 }
+
 
 static int
 luaB_ipairs(lua_State * L)
@@ -261,6 +283,7 @@ luaB_ipairs(lua_State * L)
   }
 }
 
+
 static int
 load_aux(lua_State * L, int status)
 {
@@ -273,6 +296,7 @@ load_aux(lua_State * L, int status)
   }
 }
 
+
 static int
 luaB_loadstring(lua_State * L)
 {
@@ -282,12 +306,14 @@ luaB_loadstring(lua_State * L)
   return load_aux(L, luaL_loadbuffer(L, s, l, chunkname));
 }
 
+
 static int
 luaB_loadfile(lua_State * L)
 {
   const char *fname = luaL_optstring(L, 1, NULL);
   return load_aux(L, luaL_loadfile(L, fname));
 }
+
 
 static int
 luaB_dofile(lua_State * L)
@@ -301,6 +327,7 @@ luaB_dofile(lua_State * L)
   return lua_gettop(L) - n;
 }
 
+
 static int
 luaB_assert(lua_State * L)
 {
@@ -310,6 +337,7 @@ luaB_assert(lua_State * L)
   lua_settop(L, 1);
   return 1;
 }
+
 
 static int
 luaB_unpack(lua_State * L)
@@ -323,6 +351,7 @@ luaB_unpack(lua_State * L)
   return n;
 }
 
+
 static int
 luaB_pcall(lua_State * L)
 {
@@ -333,6 +362,7 @@ luaB_pcall(lua_State * L)
   lua_insert(L, 1);
   return lua_gettop(L);         /* return status + all results */
 }
+
 
 static int
 luaB_xpcall(lua_State * L)
@@ -346,6 +376,7 @@ luaB_xpcall(lua_State * L)
   lua_replace(L, 1);
   return lua_gettop(L);         /* return status + all results */
 }
+
 
 static int
 luaB_tostring(lua_State * L)
@@ -385,6 +416,7 @@ luaB_tostring(lua_State * L)
   return 1;
 }
 
+
 static int
 luaB_newproxy(lua_State * L)
 {
@@ -411,11 +443,13 @@ luaB_newproxy(lua_State * L)
   return 1;
 }
 
+
 /*
 ** {======================================================
 ** `require' function
 ** =======================================================
 */
+
 
 /* name of global that holds table with loaded packages */
 #define REQTAB		"_LOADED"
@@ -435,6 +469,7 @@ luaB_newproxy(lua_State * L)
 #define LUA_PATH_DEFAULT	"?;?.lua"
 #endif
 
+
 static const char *
 getpath(lua_State * L)
 {
@@ -450,6 +485,7 @@ getpath(lua_State * L)
   return LUA_PATH_DEFAULT;      /* else use default */
 }
 
+
 static const char *
 pushnextpath(lua_State * L, const char *path)
 {
@@ -464,6 +500,7 @@ pushnextpath(lua_State * L, const char *path)
   lua_pushlstring(L, path, l - path);   /* directory name */
   return l;
 }
+
 
 static void
 pushcomposename(lua_State * L)
@@ -482,6 +519,7 @@ pushcomposename(lua_State * L)
   lua_pushstring(L, path);      /* push last sufix (`n' already includes this) */
   lua_concat(L, n);
 }
+
 
 static int
 luaB_require(lua_State * L)
@@ -508,8 +546,7 @@ luaB_require(lua_State * L)
     }
   }
   switch (status) {
-  case 0:
-    {
+  case 0:{
       lua_getglobal(L, "_REQUIREDNAME");        /* save previous name */
       lua_insert(L, -2);        /* put it below function */
       lua_pushvalue(L, 1);
@@ -526,18 +563,17 @@ luaB_require(lua_State * L)
       lua_rawset(L, 2);         /* mark it as loaded */
       return 1;                 /* return value */
     }
-  case LUA_ERRFILE:
-    {                           /* file not found */
+  case LUA_ERRFILE:{           /* file not found */
       return luaL_error(L, "could not load package `%s' from path `%s'", lua_tostring(L, 1), getpath(L));
     }
-  default:
-    {
+  default:{
       return luaL_error(L, "error loading package `%s' (%s)", lua_tostring(L, 1), lua_tostring(L, -1));
     }
   }
 }
 
 /* }====================================================== */
+
 
 static const luaL_reg base_funcs[] = {
   {"error", luaB_error},
@@ -568,6 +604,7 @@ static const luaL_reg base_funcs[] = {
   {NULL, NULL}
 };
 
+
 /*
 ** {======================================================
 ** Coroutine library
@@ -594,6 +631,7 @@ auxresume(lua_State * L, lua_State * co, int narg)
   }
 }
 
+
 static int
 luaB_coresume(lua_State * L)
 {
@@ -612,6 +650,7 @@ luaB_coresume(lua_State * L)
   }
 }
 
+
 static int
 luaB_auxwrap(lua_State * L)
 {
@@ -628,6 +667,7 @@ luaB_auxwrap(lua_State * L)
   return r;
 }
 
+
 static int
 luaB_cocreate(lua_State * L)
 {
@@ -638,6 +678,7 @@ luaB_cocreate(lua_State * L)
   return 1;
 }
 
+
 static int
 luaB_cowrap(lua_State * L)
 {
@@ -646,11 +687,13 @@ luaB_cowrap(lua_State * L)
   return 1;
 }
 
+
 static int
 luaB_yield(lua_State * L)
 {
   return lua_yield(L, lua_gettop(L));
 }
+
 
 static int
 luaB_costatus(lua_State * L)
@@ -669,6 +712,7 @@ luaB_costatus(lua_State * L)
   return 1;
 }
 
+
 static const luaL_reg co_funcs[] = {
   {"create", luaB_cocreate},
   {"wrap", luaB_cowrap},
@@ -679,6 +723,8 @@ static const luaL_reg co_funcs[] = {
 };
 
 /* }====================================================== */
+
+
 
 static void
 base_open(lua_State * L)
@@ -702,6 +748,7 @@ base_open(lua_State * L)
   lua_rawset(L, -1);            /* set global _G */
 }
 
+
 LUALIB_API int
 luaopen_base(lua_State * L)
 {
@@ -711,10 +758,3 @@ luaopen_base(lua_State * L)
   lua_setglobal(L, REQTAB);
   return 0;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

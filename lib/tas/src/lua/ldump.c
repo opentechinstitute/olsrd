@@ -1,5 +1,6 @@
 
 /*
+** $Id: ldump.c,v 1.4 2003/02/11 23:52:12 lhf Exp $
 ** save bytecodes
 ** See Copyright Notice in lua.h
 */
@@ -179,10 +180,3 @@ luaU_dump(lua_State * L, const Proto * Main, lua_Chunkwriter w, void *data)
   DumpHeader(&D);
   DumpFunction(Main, NULL, &D);
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

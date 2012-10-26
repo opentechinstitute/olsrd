@@ -1,8 +1,10 @@
 
 /*
+** $Id: lfunc.c,v 1.67 2003/03/18 12:50:04 roberto Exp $
 ** Auxiliary functions to manipulate prototypes and closures
 ** See Copyright Notice in lua.h
 */
+
 
 #include <stdlib.h>
 
@@ -16,11 +18,14 @@
 #include "lobject.h"
 #include "lstate.h"
 
+
 #define sizeCclosure(n)	(cast(int, sizeof(CClosure)) + \
                          cast(int, sizeof(TObject)*((n)-1)))
 
 #define sizeLclosure(n)	(cast(int, sizeof(LClosure)) + \
                          cast(int, sizeof(TObject *)*((n)-1)))
+
+
 
 Closure *
 luaF_newCclosure(lua_State * L, int nelems)
@@ -32,6 +37,7 @@ luaF_newCclosure(lua_State * L, int nelems)
   return c;
 }
 
+
 Closure *
 luaF_newLclosure(lua_State * L, int nelems, TObject * e)
 {
@@ -42,6 +48,7 @@ luaF_newLclosure(lua_State * L, int nelems, TObject * e)
   c->l.nupvalues = cast(lu_byte, nelems);
   return c;
 }
+
 
 UpVal *
 luaF_findupval(lua_State * L, StkId level)
@@ -63,6 +70,7 @@ luaF_findupval(lua_State * L, StkId level)
   return v;
 }
 
+
 void
 luaF_close(lua_State * L, StkId level)
 {
@@ -74,6 +82,7 @@ luaF_close(lua_State * L, StkId level)
     luaC_link(L, valtogco(p), LUA_TUPVAL);
   }
 }
+
 
 Proto *
 luaF_newproto(lua_State * L)
@@ -101,6 +110,7 @@ luaF_newproto(lua_State * L)
   return f;
 }
 
+
 void
 luaF_freeproto(lua_State * L, Proto * f)
 {
@@ -113,12 +123,14 @@ luaF_freeproto(lua_State * L, Proto * f)
   luaM_freelem(L, f);
 }
 
+
 void
 luaF_freeclosure(lua_State * L, Closure * c)
 {
   int size = (c->c.isC) ? sizeCclosure(c->c.nupvalues) : sizeLclosure(c->l.nupvalues);
   luaM_free(L, c, size);
 }
+
 
 /*
 ** Look for n-th local variable at line `line' in function `func'.
@@ -137,10 +149,3 @@ luaF_getlocalname(const Proto * f, int local_number, int pc)
   }
   return NULL;                  /* not found */
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

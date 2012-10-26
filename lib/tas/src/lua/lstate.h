@@ -1,5 +1,6 @@
 
 /*
+** $Id: lstate.h,v 1.109 2003/02/27 11:52:30 roberto Exp $
 ** Global State
 ** See Copyright Notice in lua.h
 */
@@ -12,6 +13,7 @@
 #include "lobject.h"
 #include "ltm.h"
 #include "lzio.h"
+
 
 /*
 ** macros for thread synchronization inside Lua core machine:
@@ -31,11 +33,15 @@
 #define lua_unlock(L)	((void) 0)
 #endif
 
+
 #ifndef lua_userstateopen
 #define lua_userstateopen(l)
 #endif
 
+
+
 struct lua_longjmp;                    /* defined in ldo.c */
+
 
 /* default meta table (both for tables and udata) */
 #define defaultmeta(L)	(&G(L)->_defaultmeta)
@@ -46,18 +52,23 @@ struct lua_longjmp;                    /* defined in ldo.c */
 /* registry */
 #define registry(L)	(&G(L)->_registry)
 
+
 /* extra stack space to handle TM calls and some other extras */
 #define EXTRA_STACK   5
+
 
 #define BASIC_CI_SIZE           8
 
 #define BASIC_STACK_SIZE        (2*LUA_MINSTACK)
+
+
 
 typedef struct stringtable {
   GCObject **hash;
   ls_nstr nuse;                        /* number of elements */
   int size;
 } stringtable;
+
 
 /*
 ** informations about a call
@@ -78,6 +89,7 @@ typedef struct CallInfo {
   } u;
 } CallInfo;
 
+
 /*
 ** bit fields for `CallInfo.state'
 */
@@ -92,7 +104,9 @@ typedef struct CallInfo {
 #define CI_SAVEDPC	(1<<3)  /* 1 if `savedpc' is updated */
 #define CI_YIELD	(1<<4)  /* 1 if thread is suspended */
 
+
 #define ci_func(ci)	(clvalue((ci)->base - 1))
+
 
 /*
 ** `global state', shared by all threads of this state
@@ -112,6 +126,7 @@ typedef struct global_State {
   Node dummynode[1];                   /* common node array for all empty tables */
   TString *tmname[TM_N];               /* array with tag-method names */
 } global_State;
+
 
 /*
 ** `per thread' state
@@ -142,7 +157,9 @@ struct lua_State {
   ptrdiff_t errfunc;                   /* current error handling function (stack index) */
 };
 
+
 #define G(L)	(L->l_G)
+
 
 /*
 ** Union of all collectable objects
@@ -158,6 +175,7 @@ union GCObject {
   struct lua_State th;                 /* thread */
 };
 
+
 /* macros to convert a GCObject into a specific value */
 #define gcotots(o)	check_exp((o)->gch.tt == LUA_TSTRING, &((o)->ts))
 #define gcotou(o)	check_exp((o)->gch.tt == LUA_TUSERDATA, &((o)->u))
@@ -172,14 +190,8 @@ union GCObject {
 /* macro to convert any value into a GCObject */
 #define valtogco(v)	(cast_align(GCObject *, (v)))
 
+
 lua_State *luaE_newthread(lua_State * L);
 void luaE_freethread(lua_State * L, lua_State * L1);
 
 #endif
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

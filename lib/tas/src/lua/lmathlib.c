@@ -1,8 +1,10 @@
 
 /*
+** $Id: lmathlib.c,v 1.56 2003/03/11 12:30:37 roberto Exp $
 ** Standard mathematical library
 ** See Copyright Notice in lua.h
 */
+
 
 #include <stdlib.h>
 #include <math.h>
@@ -14,9 +16,12 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+
 #undef PI
 #define PI (3.14159265358979323846)
 #define RADIANS_PER_DEGREE (PI/180.0)
+
+
 
 /*
 ** If you want Lua to operate in degrees (instead of radians),
@@ -29,6 +34,7 @@
 #define FROMRAD(a)	(a)
 #define TORAD(a)	(a)
 #endif
+
 
 static int
 math_abs(lua_State * L)
@@ -172,6 +178,8 @@ math_ldexp(lua_State * L)
   return 1;
 }
 
+
+
 static int
 math_min(lua_State * L)
 {
@@ -186,6 +194,7 @@ math_min(lua_State * L)
   lua_pushnumber(L, dmin);
   return 1;
 }
+
 
 static int
 math_max(lua_State * L)
@@ -202,6 +211,7 @@ math_max(lua_State * L)
   return 1;
 }
 
+
 static int
 math_random(lua_State * L)
 {
@@ -209,20 +219,17 @@ math_random(lua_State * L)
      some systems (SunOS!) `rand()' may return a value larger than RAND_MAX */
   lua_Number r = (lua_Number) (rand() % RAND_MAX) / (lua_Number) RAND_MAX;
   switch (lua_gettop(L)) {      /* check number of arguments */
-  case 0:
-    {                           /* no arguments */
+  case 0:{                     /* no arguments */
       lua_pushnumber(L, r);     /* Number between 0 and 1 */
       break;
     }
-  case 1:
-    {                           /* only upper limit */
+  case 1:{                     /* only upper limit */
       int u = luaL_checkint(L, 1);
       luaL_argcheck(L, 1 <= u, 1, "interval is empty");
       lua_pushnumber(L, floor(r * u) + 1);      /* int between 1 and `u' */
       break;
     }
-  case 2:
-    {                           /* lower and upper limits */
+  case 2:{                     /* lower and upper limits */
       int l = luaL_checkint(L, 1);
       int u = luaL_checkint(L, 2);
       luaL_argcheck(L, l <= u, 2, "interval is empty");
@@ -235,12 +242,14 @@ math_random(lua_State * L)
   return 1;
 }
 
+
 static int
 math_randomseed(lua_State * L)
 {
   srand(luaL_checkint(L, 1));
   return 0;
 }
+
 
 static const luaL_reg mathlib[] = {
   {"abs", math_abs},
@@ -270,6 +279,7 @@ static const luaL_reg mathlib[] = {
   {NULL, NULL}
 };
 
+
 /*
 ** Open math library
 */
@@ -285,10 +295,3 @@ luaopen_math(lua_State * L)
   lua_settable(L, LUA_GLOBALSINDEX);
   return 1;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

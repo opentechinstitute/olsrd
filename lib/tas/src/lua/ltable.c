@@ -1,8 +1,10 @@
 
 /*
+** $Id: ltable.c,v 1.132 2003/04/03 13:35:34 roberto Exp $
 ** Lua tables (hash)
 ** See Copyright Notice in lua.h
 */
+
 
 /*
 ** Implementation of tables (aka arrays, objects, or hash tables).
@@ -34,6 +36,7 @@
 #include "lstate.h"
 #include "ltable.h"
 
+
 /*
 ** max size of array part is 2^MAXBITS
 */
@@ -46,15 +49,18 @@
 /* check whether `x' < 2^MAXBITS */
 #define toobig(x)	((((x)-1) >> MAXBITS) != 0)
 
+
 /* function to convert a lua_Number to int (with any rounding method) */
 #ifndef lua_number2int
 #define lua_number2int(i,n)	((i)=(int)(n))
 #endif
 
+
 #define hashpow2(t,n)      (gnode(t, lmod((n), sizenode(t))))
 
 #define hashstr(t,str)  hashpow2(t, (str)->tsv.hash)
 #define hashboolean(t,p)        hashpow2(t, p)
+
 
 /*
 ** for some types, it is better to avoid modulus by power of 2, as
@@ -62,12 +68,15 @@
 */
 #define hashmod(t,n)	(gnode(t, ((n) % ((sizenode(t)-1)|1))))
 
+
 #define hashpointer(t,p)	hashmod(t, IntPoint(p))
+
 
 /*
 ** number of ints inside a lua_Number
 */
 #define numints		cast(int, sizeof(lua_Number)/sizeof(int))
+
 
 /*
 ** hash for lua_Numbers
@@ -84,6 +93,8 @@ hashnum(const Table * t, lua_Number n)
     a[0] += a[i];
   return hashmod(t, cast(lu_hash, a[0]));
 }
+
+
 
 /*
 ** returns the `main' position of an element in a table (that is, the index
@@ -106,6 +117,7 @@ luaH_mainposition(const Table * t, const TObject * key)
   }
 }
 
+
 /*
 ** returns the index for `key' if `key' is an appropriate key to live in
 ** the array part of the table, -1 otherwise.
@@ -121,6 +133,7 @@ arrayindex(const TObject * key)
   }
   return -1;                    /* `key' did not match some condition */
 }
+
 
 /*
 ** returns the index of a `key' for table traversals. First goes all
@@ -145,6 +158,7 @@ luaH_index(lua_State * L, Table * t, StkId key)
   }
 }
 
+
 int
 luaH_next(lua_State * L, Table * t, StkId key)
 {
@@ -166,11 +180,13 @@ luaH_next(lua_State * L, Table * t, StkId key)
   return 0;                     /* no more elements */
 }
 
+
 /*
 ** {=============================================================
 ** Rehash
 ** ==============================================================
 */
+
 
 static void
 computesizes(int nums[], int ntotal, int *narray, int *nhash)
@@ -193,6 +209,7 @@ computesizes(int nums[], int ntotal, int *narray, int *nhash)
   *narray = (n == -1) ? 0 : twoto(n);
   lua_assert(na <= *narray && na >= *narray / 2);
 }
+
 
 static void
 numuse(const Table * t, int *narray, int *nhash)
@@ -235,6 +252,7 @@ numuse(const Table * t, int *narray, int *nhash)
   computesizes(nums, totaluse, narray, nhash);
 }
 
+
 static void
 setarrayvector(lua_State * L, Table * t, int size)
 {
@@ -244,6 +262,7 @@ setarrayvector(lua_State * L, Table * t, int size)
     setnilvalue(&t->array[i]);
   t->sizearray = size;
 }
+
 
 static void
 setnodevector(lua_State * L, Table * t, int lsize)
@@ -268,6 +287,7 @@ setnodevector(lua_State * L, Table * t, int lsize)
   t->lsizenode = cast(lu_byte, lsize);
   t->firstfree = gnode(t, size - 1);    /* first free position to be used */
 }
+
 
 static void
 resize(lua_State * L, Table * t, int nasize, int nhsize)
@@ -312,6 +332,7 @@ resize(lua_State * L, Table * t, int nasize, int nhsize)
     luaM_freearray(L, nold, twoto(oldhsize), Node);     /* free old array */
 }
 
+
 static void
 rehash(lua_State * L, Table * t)
 {
@@ -320,9 +341,12 @@ rehash(lua_State * L, Table * t)
   resize(L, t, nasize, luaO_log2(nhsize) + 1);
 }
 
+
+
 /*
 ** }=============================================================
 */
+
 
 Table *
 luaH_new(lua_State * L, int narray, int lnhash)
@@ -341,6 +365,7 @@ luaH_new(lua_State * L, int narray, int lnhash)
   return t;
 }
 
+
 void
 luaH_free(lua_State * L, Table * t)
 {
@@ -349,6 +374,7 @@ luaH_free(lua_State * L, Table * t)
   luaM_freearray(L, t->array, t->sizearray, TObject);
   luaM_freelem(L, t);
 }
+
 
 #if 0
 
@@ -373,6 +399,7 @@ luaH_remove(Table * t, Node * e)
   e->next = NULL;
 }
 #endif
+
 
 /*
 ** inserts a new key into a hash table; first, check whether key's main
@@ -423,6 +450,7 @@ newkey(lua_State * L, Table * t, const TObject * key)
   return val;
 }
 
+
 /*
 ** generic search function
 */
@@ -438,11 +466,11 @@ luaH_getany(Table * t, const TObject * key)
         return gval(n);         /* that's it */
       else
         n = n->next;
-    }
-    while (n);
+    } while (n);
     return &luaO_nilobject;
   }
 }
+
 
 /*
 ** search function for integers
@@ -460,11 +488,11 @@ luaH_getnum(Table * t, int key)
         return gval(n);         /* that's it */
       else
         n = n->next;
-    }
-    while (n);
+    } while (n);
     return &luaO_nilobject;
   }
 }
+
 
 /*
 ** search function for strings
@@ -478,10 +506,10 @@ luaH_getstr(Table * t, TString * key)
       return gval(n);           /* that's it */
     else
       n = n->next;
-  }
-  while (n);
+  } while (n);
   return &luaO_nilobject;
 }
+
 
 /*
 ** main search function
@@ -492,8 +520,7 @@ luaH_get(Table * t, const TObject * key)
   switch (ttype(key)) {
   case LUA_TSTRING:
     return luaH_getstr(t, tsvalue(key));
-  case LUA_TNUMBER:
-    {
+  case LUA_TNUMBER:{
       int k;
       lua_number2int(k, (nvalue(key)));
       if (cast(lua_Number, k) == nvalue(key))   /* is an integer index? */
@@ -504,6 +531,7 @@ luaH_get(Table * t, const TObject * key)
     return luaH_getany(t, key);
   }
 }
+
 
 TObject *
 luaH_set(lua_State * L, Table * t, const TObject * key)
@@ -521,6 +549,7 @@ luaH_set(lua_State * L, Table * t, const TObject * key)
   }
 }
 
+
 TObject *
 luaH_setnum(lua_State * L, Table * t, int key)
 {
@@ -533,10 +562,3 @@ luaH_setnum(lua_State * L, Table * t, int key)
     return newkey(L, t, &k);
   }
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

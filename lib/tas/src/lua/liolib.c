@@ -1,8 +1,10 @@
 
 /*
+** $Id: liolib.c,v 2.39a 2003/03/19 21:16:12 roberto Exp $
 ** Standard I/O (and system) library
 ** See Copyright Notice in lua.h
 */
+
 
 #include <errno.h>
 #include <locale.h>
@@ -18,6 +20,8 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+
+
 /*
 ** by default, gcc does not get `tmpname'
 */
@@ -28,6 +32,7 @@
 #define USE_TMPNAME	1
 #endif
 #endif
+
 
 /*
 ** by default, posix systems get `popen'
@@ -44,6 +49,8 @@
 #define USE_POPEN	0
 #endif
 
+
+
 static int io_exit(lua_State * L) __attribute__ ((noreturn));
 
 /*
@@ -52,14 +59,17 @@ static int io_exit(lua_State * L) __attribute__ ((noreturn));
 ** =======================================================
 */
 
+
 #if !USE_POPEN
 #define pclose(f)    (-1)
 #endif
+
 
 #define FILEHANDLE		"FILE*"
 
 #define IO_INPUT		"_input"
 #define IO_OUTPUT		"_output"
+
 
 static int
 pushresult(lua_State * L, int i, const char *filename)
@@ -78,6 +88,7 @@ pushresult(lua_State * L, int i, const char *filename)
   }
 }
 
+
 static FILE **
 topfile(lua_State * L, int findex)
 {
@@ -86,6 +97,7 @@ topfile(lua_State * L, int findex)
     luaL_argerror(L, findex, "bad file");
   return f;
 }
+
 
 static int
 io_type(lua_State * L)
@@ -100,6 +112,7 @@ io_type(lua_State * L)
   return 1;
 }
 
+
 static FILE *
 tofile(lua_State * L, int findex)
 {
@@ -108,6 +121,8 @@ tofile(lua_State * L, int findex)
     luaL_error(L, "attempt to use a closed file");
   return *f;
 }
+
+
 
 /*
 ** When creating file handles, always creates a `closed' file handle
@@ -123,6 +138,7 @@ newfile(lua_State * L)
   lua_setmetatable(L, -2);
   return pf;
 }
+
 
 /*
 ** assumes that top of the stack is the `io' library, and next is
@@ -141,6 +157,7 @@ registerfile(lua_State * L, FILE * f, const char *name, const char *impname)
   lua_settable(L, -3);          /* io[name] = file */
 }
 
+
 static int
 aux_close(lua_State * L)
 {
@@ -155,6 +172,7 @@ aux_close(lua_State * L)
   }
 }
 
+
 static int
 io_close(lua_State * L)
 {
@@ -165,6 +183,7 @@ io_close(lua_State * L)
   return pushresult(L, aux_close(L), NULL);
 }
 
+
 static int
 io_gc(lua_State * L)
 {
@@ -173,6 +192,7 @@ io_gc(lua_State * L)
     aux_close(L);
   return 0;
 }
+
 
 static int
 io_tostring(lua_State * L)
@@ -187,6 +207,7 @@ io_tostring(lua_State * L)
   return 1;
 }
 
+
 static int
 io_open(lua_State * L)
 {
@@ -196,6 +217,7 @@ io_open(lua_State * L)
   *pf = fopen(filename, mode);
   return (*pf == NULL) ? pushresult(L, 0, filename) : 1;
 }
+
 
 static int
 io_popen(lua_State * L)
@@ -212,6 +234,7 @@ io_popen(lua_State * L)
 #endif
 }
 
+
 static int
 io_tmpfile(lua_State * L)
 {
@@ -220,6 +243,7 @@ io_tmpfile(lua_State * L)
   return (*pf == NULL) ? pushresult(L, 0, NULL) : 1;
 }
 
+
 static FILE *
 getiofile(lua_State * L, const char *name)
 {
@@ -227,6 +251,7 @@ getiofile(lua_State * L, const char *name)
   lua_rawget(L, lua_upvalueindex(1));
   return tofile(L, -1);
 }
+
 
 static int
 g_iofile(lua_State * L, const char *name, const char *mode)
@@ -253,11 +278,13 @@ g_iofile(lua_State * L, const char *name, const char *mode)
   return 1;
 }
 
+
 static int
 io_input(lua_State * L)
 {
   return g_iofile(L, IO_INPUT, "r");
 }
+
 
 static int
 io_output(lua_State * L)
@@ -265,7 +292,9 @@ io_output(lua_State * L)
   return g_iofile(L, IO_OUTPUT, "w");
 }
 
+
 static int io_readline(lua_State * L);
+
 
 static void
 aux_lines(lua_State * L, int idx, int close)
@@ -277,6 +306,7 @@ aux_lines(lua_State * L, int idx, int close)
   lua_pushcclosure(L, io_readline, 3);
 }
 
+
 static int
 f_lines(lua_State * L)
 {
@@ -284,6 +314,7 @@ f_lines(lua_State * L)
   aux_lines(L, 1, 0);
   return 1;
 }
+
 
 static int
 io_lines(lua_State * L)
@@ -302,11 +333,13 @@ io_lines(lua_State * L)
   }
 }
 
+
 /*
 ** {======================================================
 ** READ
 ** =======================================================
 */
+
 
 static int
 read_number(lua_State * L, FILE * f)
@@ -319,6 +352,7 @@ read_number(lua_State * L, FILE * f)
     return 0;                   /* read fails */
 }
 
+
 static int
 test_eof(lua_State * L, FILE * f)
 {
@@ -327,6 +361,7 @@ test_eof(lua_State * L, FILE * f)
   lua_pushlstring(L, NULL, 0);
   return (c != EOF);
 }
+
 
 static int
 read_line(lua_State * L, FILE * f)
@@ -351,6 +386,7 @@ read_line(lua_State * L, FILE * f)
   }
 }
 
+
 static int
 read_chars(lua_State * L, FILE * f, size_t n)
 {
@@ -366,11 +402,11 @@ read_chars(lua_State * L, FILE * f, size_t n)
     nr = fread(p, sizeof(char), rlen, f);
     luaL_addsize(&b, nr);
     n -= nr;                    /* still have to read `n' chars */
-  }
-  while (n > 0 && nr == rlen);  /* until end of count or eof */
+  } while (n > 0 && nr == rlen);        /* until end of count or eof */
   luaL_pushresult(&b);          /* close buffer */
   return (n == 0 || lua_strlen(L, -1) > 0);
 }
+
 
 static int
 g_read(lua_State * L, FILE * f, int first)
@@ -417,17 +453,20 @@ g_read(lua_State * L, FILE * f, int first)
   return n - first;
 }
 
+
 static int
 io_read(lua_State * L)
 {
   return g_read(L, getiofile(L, IO_INPUT), 1);
 }
 
+
 static int
 f_read(lua_State * L)
 {
   return g_read(L, tofile(L, 1), 2);
 }
+
 
 static int
 io_readline(lua_State * L)
@@ -449,6 +488,7 @@ io_readline(lua_State * L)
 
 /* }====================================================== */
 
+
 static int
 g_write(lua_State * L, FILE * f, int arg)
 {
@@ -467,17 +507,20 @@ g_write(lua_State * L, FILE * f, int arg)
   return pushresult(L, status, NULL);
 }
 
+
 static int
 io_write(lua_State * L)
 {
   return g_write(L, getiofile(L, IO_OUTPUT), 1);
 }
 
+
 static int
 f_write(lua_State * L)
 {
   return g_write(L, tofile(L, 1), 2);
 }
+
 
 static int
 f_seek(lua_State * L)
@@ -497,17 +540,20 @@ f_seek(lua_State * L)
   }
 }
 
+
 static int
 io_flush(lua_State * L)
 {
   return pushresult(L, fflush(getiofile(L, IO_OUTPUT)) == 0, NULL);
 }
 
+
 static int
 f_flush(lua_State * L)
 {
   return pushresult(L, fflush(tofile(L, 1)) == 0, NULL);
 }
+
 
 static const luaL_reg iolib[] = {
   {"input", io_input},
@@ -524,6 +570,7 @@ static const luaL_reg iolib[] = {
   {NULL, NULL}
 };
 
+
 static const luaL_reg flib[] = {
   {"flush", f_flush},
   {"read", f_read},
@@ -535,6 +582,7 @@ static const luaL_reg flib[] = {
   {"__tostring", io_tostring},
   {NULL, NULL}
 };
+
 
 static void
 createmeta(lua_State * L)
@@ -549,6 +597,7 @@ createmeta(lua_State * L)
 
 /* }====================================================== */
 
+
 /*
 ** {======================================================
 ** Other O.S. Operations
@@ -562,12 +611,14 @@ io_execute(lua_State * L)
   return 1;
 }
 
+
 static int
 io_remove(lua_State * L)
 {
   const char *filename = luaL_checkstring(L, 1);
   return pushresult(L, remove(filename) == 0, filename);
 }
+
 
 static int
 io_rename(lua_State * L)
@@ -576,6 +627,7 @@ io_rename(lua_State * L)
   const char *toname = luaL_checkstring(L, 2);
   return pushresult(L, rename(fromname, toname) == 0, fromname);
 }
+
 
 #if !USE_TMPNAME
 static int io_tmpname(lua_State * L) __attribute__ ((noreturn));
@@ -597,6 +649,7 @@ io_tmpname(lua_State * L)
 #endif
 }
 
+
 static int
 io_getenv(lua_State * L)
 {
@@ -604,12 +657,14 @@ io_getenv(lua_State * L)
   return 1;
 }
 
+
 static int
 io_clock(lua_State * L)
 {
   lua_pushnumber(L, clock() / (lua_Number) CLOCKS_PER_SEC);
   return 1;
 }
+
 
 /*
 ** {======================================================
@@ -646,6 +701,7 @@ getboolfield(lua_State * L, const char *key)
   return res;
 }
 
+
 static int
 getfield(lua_State * L, const char *key, int d)
 {
@@ -662,6 +718,7 @@ getfield(lua_State * L, const char *key, int d)
   lua_pop(L, 1);
   return res;
 }
+
 
 static int
 io_date(lua_State * L)
@@ -699,6 +756,7 @@ io_date(lua_State * L)
   return 1;
 }
 
+
 static int
 io_time(lua_State * L)
 {
@@ -725,6 +783,7 @@ io_time(lua_State * L)
   return 1;
 }
 
+
 static int
 io_difftime(lua_State * L)
 {
@@ -733,6 +792,7 @@ io_difftime(lua_State * L)
 }
 
 /* }====================================================== */
+
 
 static int
 io_setloc(lua_State * L)
@@ -750,6 +810,7 @@ io_setloc(lua_State * L)
   lua_pushstring(L, setlocale(cat[op], l));
   return 1;
 }
+
 
 static int
 io_exit(lua_State * L)
@@ -774,6 +835,8 @@ static const luaL_reg syslib[] = {
 
 /* }====================================================== */
 
+
+
 LUALIB_API int
 luaopen_io(lua_State * L)
 {
@@ -787,10 +850,3 @@ luaopen_io(lua_State * L)
   registerfile(L, stderr, "stderr", NULL);
   return 1;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

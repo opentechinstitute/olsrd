@@ -1,5 +1,6 @@
 
 /*
+** $Id: ltm.h,v 1.41 2002/11/14 11:51:50 roberto Exp $
 ** Tag methods
 ** See Copyright Notice in lua.h
 */
@@ -7,7 +8,9 @@
 #ifndef ltm_h
 #define ltm_h
 
+
 #include "lobject.h"
+
 
 /*
 * WARNING: if you change the order of this enumeration,
@@ -32,10 +35,13 @@ typedef enum {
   TM_N                                 /* number of elements in the enum */
 } TMS;
 
+
+
 #define gfasttm(g,et,e) \
   (((et)->flags & (1u<<(e))) ? NULL : luaT_gettm(et, e, (g)->tmname[e]))
 
 #define fasttm(l,et,e)	gfasttm(G(l), et, e)
+
 
 const TObject *luaT_gettm(Table * events, TMS event, TString * ename);
 const TObject *luaT_gettmbyobj(lua_State * L, const TObject * o, TMS event);
@@ -44,10 +50,3 @@ void luaT_init(lua_State * L);
 extern const char *const luaT_typenames[];
 
 #endif
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

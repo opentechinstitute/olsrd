@@ -1,8 +1,10 @@
 
 /*
+** $Id: ldo.c,v 1.217a 2003/04/03 13:35:34 roberto Exp $
 ** Stack and Call structure of Lua
 ** See Copyright Notice in lua.h
 */
+
 
 #include <setjmp.h>
 #include <stdlib.h>
@@ -28,11 +30,15 @@
 #include "lvm.h"
 #include "lzio.h"
 
+
+
+
 /*
 ** {======================================================
 ** Error-recovery functions (based on long jumps)
 ** =======================================================
 */
+
 
 /* chain list of long jump buffers */
 struct lua_longjmp {
@@ -41,29 +47,28 @@ struct lua_longjmp {
   volatile int status;                 /* error code */
 };
 
+
 static void
 seterrorobj(lua_State * L, int errcode, StkId oldtop)
 {
   switch (errcode) {
-  case LUA_ERRMEM:
-    {
+  case LUA_ERRMEM:{
       setsvalue2s(oldtop, luaS_new(L, MEMERRMSG));
       break;
     }
-  case LUA_ERRERR:
-    {
+  case LUA_ERRERR:{
       setsvalue2s(oldtop, luaS_new(L, "error in error handling"));
       break;
     }
   case LUA_ERRSYNTAX:
-  case LUA_ERRRUN:
-    {
+  case LUA_ERRRUN:{
       setobjs2s(oldtop, L->top - 1);    /* error message on current top */
       break;
     }
   }
   L->top = oldtop + 1;
 }
+
 
 void
 luaD_throw(lua_State * L, int errcode)
@@ -76,6 +81,7 @@ luaD_throw(lua_State * L, int errcode)
     exit(EXIT_FAILURE);
   }
 }
+
 
 int
 luaD_rawrunprotected(lua_State * L, Pfunc f, void *ud)
@@ -90,6 +96,7 @@ luaD_rawrunprotected(lua_State * L, Pfunc f, void *ud)
   return lj.status;
 }
 
+
 static void
 restore_stack_limit(lua_State * L)
 {
@@ -102,6 +109,7 @@ restore_stack_limit(lua_State * L)
 }
 
 /* }====================================================== */
+
 
 static void
 correctstack(lua_State * L, TObject * oldstack)
@@ -118,6 +126,7 @@ correctstack(lua_State * L, TObject * oldstack)
   L->base = L->ci->base;
 }
 
+
 void
 luaD_reallocstack(lua_State * L, int newsize)
 {
@@ -127,6 +136,7 @@ luaD_reallocstack(lua_State * L, int newsize)
   L->stack_last = L->stack + newsize - 1 - EXTRA_STACK;
   correctstack(L, oldstack);
 }
+
 
 void
 luaD_reallocCI(lua_State * L, int newsize)
@@ -138,6 +148,7 @@ luaD_reallocCI(lua_State * L, int newsize)
   L->end_ci = L->base_ci + L->size_ci;
 }
 
+
 void
 luaD_growstack(lua_State * L, int n)
 {
@@ -146,6 +157,7 @@ luaD_growstack(lua_State * L, int n)
   else
     luaD_reallocstack(L, L->stacksize + n + EXTRA_STACK);
 }
+
 
 static void
 luaD_growCI(lua_State * L)
@@ -158,6 +170,7 @@ luaD_growCI(lua_State * L)
       luaG_runerror(L, "stack overflow");
   }
 }
+
 
 void
 luaD_callhook(lua_State * L, int event, int line)
@@ -186,6 +199,7 @@ luaD_callhook(lua_State * L, int event, int line)
   }
 }
 
+
 static void
 adjust_varargs(lua_State * L, int nfixargs, StkId base)
 {
@@ -210,6 +224,7 @@ adjust_varargs(lua_State * L, int nfixargs, StkId base)
   incr_top(L);
 }
 
+
 static StkId
 tryfuncTM(lua_State * L, StkId func)
 {
@@ -226,6 +241,7 @@ tryfuncTM(lua_State * L, StkId func)
   setobj2s(func, tm);           /* tag method is the new function to be called */
   return func;
 }
+
 
 StkId
 luaD_precall(lua_State * L, StkId func)
@@ -275,6 +291,7 @@ luaD_precall(lua_State * L, StkId func)
   }
 }
 
+
 static StkId
 callrethooks(lua_State * L, StkId firstResult)
 {
@@ -286,6 +303,7 @@ callrethooks(lua_State * L, StkId firstResult)
   }
   return restorestack(L, fr);
 }
+
 
 void
 luaD_poscall(lua_State * L, int wanted, StkId firstResult)
@@ -305,6 +323,7 @@ luaD_poscall(lua_State * L, int wanted, StkId firstResult)
     setnilvalue(res++);
   L->top = res;
 }
+
 
 /*
 ** Call a function (C or Lua). The function to be called is at *func.
@@ -330,6 +349,7 @@ luaD_call(lua_State * L, StkId func, int nResults)
   L->nCcalls--;
   luaC_checkGC(L);
 }
+
 
 static void
 resume(lua_State * L, void *ud)
@@ -360,6 +380,7 @@ resume(lua_State * L, void *ud)
     luaD_poscall(L, LUA_MULTRET, firstResult);  /* finalize this coroutine */
 }
 
+
 static int
 resume_error(lua_State * L, const char *msg)
 {
@@ -369,6 +390,7 @@ resume_error(lua_State * L, const char *msg)
   lua_unlock(L);
   return LUA_ERRRUN;
 }
+
 
 LUA_API int
 lua_resume(lua_State * L, int nargs)
@@ -397,6 +419,7 @@ lua_resume(lua_State * L, int nargs)
   return status;
 }
 
+
 LUA_API int
 lua_yield(lua_State * L, int nresults)
 {
@@ -419,6 +442,7 @@ lua_yield(lua_State * L, int nresults)
   lua_unlock(L);
   return -1;
 }
+
 
 int
 luaD_pcall(lua_State * L, Pfunc func, void *u, ptrdiff_t old_top, ptrdiff_t ef)
@@ -444,6 +468,8 @@ luaD_pcall(lua_State * L, Pfunc func, void *u, ptrdiff_t old_top, ptrdiff_t ef)
   return status;
 }
 
+
+
 /*
 ** Execute a protected parser.
 */
@@ -468,6 +494,7 @@ f_parser(lua_State * L, void *ud)
   incr_top(L);
 }
 
+
 int
 luaD_protectedparser(lua_State * L, ZIO * z, int bin)
 {
@@ -485,10 +512,3 @@ luaD_protectedparser(lua_State * L, ZIO * z, int bin)
   }
   return status;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

@@ -1,8 +1,10 @@
 
 /*
+** $Id: ltablib.c,v 1.21 2003/04/03 13:35:34 roberto Exp $
 ** Library for Table Manipulation
 ** See Copyright Notice in lua.h
 */
+
 
 #include <stddef.h>
 
@@ -13,7 +15,9 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+
 #define aux_getn(L,n)	(luaL_checktype(L, n, LUA_TTABLE), luaL_getn(L, n))
+
 
 static int
 luaB_foreachi(lua_State * L)
@@ -32,6 +36,7 @@ luaB_foreachi(lua_State * L)
   }
   return 0;
 }
+
 
 static int
 luaB_foreach(lua_State * L)
@@ -52,12 +57,14 @@ luaB_foreach(lua_State * L)
   }
 }
 
+
 static int
 luaB_getn(lua_State * L)
 {
   lua_pushnumber(L, (lua_Number) aux_getn(L, 1));
   return 1;
 }
+
 
 static int
 luaB_setn(lua_State * L)
@@ -66,6 +73,7 @@ luaB_setn(lua_State * L)
   luaL_setn(L, 1, luaL_checkint(L, 2));
   return 0;
 }
+
 
 static int
 luaB_tinsert(lua_State * L)
@@ -91,6 +99,7 @@ luaB_tinsert(lua_State * L)
   return 0;
 }
 
+
 static int
 luaB_tremove(lua_State * L)
 {
@@ -108,6 +117,7 @@ luaB_tremove(lua_State * L)
   lua_rawseti(L, 1, n);         /* t[n] = nil */
   return 1;
 }
+
 
 static int
 str_concat(lua_State * L)
@@ -132,12 +142,15 @@ str_concat(lua_State * L)
   return 1;
 }
 
+
+
 /*
 ** {======================================================
 ** Quicksort
 ** (based on `Algorithms in MODULA-3', Robert Sedgewick;
 **  Addison-Wesley, 1993.)
 */
+
 
 static void
 set2(lua_State * L, int i, int j)
@@ -249,6 +262,7 @@ luaB_sort(lua_State * L)
 
 /* }====================================================== */
 
+
 static const luaL_reg tab_funcs[] = {
   {"concat", str_concat},
   {"foreach", luaB_foreach},
@@ -261,16 +275,10 @@ static const luaL_reg tab_funcs[] = {
   {NULL, NULL}
 };
 
+
 LUALIB_API int
 luaopen_table(lua_State * L)
 {
   luaL_openlib(L, LUA_TABLIBNAME, tab_funcs, 0);
   return 1;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

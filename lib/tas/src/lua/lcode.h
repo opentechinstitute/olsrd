@@ -1,5 +1,6 @@
 
 /*
+** $Id: lcode.h,v 1.38 2002/12/11 12:34:22 roberto Exp $
 ** Code generator for Lua
 ** See Copyright Notice in lua.h
 */
@@ -12,11 +13,13 @@
 #include "lopcodes.h"
 #include "lparser.h"
 
+
 /*
 ** Marks the end of a patch list. It is an invalid value both as an absolute
 ** address, and as a list link (would link an element to itself).
 */
 #define NO_JUMP (-1)
+
 
 /*
 ** grep "ORDER OPR" if you change these enums
@@ -33,6 +36,7 @@ typedef enum BinOpr {
 #define binopistest(op)	((op) >= OPR_NE)
 
 typedef enum UnOpr { OPR_MINUS, OPR_NOT, OPR_NOUNOPR } UnOpr;
+
 
 #define getcode(fs,e)	((fs)->f->code[(e)->info])
 
@@ -67,11 +71,5 @@ void luaK_prefix(FuncState * fs, UnOpr op, expdesc * v);
 void luaK_infix(FuncState * fs, BinOpr op, expdesc * v);
 void luaK_posfix(FuncState * fs, BinOpr op, expdesc * v1, expdesc * v2);
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

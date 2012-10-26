@@ -1,8 +1,10 @@
 
 /*
+** $Id: ltests.c,v 1.158 2003/04/07 14:35:00 roberto Exp $
 ** Internal Module for Debugging of the Lua Implementation
 ** See Copyright Notice in lua.h
 */
+
 
 #include <ctype.h>
 #include <limits.h>
@@ -27,18 +29,24 @@
 #include "ltable.h"
 #include "lualib.h"
 
+
+
 /*
 ** The whole module only makes sense with LUA_DEBUG on
 */
 #ifdef LUA_DEBUG
 
+
 #define lua_pushintegral(L,i)	lua_pushnumber(L, cast(lua_Number, (i)))
+
 
 static lua_State *lua_state = NULL;
 
 int islocked = 0;
 
+
 #define func_at(L,k)	(L->ci->base+(k) - 1)
+
 
 static void
 setnameval(lua_State * L, const char *name, int val)
@@ -47,6 +55,7 @@ setnameval(lua_State * L, const char *name, int val)
   lua_pushintegral(L, val);
   lua_settable(L, -3);
 }
+
 
 /*
 ** {======================================================================
@@ -81,6 +90,7 @@ unsigned long memdebug_total = 0;
 unsigned long memdebug_maxmem = 0;
 unsigned long memdebug_memlimit = ULONG_MAX;
 
+
 static void *
 checkblock(void *block, size_t size)
 {
@@ -90,6 +100,7 @@ checkblock(void *block, size_t size)
     lua_assert(*(cast(char *, b) + HEADER + size + i) == MARK + i);     /* corrupted block? */
   return b;
 }
+
 
 static void
 freeblock(void *block, size_t size)
@@ -103,6 +114,7 @@ freeblock(void *block, size_t size)
     memdebug_total -= size;
   }
 }
+
 
 void *
 debug_realloc(void *block, size_t oldsize, size_t size)
@@ -142,13 +154,17 @@ debug_realloc(void *block, size_t oldsize, size_t size)
   }
 }
 
+
 /* }====================================================================== */
+
+
 
 /*
 ** {======================================================
 ** Disassembler
 ** =======================================================
 */
+
 
 static char *
 buildop(Proto * p, int pc, char *buff)
@@ -172,6 +188,7 @@ buildop(Proto * p, int pc, char *buff)
   return buff;
 }
 
+
 #if 0
 void
 luaI_printcode(Proto * pt, int size)
@@ -184,6 +201,7 @@ luaI_printcode(Proto * pt, int size)
   printf("-------\n");
 }
 #endif
+
 
 static int
 listcode(lua_State * L)
@@ -204,6 +222,7 @@ listcode(lua_State * L)
   return 1;
 }
 
+
 static int
 listk(lua_State * L)
 {
@@ -219,6 +238,7 @@ listk(lua_State * L)
   }
   return 1;
 }
+
 
 static int
 listlocals(lua_State * L)
@@ -236,6 +256,9 @@ listlocals(lua_State * L)
 
 /* }====================================================== */
 
+
+
+
 static int
 get_limits(lua_State * L)
 {
@@ -248,6 +271,7 @@ get_limits(lua_State * L)
   setnameval(L, "MAXUPVALUES", MAXUPVALUES);
   return 1;
 }
+
 
 static int
 mem_query(lua_State * L)
@@ -262,6 +286,7 @@ mem_query(lua_State * L)
     return 0;
   }
 }
+
 
 static int
 hash_query(lua_State * L)
@@ -279,6 +304,7 @@ hash_query(lua_State * L)
   return 1;
 }
 
+
 static int
 stacklevel(lua_State * L)
 {
@@ -290,6 +316,7 @@ stacklevel(lua_State * L)
   lua_pushintegral(L, (unsigned long)&a);
   return 5;
 }
+
 
 static int
 table_query(lua_State * L)
@@ -320,6 +347,7 @@ table_query(lua_State * L)
   return 3;
 }
 
+
 static int
 string_query(lua_State * L)
 {
@@ -341,6 +369,7 @@ string_query(lua_State * L)
   }
   return 0;
 }
+
 
 static int
 tref(lua_State * L)
@@ -387,6 +416,7 @@ metatable(lua_State * L)
   return 1;
 }
 
+
 static int
 upvalue(lua_State * L)
 {
@@ -405,6 +435,7 @@ upvalue(lua_State * L)
   }
 }
 
+
 static int
 newuserdata(lua_State * L)
 {
@@ -415,6 +446,7 @@ newuserdata(lua_State * L)
   return 1;
 }
 
+
 static int
 pushuserdata(lua_State * L)
 {
@@ -422,12 +454,14 @@ pushuserdata(lua_State * L)
   return 1;
 }
 
+
 static int
 udataval(lua_State * L)
 {
   lua_pushintegral(L, cast(int, lua_touserdata(L, 1)));
   return 1;
 }
+
 
 static int
 doonnewstack(lua_State * L)
@@ -441,6 +475,7 @@ doonnewstack(lua_State * L)
   lua_pushintegral(L, status);
   return 1;
 }
+
 
 static int
 s2d(lua_State * L)
@@ -457,6 +492,7 @@ d2s(lua_State * L)
   return 1;
 }
 
+
 static int
 newstate(lua_State * L)
 {
@@ -468,6 +504,7 @@ newstate(lua_State * L)
     lua_pushnil(L);
   return 1;
 }
+
 
 static int
 loadlib(lua_State * L)
@@ -522,6 +559,7 @@ doremote(lua_State * L)
   }
 }
 
+
 static int
 log2_aux(lua_State * L)
 {
@@ -538,6 +576,7 @@ int2fb_aux(lua_State * L)
   return 2;
 }
 
+
 static int
 test_do(lua_State * L)
 {
@@ -548,6 +587,8 @@ test_do(lua_State * L)
     lua_dostring(L, p);
   return lua_gettop(L);
 }
+
+
 
 /*
 ** {======================================================
@@ -596,10 +637,12 @@ getname_aux(char *buff, const char **pc)
   return buff;
 }
 
+
 #define EQ(s1)	(strcmp(s1, inst) == 0)
 
 #define getnum	(getnum_aux(L, &pc))
 #define getname	(getname_aux(buff, &pc))
+
 
 static int
 testC(lua_State * L)
@@ -758,6 +801,7 @@ testC(lua_State * L)
 
 /* }====================================================== */
 
+
 /*
 ** {======================================================
 ** tests for yield inside hooks
@@ -788,6 +832,7 @@ setyhook(lua_State * L)
   return 0;
 }
 
+
 static int
 coresume(lua_State * L)
 {
@@ -806,6 +851,8 @@ coresume(lua_State * L)
 }
 
 /* }====================================================== */
+
+
 
 static const struct luaL_reg tests_funcs[] = {
   {"hash", hash_query},
@@ -841,6 +888,7 @@ static const struct luaL_reg tests_funcs[] = {
   {NULL, NULL}
 };
 
+
 static void
 fim(void)
 {
@@ -850,6 +898,7 @@ fim(void)
   lua_assert(memdebug_total == 0);
 }
 
+
 static int
 l_panic(lua_State * L)
 {
@@ -857,6 +906,7 @@ l_panic(lua_State * L)
   fprintf(stderr, "unable to recover; exiting\n");
   return 0;
 }
+
 
 int
 luaB_opentests(lua_State * L)
@@ -868,6 +918,7 @@ luaB_opentests(lua_State * L)
   atexit(fim);
   return 0;
 }
+
 
 #undef main
 int
@@ -881,10 +932,3 @@ main(int argc, char *argv[])
 }
 
 #endif
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

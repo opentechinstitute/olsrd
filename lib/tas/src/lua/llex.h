@@ -1,5 +1,6 @@
 
 /*
+** $Id: llex.h,v 1.47 2003/02/28 17:19:47 roberto Exp $
 ** Lexical Analyzer
 ** See Copyright Notice in lua.h
 */
@@ -10,10 +11,12 @@
 #include "lobject.h"
 #include "lzio.h"
 
+
 #define FIRST_RESERVED	257
 
 /* maximum length of a reserved word */
 #define TOKEN_LEN	(sizeof("function")/sizeof(char))
+
 
 /*
 * WARNING: if you change the order of this enumeration,
@@ -33,15 +36,18 @@ enum RESERVED {
 /* number of reserved words */
 #define NUM_RESERVED	(cast(int, TK_WHILE-FIRST_RESERVED+1))
 
+
 typedef union {
   lua_Number r;
   TString *ts;
 } SemInfo;                             /* semantics information */
 
+
 typedef struct Token {
   int token;
   SemInfo seminfo;
 } Token;
+
 
 typedef struct LexState {
   int current;                         /* current character (charint) */
@@ -57,6 +63,7 @@ typedef struct LexState {
   int nestlevel;                       /* level of nested non-terminals */
 } LexState;
 
+
 void luaX_init(lua_State * L);
 void luaX_setinput(lua_State * L, LexState * LS, ZIO * z, TString * source);
 int luaX_lex(LexState * LS, SemInfo * seminfo);
@@ -65,11 +72,5 @@ void luaX_syntaxerror(LexState * ls, const char *s) __attribute__ ((noreturn));
 void luaX_errorline(LexState * ls, const char *s, const char *token, int line) __attribute__ ((noreturn));
 const char *luaX_token2str(LexState * ls, int token);
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

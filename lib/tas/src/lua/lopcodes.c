@@ -1,9 +1,11 @@
 
 /*
+** $Id: lopcodes.c,v 1.22 2002/12/04 17:38:31 roberto Exp $
 ** extracted automatically from lopcodes.h by mkprint.lua
 ** DO NOT EDIT
 ** See Copyright Notice in lua.h
 */
+
 
 #define lopcodes_c
 
@@ -11,6 +13,7 @@
 
 #include "lobject.h"
 #include "lopcodes.h"
+
 
 #ifdef LUA_OPNAMES
 
@@ -58,6 +61,7 @@ const char *const luaP_opnames[] = {
    ((b)<<OpModeBreg) | ((bk)<<OpModeBrk) | ((ck)<<OpModeCrk) | \
    ((sa)<<OpModesetA) | ((k)<<OpModeK) | (m))
 
+
 const lu_byte luaP_opmodes[NUM_OPCODES] = {
 
 /*       T  B Bk Ck sA  K  mode			   opcode    */
@@ -97,10 +101,3 @@ const lu_byte luaP_opmodes[NUM_OPCODES] = {
     , opmode(0, 0, 0, 0, 0, 0, iABC)    /* OP_CLOSE */
     , opmode(0, 0, 0, 0, 1, 0, iABx)    /* OP_CLOSURE */
 };
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

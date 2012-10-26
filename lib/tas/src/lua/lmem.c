@@ -1,8 +1,10 @@
 
 /*
+** $Id: lmem.c,v 1.61 2002/12/04 17:38:31 roberto Exp $
 ** Interface to Memory Manager
 ** See Copyright Notice in lua.h
 */
+
 
 #include <stdlib.h>
 
@@ -15,6 +17,8 @@
 #include "lmem.h"
 #include "lobject.h"
 #include "lstate.h"
+
+
 
 /*
 ** definition for realloc function. It must assure that l_realloc(NULL,
@@ -33,7 +37,9 @@
 #define l_free(b,os)	free(b)
 #endif
 
+
 #define MINSIZEARRAY	4
+
 
 void *
 luaM_growaux(lua_State * L, void *block, int *size, int size_elems, int limit, const char *errormsg)
@@ -48,11 +54,12 @@ luaM_growaux(lua_State * L, void *block, int *size, int size_elems, int limit, c
     else
       luaG_runerror(L, errormsg);
   }
-  newblock =
-    luaM_realloc(L, block, cast(lu_mem, *size) * cast(lu_mem, size_elems), cast(lu_mem, newsize) * cast(lu_mem, size_elems));
+  newblock = luaM_realloc(L, block,
+                          cast(lu_mem, *size) * cast(lu_mem, size_elems), cast(lu_mem, newsize) * cast(lu_mem, size_elems));
   *size = newsize;              /* update only when everything else is OK */
   return newblock;
 }
+
 
 /*
 ** generic allocation routine.
@@ -85,10 +92,3 @@ luaM_realloc(lua_State * L, void *block, lu_mem oldsize, lu_mem size)
   }
   return block;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

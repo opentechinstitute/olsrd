@@ -1,5 +1,6 @@
 
 /*
+** $Id: lopcodes.h,v 1.102 2002/08/21 18:56:09 roberto Exp $
 ** Opcodes for Lua virtual machine
 ** See Copyright Notice in lua.h
 */
@@ -8,6 +9,7 @@
 #define lopcodes_h
 
 #include "llimits.h"
+
 
 /*===========================================================================
   We assume that instructions are unsigned numbers.
@@ -26,7 +28,9 @@
   unsigned argument.
 ===========================================================================*/
 
+
 enum OpMode { iABC, iABx, iAsBx };     /* basic instruction format */
+
 
 /*
 ** size and position of opcode arguments.
@@ -43,6 +47,7 @@ enum OpMode { iABC, iABx, iAsBx };     /* basic instruction format */
 #define POS_Bx		POS_C
 #define POS_A		(POS_B + SIZE_B)
 
+
 /*
 ** limits for opcode arguments.
 ** we use (signed) int to manipulate most arguments,
@@ -56,9 +61,11 @@ enum OpMode { iABC, iABx, iAsBx };     /* basic instruction format */
 #define MAXARG_sBx        MAX_INT
 #endif
 
+
 #define MAXARG_A        ((1<<SIZE_A)-1)
 #define MAXARG_B        ((1<<SIZE_B)-1)
 #define MAXARG_C        ((1<<SIZE_C)-1)
+
 
 /* creates a mask with `n' 1 bits at position `p' */
 #define MASK1(n,p)	((~((~(Instruction)0)<<n))<<p)
@@ -92,6 +99,7 @@ enum OpMode { iABC, iABx, iAsBx };     /* basic instruction format */
 #define GETARG_sBx(i)	(GETARG_Bx(i)-MAXARG_sBx)
 #define SETARG_sBx(i,b)	SETARG_Bx((i),cast(unsigned int, (b)+MAXARG_sBx))
 
+
 #define CREATE_ABC(o,a,b,c)	(cast(Instruction, o) \
 			| (cast(Instruction, a)<<POS_A) \
 			| (cast(Instruction, b)<<POS_B) \
@@ -101,16 +109,21 @@ enum OpMode { iABC, iABx, iAsBx };     /* basic instruction format */
 			| (cast(Instruction, a)<<POS_A) \
 			| (cast(Instruction, bc)<<POS_Bx))
 
+
+
+
 /*
 ** invalid register that fits in 8 bits
 */
 #define NO_REG		MAXARG_A
+
 
 /*
 ** R(x) - register
 ** Kst(x) - constant (in constant table)
 ** RK(x) == if x < MAXSTACK then R(x) else Kst(x-MAXSTACK)
 */
+
 
 /*
 ** grep "ORDER OP" if you change these enums
@@ -174,7 +187,10 @@ name		args	description
   OP_CLOSURE                           /*    A Bx    R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))  */
 } OpCode;
 
+
 #define NUM_OPCODES	(cast(int, OP_CLOSURE+1))
+
+
 
 /*===========================================================================
   Notes:
@@ -189,6 +205,7 @@ name		args	description
   (4) All `skips' (pc++) assume that next instruction is a jump
 ===========================================================================*/
 
+
 /*
 ** masks for instruction properties
 */
@@ -201,25 +218,23 @@ enum OpModeMask {
   OpModeT                       /* operator is a test */
 };
 
+
 extern const lu_byte luaP_opmodes[NUM_OPCODES];
 
 #define getOpMode(m)            (cast(enum OpMode, luaP_opmodes[m] & 3))
 #define testOpMode(m, b)        (luaP_opmodes[m] & (1 << (b)))
 
+
 #ifdef LUA_OPNAMES
 extern const char *const luaP_opnames[];        /* opcode names */
 #endif
+
+
 
 /* number of list items to accumulate before a SETLIST instruction */
 
 /* (must be a power of 2) */
 #define LFIELDS_PER_FLUSH	32
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

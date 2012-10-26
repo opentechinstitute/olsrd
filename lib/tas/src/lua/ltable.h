@@ -1,5 +1,6 @@
 
 /*
+** $Id: ltable.h,v 1.44 2003/03/18 12:50:04 roberto Exp $
 ** Lua tables (hash)
 ** See Copyright Notice in lua.h
 */
@@ -9,9 +10,11 @@
 
 #include "lobject.h"
 
+
 #define gnode(t,i)	(&(t)->node[i])
 #define gkey(n)		(&(n)->i_key)
 #define gval(n)		(&(n)->i_val)
+
 
 const TObject *luaH_getnum(Table * t, int key);
 TObject *luaH_setnum(lua_State * L, Table * t, int key);
@@ -25,11 +28,5 @@ int luaH_next(lua_State * L, Table * t, StkId key);
 /* exported only for debugging */
 Node *luaH_mainposition(const Table * t, const TObject * key);
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

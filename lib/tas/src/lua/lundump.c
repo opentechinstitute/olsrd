@@ -1,5 +1,6 @@
 
 /*
+** $Id: lundump.c,v 1.49 2003/04/07 20:34:20 lhf Exp $
 ** load pre-compiled Lua chunks
 ** See Copyright Notice in lua.h
 */
@@ -303,10 +304,3 @@ luaU_endianness(void)
   int x = 1;
   return *(char *)&x;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

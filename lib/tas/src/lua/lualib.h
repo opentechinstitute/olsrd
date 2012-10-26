@@ -1,17 +1,21 @@
 
 /*
+** $Id: lualib.h,v 1.28 2003/03/18 12:24:26 roberto Exp $
 ** Lua standard libraries
 ** See Copyright Notice in lua.h
 */
+
 
 #ifndef lualib_h
 #define lualib_h
 
 #include "lua.h"
 
+
 #ifndef LUALIB_API
 #define LUALIB_API	LUA_API
 #endif
+
 
 #define LUA_COLIBNAME	"coroutine"
 LUALIB_API int luaopen_base(lua_State * L);
@@ -32,12 +36,15 @@ LUALIB_API int luaopen_math(lua_State * L);
 #define LUA_DBLIBNAME	"debug"
 LUALIB_API int luaopen_debug(lua_State * L);
 
+
 LUALIB_API int luaopen_loadlib(lua_State * L);
+
 
 /* to help testing the libraries */
 #ifndef lua_assert
 #define lua_assert(c)           /* empty */
 #endif
+
 
 /* compatibility code */
 #define lua_baselibopen	luaopen_base
@@ -48,10 +55,3 @@ LUALIB_API int luaopen_loadlib(lua_State * L);
 #define lua_dblibopen	luaopen_debug
 
 #endif
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

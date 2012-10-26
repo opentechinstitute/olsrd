@@ -1,5 +1,6 @@
 
 /*
+** $Id: loadlib.c,v 1.4 2003/04/07 20:11:53 roberto Exp $
 ** Dynamic library loader for Lua
 ** See Copyright Notice in lua.h
 *
@@ -30,7 +31,9 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+
 #undef LOADLIB
+
 
 #ifdef USE_DLOPEN
 #define LOADLIB
@@ -69,6 +72,8 @@ loadlib(lua_State * L)
 
 #endif
 
+
+
 /*
 ** In Windows, default is to use dll; otherwise, default is not to use dll
 */
@@ -79,6 +84,7 @@ loadlib(lua_State * L)
 #define USE_DLL	0
 #endif
 #endif
+
 
 #if USE_DLL
 #define LOADLIB
@@ -123,6 +129,8 @@ loadlib(lua_State * L)
 }
 
 #endif
+
+
 
 #ifndef LOADLIB
 
@@ -201,10 +209,3 @@ luaopen_loadlib(lua_State * L)
 * http://cvs.gnome.org/lxr/source/glib/gmodule/
 *
 */
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

@@ -1,5 +1,6 @@
 
 /*
+** $Id: lparser.h,v 1.47 2003/02/11 10:46:24 roberto Exp $
 ** Lua Parser
 ** See Copyright Notice in lua.h
 */
@@ -11,6 +12,7 @@
 #include "lobject.h"
 #include "ltable.h"
 #include "lzio.h"
+
 
 /*
 ** Expression descriptor
@@ -39,7 +41,9 @@ typedef struct expdesc {
   int f;                               /* patch list of `exit when false' */
 } expdesc;
 
+
 struct BlockCnt;                       /* defined in lparser.c */
+
 
 /* state needed to generate code for a given function */
 typedef struct FuncState {
@@ -61,13 +65,8 @@ typedef struct FuncState {
   int actvar[MAXVARS];                 /* declared-variable stack */
 } FuncState;
 
+
 Proto *luaY_parser(lua_State * L, ZIO * z, Mbuffer * buff);
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

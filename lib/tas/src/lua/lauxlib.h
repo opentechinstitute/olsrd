@@ -1,25 +1,32 @@
 
 /*
+** $Id: lauxlib.h,v 1.60 2003/04/03 13:35:34 roberto Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */
 
+
 #ifndef lauxlib_h
 #define lauxlib_h
+
 
 #include <stddef.h>
 #include <stdio.h>
 
 #include "lua.h"
 
+
 #ifndef LUALIB_API
 #define LUALIB_API	LUA_API
 #endif
+
+
 
 typedef struct luaL_reg {
   const char *name;
   lua_CFunction func;
 } luaL_reg;
+
 
 LUALIB_API void luaL_openlib(lua_State * L, const char *libname, const luaL_reg * l, int nup);
 LUALIB_API int luaL_getmetafield(lua_State * L, int obj, const char *e);
@@ -53,6 +60,8 @@ LUALIB_API void luaL_setn(lua_State * L, int t, int n);
 LUALIB_API int luaL_loadfile(lua_State * L, const char *filename);
 LUALIB_API int luaL_loadbuffer(lua_State * L, const char *buff, size_t sz, const char *name);
 
+
+
 /*
 ** ===============================================================
 ** some useful macros
@@ -68,15 +77,18 @@ LUALIB_API int luaL_loadbuffer(lua_State * L, const char *buff, size_t sz, const
 #define luaL_optint(L,n,d)	luaL_optnumber(L, n,(lua_Number)(d))
 #define luaL_optlong(L,n,d)	luaL_optnumber(L, n,(lua_Number)(d))
 
+
 /*
 ** {======================================================
 ** Generic Buffer manipulation
 ** =======================================================
 */
 
+
 #ifndef LUAL_BUFFERSIZE
 #define LUAL_BUFFERSIZE	  BUFSIZ
 #endif
+
 
 typedef struct luaL_Buffer {
   char *p;                             /* current position in buffer */
@@ -98,7 +110,10 @@ LUALIB_API void luaL_addstring(luaL_Buffer * B, const char *s);
 LUALIB_API void luaL_addvalue(luaL_Buffer * B);
 LUALIB_API void luaL_pushresult(luaL_Buffer * B);
 
+
 /* }====================================================== */
+
+
 
 /*
 ** Compatibility macros and functions
@@ -107,6 +122,7 @@ LUALIB_API void luaL_pushresult(luaL_Buffer * B);
 LUALIB_API int lua_dofile(lua_State * L, const char *filename);
 LUALIB_API int lua_dostring(lua_State * L, const char *str);
 LUALIB_API int lua_dobuffer(lua_State * L, const char *buff, size_t sz, const char *n);
+
 
 #define luaL_check_lstr 	luaL_checklstring
 #define luaL_opt_lstr 	luaL_optlstring
@@ -120,11 +136,5 @@ LUALIB_API int lua_dobuffer(lua_State * L, const char *buff, size_t sz, const ch
 #define luaL_opt_int	luaL_optint
 #define luaL_opt_long	luaL_optlong
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

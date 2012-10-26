@@ -1,8 +1,10 @@
 
 /*
+** $Id: lstate.c,v 1.123 2003/04/03 13:35:34 roberto Exp $
 ** Global State
 ** See Copyright Notice in lua.h
 */
+
 
 #include <stdlib.h>
 
@@ -21,6 +23,7 @@
 #include "ltable.h"
 #include "ltm.h"
 
+
 /*
 ** macro to allow the inclusion of user information in Lua state
 */
@@ -34,6 +37,8 @@ union UEXTRASPACE {
 #define EXTRASPACE (sizeof(union UEXTRASPACE))
 #endif
 
+
+
 /*
 ** you can change this function through the official API:
 ** call `lua_setpanicf'
@@ -44,6 +49,7 @@ default_panic(lua_State * L)
   UNUSED(L);
   return 0;
 }
+
 
 static lua_State *
 mallocstate(lua_State * L)
@@ -57,11 +63,13 @@ mallocstate(lua_State * L)
   }
 }
 
+
 static void
 freestate(lua_State * L, lua_State * L1)
 {
   luaM_free(L, cast(lu_byte *, L1) - EXTRASPACE, sizeof(lua_State) + EXTRASPACE);
 }
+
 
 static void
 stack_init(lua_State * L1, lua_State * L)
@@ -80,12 +88,14 @@ stack_init(lua_State * L1, lua_State * L)
   L1->end_ci = L1->base_ci + L1->size_ci;
 }
 
+
 static void
 freestack(lua_State * L, lua_State * L1)
 {
   luaM_freearray(L, L1->base_ci, L1->size_ci, CallInfo);
   luaM_freearray(L, L1->stack, L1->stacksize, TObject);
 }
+
 
 /*
 ** open parts that may cause memory-allocation errors
@@ -129,6 +139,7 @@ f_luaopen(lua_State * L, void *ud)
   g->GCthreshold = 4 * G(L)->nblocks;
 }
 
+
 static void
 preinit_state(lua_State * L)
 {
@@ -147,6 +158,7 @@ preinit_state(lua_State * L)
   L->errfunc = 0;
   setnilvalue(gt(L));
 }
+
 
 static void
 close_state(lua_State * L)
@@ -167,6 +179,7 @@ close_state(lua_State * L)
   freestate(NULL, L);
 }
 
+
 lua_State *
 luaE_newthread(lua_State * L)
 {
@@ -179,6 +192,7 @@ luaE_newthread(lua_State * L)
   return L1;
 }
 
+
 void
 luaE_freethread(lua_State * L, lua_State * L1)
 {
@@ -187,6 +201,7 @@ luaE_freethread(lua_State * L, lua_State * L1)
   freestack(L, L1);
   freestate(L, L1);
 }
+
 
 LUA_API lua_State *
 lua_open(void)
@@ -208,12 +223,14 @@ lua_open(void)
   return L;
 }
 
+
 static void
 callallgcTM(lua_State * L, void *ud)
 {
   UNUSED(ud);
   luaC_callGCTM(L);             /* call GC metamethods for all udata */
 }
+
 
 LUA_API void
 lua_close(lua_State * L)
@@ -227,15 +244,7 @@ lua_close(lua_State * L)
     L->ci = L->base_ci;
     L->base = L->top = L->ci->base;
     L->nCcalls = 0;
-  }
-  while (luaD_rawrunprotected(L, callallgcTM, NULL) != 0);
+  } while (luaD_rawrunprotected(L, callallgcTM, NULL) != 0);
   lua_assert(G(L)->tmudata == NULL);
   close_state(L);
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

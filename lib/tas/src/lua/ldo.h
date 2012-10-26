@@ -1,11 +1,13 @@
 
 /*
+** $Id: ldo.h,v 1.56 2002/12/04 17:29:32 roberto Exp $
 ** Stack and Call structure of Lua
 ** See Copyright Notice in lua.h
 */
 
 #ifndef ldo_h
 #define ldo_h
+
 
 #include "lobject.h"
 #include "lstate.h"
@@ -22,10 +24,12 @@
 #define condhardstacktests(x)	x
 #endif
 
+
 #define luaD_checkstack(L,n)	\
   if ((char *)L->stack_last - (char *)L->top <= (n)*(int)sizeof(TObject)) \
     luaD_growstack(L, n); \
   else condhardstacktests(luaD_reallocstack(L, L->stacksize));
+
 
 #define incr_top(L) {luaD_checkstack(L,1); L->top++;}
 
@@ -34,6 +38,7 @@
 
 #define saveci(L,p)		((char *)(p) - (char *)L->base_ci)
 #define restoreci(L,n)		((CallInfo *)ARM_NOWARN_ALIGN((char *)L->base_ci + (n)))
+
 
 /* type of protected functions, to be ran by `runprotected' */
 typedef void (*Pfunc) (lua_State * L, void *ud);
@@ -52,11 +57,5 @@ void luaD_growstack(lua_State * L, int n);
 void luaD_throw(lua_State * L, int errcode) __attribute__ ((noreturn));
 int luaD_rawrunprotected(lua_State * L, Pfunc f, void *ud);
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif

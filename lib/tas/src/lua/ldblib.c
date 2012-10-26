@@ -1,8 +1,10 @@
 
 /*
+** $Id: ldblib.c,v 1.80 2003/04/03 13:35:34 roberto Exp $
 ** Interface from Lua to its debug API
 ** See Copyright Notice in lua.h
 */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +17,8 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+
+
 static void
 settabss(lua_State * L, const char *i, const char *v)
 {
@@ -23,6 +27,7 @@ settabss(lua_State * L, const char *i, const char *v)
   lua_rawset(L, -3);
 }
 
+
 static void
 settabsi(lua_State * L, const char *i, int v)
 {
@@ -30,6 +35,7 @@ settabsi(lua_State * L, const char *i, int v)
   lua_pushnumber(L, (lua_Number) v);
   lua_rawset(L, -3);
 }
+
 
 static int
 getinfo(lua_State * L)
@@ -78,6 +84,7 @@ getinfo(lua_State * L)
   return 1;                     /* return table */
 }
 
+
 static int
 getlocal(lua_State * L)
 {
@@ -96,6 +103,7 @@ getlocal(lua_State * L)
   }
 }
 
+
 static int
 setlocal(lua_State * L)
 {
@@ -106,6 +114,7 @@ setlocal(lua_State * L)
   lua_pushstring(L, lua_setlocal(L, &ar, luaL_checkint(L, 2)));
   return 1;
 }
+
 
 static int
 auxupvalue(lua_State * L, int get)
@@ -123,11 +132,13 @@ auxupvalue(lua_State * L, int get)
   return get + 1;
 }
 
+
 static int
 getupvalue(lua_State * L)
 {
   return auxupvalue(L, 1);
 }
+
 
 static int
 setupvalue(lua_State * L)
@@ -136,7 +147,10 @@ setupvalue(lua_State * L)
   return auxupvalue(L, 0);
 }
 
+
+
 static const char KEY_HOOK = 'h';
+
 
 static void
 hookf(lua_State * L, lua_Debug * ar)
@@ -156,6 +170,7 @@ hookf(lua_State * L, lua_Debug * ar)
     lua_pop(L, 1);              /* pop result from gettable */
 }
 
+
 static int
 makemask(const char *smask, int count)
 {
@@ -171,6 +186,7 @@ makemask(const char *smask, int count)
   return mask;
 }
 
+
 static char *
 unmakemask(int mask, char *smask)
 {
@@ -184,6 +200,7 @@ unmakemask(int mask, char *smask)
   smask[i] = '\0';
   return smask;
 }
+
 
 static int
 sethook(lua_State * L)
@@ -203,6 +220,7 @@ sethook(lua_State * L)
   return 0;
 }
 
+
 static int
 gethook(lua_State * L)
 {
@@ -220,6 +238,7 @@ gethook(lua_State * L)
   return 3;
 }
 
+
 static int
 debug(lua_State * L)
 {
@@ -232,6 +251,7 @@ debug(lua_State * L)
     lua_settop(L, 0);           /* remove eventual returns */
   }
 }
+
 
 #define LEVELS1	12              /* size of the first part of the stack */
 #define LEVELS2	10              /* size of the second part of the stack */
@@ -274,8 +294,7 @@ errorfb(lua_State * L)
     case 'm':                  /* method */
       lua_pushfstring(L, " in function `%s'", ar.name);
       break;
-    default:
-      {
+    default:{
         if (*ar.what == 'm')    /* main? */
           lua_pushfstring(L, " in main chunk");
         else if (*ar.what == 'C' || *ar.what == 't')
@@ -290,6 +309,7 @@ errorfb(lua_State * L)
   return 1;
 }
 
+
 static const luaL_reg dblib[] = {
   {"getlocal", getlocal},
   {"getinfo", getinfo},
@@ -303,6 +323,7 @@ static const luaL_reg dblib[] = {
   {NULL, NULL}
 };
 
+
 LUALIB_API int
 luaopen_debug(lua_State * L)
 {
@@ -312,10 +333,3 @@ luaopen_debug(lua_State * L)
   lua_settable(L, LUA_GLOBALSINDEX);
   return 1;
 }
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

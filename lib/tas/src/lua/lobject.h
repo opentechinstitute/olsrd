@@ -1,5 +1,6 @@
 
 /*
+** $Id: lobject.h,v 1.159 2003/03/18 12:50:04 roberto Exp $
 ** Type definitions for Lua objects
 ** See Copyright Notice in lua.h
 */
@@ -7,11 +8,14 @@
 #ifndef lobject_h
 #define lobject_h
 
+
 #include "llimits.h"
 #include "lua.h"
 
+
 /* tags for values visible from Lua */
 #define NUM_TAGS	LUA_TTHREAD
+
 
 /*
 ** Extra tags for non-values
@@ -19,10 +23,12 @@
 #define LUA_TPROTO	(NUM_TAGS+1)
 #define LUA_TUPVAL	(NUM_TAGS+2)
 
+
 /*
 ** Union of all collectable objects
 */
 typedef union GCObject GCObject;
+
 
 /*
 ** Common Header for all collectable objects (in macro form, to be
@@ -30,12 +36,16 @@ typedef union GCObject GCObject;
 */
 #define CommonHeader	GCObject *next; lu_byte tt; lu_byte marked
 
+
 /*
 ** Common header in struct form
 */
 typedef struct GCheader {
   CommonHeader;
 } GCheader;
+
+
+
 
 /*
 ** Union of all Lua values
@@ -47,6 +57,7 @@ typedef union {
   int b;
 } Value;
 
+
 /*
 ** Lua values (or `tagged objects')
 */
@@ -54,6 +65,7 @@ typedef struct lua_TObject {
   int tt;
   Value value;
 } TObject;
+
 
 /* Macros to test type */
 #define ttisnil(o)	(ttype(o) == LUA_TNIL)
@@ -120,16 +132,20 @@ typedef struct lua_TObject {
 
 #define setnilvalue(obj) ((obj)->tt=LUA_TNIL)
 
+
+
 /*
 ** for internal debug only
 */
 #define checkconsistency(obj) \
   lua_assert(!iscollectable(obj) || (ttype(obj) == (obj)->value.gc->gch.tt))
 
+
 #define setobj(obj1,obj2) \
   { const TObject *o2=(obj2); TObject *o1=(obj1); \
     checkconsistency(o2); \
     o1->tt=o2->tt; o1->value = o2->value; }
+
 
 /*
 ** different types of sets, according to destination
@@ -154,9 +170,13 @@ typedef struct lua_TObject {
 
 #define setttype(obj, tt) (ttype(obj) = (tt))
 
+
 #define iscollectable(o)	(ttype(o) >= LUA_TSTRING)
 
+
+
 typedef TObject *StkId;                /* index to stack elements */
+
 
 /*
 ** String headers for string table
@@ -171,8 +191,11 @@ typedef union TString {
   } tsv;
 } TString;
 
+
 #define getstr(ts)	cast(const char *, (ts) + 1)
 #define svalue(o)       getstr(tsvalue(o))
+
+
 
 typedef union Udata {
   L_Umaxalign dummy;                   /* ensures maximum alignment for `local' udata */
@@ -182,6 +205,9 @@ typedef union Udata {
     size_t len;
   } uv;
 } Udata;
+
+
+
 
 /*
 ** Function Prototypes
@@ -209,11 +235,14 @@ typedef struct Proto {
   lu_byte maxstacksize;
 } Proto;
 
+
 typedef struct LocVar {
   TString *varname;
   int startpc;                         /* first point where variable is active */
   int endpc;                           /* first point where variable is dead */
 } LocVar;
+
+
 
 /*
 ** Upvalues
@@ -224,6 +253,7 @@ typedef struct UpVal {
   TObject *v;                          /* points to stack or to its own value */
   TObject value;                       /* the value (when closed) */
 } UpVal;
+
 
 /*
 ** Closures
@@ -238,6 +268,7 @@ typedef struct CClosure {
   TObject upvalue[1];
 } CClosure;
 
+
 typedef struct LClosure {
   ClosureHeader;
   struct Proto *p;
@@ -245,13 +276,16 @@ typedef struct LClosure {
   UpVal *upvals[1];
 } LClosure;
 
+
 typedef union Closure {
   CClosure c;
   LClosure l;
 } Closure;
 
+
 #define iscfunction(o)	(ttype(o) == LUA_TFUNCTION && clvalue(o)->c.isC)
 #define isLfunction(o)	(ttype(o) == LUA_TFUNCTION && !clvalue(o)->c.isC)
+
 
 /*
 ** Tables
@@ -262,6 +296,7 @@ typedef struct Node {
   TObject i_val;
   struct Node *next;                   /* for chaining */
 } Node;
+
 
 typedef struct Table {
   CommonHeader;
@@ -275,14 +310,19 @@ typedef struct Table {
   int sizearray;                       /* size of `array' array */
 } Table;
 
+
+
 /*
 ** `module' operation for hashing (size is always a power of 2)
 */
 #define lmod(s,size) \
 	check_exp((size&(size-1))==0, (cast(int, (s) & ((size)-1))))
 
+
 #define twoto(x)	(1<<(x))
 #define sizenode(t)	(twoto((t)->lsizenode))
+
+
 
 extern const TObject luaO_nilobject;
 
@@ -297,11 +337,5 @@ const char *luaO_pushvfstring(lua_State * L, const char *fmt, va_list argp);
 const char *luaO_pushfstring(lua_State * L, const char *fmt, ...);
 void luaO_chunkid(char *out, const char *source, int len);
 
-#endif
 
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif
