@@ -44,6 +44,7 @@ int luaO_int2fb (unsigned int x) {
 }
 
 
+/* *INDENT-OFF* */
 int luaO_log2 (unsigned int x) {
   static const lu_byte log_8[255] = {
     0,
@@ -69,6 +70,7 @@ int luaO_log2 (unsigned int x) {
     return -1;  /* special `log' for 0 */
   }
 }
+/* *INDENT-ON* */
 
 
 int luaO_rawequalObj (const TObject *t1, const TObject *t2) {
