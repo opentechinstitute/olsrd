@@ -136,7 +136,7 @@ static int loadlib(lua_State *L)
 ** Those systems support dlopen, so they should have defined USE_DLOPEN.
 ** The default (no)implementation gives them a special error message.
 */
-#ifdef linux
+#ifdef __linux__
 #define LOADLIB
 #endif
 
