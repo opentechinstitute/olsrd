@@ -326,6 +326,7 @@ set_loss_link_multiplier(struct link_entry *entry)
       break;
     }
   }
+  assert(cfg_inter);
 
   /* create a null address for comparison */
   memset(&null_addr, 0, sizeof(union olsr_ip_addr));
