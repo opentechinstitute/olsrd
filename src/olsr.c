@@ -560,6 +560,9 @@ olsr_exit(const char *msg, int val)
   olsr_cnf->exit_value = val;
 
   raise(SIGTERM);
+
+  /* just to be sure */
+  exit(val);
 }
 
 /**

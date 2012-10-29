@@ -83,7 +83,7 @@ const char *olsr_link_to_string(uint8_t);
 
 const char *olsr_status_to_string(uint8_t);
 
-void olsr_exit(const char *, int);
+void olsr_exit(const char *, int) __attribute__((noreturn));
 
 void *olsr_malloc(size_t, const char *);
 
