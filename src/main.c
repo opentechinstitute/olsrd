@@ -427,7 +427,10 @@ int main(int argc, char *argv[]) {
     olsr_syslog(OLSR_LOG_ERR, "rtnetlink socket: %m");
     olsr_exit(__func__, 0);
   }
-  fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK);
+
+  if (fcntl(olsr_cnf->rtnl_s, F_SETFL, O_NONBLOCK)) {
+    olsr_syslog(OLSR_LOG_INFO, "rtnetlink could not be set to nonblocking");
+  }
 
   if ((olsr_cnf->rt_monitor_socket = rtnetlink_register_socket(RTMGRP_LINK)) < 0) {
     olsr_syslog(OLSR_LOG_ERR, "rtmonitor socket: %m");
