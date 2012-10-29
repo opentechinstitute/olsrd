@@ -871,12 +871,8 @@ int set_default_ifcnfs(struct olsr_if *ifs, struct if_config_options *cnf) {
 
 #define NEXT_ARG do { argv++;argc--; } while (0)
 #define CHECK_ARGC do { if(!argc) { \
-      if((argc - 1) == 1){ \
-      fprintf(stderr, "Error parsing command line options!\n"); \
-      } else { \
-      argv--; \
-      fprintf(stderr, "You must provide a parameter when using the %s switch!\n", *argv); \
-     } \
+     argv--; \
+     fprintf(stderr, "You must provide a parameter when using the %s switch!\n", *argv); \
      olsr_exit(__func__, EXIT_FAILURE); \
      } } while (0)
 
