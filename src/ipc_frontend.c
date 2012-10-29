@@ -97,7 +97,7 @@ ipc_init(void)
 
   if (setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
     perror("SO_REUSEADDR failed");
-    return 0;
+    olsr_exit("IPC socket", EXIT_FAILURE);
   }
 
   /* complete the socket structure */
