@@ -578,7 +578,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
     if (err == 0) {
       /* create this rule a second time if hostrule generation was successful */
       err = olsr_new_netlink_route(af_family, table, nexthop->iif_index, metric, olsr_cnf->rt_proto,
-          src, hostRoute ? NULL : &nexthop->gateway, &rt->rt_dst, set, false);
+          src, &nexthop->gateway, &rt->rt_dst, set, false);
     }
     olsr_syslog(OLSR_LOG_ERR, ". %s (%d)", err == 0 ? "successful" : "failed", err);
   }
