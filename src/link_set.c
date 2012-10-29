@@ -720,7 +720,7 @@ update_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *rem
   }
 
   /* L_time = max(L_time, L_ASYM_time) */
-  if (entry->link_timer && (entry->link_timer->timer_clock < entry->ASYM_time)) {
+  if (entry->link_timer == NULL || (entry->link_timer->timer_clock < entry->ASYM_time)) {
     olsr_set_link_timer(entry, TIME_DUE(entry->ASYM_time));
   }
 
