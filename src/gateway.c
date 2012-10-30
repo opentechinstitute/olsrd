@@ -329,8 +329,8 @@ bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *ma
  * @param seqno the sequence number of the HNA
  */
 void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
+  uint8_t *ptr;
   struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
-  uint8_t *ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
 
   if (!gw) {
     gw = olsr_cookie_malloc(gw_mem_cookie);
@@ -346,6 +346,7 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
   /* keep new HNA seqno */
   gw->seqno = seqno;
 
+  ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
   if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_LINKSPEED) != 0) {
     gw->uplink = deserialize_gw_speed(ptr[GW_HNA_UPLINK]);
     gw->downlink = deserialize_gw_speed(ptr[GW_HNA_DOWNLINK]);
