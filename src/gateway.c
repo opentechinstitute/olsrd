@@ -193,9 +193,22 @@ void olsr_cleanup_gateways(void) {
 
   olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
 
+  /* remove all gateways in the gateway tree that are not the active gateway */
   while ((avlnode = avl_walk_first(&gateway_tree))) {
-    olsr_delete_gateway_tree_entry(node2gateway(avlnode), FORCE_DELETE_GW_ENTRY, true);
+    struct gateway_entry* tree_gw = node2gateway(avlnode);
+    if ((tree_gw != olsr_get_inet_gateway(false)) && (tree_gw != olsr_get_inet_gateway(true))) {
+      olsr_delete_gateway_tree_entry(tree_gw, FORCE_DELETE_GW_ENTRY, true);
+    }
   }
+
+  /* remove the active IPv4 gateway */
+  olsr_delete_gateway_tree_entry(olsr_get_inet_gateway(false), FORCE_DELETE_GW_ENTRY, true);
+
+  /* remove the active IPv6 gateway */
+  olsr_delete_gateway_tree_entry(olsr_get_inet_gateway(true), FORCE_DELETE_GW_ENTRY, true);
+
+  /* there should be no more gateways */
+  assert(!avl_walk_first(&gateway_tree));
 
   assert(gw_handler);
   gw_handler->cleanup();
