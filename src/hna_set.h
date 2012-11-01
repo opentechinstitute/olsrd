@@ -94,7 +94,7 @@ struct hna_net *olsr_add_hna_net(struct hna_entry *, const union olsr_ip_addr *,
 
 void olsr_update_hna_entry(const union olsr_ip_addr *, const union olsr_ip_addr *, uint8_t, olsr_reltime);
 
-#ifdef NODEBUG
+#ifndef NODEBUG
 void olsr_print_hna_set(void);
 #else
 #define olsr_print_hna_set() do { } while(0)
