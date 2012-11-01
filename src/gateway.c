@@ -234,7 +234,7 @@ void olsr_trigger_inetgw_startup(void) {
 void olsr_print_gateway_entries(void) {
   struct ipaddr_str buf;
   struct gateway_entry *gw;
-  const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
+  const int addrsize = olsr_cnf->ip_version == AF_INET ? (INET_ADDRSTRLEN - 1) : (INET6_ADDRSTRLEN - 1);
 
   OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- GATEWAYS\n\n", olsr_wallclock_string());
   OLSR_PRINTF(0, "%-*s %-6s %-9s %-9s %s\n",

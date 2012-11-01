@@ -383,7 +383,7 @@ void
 olsr_print_neighbor_table(void)
 {
   /* The whole function doesn't do anything else. */
-  const int iplen = olsr_cnf->ip_version == AF_INET ? 15 : 39;
+  const int iplen = olsr_cnf->ip_version == AF_INET ? (INET_ADDRSTRLEN - 1) : (INET6_ADDRSTRLEN - 1);
   int idx;
   struct tm * nowtm;
   struct timeval now;

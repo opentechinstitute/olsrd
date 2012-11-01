@@ -805,7 +805,7 @@ olsr_print_link_set(void)
 {
   /* The whole function makes no sense without it. */
   struct link_entry *walker;
-  const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
+  const int addrsize = olsr_cnf->ip_version == AF_INET ? (INET_ADDRSTRLEN - 1) : (INET6_ADDRSTRLEN - 1);
 
   OLSR_PRINTF(0, "\n--- %s ---------------------------------------------------- LINKS\n\n", olsr_wallclock_string());
   OLSR_PRINTF(1, "%-*s  %-6s %-14s %s\n", addrsize, "IP address", "hyst", "      LQ      ", "ETX");
