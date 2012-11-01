@@ -59,6 +59,8 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
  * Helper Functions
  */
 
+#define TUNNEL_NAME (olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6)
+
 #define OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen) (((uint8_t *)mask) + ((prefixlen+7)/8))
 
 /**
@@ -174,7 +176,7 @@ int olsr_init_gateways(void) {
   gw_handler = &gw_def_handler;
   gw_handler->init();
 
-  if (olsr_os_init_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6)) {
+  if (olsr_os_init_iptunnel(TUNNEL_NAME)) {
     return 1;
   }
 
@@ -191,7 +193,7 @@ void olsr_cleanup_gateways(void) {
 
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
-  olsr_os_cleanup_iptunnel(olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
+  olsr_os_cleanup_iptunnel(TUNNEL_NAME);
 
   /* remove all gateways in the gateway tree that are not the active gateway */
   while ((avlnode = avl_walk_first(&gateway_tree))) {
