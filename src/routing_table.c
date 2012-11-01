@@ -664,10 +664,10 @@ olsr_rtp_to_string(const struct rt_path *rtp)
  * Print the routingtree to STDOUT
  *
  */
+#ifndef NODEBUG
 void
 olsr_print_routing_table(struct avl_tree *tree)
 {
-#ifndef NODEBUG
   /* The whole function makes no sense without it. */
   struct avl_node *rt_tree_node;
   struct lqtextbuffer lqbuffer;
@@ -694,9 +694,9 @@ olsr_print_routing_table(struct avl_tree *tree)
                   if_ifwithindex_name(rt->rt_nexthop.iif_index), rtp->rtp_version);
     }
   }
-#endif /* NODEBUG */
   tree = NULL;                  /* squelch compiler warnings */
 }
+#endif /* NODEBUG */
 
 /*
  * Local Variables:
