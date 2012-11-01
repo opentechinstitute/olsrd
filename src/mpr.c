@@ -507,10 +507,10 @@ olsr_optimize_mpr_set(void)
   }
 }
 
+#ifndef NODEBUG
 void
 olsr_print_mpr_set(void)
 {
-#ifndef NODEBUG
   /* The whole function makes no sense without it. */
   struct neighbor_entry *a_neighbor;
 
@@ -528,8 +528,8 @@ olsr_print_mpr_set(void)
   } OLSR_FOR_ALL_NBR_ENTRIES_END(a_neighbor);
 
   OLSR_PRINTF(1, "\n");
-#endif /* NODEBUG */
 }
+#endif /* NODEBUG */
 
 /*
  * Local Variables:
