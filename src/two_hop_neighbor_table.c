@@ -204,10 +204,10 @@ olsr_lookup_two_hop_neighbor_table_mid(const union olsr_ip_addr *dest)
  *
  *@return nada
  */
+#ifndef NODEBUG
 void
 olsr_print_two_hop_neighbor_table(void)
 {
-#ifndef NODEBUG
   /* The whole function makes no sense without it. */
   int i;
 
@@ -234,8 +234,8 @@ olsr_print_two_hop_neighbor_table(void)
       }
     }
   }
-#endif /* NODEBUG */
 }
+#endif /* NODEBUG */
 
 /*
  * Local Variables:
