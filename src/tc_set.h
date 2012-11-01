@@ -144,7 +144,11 @@ extern struct tc_entry *tc_myself;
 void olsr_init_tc(void);
 void olsr_delete_all_tc_entries(void);
 void olsr_change_myself_tc(void);
+#ifndef NODEBUG
 void olsr_print_tc_table(void);
+#else
+#define olsr_print_tc_table() do { } while(0)
+#endif
 void olsr_time_out_tc_set(void);
 
 /* tc msg input parser */

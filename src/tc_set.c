@@ -682,10 +682,10 @@ olsr_lookup_tc_edge(struct tc_entry *tc, union olsr_ip_addr *edge_addr)
 /**
  * Print the topology table to stdout
  */
+#ifndef NODEBUG
 void
 olsr_print_tc_table(void)
 {
-#ifndef NODEBUG
   /* The whole function makes no sense without it. */
   struct tc_entry *tc;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? 15 : 39;
@@ -705,8 +705,8 @@ olsr_print_tc_table(void)
 
     } OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
   } OLSR_FOR_ALL_TC_ENTRIES_END(tc);
-#endif /* NODEBUG */
 }
+#endif /* NODEBUG */
 
 /*
  * calculate the border IPs of a tc edge set according to the border flags
