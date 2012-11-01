@@ -310,10 +310,10 @@ olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *ne
  *
  *@return nada
  */
+#ifdef NODEBUG
 void
 olsr_print_hna_set(void)
 {
-#ifdef NODEBUG
   /* The whole function doesn't do anything else. */
   int idx;
 
@@ -349,8 +349,8 @@ olsr_print_hna_set(void)
       tmp_hna = tmp_hna->next;
     }
   }
-#endif /* NODEBUG */
 }
+#endif /* NODEBUG */
 
 /**
  *Process incoming HNA message.
