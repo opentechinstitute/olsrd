@@ -378,15 +378,19 @@ olsr_expire_nbr2_list(void *context)
  *
  *@return nada
  */
-#ifdef NODEBUG
+#ifndef NODEBUG
 void
 olsr_print_neighbor_table(void)
 {
   /* The whole function doesn't do anything else. */
-#ifndef NODEBUG
   const int iplen = olsr_cnf->ip_version == AF_INET ? 15 : 39;
-#endif /* NODEBUG */
   int idx;
+  struct tm * nowtm;
+  struct timeval now;
+
+	(void)gettimeofday(&now, NULL);
+  nowtm = localtime(&now.tv_sec);
+
   OLSR_PRINTF(1,
               "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n"
               "%*s  LQ     NLQ    SYM   MPR   MPRS  will\n", nowtm->tm_hour, nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000,
@@ -398,8 +402,8 @@ olsr_print_neighbor_table(void)
       struct link_entry *lnk = get_best_link_to_neighbor(&neigh->neighbor_main_addr);
       if (lnk) {
         struct ipaddr_str buf;
-        OLSR_PRINTF(1, "%-*s  %5.3f  %5.3f  %s  %s  %s  %d\n", iplen, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
-                    lnk->loss_link_quality, lnk->neigh_link_quality, neigh->status == SYM ? "YES " : "NO  ",
+        OLSR_PRINTF(1, "%-*s  %5.3f  %s  %s  %s  %d\n", iplen, olsr_ip_to_string(&buf, &neigh->neighbor_main_addr),
+                    (double)lnk->L_link_quality, neigh->status == SYM ? "YES " : "NO  ",
                     neigh->is_mpr ? "YES " : "NO  ", olsr_lookup_mprs_set(&neigh->neighbor_main_addr) == NULL ? "NO  " : "YES ",
                     neigh->willingness);
       }

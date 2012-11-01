@@ -102,7 +102,7 @@ void olsr_time_out_two_hop_neighbors(struct neighbor_entry *);
 void olsr_time_out_neighborhood_tables(void);
 void olsr_expire_nbr2_list(void *);
 
-#ifdef NODEBUG
+#ifndef NODEBUG
 void olsr_print_neighbor_table(void);
 #else
 #define olsr_print_neighbor_table() do { } while(0)
