@@ -799,10 +799,10 @@ check_link_status(const struct hello_message *message, const struct interface *i
   return ret;
 }
 
+#ifndef NODEBUG
 void
 olsr_print_link_set(void)
 {
-#ifndef NODEBUG
   /* The whole function makes no sense without it. */
   struct link_entry *walker;
   const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
@@ -818,8 +818,8 @@ olsr_print_link_set(void)
     		(double)walker->L_link_quality, get_link_entry_text(walker, '/', &lqbuffer1), get_linkcost_text(walker->linkcost,
                                                                                                         false, &lqbuffer2));
   } OLSR_FOR_ALL_LINK_ENTRIES_END(walker);
-#endif /* NODEBUG */
 }
+#endif /* NODEBUG */
 
 /*
  * called for every LQ HELLO message.
