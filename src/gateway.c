@@ -230,8 +230,8 @@ void olsr_trigger_inetgw_startup(void) {
 /**
  * Print debug information about gateway entries
  */
-void olsr_print_gateway_entries(void) {
 #ifndef NODEBUG
+void olsr_print_gateway_entries(void) {
   struct ipaddr_str buf;
   struct gateway_entry *gw;
   const int addrsize = olsr_cnf->ip_version == AF_INET ? 15 : 39;
@@ -253,8 +253,8 @@ void olsr_print_gateway_entries(void) {
         gw->downlink,
         gw->external_prefix.prefix_len == 0 ? "" : olsr_ip_prefix_to_string(&gw->external_prefix));
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
-#endif /* NODEBUG */
 }
+#endif /* NODEBUG */
 
 /*
  * Tx Path Interface

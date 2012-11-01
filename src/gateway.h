@@ -132,7 +132,11 @@ struct olsr_gw_handler {
 int olsr_init_gateways(void);
 void olsr_cleanup_gateways(void);
 void olsr_trigger_inetgw_startup(void);
+#ifndef NODEBUG
 void olsr_print_gateway_entries(void);
+#else
+#define olsr_print_gateway_entries() do { } while(0)
+#endif
 
 /*
  * Tx Path Interface
