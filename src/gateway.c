@@ -29,7 +29,7 @@
 struct avl_tree gateway_tree;
 
 /** gateway cookie */
-static struct olsr_cookie_info *gw_mem_cookie = NULL;
+static struct olsr_cookie_info *gateway_entry_mem_cookie = NULL;
 
 /** the gateway netmask for the HNA */
 static uint8_t smart_gateway_netmask[sizeof(union olsr_ip_addr)];
@@ -144,7 +144,7 @@ static void cleanup_gateway_handler(void *ptr) {
 
   /* remove gateway entry */
   avl_delete(&gateway_tree, &gw->node);
-  olsr_cookie_free(gw_mem_cookie, gw);
+  olsr_cookie_free(gateway_entry_mem_cookie, gw);
 }
 
 /*
@@ -155,8 +155,8 @@ static void cleanup_gateway_handler(void *ptr) {
  * Initialize gateway system
  */
 int olsr_init_gateways(void) {
-  gw_mem_cookie = olsr_alloc_cookie("Gateway cookie", OLSR_COOKIE_TYPE_MEMORY);
-  olsr_cookie_set_memory_size(gw_mem_cookie, sizeof(struct gateway_entry));
+  gateway_entry_mem_cookie = olsr_alloc_cookie("gateway_entry_mem_cookie", OLSR_COOKIE_TYPE_MEMORY);
+  olsr_cookie_set_memory_size(gateway_entry_mem_cookie, sizeof(struct gateway_entry));
 
   avl_init(&gateway_tree, avl_comp_default);
 
@@ -214,7 +214,7 @@ void olsr_cleanup_gateways(void) {
   gw_handler->cleanup();
   gw_handler = NULL;
 
-  olsr_free_cookie(gw_mem_cookie);
+  olsr_free_cookie(gateway_entry_mem_cookie);
 }
 
 /**
@@ -346,7 +346,7 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
   struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
 
   if (!gw) {
-    gw = olsr_cookie_malloc(gw_mem_cookie);
+    gw = olsr_cookie_malloc(gateway_entry_mem_cookie);
     gw->originator = *originator;
     gw->node.key = &gw->originator;
 
