@@ -378,10 +378,10 @@ olsr_expire_nbr2_list(void *context)
  *
  *@return nada
  */
+#ifdef NODEBUG
 void
 olsr_print_neighbor_table(void)
 {
-#ifdef NODEBUG
   /* The whole function doesn't do anything else. */
 #ifndef NODEBUG
   const int iplen = olsr_cnf->ip_version == AF_INET ? 15 : 39;
@@ -405,8 +405,8 @@ olsr_print_neighbor_table(void)
       }
     }
   }
-#endif /* NODEBUG */
 }
+#endif /* NODEBUG */
 
 /*
  * Local Variables:
