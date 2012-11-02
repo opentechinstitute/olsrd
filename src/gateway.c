@@ -462,18 +462,22 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
 
       /* cleanup gateway if necessary */
       if (current_ipv4_gw == gw) {
-        olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, false);
-        olsr_os_del_ipip_tunnel(v4gw_tunnel);
+        if (v4gw_tunnel) {
+          olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, false);
+          olsr_os_del_ipip_tunnel(v4gw_tunnel);
+          v4gw_tunnel = NULL;
+        }
 
         current_ipv4_gw = NULL;
-        v4gw_tunnel = NULL;
       }
       if (current_ipv6_gw == gw) {
-        olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, false);
-        olsr_os_del_ipip_tunnel(v6gw_tunnel);
+        if (v6gw_tunnel) {
+          olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, false);
+          olsr_os_del_ipip_tunnel(v6gw_tunnel);
+          v6gw_tunnel = NULL;
+        }
 
         current_ipv6_gw = NULL;
-        v6gw_tunnel = NULL;
       }
 
       if (!immediate) {
