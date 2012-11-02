@@ -530,10 +530,6 @@ void olsr_trigger_gatewayloss_check(void) {
  */
 bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6) {
   struct gateway_entry *new_gw;
-  struct gateway_entry *oldV4 = current_ipv4_gw;
-  struct gateway_entry *oldV6 = current_ipv6_gw;
-  struct olsr_iptunnel_entry *oldV4Tunnel = v4gw_tunnel;
-  struct olsr_iptunnel_entry *oldV6Tunnel = v6gw_tunnel;
 
   ipv4 = ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
   ipv6 = ipv6 && (olsr_cnf->ip_version == AF_INET6);
@@ -548,46 +544,40 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
   }
 
   /* handle IPv4 */
-  if (ipv4) {
-    current_ipv4_gw = NULL;
-    if (new_gw->ipv4 && (!new_gw->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
-      /* valid ipv4 gateway */
-      current_ipv4_gw = new_gw;
-      if (oldV4 != current_ipv4_gw) {
-        if ((v4gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv4_gw->originator, true))) {
-          olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
-        } else {
-          /* adding the tunnel failed, we try again in the next cycle */
-          current_ipv4_gw = NULL;
-        }
-        if (oldV4) {
-          olsr_os_del_ipip_tunnel(oldV4Tunnel);
-        }
+  if (ipv4 && new_gw->ipv4 && (!new_gw->ipv4nat || olsr_cnf->smart_gw_allow_nat) && current_ipv4_gw != new_gw) {
+    struct olsr_iptunnel_entry *new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true);
+    if (new_v4gw_tunnel) {
+      olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true);
+      if (v4gw_tunnel) {
+        olsr_os_del_ipip_tunnel(v4gw_tunnel);
+        v4gw_tunnel = NULL;
       }
+      current_ipv4_gw = new_gw;
+      v4gw_tunnel = new_v4gw_tunnel;
+    } else {
+      /* adding the tunnel failed, we try again in the next cycle */
+      ipv4 = false;
     }
   }
 
   /* handle IPv6 */
-  if (ipv6) {
-    current_ipv6_gw = NULL;
-    if (new_gw->ipv6) {
-      /* valid ipv6 gateway */
-      current_ipv6_gw = new_gw;
-      if (oldV6 != current_ipv6_gw) {
-        if ((v6gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv6_gw->originator, false))) {
-          olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
-        } else {
-          /* adding the tunnel failed, we try again in the next cycle */
-          current_ipv6_gw = NULL;
-        }
-        if (oldV6) {
-          olsr_os_del_ipip_tunnel(oldV6Tunnel);
-        }
-      }
-    }
+  if (ipv6 && new_gw->ipv6 && current_ipv6_gw != new_gw) {
+    struct olsr_iptunnel_entry *new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false);
+		if (new_v6gw_tunnel) {
+			olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true);
+			if (v6gw_tunnel) {
+				olsr_os_del_ipip_tunnel(v6gw_tunnel);
+				v6gw_tunnel = NULL;
+			}
+			current_ipv6_gw = new_gw;
+			v6gw_tunnel = new_v6gw_tunnel;
+		} else {
+			/* adding the tunnel failed, we try again in the next cycle */
+			ipv6 = false;
+		}
   }
 
-  return (ipv4 && !current_ipv4_gw) || (ipv6 && !current_ipv6_gw);
+  return !ipv4 && !ipv6;
 }
 
 /**
