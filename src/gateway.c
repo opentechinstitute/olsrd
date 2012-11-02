@@ -554,13 +554,13 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
       /* valid ipv4 gateway */
       current_ipv4_gw = new_gw;
       if (oldV4 != current_ipv4_gw) {
-        if ((v4gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv4_gw->originator, true)) != NULL) {
+        if ((v4gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv4_gw->originator, true))) {
           olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
         } else {
           /* adding the tunnel failed, we try again in the next cycle */
           current_ipv4_gw = NULL;
         }
-        if (oldV4 != NULL) {
+        if (oldV4) {
           olsr_os_del_ipip_tunnel(oldV4Tunnel);
         }
       }
@@ -574,20 +574,20 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
       /* valid ipv6 gateway */
       current_ipv6_gw = new_gw;
       if (oldV6 != current_ipv6_gw) {
-        if ((v6gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv6_gw->originator, false)) != NULL) {
+        if ((v6gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv6_gw->originator, false))) {
           olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
         } else {
           /* adding the tunnel failed, we try again in the next cycle */
           current_ipv6_gw = NULL;
         }
-        if (oldV6 != NULL) {
+        if (oldV6) {
           olsr_os_del_ipip_tunnel(oldV6Tunnel);
         }
       }
     }
   }
 
-  return (ipv4 && current_ipv4_gw == NULL) || (ipv6 && current_ipv6_gw == NULL);
+  return (ipv4 && !current_ipv4_gw) || (ipv6 && !current_ipv6_gw);
 }
 
 /**
