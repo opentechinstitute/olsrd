@@ -319,6 +319,7 @@ olsr_print_hna_set(void)
   struct tm * nowtm;
   struct timeval now;
   const int ipwidth = olsr_cnf->ip_version == AF_INET ? (INET_ADDRSTRLEN - 1) : (INET6_ADDRSTRLEN - 1);
+  const int ipwidthprefix = olsr_cnf->ip_version == AF_INET ? (INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN - 1) : (INET6_ADDRSTRLEN + 1 + 3 - 1);
 
 	(void)gettimeofday(&now, NULL);
   nowtm = localtime(&now.tv_sec);
@@ -340,7 +341,7 @@ olsr_print_hna_set(void)
 
       while (tmp_net != &tmp_hna->networks) {
         struct ipaddr_str buf;
-        OLSR_PRINTF(1, "%-*s ", ipwidth, olsr_ip_prefix_to_string(&tmp_net->hna_prefix));
+        OLSR_PRINTF(1, "%-*s ", ipwidthprefix, olsr_ip_prefix_to_string(&tmp_net->hna_prefix));
         OLSR_PRINTF(1, "%-*s\n", ipwidth, olsr_ip_to_string(&buf, &tmp_hna->A_gateway_addr));
 
         tmp_net = tmp_net->next;
