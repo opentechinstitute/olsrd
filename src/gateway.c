@@ -529,7 +529,7 @@ void olsr_trigger_gatewayloss_check(void) {
  * @return true if an error happened, false otherwise
  */
 bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6) {
-  struct gateway_entry *entry;
+  struct gateway_entry *new_gw;
   struct gateway_entry *oldV4 = current_ipv4_gw;
   struct gateway_entry *oldV6 = current_ipv6_gw;
   struct olsr_iptunnel_entry *oldV4Tunnel = v4gw_tunnel;
@@ -541,17 +541,18 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
     return true;
   }
 
-  entry = node2gateway(avl_find(&gateway_tree, originator));
-  if (!entry) {
+  new_gw = node2gateway(avl_find(&gateway_tree, originator));
+  if (!new_gw) {
+    /* the originator is not in the gateway tree, we can't set it as gateway */
     return true;
   }
 
   /* handle IPv4 */
   if (ipv4) {
     current_ipv4_gw = NULL;
-    if (entry->ipv4 && (!entry->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
+    if (new_gw->ipv4 && (!new_gw->ipv4nat || olsr_cnf->smart_gw_allow_nat)) {
       /* valid ipv4 gateway */
-      current_ipv4_gw = entry;
+      current_ipv4_gw = new_gw;
       if (oldV4 != current_ipv4_gw) {
         if ((v4gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv4_gw->originator, true)) != NULL) {
           olsr_os_inetgw_tunnel_route(v4gw_tunnel->if_index, true, true);
@@ -569,9 +570,9 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
   /* handle IPv6 */
   if (ipv6) {
     current_ipv6_gw = NULL;
-    if (entry->ipv6) {
+    if (new_gw->ipv6) {
       /* valid ipv6 gateway */
-      current_ipv6_gw = entry;
+      current_ipv6_gw = new_gw;
       if (oldV6 != current_ipv6_gw) {
         if ((v6gw_tunnel = olsr_os_add_ipip_tunnel(&current_ipv6_gw->originator, false)) != NULL) {
           olsr_os_inetgw_tunnel_route(v6gw_tunnel->if_index, false, true);
