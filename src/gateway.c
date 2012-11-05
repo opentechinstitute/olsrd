@@ -20,16 +20,11 @@
 #include "duplicate_set.h"
 #include "log.h"
 #include "gateway_default_handler.h"
+#include "gateway_list.h"
 #include "gateway.h"
 
 #include <assert.h>
 #include <net/if.h>
-
-/** A container for a gateway and its tunnel */
-struct gw_container_entry {
-		struct gateway_entry * gw; /**< the gateway entry */
-		struct olsr_iptunnel_entry * tunnel; /**< the gateway tunnel */
-};
 
 /** the gateway tree */
 struct avl_tree gateway_tree;
