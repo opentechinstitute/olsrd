@@ -180,13 +180,13 @@ rpm:
 
 # This is quite ugly but at least it works
 ifeq ($(OS),linux)
-SUBDIRS = arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mdns mini nameservice p2pd pgraph pud quagga secure sgwdynspeed tas txtinfo watchdog
+SUBDIRS = arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mdns mini nameservice p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog
 else
 ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo jsoninfo mini pgraph secure txtinfo
 else
 ifeq ($(OS),android)
-SUBDIRS := arprefresh bmf dot_draw dyn_gw_plain httpinfo jsoninfo mini nameservice pgraph pud secure sgwdynspeed tas txtinfo watchdog
+SUBDIRS := arprefresh bmf dot_draw dyn_gw_plain httpinfo jsoninfo mini nameservice pgraph pud secure sgwdynspeed txtinfo watchdog
 else
 SUBDIRS := dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mini nameservice pgraph secure txtinfo watchdog
 endif
@@ -397,18 +397,6 @@ sgwdynspeed_install:
 
 sgwdynspeed_uninstall:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/sgwdynspeed DESTDIR=$(DESTDIR) uninstall
-
-tas:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/tas
-
-tas_clean:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) clean
-
-tas_install:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) install
-
-tas_uninstall:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/tas DESTDIR=$(DESTDIR) uninstall
 
 txtinfo:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/txtinfo
