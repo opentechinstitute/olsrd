@@ -117,7 +117,7 @@ ipc_read(void)
   //char buf[BUFFSIZE+1];
 
   //printf(".");fflush(stdout);
-  memset(&inbuf, 0, sizeof(BUFFSIZE + 1));
+  memset(&inbuf, 0, sizeof(inbuf));
   //buf[0] = '\0';
 
   if (connected) {
