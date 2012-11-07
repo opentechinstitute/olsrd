@@ -487,6 +487,9 @@ process_tc(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union tc_m
 
   //printf("TC Size: %d\n", size);
 
+  memset(&mprsinfo, 0, sizeof(*mprsinfo));
+  memset(&mprsinfo6, 0, sizeof(*mprsinfo6));
+
   if (ipversion == AF_INET)
     mprsinfo = &m->v4.neigh[0];
   else
@@ -524,6 +527,9 @@ process_mid(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union mid
   /* Calculate size of the midinfo */
   size = size - 4 - 4 - ipsize;
 
+  memset(&midaddr, 0, sizeof(*midaddr));
+  memset(&midaddr6, 0, sizeof(*midaddr6));
+
   if (ipversion == AF_INET)
     midaddr = &m->v4.mid_addr[0];
   else
@@ -558,6 +564,9 @@ process_hna(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union hna
 
   /* Calculate size of the hnainfo */
   size = size - 4 - 4 - ipsize;
+
+  memset(&hnapairs, 0, sizeof(*hnapairs));
+  memset(&hnapairs6, 0, sizeof(*hnapairs6));
 
   if (ipversion == AF_INET)
     hnapairs = &m->v4.hna_net[0];
