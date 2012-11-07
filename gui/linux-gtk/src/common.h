@@ -123,7 +123,7 @@ int remove_nodes_list(union olsr_ip_addr *);
 /*
  *IPC public
  */
-int ipc_connect();
+int ipc_connect(struct sockaddr_in *pin);
 
 int ipc_close(void);
 

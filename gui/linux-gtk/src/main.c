@@ -25,12 +25,13 @@
 #include "main.h"
 #include "ipc.h"
 
+struct sockaddr_in pin;
+
 int
 main(int argc, char *argv[])
 {
   struct hostent *hp;
   struct in_addr in;
-  struct sockaddr_in pin;
 
 #ifdef _WIN32
   WSADATA WsaData;

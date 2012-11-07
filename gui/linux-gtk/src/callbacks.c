@@ -173,13 +173,15 @@ column_clicked_callback(GtkWidget * list, gint column)
 
 }
 
+extern struct sockaddr_in pin;
+
 /*
  *Connect button callback
  */
 void
 connect_callback(GtkWidget * widget, gpointer data)
 {
-  ipc_connect();
+  ipc_connect(&pin);
 }
 
 /*
