@@ -13,6 +13,8 @@ all:	olsrd-gui
 olsrd-gui:	$(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
+.PHONY: clean install
+
 clean:
 	rm -f $(OBJS) olsrd-gui
 
