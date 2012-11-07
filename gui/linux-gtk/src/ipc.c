@@ -473,8 +473,8 @@ int
 process_tc(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union tc_message *m)
 {
 
-  struct neigh_info *mprsinfo;
-  struct neigh_info6 *mprsinfo6;
+  struct neigh_info *mprsinfo = NULL;
+  struct neigh_info6 *mprsinfo6 = NULL;
 
   printf("Processing TC from %s size = %d\n", ip_to_string(originator), size);
 
@@ -516,8 +516,8 @@ process_tc(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union tc_m
 int
 process_mid(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union mid_message *m)
 {
-  struct midaddr *midaddr;
-  struct midaddr6 *midaddr6;
+  struct midaddr *midaddr = NULL;
+  struct midaddr6 *midaddr6 = NULL;
 
   printf("Processing MID from %s size = %d\n", ip_to_string(originator), size);
 
@@ -551,8 +551,8 @@ process_mid(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union mid
 int
 process_hna(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union hna_message *m)
 {
-  struct hnapair *hnapairs;
-  struct hnapair6 *hnapairs6;
+  struct hnapair *hnapairs = NULL;
+  struct hnapair6 *hnapairs6 = NULL;
 
   printf("Processing HNA size = %d\n", size);
 
