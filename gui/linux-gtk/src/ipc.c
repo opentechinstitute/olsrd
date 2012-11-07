@@ -557,10 +557,10 @@ process_mid(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union mid
 int
 process_hna(int size, olsr_u8_t vtime, union olsr_ip_addr *originator, union hna_message *m)
 {
-
-  printf("Processing HNA size = %d\n", size);
   struct hnapair *hnapairs;
   struct hnapair6 *hnapairs6;
+
+  printf("Processing HNA size = %d\n", size);
 
   /* Calculate size of the hnainfo */
   size = size - 4 - 4 - ipsize;
