@@ -910,13 +910,13 @@ update_nodes_list(struct node *node)
   char *ip;
   int found = 0;
   char *dest;
-  char *tmp[9] = { "", "", "", "", "", "", "", "", "" };
+  char *tmp[9] = { (char *)"", (char *)"", (char *)"", (char *)"", (char *)"", (char *)"", (char *)"", (char *)"", (char *)"" };
   char timer[20];
   struct tm *time_st;
   char itoa_buf[10];
 
   if (memcmp(&node->addr, &main_addr, ipsize) == 0)
-    dest = "local";
+    dest = (char *)"local";
   else
     dest = ip_to_string(&node->addr);
 

@@ -73,7 +73,7 @@ ipc_connect(struct sockaddr_in *pin)
     set_net_info_offline();
     printf("connection refused\n");
   } else {
-    set_net_info("Connected!", FALSE);
+    set_net_info((gchar *)"Connected!", FALSE);
     printf("Connected!!\n");
 
     /* Setting socket non-blocking */
@@ -124,7 +124,7 @@ ipc_read()
     bytes = recv(ipc_socket, (char *)&inbuf, BUFFSIZE, 0);
     if (bytes == 0) {
       shutdown(ipc_socket, SHUT_RDWR);
-      set_net_info("Disconnected from server...", TRUE);
+      set_net_info((gchar *)"Disconnected from server...", TRUE);
       connected = 0;
       close(ipc_socket);
     }
@@ -225,7 +225,7 @@ ipc_evaluate_message(union olsr_message *olsr_in)
   case HELLO_MESSAGE:
     //printf("Received HELLO packet\n");
     if (!freeze_packets)
-      packet_list_add("HELLO", ip_to_string(originator), itoa_buf);
+      packet_list_add((char *)"HELLO", ip_to_string(originator), itoa_buf);
 
     if (ipversion == AF_INET) {
       process_hello(msgsize, vtime, originator, (union hello_message *)&olsr_in->v4.message.hello);
@@ -236,7 +236,7 @@ ipc_evaluate_message(union olsr_message *olsr_in)
 
   case TC_MESSAGE:
     if (!freeze_packets)
-      packet_list_add("TC", ip_to_string(originator), itoa_buf);
+      packet_list_add((char *)"TC", ip_to_string(originator), itoa_buf);
 
     if (ipversion == AF_INET) {
       process_tc(msgsize, vtime, originator, (union tc_message *)&olsr_in->v4.message.tc);
@@ -249,7 +249,7 @@ ipc_evaluate_message(union olsr_message *olsr_in)
 
   case MID_MESSAGE:
     if (!freeze_packets)
-      packet_list_add("MID", ip_to_string(originator), itoa_buf);
+      packet_list_add((char *)"MID", ip_to_string(originator), itoa_buf);
     if (ipversion == AF_INET) {
       process_mid(msgsize, vtime, originator, (union mid_message *)&olsr_in->v4.message.mid);
       //printf("Received MID packet from %s\n", ip_to_string(&m->olsr_mid->mid_origaddr));
@@ -263,7 +263,7 @@ ipc_evaluate_message(union olsr_message *olsr_in)
   case HNA_MESSAGE:
 
     if (!freeze_packets)
-      packet_list_add("HNA", ip_to_string(originator), itoa_buf);
+      packet_list_add((char *)"HNA", ip_to_string(originator), itoa_buf);
     if (ipversion == AF_INET) {
       process_hna(msgsize, vtime, originator, (union hna_message *)&olsr_in->v4.message.hna);
       //printf("Received HNA packet\n");

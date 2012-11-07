@@ -60,7 +60,7 @@ node_selection(GtkWidget * clist, gint row, gint column, GdkEventButton * event,
   struct mpr *mprs;
   struct hna *hnas;
   int i;
-  gchar *tmpshit[1] = { "" };
+  gchar *tmpshit[1] = { (gchar *)"" };
 
   /*
    *Clear the lists
