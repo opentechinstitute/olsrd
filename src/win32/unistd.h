@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #if !defined TL_UNISTD_H_INCLUDED
 
 #include <stddef.h>
@@ -60,6 +62,8 @@ int getpid(void);
 int isatty(int fd);
 
 #endif /* !defined TL_UNISTD_H_INCLUDED */
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include <stdio.h>
 #include "net/route.h"
 
@@ -200,6 +202,8 @@ olsr_ioctl_del_route6(const struct rt_entry *rt __attribute__ ((unused)))
 {
   return 0;
 }
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

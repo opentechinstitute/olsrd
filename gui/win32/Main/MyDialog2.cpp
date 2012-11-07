@@ -38,6 +38,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include "stdafx.h"
 #include "Frontend.h"
 #include "MyDialog2.h"
@@ -695,3 +697,5 @@ void MyDialog2::OnEtxRadio2()
 {
 	m_EtxRadio1.SetCheck(FALSE);
 }
+
+#endif /* _WIN32 */

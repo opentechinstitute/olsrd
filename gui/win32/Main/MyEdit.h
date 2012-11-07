@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -39,6 +38,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #if !defined(AFX_MYEDIT_H__951EC391_AFE3_428F_865D_24CA55C68C7C__INCLUDED_)
 #define AFX_MYEDIT_H__951EC391_AFE3_428F_865D_24CA55C68C7C__INCLUDED_
 
@@ -67,6 +68,8 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 
 #endif /* !defined(AFX_MYEDIT_H__951EC391_AFE3_428F_865D_24CA55C68C7C__INCLUDED_) */
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

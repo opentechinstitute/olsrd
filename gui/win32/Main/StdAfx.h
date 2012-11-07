@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 // stdafx.h : Include-Datei f�r Standard-System-Include-Dateien,
 //  oder projektspezifische Include-Dateien, die h�ufig benutzt, aber
 //      in unregelm��igen Abst�nden ge�ndert werden.
@@ -28,6 +30,8 @@
 // Microsoft Visual C++ f�gt unmittelbar vor der vorhergehenden Zeile zus�tzliche Deklarationen ein.
 
 #endif /* !defined(AFX_STDAFX_H__D43BD17B_AEC0_43A5_9F3B_1DAA99152E38__INCLUDED_) */
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

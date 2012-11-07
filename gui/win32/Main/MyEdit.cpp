@@ -38,6 +38,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include "stdafx.h"
 #include "frontend.h"
 #include "MyEdit.h"
@@ -114,3 +116,5 @@ void MyEdit::OnKillFocus(CWnd* pNewWnd)
 
 	CEdit::OnKillFocus(pNewWnd);
 }
+
+#endif /* _WIN32 */

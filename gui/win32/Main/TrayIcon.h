@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #ifndef TRAYICON_H_171149531
 #define TRAYICON_H_171149531
 
@@ -29,6 +31,8 @@ private:
 };
 
 #endif /* TRAYICON_H_171149531 */
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

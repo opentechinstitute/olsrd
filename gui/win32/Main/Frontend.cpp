@@ -38,6 +38,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include "stdafx.h"
 #include "Frontend.h"
 #include "FrontendDlg.h"
@@ -289,3 +291,5 @@ int CFrontendApp::RedirectStdHandles(void)
 
 	return 0;
 }
+
+#endif /* _WIN32 */

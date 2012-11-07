@@ -38,6 +38,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include "stdafx.h"
 #include "Frontend.h"
 #include "MyTabCtrl.h"
@@ -121,3 +123,5 @@ void MyTabCtrl::OnSelchange(NMHDR* pNMHDR, LRESULT* pResult)
 
 	*pResult = 0;
 }
+
+#endif /* _WIN32 */

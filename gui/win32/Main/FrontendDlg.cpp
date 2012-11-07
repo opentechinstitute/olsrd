@@ -38,6 +38,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include "stdafx.h"
 #include "Frontend.h"
 #include "FrontendDlg.h"
@@ -1006,3 +1008,5 @@ void CFrontendDlg::OnExitButton()
 
 	DestroyWindow();
 }
+
+#endif /* _WIN32 */

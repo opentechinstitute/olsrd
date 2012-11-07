@@ -56,6 +56,8 @@
  * SOFTWARE.
  */
 
+#ifdef _WIN32
+
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/times.h>
@@ -538,6 +540,8 @@ write(int fd, const void *buf, unsigned int count)
   }
   return written;
 }
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

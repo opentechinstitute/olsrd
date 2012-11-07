@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #if defined WINCE
 #include <sys/types.h>          // for time_t
 #endif /* defined WINCE */
@@ -406,6 +408,8 @@ olsr_select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, s
   return select(nfds, readfds, writefds, exceptfds, timeout);
 #endif /* _WIN32 */
 }
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

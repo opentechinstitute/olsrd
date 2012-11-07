@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include <stdlib.h>
 #define random() rand()
 #define srandom(x) srand(x)
@@ -918,6 +920,8 @@ check_interface_updates(void *dummy __attribute__ ((unused)))
       chk_if_up(IntConf, 3);
   }
 }
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

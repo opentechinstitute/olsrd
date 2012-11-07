@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #if !defined TL_WS2TCPIP_INCLUDED
 
 #define TL_WS2TCPIP_INCLUDED
@@ -33,6 +35,8 @@ struct ipv6_mreq {
 };
 
 #endif /* !defined TL_WS2TCPIP_INCLUDED */
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

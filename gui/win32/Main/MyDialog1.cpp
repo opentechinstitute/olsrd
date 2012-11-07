@@ -38,6 +38,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include "stdafx.h"
 #include "Frontend.h"
 #include "MyDialog1.h"
@@ -271,3 +273,5 @@ void MyDialog1::OnSaveButton()
 
 	FileName.ReleaseBuffer();
 }
+
+#endif /* _WIN32 */

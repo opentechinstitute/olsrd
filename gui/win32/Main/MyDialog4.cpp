@@ -38,6 +38,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include "stdafx.h"
 #include "Frontend.h"
 #include "MyDialog4.h"
@@ -152,3 +154,5 @@ void MyDialog4::ClearRoutes(void)
 {
 	m_RoutingTable.DeleteAllItems();
 }
+
+#endif /* _WIN32 */

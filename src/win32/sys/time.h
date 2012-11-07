@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon (olsrd)
  * Copyright (c) 2004, Thomas Lopatic (thomas@lopatic.de)
@@ -38,6 +37,8 @@
  * the copyright holders.
  *
  */
+
+#ifdef _WIN32
 
 #if !defined TL_SYS_TIME_H_INCLUDED
 
@@ -96,6 +97,8 @@ int nanosleep(struct timespec *Req, struct timespec *Rem);
 int gettimeofday(struct timeval *TVal, void *TZone);
 
 #endif /* !defined TL_SYS_TIME_H_INCLUDED */
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:

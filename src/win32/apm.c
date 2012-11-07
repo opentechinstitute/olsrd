@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef _WIN32
+
 #include "apm.h"
 #include "defs.h"
 #include <stdio.h>
@@ -89,6 +91,8 @@ apm_read(struct olsr_apm_info *ApmInfo)
   return 0;
 #endif /* !defined WINCE */
 }
+
+#endif /* _WIN32 */
 
 /*
  * Local Variables:
