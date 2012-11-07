@@ -233,11 +233,11 @@ static void gw_default_choose_gateway(void) {
 
   if (inet_ipv4) {
     /* we are dealing with an IPv4 or dual stack gateway */
-    olsr_set_inet_gateway(&inet_ipv4->originator, true, dual);
+    olsr_set_inet_gateway(&inet_ipv4->originator, cost_ipv4, true, dual);
   }
   if (inet_ipv6 && !dual) {
     /* we are dealing with an IPv6-only gateway */
-    olsr_set_inet_gateway(&inet_ipv6->originator, false, true);
+    olsr_set_inet_gateway(&inet_ipv6->originator, cost_ipv6, false, true);
   }
 
   if ((olsr_cnf->smart_gw_thresh == 0) && gw_def_finished_ipv4 && gw_def_finished_ipv6) {

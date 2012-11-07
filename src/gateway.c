@@ -535,11 +535,12 @@ void olsr_trigger_gatewayloss_check(void) {
  * Sets a new internet gateway.
  *
  * @param originator ip address of the node with the new gateway
+ * @param path_cost the path cost
  * @param ipv4 set ipv4 gateway
  * @param ipv6 set ipv6 gateway
  * @return true if an error happened, false otherwise
  */
-bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6) {
+bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost __attribute__((unused)), bool ipv4, bool ipv6) {
   struct gateway_entry *new_gw;
 
   ipv4 = ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
