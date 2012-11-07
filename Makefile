@@ -69,7 +69,7 @@ endif
 		$(MAKECMDPREFIX)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 cfgparser:	$(CFGDEPS) src/builddata.o
-		$(MAKE) -C $(CFGDIR)
+		$(MAKECMDPREFIX)$(MAKECMD) -C $(CFGDIR)
 
 switch:		
 	$(MAKECMDPREFIX)$(MAKECMD) -C $(SWITCHDIR)
@@ -96,7 +96,7 @@ clean:
 	-rm -fr gui/win32/Shim/Release
 
 clean_gui:
-	$(MAKE) -C gui/linux-gtk clean
+	$(MAKECMDPREFIX)$(MAKECMD) -C gui/linux-gtk clean
 
 distclean: uberclean
 uberclean:	clean clean_libs clean_gui
