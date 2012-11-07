@@ -24,6 +24,7 @@
 #include "common.h"
 #include "interface.h"
 #include "pixmaps.h"
+#include <stdio.h>
 
 /* Global widgets */
 
@@ -1030,13 +1031,11 @@ set_net_info(gchar * info, int disp_button)
 {
   gchar title[255];
 
-  memset(&title[0], 0, 255);
+  memset(&title[0], 0, sizeof(title));
   gtk_label_set_text((GtkLabel *) info_label, info);
   gtk_label_set_text((GtkLabel *) net_label, "Connected");
 
-  strcat(title, olsrd_version);
-  strcat(title, " - ");
-  strcat(title, ip_to_string(&main_addr));
+  snprintf(&title[0], sizeof(title), "%s - %s", olsrd_version, ip_to_string(&main_addr));
 
   gtk_window_set_title(GTK_WINDOW(main_window), title);
 
