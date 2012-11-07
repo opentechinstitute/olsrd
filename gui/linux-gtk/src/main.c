@@ -127,7 +127,7 @@ ipc_timeout(gpointer data __attribute__((unused)))
 
 __attribute__((noreturn))
 void
-shutdown_(int signal)
+shutdown_(int sig)
 {
   printf("Cleaning up...\n");
 
@@ -135,7 +135,7 @@ shutdown_(int signal)
     printf("Could not close socket!\n");
 
   printf("BYE-BYE!\n");
-  exit(signal);
+  exit(sig);
 }
 
 /*
