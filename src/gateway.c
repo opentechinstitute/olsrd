@@ -431,7 +431,8 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
 
   if (immediate && gw->cleanup_timer) {
     /* stop timer if we have to remove immediately */
-    olsr_set_timer(&gw->cleanup_timer, 0, 0, false, NULL, NULL, NULL);
+    olsr_stop_timer(gw->cleanup_timer);
+    gw->cleanup_timer = NULL;
   }
 
   if (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6) {
