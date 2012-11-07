@@ -845,7 +845,7 @@ route_list_add(char *dest, char *gw, char *metric, char *dev)
  *Update the entyr with IP 'addr'
  */
 void
-route_list_update(char *addr)
+route_list_update(char *addr __attribute__((unused)))
 {
 
 }

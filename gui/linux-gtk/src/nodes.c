@@ -511,7 +511,7 @@ find_node_t(union olsr_ip_addr *ip)
  *Remove timed out nodes
  */
 gint
-time_out_nodes(gpointer data)
+time_out_nodes(gpointer data __attribute__((unused)))
 {
   struct node *tmp_nodes;
   struct node *node_to_delete;

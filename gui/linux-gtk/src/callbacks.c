@@ -25,7 +25,9 @@
 #include "interface.h"
 
 void
-selection_made(GtkWidget * clist, gint row, gint column, GdkEventButton * event, gpointer data)
+selection_made(GtkWidget * clist, gint row, gint column __attribute__((unused)),
+		GdkEventButton * event __attribute__((unused)),
+		gpointer data __attribute__((unused)))
 {
   gchar *ip, *hops, *gw, *dev;
   const gchar text[100];
@@ -51,7 +53,10 @@ selection_made(GtkWidget * clist, gint row, gint column, GdkEventButton * event,
 }
 
 void
-node_selection(GtkWidget * clist, gint row, gint column, GdkEventButton * event, gpointer data)
+node_selection(GtkWidget * clist __attribute__((unused)), gint row,
+		gint column __attribute__((unused)),
+		GdkEventButton * event __attribute__((unused)),
+		gpointer data __attribute__((unused)))
 {
 
   gchar *text;
@@ -122,7 +127,10 @@ node_selection(GtkWidget * clist, gint row, gint column, GdkEventButton * event,
 }
 
 void
-packet_selection(GtkWidget * clist, gint row, gint column, GdkEventButton * event, gpointer data)
+packet_selection(GtkWidget * clist __attribute__((unused)), gint row,
+		gint column __attribute__((unused)),
+		GdkEventButton * event __attribute__((unused)),
+		gpointer data __attribute__((unused)))
 {
   /* Fetch the packet from the cache */
   union olsr_message *pack;
@@ -166,7 +174,8 @@ packet_selection(GtkWidget * clist, gint row, gint column, GdkEventButton * even
 }
 
 void
-column_clicked_callback(GtkWidget * list, gint column)
+column_clicked_callback(GtkWidget * list __attribute__((unused)),
+		gint column __attribute__((unused)))
 {
 
   //printf("You pressed %d\n",column);
@@ -179,7 +188,8 @@ extern struct sockaddr_in pin;
  *Connect button callback
  */
 void
-connect_callback(GtkWidget * widget, gpointer data)
+connect_callback(GtkWidget * widget __attribute__((unused)),
+		gpointer data __attribute__((unused)))
 {
   ipc_connect(&pin);
 }
@@ -188,7 +198,8 @@ connect_callback(GtkWidget * widget, gpointer data)
  *Packet button callback
  */
 void
-packet_callback(GtkWidget * widget, gpointer data)
+packet_callback(GtkWidget * widget __attribute__((unused)),
+		gpointer data __attribute__((unused)))
 {
   if (freeze_packets) {
     freeze_packets = 0;
@@ -203,7 +214,8 @@ packet_callback(GtkWidget * widget, gpointer data)
  *Packet display button callback
  */
 void
-packet_disp_callback(GtkWidget * widget, gpointer data)
+packet_disp_callback(GtkWidget * widget __attribute__((unused)),
+		gpointer data __attribute__((unused)))
 {
   if (display_dec) {
     display_dec = 0;
@@ -216,7 +228,8 @@ packet_disp_callback(GtkWidget * widget, gpointer data)
 
 __attribute__((noreturn))
 void
-gui_shutdown(GtkObject * object, gpointer user_data)
+gui_shutdown(GtkObject * object __attribute__((unused)),
+		gpointer user_data __attribute__((unused)))
 {
   printf("Shutting down...\n");
 

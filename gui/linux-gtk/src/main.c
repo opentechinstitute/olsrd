@@ -118,7 +118,7 @@ add_timeouts(void)
 }
 
 gint
-ipc_timeout(gpointer data)
+ipc_timeout(gpointer data __attribute__((unused)))
 {
 
   ipc_read();
