@@ -84,7 +84,7 @@ src/builddata.c:
 	$(MAKECMDPREFIX)echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
 
 
-.PHONY: help libs clean_libs libs_clean clean distclean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all 
+.PHONY: help libs clean_libs libs_clean clean distclean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all gui clean_gui 
 
 clean:
 	-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c $(TMPFILES)
@@ -94,6 +94,14 @@ clean:
 	-rm -f olsr-setup.exe
 	-rm -fr gui/win32/Main/Release
 	-rm -fr gui/win32/Shim/Release
+
+gui:
+ifeq ($(OS),linux)
+	$(MAKECMDPREFIX)$(MAKECMD) -C gui/linux-gtk all
+else
+	@echo "target gui not supported on $(OS)"
+	@exit 1
+endif
 
 clean_gui:
 	$(MAKECMDPREFIX)$(MAKECMD) -C gui/linux-gtk clean
