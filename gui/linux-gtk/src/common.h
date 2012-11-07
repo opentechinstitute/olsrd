@@ -114,7 +114,7 @@ void route_list_update(char *);
 
 void set_net_info(gchar *, int);
 
-void set_net_info_offline();
+void set_net_info_offline(void);
 
 void update_nodes_list(struct node *);
 
@@ -125,11 +125,11 @@ int remove_nodes_list(union olsr_ip_addr *);
  */
 int ipc_connect();
 
-int ipc_close();
+int ipc_close(void);
 
-int ipc_read();
+int ipc_read(void);
 
-int ipc_send();
+int ipc_send(void);
 
 char *ip_to_string(union olsr_ip_addr *);
 
@@ -147,7 +147,7 @@ union olsr_message *get_packet(int);
  *Nodes.c public
  */
 
-void init_nodes();
+void init_nodes(void);
 
 struct node *find_node(char *);
 

@@ -3,7 +3,6 @@ include $(TOPDIR)/Makefile.inc
 
 # hardening flags: -fPIE -Wl,-z,now -pie
 CFLAGS += $(shell pkg-config --cflags gtk+-2.0) -fPIE -Wno-strict-prototypes \
-          -Wno-missing-prototypes -Wno-old-style-definition \
           -Wno-unused-parameter -Wno-cast-qual -Wno-declaration-after-statement
 CPPFLAGS += $(shell pkg-config --cflags gtk+-2.0)
 LDFLAGS = -pie

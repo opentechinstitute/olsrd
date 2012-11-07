@@ -98,7 +98,7 @@ main(int argc, char *argv[])
  */
 
 int
-add_timeouts()
+add_timeouts(void)
 {
 
   /*

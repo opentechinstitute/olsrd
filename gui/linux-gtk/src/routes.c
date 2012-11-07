@@ -32,7 +32,7 @@
 #include "routes.h"
 
 int
-init_route_entries()
+init_route_entries(void)
 {
   route_count = 0;
 

@@ -38,7 +38,7 @@
 int ipc_socket = 0;
 
 int
-ipc_close()
+ipc_close(void)
 {
 
   if (close(ipc_socket))
@@ -104,7 +104,7 @@ ipc_connect(struct sockaddr_in *pin)
 }
 
 int
-ipc_read()
+ipc_read(void)
 {
   //int x, i;
   int bytes, tmp_len;
@@ -197,7 +197,7 @@ ipc_read()
 }
 
 int
-ipc_send()
+ipc_send(void)
 {
 
   return 1;

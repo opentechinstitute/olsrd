@@ -26,7 +26,7 @@
 #include <math.h>
 
 void
-init_nodes()
+init_nodes(void)
 {
 
   nodes.next = &nodes;

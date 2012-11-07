@@ -53,7 +53,7 @@ olsr_u32_t route_count;
 
 /* Functions */
 
-int init_route_entries();
+int init_route_entries(void);
 
 int add_route_entry(struct route_entry *);
 

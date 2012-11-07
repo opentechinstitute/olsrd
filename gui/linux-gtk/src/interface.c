@@ -1047,14 +1047,14 @@ set_net_info(gchar * info, int disp_button)
 }
 
 void
-set_net_info_offline()
+set_net_info_offline(void)
 {
   gtk_label_set_text((GtkLabel *) net_label, "Connection refused...");
   gtk_widget_show(connect_button);
 }
 
 void
-set_net_info_connecting()
+set_net_info_connecting(void)
 {
   gtk_label_set_text((GtkLabel *) net_label, "Connecting...");
 }
