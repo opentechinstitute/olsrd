@@ -124,6 +124,7 @@ ipc_timeout(gpointer data)
   return 1;
 }
 
+__attribute__((noreturn))
 void
 shutdown_(int signal)
 {

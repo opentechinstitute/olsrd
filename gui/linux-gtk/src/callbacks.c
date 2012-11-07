@@ -212,6 +212,7 @@ packet_disp_callback(GtkWidget * widget, gpointer data)
   }
 }
 
+__attribute__((noreturn))
 void
 gui_shutdown(GtkObject * object, gpointer user_data)
 {
