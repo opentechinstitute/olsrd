@@ -1,5 +1,14 @@
 CC ?=	gcc
 
+# shows full compiler/linker calls if activated
+VERBOSE ?= 0
+
+ifeq ($(VERBOSE),0)
+MAKECMDPREFIX = @
+else
+MAKECMDPREFIX =
+endif
+
 # hardening flags: -fPIE -Wl,-z,now -pie
 CFLAGS += -O2 -Wall $(shell pkg-config --cflags gtk+-2.0) -fPIE
 LDFLAGS += -Wl,-z,now -pie
@@ -11,7 +20,16 @@ OBJS=	src/main.o src/interface.o src/callbacks.o src/ipc.o \
 all:	olsrd-gui
 
 olsrd-gui:	$(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+ifeq ($(VERBOSE),0)
+	@echo "[LD] $@"
+endif
+	$(MAKECMDPREFIX)$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+%.o: %.c
+ifeq ($(VERBOSE),0)
+	@echo "[CC] $<"
+endif
+	$(MAKECMDPREFIX)$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 .PHONY: clean install
 
