@@ -103,6 +103,14 @@ struct olsr_gw_handler {
     void (*startup)(void);
 
     /**
+     * Called when the costs of a gateway must be determined.
+     *
+     * @param gw the gateway
+     * @return the costs
+     */
+    uint64_t (*getcosts)(struct gateway_entry *gw);
+
+    /**
      * Called when a new gateway must be chosen.
      *
      * @param ipv4 true when an IPv4 gateway must be chosen
