@@ -296,8 +296,8 @@ int main(int argc, char *argv[]) {
   /* Open syslog */
   olsr_openlog("olsrd");
 
-  /* Using PID as random seed */
-  srandom(getpid());
+  /* setup random seed */
+  srandom(time(NULL));
 
   /* Init widely used statics */
   memset(&all_zero, 0, sizeof(union olsr_ip_addr));
