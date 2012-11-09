@@ -54,8 +54,6 @@ unsigned int random(void);
 
 char *StrError(unsigned int ErrNo);
 
-int getpid(void);
-
 #define IPTOS_TOS(x) ((x) & 0x1e)
 #define IPTOS_PREC(x) ((x) & 0xe0)
 

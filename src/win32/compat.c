@@ -94,13 +94,6 @@ random(void)
 }
 
 int
-getpid(void)
-{
-  HANDLE h = GetCurrentThread();
-  return (int)h;
-}
-
-int
 nanosleep(struct timespec *Req, struct timespec *Rem)
 {
   Sleep(Req->tv_sec * 1000 + Req->tv_nsec / 1000000);
