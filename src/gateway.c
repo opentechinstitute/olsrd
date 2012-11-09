@@ -41,6 +41,12 @@ static uint8_t smart_gateway_netmask[sizeof(union olsr_ip_addr)];
 /** the gateway handler/plugin */
 static struct olsr_gw_handler *gw_handler;
 
+/** the IPv4 gateway list */
+static struct gw_list gw_list_ipv4;
+
+/** the IPv6 gateway list */
+static struct gw_list gw_list_ipv6;
+
 /** the current IPv4 gateway */
 static struct gw_container_entry *current_ipv4_gw;
 
@@ -163,6 +169,9 @@ int olsr_init_gateways(void) {
 
   avl_init(&gateway_tree, avl_comp_default);
 
+  olsr_gw_list_init(&gw_list_ipv4, 1);
+  olsr_gw_list_init(&gw_list_ipv6, 1);
+
   current_ipv4_gw = NULL;
   current_ipv6_gw = NULL;
 
@@ -188,6 +197,7 @@ int olsr_init_gateways(void) {
  */
 void olsr_cleanup_gateways(void) {
   struct avl_node * avlnode = NULL;
+  struct gw_container_entry * gw;
 
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
@@ -201,11 +211,21 @@ void olsr_cleanup_gateways(void) {
     }
   }
 
-  /* remove the active IPv4 gateway */
-  olsr_delete_gateway_tree_entry(olsr_get_inet_gateway(false), FORCE_DELETE_GW_ENTRY, true);
+  /* remove all active IPv4 gateways (should be at most 1 now) */
+  OLSR_FOR_ALL_GWS(&gw_list_ipv4.head, gw) {
+    if (gw && gw->gw) {
+      olsr_delete_gateway_entry(&gw->gw->originator, FORCE_DELETE_GW_ENTRY, true);
+    }
+  }
+  OLSR_FOR_ALL_GWS_END(gw);
 
-  /* remove the active IPv6 gateway */
-  olsr_delete_gateway_tree_entry(olsr_get_inet_gateway(true), FORCE_DELETE_GW_ENTRY, true);
+  /* remove all active IPv6 gateways (should be at most 1 now) */
+  OLSR_FOR_ALL_GWS(&gw_list_ipv6.head, gw) {
+    if (gw && gw->gw) {
+      olsr_delete_gateway_entry(&gw->gw->originator, FORCE_DELETE_GW_ENTRY, true);
+    }
+  }
+  OLSR_FOR_ALL_GWS_END(gw);
 
   /* there should be no more gateways */
   assert(!avl_walk_first(&gateway_tree));
@@ -216,6 +236,8 @@ void olsr_cleanup_gateways(void) {
   gw_handler->cleanup();
   gw_handler = NULL;
 
+  olsr_gw_list_cleanup(&gw_list_ipv6);
+  olsr_gw_list_cleanup(&gw_list_ipv4);
   olsr_free_cookie(gw_container_entry_mem_cookie);
   olsr_free_cookie(gateway_entry_mem_cookie);
 }
@@ -345,6 +367,7 @@ bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *ma
  * @param seqno the sequence number of the HNA
  */
 void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
+  struct gw_container_entry * new_gw_in_list;
   uint8_t *ptr;
   struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
 
@@ -396,6 +419,13 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
     gw->cleanup_timer = NULL;
   }
 
+  /* update the costs of the gateway when it is an active gateway */
+  new_gw_in_list = olsr_gw_list_find(&gw_list_ipv4, gw);
+  if (new_gw_in_list) {
+    assert(gw_handler);
+    new_gw_in_list = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list, gw_handler->getcosts(new_gw_in_list->gw));
+  }
+
   /* call update handler */
   assert(gw_handler);
   gw_handler->update(gw);
@@ -437,7 +467,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
   }
 
   if (gw->cleanup_timer == NULL || gw->ipv4 || gw->ipv6) {
-    /* found a gw and it wasn't deleted yet */
+    /* the gw  is not scheduled for deletion */
 
     if (olsr_cnf->ip_version == AF_INET && prefixlen == 0) {
       change = gw->ipv4;
@@ -453,6 +483,8 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
     }
 
     if (prefixlen == FORCE_DELETE_GW_ENTRY || !(gw->ipv4 || gw->ipv6)) {
+      struct gw_container_entry * gw_in_list;
+
       /* prevent this gateway from being chosen as the new gateway */
       gw->ipv4 = false;
       gw->ipv4nat = false;
@@ -463,27 +495,38 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
       gw_handler->delete(gw);
 
       /* cleanup gateway if necessary */
-      if (current_ipv4_gw && current_ipv4_gw->gw == gw) {
-        if (current_ipv4_gw->tunnel) {
+      gw_in_list = olsr_gw_list_find(&gw_list_ipv4, gw);
+      if (gw_in_list) {
+        if (current_ipv4_gw && current_ipv4_gw->gw == gw) {
           olsr_os_inetgw_tunnel_route(current_ipv4_gw->tunnel->if_index, true, false);
-          olsr_os_del_ipip_tunnel(current_ipv4_gw->tunnel);
-          current_ipv4_gw->tunnel = NULL;
+          current_ipv4_gw = NULL;
         }
 
-        current_ipv4_gw->gw = NULL;
-        olsr_cookie_free(gw_container_entry_mem_cookie, current_ipv4_gw);
-        current_ipv4_gw = NULL;
+        if (gw_in_list->tunnel) {
+          olsr_os_del_ipip_tunnel(gw_in_list->tunnel);
+          gw_in_list->tunnel = NULL;
+        }
+
+        gw_in_list->gw = NULL;
+        gw_in_list = olsr_gw_list_remove(&gw_list_ipv4, gw_in_list);
+        olsr_cookie_free(gw_container_entry_mem_cookie, gw_in_list);
       }
-      if (current_ipv6_gw && current_ipv6_gw->gw == gw) {
-        if (current_ipv6_gw->tunnel) {
+
+      gw_in_list = olsr_gw_list_find(&gw_list_ipv6, gw);
+      if (gw_in_list) {
+        if (current_ipv6_gw && current_ipv6_gw->gw == gw) {
           olsr_os_inetgw_tunnel_route(current_ipv6_gw->tunnel->if_index, false, false);
-          olsr_os_del_ipip_tunnel(current_ipv6_gw->tunnel);
-          current_ipv6_gw->tunnel = NULL;
+          current_ipv6_gw = NULL;
         }
 
-        current_ipv6_gw->gw = NULL;
-        olsr_cookie_free(gw_container_entry_mem_cookie, current_ipv6_gw);
-        current_ipv6_gw = NULL;
+        if (gw_in_list->tunnel) {
+          olsr_os_del_ipip_tunnel(gw_in_list->tunnel);
+          gw_in_list->tunnel = NULL;
+        }
+
+        gw_in_list->gw = NULL;
+        gw_in_list = olsr_gw_list_remove(&gw_list_ipv6, gw_in_list);
+        olsr_cookie_free(gw_container_entry_mem_cookie, gw_in_list);
       }
 
       if (!immediate) {
@@ -492,6 +535,13 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
       } else {
         cleanup_gateway_handler(gw);
       }
+
+      /* when the current gateway was deleted, then immediately choose a new gateway */
+      if (!current_ipv4_gw || !current_ipv6_gw) {
+        assert(gw_handler);
+        gw_handler->choose(!current_ipv4_gw, !current_ipv6_gw);
+      }
+
     } else if (change) {
       assert(gw_handler);
       gw_handler->update(gw);
@@ -535,7 +585,7 @@ void olsr_trigger_gatewayloss_check(void) {
  * @param ipv6 set ipv6 gateway
  * @return true if an error happened, false otherwise
  */
-bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost __attribute__((unused)), bool ipv4, bool ipv6) {
+bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, bool ipv4, bool ipv6) {
   struct gateway_entry *new_gw;
 
   ipv4 = ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
@@ -552,50 +602,84 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost __
 
   /* handle IPv4 */
   if (ipv4 && new_gw->ipv4 && (!new_gw->ipv4nat || olsr_cnf->smart_gw_allow_nat) && (!current_ipv4_gw || current_ipv4_gw->gw != new_gw)) {
-    struct olsr_iptunnel_entry *new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true);
-    if (new_v4gw_tunnel) {
-      olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true);
-      if (current_ipv4_gw) {
-        current_ipv4_gw->gw = NULL;
-        if (current_ipv4_gw->tunnel) {
-          olsr_os_del_ipip_tunnel(current_ipv4_gw->tunnel);
-          current_ipv4_gw->tunnel = NULL;
-        }
-        olsr_cookie_free(gw_container_entry_mem_cookie, current_ipv4_gw);
-        current_ipv4_gw = NULL;
-      }
+    /* new gw is different than the current gw */
 
-      current_ipv4_gw = olsr_cookie_malloc(gw_container_entry_mem_cookie);
-      current_ipv4_gw->gw = new_gw;
-      current_ipv4_gw->tunnel = new_v4gw_tunnel;
+    struct gw_container_entry * new_gw_in_list = olsr_gw_list_find(&gw_list_ipv4, new_gw);
+    if (new_gw_in_list) {
+      /* new gw is already in the gw list */
+      assert(new_gw_in_list->tunnel);
+      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true);
+      current_ipv4_gw = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list, path_cost);
     } else {
-      /* adding the tunnel failed, we try again in the next cycle */
-      ipv4 = false;
+      /* new gw is not yet in the gw list */
+      struct olsr_iptunnel_entry *new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true);
+      if (new_v4gw_tunnel) {
+        olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true);
+
+        if (olsr_gw_list_full(&gw_list_ipv4)) {
+          /* the list is full: remove the worst active gateway */
+          struct gw_container_entry* worst = olsr_gw_list_get_worst_entry(&gw_list_ipv4);
+          assert(worst);
+
+          worst->gw = NULL;
+          if (worst->tunnel) {
+            olsr_os_del_ipip_tunnel(worst->tunnel);
+            worst->tunnel = NULL;
+          }
+          olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv4, worst));
+        }
+
+        new_gw_in_list = olsr_cookie_malloc(gw_container_entry_mem_cookie);
+        new_gw_in_list->gw = new_gw;
+        new_gw_in_list->tunnel = new_v4gw_tunnel;
+        new_gw_in_list->path_cost = path_cost;
+        current_ipv4_gw = olsr_gw_list_add(&gw_list_ipv4, new_gw_in_list);
+      } else {
+        /* adding the tunnel failed, we try again in the next cycle */
+        ipv4 = false;
+      }
     }
   }
 
   /* handle IPv6 */
   if (ipv6 && new_gw->ipv6 && (!current_ipv6_gw || current_ipv6_gw->gw != new_gw)) {
-    struct olsr_iptunnel_entry *new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false);
-		if (new_v6gw_tunnel) {
-			olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true);
-			if (current_ipv6_gw) {
-				current_ipv6_gw->gw = NULL;
-				if (current_ipv6_gw->tunnel) {
-					olsr_os_del_ipip_tunnel(current_ipv6_gw->tunnel);
-					current_ipv6_gw->tunnel = NULL;
-				}
-				olsr_cookie_free(gw_container_entry_mem_cookie, current_ipv6_gw);
-				current_ipv6_gw = NULL;
-			}
+    /* new gw is different than the current gw */
 
-			current_ipv6_gw = olsr_cookie_malloc(gw_container_entry_mem_cookie);
-			current_ipv6_gw->gw = new_gw;
-			current_ipv6_gw->tunnel = new_v6gw_tunnel;
-		} else {
-			/* adding the tunnel failed, we try again in the next cycle */
-			ipv6 = false;
-		}
+  	struct gw_container_entry * new_gw_in_list = olsr_gw_list_find(&gw_list_ipv6, new_gw);
+    if (new_gw_in_list) {
+      /* new gw is already in the gw list */
+      assert(new_gw_in_list->tunnel);
+      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true);
+      current_ipv6_gw = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list, path_cost);
+    } else {
+      /* new gw is not yet in the gw list */
+  	  struct olsr_iptunnel_entry *new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false);
+      if (new_v6gw_tunnel) {
+        olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true);
+
+        if (olsr_gw_list_full(&gw_list_ipv6)) {
+          /* the list is full: remove the worst active gateway */
+          struct gw_container_entry* worst = olsr_gw_list_get_worst_entry(&gw_list_ipv6);
+          assert(worst);
+
+          worst->gw = NULL;
+          if (worst->tunnel) {
+            olsr_os_del_ipip_tunnel(worst->tunnel);
+            worst->tunnel = NULL;
+          }
+          olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv6, worst));
+        }
+
+        new_gw_in_list = olsr_cookie_malloc(gw_container_entry_mem_cookie);
+        new_gw_in_list->gw = new_gw;
+        new_gw_in_list->tunnel = new_v6gw_tunnel;
+        new_gw_in_list->path_cost = path_cost;
+        current_ipv6_gw = olsr_gw_list_add(&gw_list_ipv6, new_gw_in_list);
+      } else {
+        /* adding the tunnel failed, we try again in the next cycle */
+        ipv6 = false;
+      }
+    }
   }
 
   return !ipv4 && !ipv6;
