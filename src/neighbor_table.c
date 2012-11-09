@@ -389,7 +389,7 @@ olsr_print_neighbor_table(void)
   struct timeval now;
 
 	(void)gettimeofday(&now, NULL);
-  nowtm = localtime(&now.tv_sec);
+  nowtm = localtime((time_t *)&now.tv_sec);
 
   OLSR_PRINTF(1,
               "\n--- %02d:%02d:%02d.%02d ------------------------------------------------ NEIGHBORS\n\n"
