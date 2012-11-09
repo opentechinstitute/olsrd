@@ -322,7 +322,7 @@ olsr_print_hna_set(void)
   const int ipwidthprefix = olsr_cnf->ip_version == AF_INET ? (INET_ADDRSTRLEN + 1 + INET_ADDRSTRLEN - 1) : (INET6_ADDRSTRLEN + 1 + 3 - 1);
 
 	(void)gettimeofday(&now, NULL);
-  nowtm = localtime(&now.tv_sec);
+  nowtm = localtime((time_t *)&now.tv_sec);
 
   OLSR_PRINTF(1, "\n--- %02d:%02d:%02d.%02d ------------------------------------------------- HNA SET\n\n", nowtm->tm_hour,
               nowtm->tm_min, nowtm->tm_sec, (int)now.tv_usec / 10000);
