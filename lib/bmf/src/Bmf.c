@@ -956,6 +956,7 @@ BMF_handle_listeningFd(int skfd, void *data, unsigned int flags __attribute__ ((
   int nBytes;
   int minimumLength;
   struct ip* ipHeader;
+  unsigned int headerLength;
   struct udphdr* udpHeader;
   u_int16_t destPort;
   union olsr_ip_addr forwardedBy;
@@ -994,14 +995,6 @@ BMF_handle_listeningFd(int skfd, void *data, unsigned int flags __attribute__ ((
     return;
   }
 
-  udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((rxBuffer + GetIpHeaderLength(rxBuffer)));
-  destPort = ntohs(udpHeader->dest);
-  if (destPort != BMF_ENCAP_PORT)
-  {
-    /* Not BMF */
-    return;
-  }
-
   /* Check if the number of received bytes is large enough for a minimal BMF
    * encapsulation packet, at least:
    * - the IP header of the encapsulation IP packet
@@ -1011,8 +1004,9 @@ BMF_handle_listeningFd(int skfd, void *data, unsigned int flags __attribute__ ((
    * Note: on a VLAN interface, the value returned by 'recvfrom' may (but need
    * not) be 4 (bytes) larger than the value returned on a non-VLAN interface, for
    * the same ethernet frame. */
+  headerLength = GetIpHeaderLength(rxBuffer);
   minimumLength =
-    GetIpHeaderLength(rxBuffer) +
+    headerLength +
     sizeof(struct udphdr) +
     ENCAP_HDR_LEN +
     sizeof(struct ip);
@@ -1028,13 +1022,21 @@ BMF_handle_listeningFd(int skfd, void *data, unsigned int flags __attribute__ ((
     return;
   }
 
+  udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((rxBuffer + headerLength));
+  destPort = ntohs(udpHeader->dest);
+  if (destPort != BMF_ENCAP_PORT)
+  {
+    /* Not BMF */
+    return;
+  }
+
   forwardedBy.v4 = ipHeader->ip_src;
   forwardedTo.v4 = ipHeader->ip_dst;
   BmfEncapsulationPacketReceived(
     walker,
     &forwardedBy,
     &forwardedTo,
-    rxBuffer + GetIpHeaderLength(rxBuffer) + sizeof(struct udphdr));
+    rxBuffer + headerLength + sizeof(struct udphdr));
 
 }
 
