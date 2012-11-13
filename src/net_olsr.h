@@ -51,8 +51,6 @@
 
 typedef int (*packet_transform_function) (uint8_t *, int *);
 
-void net_set_disp_pack_out(bool);
-
 void init_net(void);
 
 int net_add_buffer(struct interface *);

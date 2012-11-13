@@ -51,7 +51,6 @@
 #include "rebuild_packet.h"
 #include "net_os.h"
 #include "log.h"
-#include "print_packet.h"
 #include "net_olsr.h"
 #include "duplicate_handler.h"
 
@@ -79,14 +78,6 @@ struct packetparser_function_entry *packetparser_functions;
 
 static uint32_t inbuf_aligned[MAXMESSAGESIZE/sizeof(uint32_t) + 1];
 static char *inbuf = (char *)inbuf_aligned;
-
-static bool disp_pack_in = false;
-
-void
-parser_set_disp_pack_in(bool val)
-{
-  disp_pack_in = val;
-}
 
 /**
  *Initialize the parser.
@@ -292,10 +283,6 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
     olsr_syslog(OLSR_LOG_ERR, " packet length error in  packet received from %s!", olsr_ip_to_string(&buf, from_addr));
     return;
   }
-
-  /* Display packet */
-  if (disp_pack_in)
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)olsr, size, from_addr);
 
   // translate sequence number to host order
   olsr->olsr_seqno = ntohs(olsr->olsr_seqno);

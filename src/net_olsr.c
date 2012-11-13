@@ -44,15 +44,12 @@
 #include "log.h"
 #include "olsr.h"
 #include "net_os.h"
-#include "print_packet.h"
 #include "link_set.h"
 #include "lq_packet.h"
 
 #include <stdlib.h>
 #include <assert.h>
 #include <limits.h>
-
-static bool disp_pack_out = false;
 
 #ifdef _WIN32
 #define perror(x) WinSockPError(x)
@@ -86,12 +83,6 @@ static const char *const deny_ipv6_defaults[] = {
   "0::1",
   NULL
 };
-
-void
-net_set_disp_pack_out(bool val)
-{
-  disp_pack_out = val;
-}
 
 /*
  * Converts each invalid IP-address from string to network byte order
@@ -379,13 +370,6 @@ net_output(struct interface *ifp)
   for (tmp_ptf_list = ptf_list; tmp_ptf_list != NULL; tmp_ptf_list = tmp_ptf_list->next) {
     tmp_ptf_list->function(ifp->netbuf.buff, &ifp->netbuf.pending);
   }
-
-  /*
-   *if the -dispout option was given
-   *we print the content of the packets
-   */
-  if (disp_pack_out)
-    print_olsr_serialized_packet(stdout, (union olsr_packet *)ifp->netbuf.buff, ifp->netbuf.pending, &ifp->ip_addr);
 
   if (olsr_cnf->ip_version == AF_INET) {
     /* IP version 4 */

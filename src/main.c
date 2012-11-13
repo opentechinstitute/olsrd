@@ -864,7 +864,7 @@ static void print_usage(bool error) {
         "usage: olsrd [-f <configfile>] [ -i interface1 interface2 ... ]\n"
         "  [-d <debug_level>] [-ipv6] [-multi <IPv6 multicast address>]\n"
         "  [-lql <LQ level>] [-lqw <LQ winsize>] [-lqnt <nat threshold>]\n"
-        "  [-bcast <broadcastaddr>] [-ipc] [-dispin] [-dispout] [-delgw]\n"
+        "  [-bcast <broadcastaddr>] [-ipc] [-delgw]\n"
         "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
         "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
         "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n"
@@ -1092,22 +1092,6 @@ static int olsr_process_arguments(int argc, char *argv[],
       NEXT_ARG;
       CHECK_ARGC;
       sscanf(*argv, "%f", &cnf->pollrate);
-      continue;
-    }
-
-    /*
-     * Should we display the contents of packages beeing sent?
-     */
-    if (strcmp(*argv, "-dispin") == 0) {
-      parser_set_disp_pack_in(true);
-      continue;
-    }
-
-    /*
-     * Should we display the contents of incoming packages?
-     */
-    if (strcmp(*argv, "-dispout") == 0) {
-      net_set_disp_pack_out(true);
       continue;
     }
 
