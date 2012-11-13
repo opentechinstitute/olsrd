@@ -164,7 +164,7 @@ print_messagedump(FILE * handle, uint8_t * msg, int16_t size)
 static void
 print_hellomsg(FILE * handle, uint8_t * data, int16_t totsize)
 {
-  union olsr_ip_addr *haddr;
+  uint8_t * haddr;
   int hellosize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
 
   fprintf(handle, "    +Htime: %u ms\n", me_to_reltime(data[2]));
@@ -184,10 +184,10 @@ print_hellomsg(FILE * handle, uint8_t * data, int16_t totsize)
       fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", olsr_link_to_string(EXTRACT_LINK(hinf->link_code)),
               olsr_status_to_string(EXTRACT_STATUS(hinf->link_code)), ntohs(hinf->size));
 
-      for (haddr = (union olsr_ip_addr *)&hinf->neigh_addr; (char *)haddr < (char *)hinf + ntohs(hinf->size);
-           haddr += sizeof(haddr->v4)) {
+      for (haddr = (uint8_t *)&hinf->neigh_addr[0]; haddr < (uint8_t *)hinf + ntohs(hinf->size);
+           haddr += sizeof(struct in_addr)) {
         struct ipaddr_str buf;
-        fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
+        fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)ARM_NOWARN_ALIGN(haddr)));
       }
     }
 
@@ -203,9 +203,10 @@ print_hellomsg(FILE * handle, uint8_t * data, int16_t totsize)
       fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)),
               olsr_status_to_string(EXTRACT_STATUS(hinf6->link_code)), ntohs(hinf6->size));
 
-      for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr; (char *)haddr < (char *)hinf6 + ntohs(hinf6->size); haddr++) {
+      for (haddr = (uint8_t *)&hinf6->neigh_addr[0]; haddr < (uint8_t *)hinf6 + ntohs(hinf6->size);
+           haddr += sizeof(struct in6_addr)) {
         struct ipaddr_str buf;
-        fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
+        fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)ARM_NOWARN_ALIGN(haddr)));
       }
     }
 
@@ -216,7 +217,7 @@ print_hellomsg(FILE * handle, uint8_t * data, int16_t totsize)
 static void
 print_hellomsg_lq(FILE * handle, uint8_t * data, int16_t totsize)
 {
-  union olsr_ip_addr *haddr;
+  uint8_t * haddr;
   int hellosize = totsize - ((olsr_cnf->ip_version == AF_INET) ? OLSR_MSGHDRSZ_IPV4 : OLSR_MSGHDRSZ_IPV6);
 
   fprintf(handle, "    +Htime: %u ms\n", me_to_reltime(data[2]));
@@ -236,11 +237,11 @@ print_hellomsg_lq(FILE * handle, uint8_t * data, int16_t totsize)
       fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", olsr_link_to_string(EXTRACT_LINK(hinf->link_code)),
               olsr_status_to_string(EXTRACT_STATUS(hinf->link_code)), ntohs(hinf->size));
 
-      for (haddr = (union olsr_ip_addr *)&hinf->neigh_addr; (char *)haddr < (char *)hinf + ntohs(hinf->size);
-           haddr += sizeof(haddr->v4)) {
+      for (haddr = (uint8_t *)&hinf->neigh_addr[0]; haddr < (uint8_t *)hinf + ntohs(hinf->size);
+           haddr += sizeof(struct in_addr) + active_lq_handler->hello_lqdata_size) {
         struct ipaddr_str buf;
-        uint8_t *quality = (uint8_t *) haddr + olsr_cnf->ipsize;
-        fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
+        uint8_t *quality = haddr + olsr_cnf->ipsize;
+        fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)ARM_NOWARN_ALIGN(haddr)));
         fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
       }
     }
@@ -257,10 +258,11 @@ print_hellomsg_lq(FILE * handle, uint8_t * data, int16_t totsize)
       fprintf(handle, "    ++ Link: %s, Status: %s, Size: %d\n", olsr_link_to_string(EXTRACT_LINK(hinf6->link_code)),
               olsr_status_to_string(EXTRACT_STATUS(hinf6->link_code)), ntohs(hinf6->size));
 
-      for (haddr = (union olsr_ip_addr *)hinf6->neigh_addr; (char *)haddr < (char *)hinf6 + ntohs(hinf6->size) + 4; haddr++) {
+      for (haddr = (uint8_t *)&hinf6->neigh_addr[0]; haddr < (uint8_t *)hinf6 + ntohs(hinf6->size);
+           haddr += sizeof(struct in6_addr) + active_lq_handler->hello_lqdata_size) {
         struct ipaddr_str buf;
-        uint8_t *quality = (uint8_t *) haddr + olsr_cnf->ipsize;
-        fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, haddr));
+        uint8_t *quality = haddr + olsr_cnf->ipsize;
+        fprintf(handle, "    ++ %s\n", olsr_ip_to_string(&buf, (union olsr_ip_addr *)ARM_NOWARN_ALIGN(haddr)));
         fprintf(handle, "    ++ LQ = %d, RLQ = %d\n", quality[0], quality[1]);
       }
     }
