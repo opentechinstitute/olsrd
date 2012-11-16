@@ -1,53 +1,5 @@
 This file states changes as of version 0.2.4:
 
-0.6.5 (up to 0875044) ----------------------------------------------------
-
-Bugfix and plugin release 0.6.5
-
-* Main
-  android       : Update olsrd-adhoc-setup script
-                  Build fixes; no more warnings and use gcc 4.6 from NDK r8b
-  build system  : Many small improvements
-                  Use proper 'OS' compiler defines
-                  make VERBOSE=1 will show full commands
-                  Add gcc hardening flags (to non-debug builds)
-                  Add a gui make target
-                  Make olsrd build for win64 as well (on mingw64)
-  code overall  : Coverity fixes
-                  Remove most of the dead code
-                  Many small fixes
-  gui (linux)   : Coverity fixes
-  nl802.11      : Support for Linux NL802.11 wireless link information in cost
-                    calculation.
-  smart gateway : Refactored code
-                  Better cleanup of gateways on shutdown
-                  Some small fixes
-
-
-* Plugins
-  bmf           : Coverity fixes
-  httpinfo      : Coverity fixes
-  jsoninfo      : Coverity fixes
-  mdns          : Coverity fixes
-                  Fixing loops for mDNS packets when mDNS plugin is
-                    misconfigured
-                  Add router election mechansim to have only 1 active mDNS OLSR
-                    router in 1 LAN
-                  Add Host Filtering
-                  Some small fixes
-  nameservice   : Coverity fixes
-  p2pd          : Coverity fixes
-  pud           : Coverity fixes
-                  Update nmealib
-                  Some small fixes
-  quagga        : Coverity fixes
-  secure        : Coverity fixes
-                  The plugin can only work on IPv4, so assert on it.
-  sgwdynspeed   : Coverity fixes
-  tas           : Remove plugin
-  txtinfo       : Coverity fixes
-
-
 0.6.4 --------------------------------------------------------------------
 
 Bugfix and plugin release 0.6.4
