@@ -1005,6 +1005,11 @@ BMF_handle_listeningFd(int skfd, void *data, unsigned int flags __attribute__ ((
    * not) be 4 (bytes) larger than the value returned on a non-VLAN interface, for
    * the same ethernet frame. */
   headerLength = GetIpHeaderLength(rxBuffer);
+  if (headerLength >= BMF_BUFFER_SIZE) {
+    olsr_printf(1, "%s: IP header pretends to have a length of %u\n",
+        PLUGIN_NAME, headerLength);
+    return;
+  }
   minimumLength =
     headerLength +
     sizeof(struct udphdr) +
