@@ -77,7 +77,7 @@ static int ipc_send_net_info(int fd);
  *Create the socket to use for IPC to the
  *GUI front-end
  *
- *@return the socket FD
+ *@return -1 if an error happened, 0 otherwise
  */
 int
 ipc_init(void)
@@ -92,12 +92,13 @@ ipc_init(void)
   /* get an internet domain socket */
   if ((ipc_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
     perror("IPC socket");
-    olsr_exit("IPC socket", EXIT_FAILURE);
+    return -1;
   }
 
   if (setsockopt(ipc_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes)) < 0) {
     perror("SO_REUSEADDR failed");
-    olsr_exit("IPC socket", EXIT_FAILURE);
+    close(ipc_sock);
+    return -1;
   }
 
   /* complete the socket structure */
@@ -113,7 +114,8 @@ ipc_init(void)
     sleep(10);
     if (bind(ipc_sock, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
       perror("IPC bind");
-      olsr_exit("IPC bind", EXIT_FAILURE);
+      close(ipc_sock);
+      return -1;
     }
     OLSR_PRINTF(1, "OK\n");
   }
@@ -121,13 +123,14 @@ ipc_init(void)
   /* show that we are willing to listen */
   if (listen(ipc_sock, olsr_cnf->ipc_connections) == -1) {
     perror("IPC listen");
-    olsr_exit("IPC listen", EXIT_FAILURE);
+    close(ipc_sock);
+    return -1;
   }
 
   /* Register the socket with the socket parser */
   add_olsr_socket(ipc_sock, &ipc_accept, NULL, NULL, SP_PR_READ);
 
-  return ipc_sock;
+  return 0;
 }
 
 

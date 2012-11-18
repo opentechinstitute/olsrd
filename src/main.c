@@ -554,7 +554,9 @@ int main(int argc, char *argv[]) {
   /* Initialize the IPC socket */
 
   if (olsr_cnf->ipc_connections > 0) {
-    ipc_init();
+    if (ipc_init()) {
+      olsr_exit("ipc_init failure", 1);
+    }
   }
   /* Initialisation of different tables to be used. */
   olsr_init_tables();
