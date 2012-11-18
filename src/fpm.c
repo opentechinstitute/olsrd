@@ -43,7 +43,7 @@
 #include <assert.h>
 #include "fpm.h"
 
-#ifdef USE_FPM
+#if 1 // def USE_FPM
 
 #ifndef NDEBUG
 
@@ -111,9 +111,14 @@ fpm
 fpmdiv(fpm a, fpm b)
 {
   fpm r;
-  long long tmp = ((long long)(sfpm) a << FPM_BIT);
-  assert(FPM_INT_MIN <= tmp);
-  assert(tmp <= FPM_INT_MAX);
+
+  /*
+   * The following two asserts are always true
+   *
+   * long long tmp = ((long long)(sfpm) a << FPM_BIT);
+   * assert(FPM_INT_MIN <= tmp);
+   * assert(tmp <= FPM_INT_MAX);
+   */
   r = (fpm) fpmdiv_def((sfpm) a, (sfpm) b);
   return r;
 }

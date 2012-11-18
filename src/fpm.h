@@ -42,7 +42,7 @@
 #ifndef _FPM_H
 #define _FPM_H
 
-#ifdef USE_FPM
+#if 1 // def USE_FPM
 
 /*
  * The standard math should function with only 32 bits
