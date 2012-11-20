@@ -181,8 +181,8 @@ int olsr_init_gateways(void) {
 
   avl_init(&gateway_tree, avl_comp_default);
 
-  olsr_gw_list_init(&gw_list_ipv4, 1);
-  olsr_gw_list_init(&gw_list_ipv6, 1);
+  olsr_gw_list_init(&gw_list_ipv4, olsr_cnf->smart_gw_use_count);
+  olsr_gw_list_init(&gw_list_ipv6, olsr_cnf->smart_gw_use_count);
 
   current_ipv4_gw = NULL;
   current_ipv6_gw = NULL;
