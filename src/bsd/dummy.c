@@ -49,7 +49,8 @@ void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6 __attribute__ (
 }
 void olsr_os_inetgw_tunnel_route(uint32_t if_idx __attribute__ ((unused)),
     bool ipv4 __attribute__ ((unused)),
-    bool set __attribute__ ((unused))) {
+    bool set __attribute__ ((unused)),
+    uint8_t * table __attribute__ ((unused))) {
 }
 
 int olsr_os_policy_rule(int family __attribute__ ((unused)),

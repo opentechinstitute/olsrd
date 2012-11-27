@@ -498,7 +498,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
       gw_in_list = olsr_gw_list_find(&gw_list_ipv4, gw);
       if (gw_in_list) {
         if (current_ipv4_gw && current_ipv4_gw->gw == gw) {
-          olsr_os_inetgw_tunnel_route(current_ipv4_gw->tunnel->if_index, true, false);
+          olsr_os_inetgw_tunnel_route(current_ipv4_gw->tunnel->if_index, true, false, NULL);
           current_ipv4_gw = NULL;
         }
 
@@ -515,7 +515,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
       gw_in_list = olsr_gw_list_find(&gw_list_ipv6, gw);
       if (gw_in_list) {
         if (current_ipv6_gw && current_ipv6_gw->gw == gw) {
-          olsr_os_inetgw_tunnel_route(current_ipv6_gw->tunnel->if_index, false, false);
+          olsr_os_inetgw_tunnel_route(current_ipv6_gw->tunnel->if_index, false, false, NULL);
           current_ipv6_gw = NULL;
         }
 
@@ -608,13 +608,13 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
     if (new_gw_in_list) {
       /* new gw is already in the gw list */
       assert(new_gw_in_list->tunnel);
-      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true);
+      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, NULL);
       current_ipv4_gw = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list, path_cost);
     } else {
       /* new gw is not yet in the gw list */
       struct olsr_iptunnel_entry *new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true);
       if (new_v4gw_tunnel) {
-        olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true);
+        olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, NULL);
 
         if (olsr_gw_list_full(&gw_list_ipv4)) {
           /* the list is full: remove the worst active gateway */
@@ -649,13 +649,13 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
     if (new_gw_in_list) {
       /* new gw is already in the gw list */
       assert(new_gw_in_list->tunnel);
-      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true);
+      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, NULL);
       current_ipv6_gw = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list, path_cost);
     } else {
       /* new gw is not yet in the gw list */
   	  struct olsr_iptunnel_entry *new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false);
       if (new_v6gw_tunnel) {
-        olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true);
+        olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, NULL);
 
         if (olsr_gw_list_full(&gw_list_ipv6)) {
           /* the list is full: remove the worst active gateway */
