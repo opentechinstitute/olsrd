@@ -553,6 +553,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 	  fprintf(stderr, "Warning, you are using the min_tc_vtime hack. We hope you know what you are doing... contact olsr.org otherwise.\n");
   }
 
+#ifdef __linux__
   if (cnf->smart_gw_period < MIN_SMARTGW_PERIOD || cnf->smart_gw_period > MAX_SMARTGW_PERIOD) {
     fprintf(stderr, "Error, bad gateway period: %d msec (should be %d-%d)\n",
         cnf->smart_gw_period, MIN_SMARTGW_PERIOD, MAX_SMARTGW_PERIOD);
@@ -590,6 +591,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
         cnf->smart_gw_uplink, MIN_SMARTGW_SPEED, MAX_SMARTGW_SPEED);
     return -1;
   }
+#endif /* __linux__ */
 
   if (cnf->interface_defaults == NULL) {
     /* get a default configuration if the user did not specify one */
