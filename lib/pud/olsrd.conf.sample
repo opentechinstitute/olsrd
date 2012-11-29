@@ -89,6 +89,17 @@ LoadPlugin "<olsrd plugin library path>/olsrd_pud.so.1.1.0"
     #
     #PlParam "positionFile"                     ""
 
+    # Specifies the period in milliseconds on which to read the positionFile
+    # (if it changed) and activate its new setting for the position.
+    # This setting is only relevant if positionFile has been configured.
+    # A setting of zero disables dynamic updates, the positionFile is then only
+    # read during olsrd startup.
+    #
+    # Default: 0
+    #
+    #PlParam "positionFilePeriod" "0"
+
+
     #
     # TX Parameters
     #
