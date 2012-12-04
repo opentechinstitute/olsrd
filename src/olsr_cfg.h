@@ -126,6 +126,8 @@
 #define MIN_SMARTGW_USE_COUNT_MIN  1
 #define MAX_SMARTGW_USE_COUNT_MAX  1
 
+#define MAX_SMARTGW_EGRESS_INTERFACE_COUNT_MAX 32
+
 #define MIN_SMARTGW_PERIOD   1*1000
 #define MAX_SMARTGW_PERIOD   320000*1000
 
@@ -235,6 +237,12 @@ struct plugin_entry {
   struct plugin_entry *next;
 };
 
+struct sgw_egress_if {
+  char *name;
+  uint8_t mark;
+  struct sgw_egress_if *next;
+};
+
 /*
  * The config struct
  */
@@ -281,6 +289,8 @@ struct olsrd_config {
 
   bool smart_gw_active, smart_gw_allow_nat, smart_gw_uplink_nat;
   uint8_t smart_gw_use_count;
+  struct sgw_egress_if * smart_gw_egress_interfaces;
+  uint8_t smart_gw_egress_interfaces_count;
   uint32_t smart_gw_period;
   uint8_t smart_gw_stablecount;
   uint8_t smart_gw_thresh;

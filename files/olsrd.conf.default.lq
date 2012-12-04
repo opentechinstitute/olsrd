@@ -88,6 +88,13 @@
 
 # SmartGatewayUseCount 1
 
+# Determines the egress interfaces that are part of the multi-gateway setup and
+# therefore only relevant when SmartGatewayUseCount is larger than 1 (in which
+# case it must be explicitly set).
+# (default is not set)
+
+# SmartGatewayEgressInterfaces ""
+
 # Allows the selection of a smartgateway with NAT (only for IPv4)
 # (default is "yes")
 

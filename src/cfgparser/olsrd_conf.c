@@ -559,6 +559,37 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
         cnf->smart_gw_use_count, MIN_SMARTGW_USE_COUNT_MIN, MAX_SMARTGW_USE_COUNT_MAX);
     return -1;
   }
+
+  if (cnf->smart_gw_use_count > 1) {
+    struct sgw_egress_if * sgwegressif = cnf->smart_gw_egress_interfaces;
+
+    /* egress interface(s) must be set */
+    if (!sgwegressif) {
+      fprintf(stderr, "Error, no egress interfaces configured in multi-gateway mode\n");
+      return -1;
+    }
+
+    /* an egress interface must not be an OLSR interface */
+    while (sgwegressif) {
+      struct olsr_if * olsrif = cnf->interfaces;
+      while (olsrif) {
+        if (!strcmp(olsrif->name, sgwegressif->name)) {
+          fprintf(stderr, "Error, egress interface %s already is an OLSR interface\n", sgwegressif->name);
+          return -1;
+        }
+        olsrif = olsrif->next;
+      }
+      cnf->smart_gw_egress_interfaces_count++;
+      sgwegressif = sgwegressif->next;
+    }
+
+    if (cnf->smart_gw_egress_interfaces_count > MAX_SMARTGW_EGRESS_INTERFACE_COUNT_MAX) {
+      fprintf(stderr, "Error, egress interface count %u not in range [1, %u]\n",
+          cnf->smart_gw_egress_interfaces_count, MAX_SMARTGW_EGRESS_INTERFACE_COUNT_MAX);
+      return -1;
+    }
+  }
+
   if (cnf->smart_gw_period < MIN_SMARTGW_PERIOD || cnf->smart_gw_period > MAX_SMARTGW_PERIOD) {
     fprintf(stderr, "Error, bad gateway period: %d msec (should be %d-%d)\n",
         cnf->smart_gw_period, MIN_SMARTGW_PERIOD, MAX_SMARTGW_PERIOD);
@@ -793,6 +824,8 @@ set_default_cnf(struct olsrd_config *cnf)
 
   cnf->smart_gw_active = DEF_SMART_GW;
   cnf->smart_gw_use_count = DEF_GW_USE_COUNT;
+  cnf->smart_gw_egress_interfaces = NULL;
+  cnf->smart_gw_egress_interfaces_count = 0;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
   cnf->smart_gw_period = DEF_GW_PERIOD;
   cnf->smart_gw_stablecount = DEF_GW_STABLE_COUNT;
@@ -922,6 +955,16 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("Smart Gateway    : %s\n", cnf->smart_gw_active ? "yes" : "no");
 
   printf("SmGw. Use Count  : %u\n", cnf->smart_gw_use_count);
+
+  printf("SmGw. Egress I/Fs:");
+  {
+    struct sgw_egress_if * sgwegressif = cnf->smart_gw_egress_interfaces;
+    while (sgwegressif) {
+      printf(" %s", sgwegressif->name);
+      sgwegressif = sgwegressif->next;
+    }
+  }
+  printf("\n");
 
   printf("SmGw. Allow NAT  : %s\n", cnf->smart_gw_allow_nat ? "yes" : "no");
 

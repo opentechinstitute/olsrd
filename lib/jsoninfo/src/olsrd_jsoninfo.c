@@ -987,6 +987,21 @@ ipc_print_config(struct autobuf *abuf)
   abuf_json_boolean(abuf, "smartGateway", olsr_cnf->smart_gw_active);
   if (olsr_cnf->smart_gw_active) {
     abuf_json_int(abuf, "smartGatewayUseCount", olsr_cnf->smart_gw_use_count);
+    {
+      struct autobuf egressbuf;
+      struct sgw_egress_if * egressif = olsr_cnf->smart_gw_egress_interfaces;
+
+      abuf_init(&egressbuf, (olsr_cnf->smart_gw_egress_interfaces_count * IFNAMSIZ) /* interface names */
+          + (olsr_cnf->smart_gw_egress_interfaces_count - 1) /* commas */);
+      while (egressif) {
+        if (egressbuf.len) {
+          abuf_puts(&egressbuf, ",");
+        }
+        abuf_appendf(&egressbuf, "%s", egressif->name);
+      }
+      abuf_json_string(abuf, "smartGatewayEgressInterfaces", egressbuf.buf);
+      abuf_free(&egressbuf);
+    }
     abuf_json_boolean(abuf, "smartGatewayAllowNat", olsr_cnf->smart_gw_allow_nat);
     abuf_json_boolean(abuf, "smartGatewayUplinkNat", olsr_cnf->smart_gw_uplink_nat);
     abuf_json_int(abuf, "smartGatewayPeriod", olsr_cnf->smart_gw_period);

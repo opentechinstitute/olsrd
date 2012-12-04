@@ -56,6 +56,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <ctype.h>
 
 #define PARSER_DEBUG 1
 
@@ -216,6 +217,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
 %token TOK_SMART_GW_USE_COUNT
+%token TOK_SMART_GW_EGRESS_IFS
 %token TOK_SMART_GW_ALLOW_NAT
 %token TOK_SMART_GW_PERIOD
 %token TOK_SMART_GW_STABLECOUNT
@@ -319,6 +321,7 @@ stmt:       idebug
           | bsrc_ip_routes
           | amain_ip
           | bset_ipforward
+          | ssgw_egress_ifs
 ;
 
 block:      TOK_HNA4 hna4body
@@ -1311,6 +1314,75 @@ ismart_gw_use_count: TOK_SMART_GW_USE_COUNT TOK_INTEGER
   PARSER_DEBUG_PRINTF("Smart gateway use count: %d\n", $2->integer);
   olsr_cnf->smart_gw_use_count = $2->integer;
   free($2);
+}
+;
+
+ssgw_egress_ifs:   TOK_SMART_GW_EGRESS_IFS sgw_egress_ifs
+;
+
+sgw_egress_ifs:   | sgw_egress_ifs sgw_egress_if
+;
+
+sgw_egress_if: TOK_STRING
+{
+  struct sgw_egress_if *in, *last;
+  char * str = $1->string;
+  char *end;
+
+  /* Trim leading space */
+  while(isspace(*str)) {
+    str++;
+  }
+
+  /* Trim trailing space */
+  end = str + strlen(str) - 1;
+  while((end > str) && isspace(*end)) {
+    end--;
+  }
+
+  /* Write new null terminator */
+  *(end + 1) = '\0';
+
+  if(*str == 0) {
+    PARSER_DEBUG_PRINTF("Smart gateway egress interface: <empty> (skipped)\n");
+  } else {
+    PARSER_DEBUG_PRINTF("Smart gateway egress interface: %s\n", str);
+
+    in = olsr_cnf->smart_gw_egress_interfaces;
+    last = NULL;
+    while (in != NULL) {
+      if (strcmp(in->name, str) == 0) {
+        free ($1->string);
+        break;
+      }
+      last = in;
+      in = in->next;
+    }
+
+    if (in != NULL) {
+      /* remove old interface from list to add it later at the beginning */
+      if (last) {
+        last->next = in->next;
+      }
+      else {
+        olsr_cnf->smart_gw_egress_interfaces = in->next;
+      }
+    }
+    else {
+      in = malloc(sizeof(*in));
+      if (in == NULL) {
+        fprintf(stderr, "Out of memory(ADD IF)\n");
+        YYABORT;
+      }
+      memset(in, 0, sizeof(*in));
+
+      in->name = str;
+    }
+    /* Queue */
+    in->next = olsr_cnf->smart_gw_egress_interfaces;
+    olsr_cnf->smart_gw_egress_interfaces = in;
+    free($1);
+  }
 }
 ;
 

@@ -448,6 +448,23 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->smart_gw_use_count);
   abuf_puts(out,
     "\n"
+    "# Determines the egress interfaces that are part of the multi-gateway setup and\n"
+    "# therefore only relevant when SmartGatewayUseCount is larger than 1 (in which\n"
+    "# case it must be explicitly set).\n"
+    "# (default is not set)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayEgressInterfaces",
+      !cnf->smart_gw_egress_interfaces ? "# " : "");
+  {
+    struct sgw_egress_if * sgwegressif = olsr_cnf->smart_gw_egress_interfaces;
+    while (sgwegressif) {
+      abuf_appendf(out, " \"%s\"", sgwegressif->name);
+      sgwegressif = sgwegressif->next;
+    }
+    abuf_puts(out, "\n");
+  }
+  abuf_puts(out,
+    "\n"
     "# Allows the selection of a smartgateway with NAT (only for IPv4)\n"
     "# (default is \"yes\")\n"
     "\n");
