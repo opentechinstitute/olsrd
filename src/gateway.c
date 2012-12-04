@@ -135,15 +135,87 @@ static uint8_t serialize_gw_speed(uint32_t speed) {
 }
 
 /**
- * Dummy for generating an interface name for an olsr ipip tunnel
- * @param target IP destination of the tunnel
- * @param name pointer to output buffer (length IFNAMSIZ)
+ * Find an interfaceName struct corresponding to a certain gateway
+ * (when gw != NULL) or to an empty interfaceName struct (when gw == NULL).
+ *
+ * @param gw the gateway to find (when not NULL), or the empty struct to find (when NULL)
+ * @return a pointer to the struct, or NULL when not found
  */
-static void generate_iptunnel_name(union olsr_ip_addr *target, char * name) {
+static struct interfaceName * find_interfaceName(struct gateway_entry *gw) {
+  struct interfaceName * sgwTunnelInterfaceNames;
+  uint8_t i = 0;
+
+  assert(sgwTunnel4InterfaceNames);
+  assert(sgwTunnel6InterfaceNames);
+
+  sgwTunnelInterfaceNames = (olsr_cnf->ip_version == AF_INET) ? sgwTunnel4InterfaceNames : sgwTunnel6InterfaceNames;
+  while (i < olsr_cnf->smart_gw_use_count) {
+    struct interfaceName * ifn = &sgwTunnelInterfaceNames[i];
+    if (ifn->gw == gw) {
+      return ifn;
+    }
+    i++;
+  }
+
+  return NULL;
+}
+
+/**
+ * Get an unused olsr ipip tunnel name for a certain gateway and store it in name.
+ *
+ * @param gw pointer to the gateway
+ * @param name pointer to output buffer (length IFNAMSIZ)
+ * @param interfaceName a pointer to the location where to store a pointer to the interfaceName struct
+ */
+static void get_unused_iptunnel_name(struct gateway_entry *gw, char * name, struct interfaceName ** interfaceName) {
   static uint32_t counter = 0;
 
+  assert(gw);
+  assert(name);
+  assert(interfaceName);
+
+  if (olsr_cnf->smart_gw_use_count > 1) {
+    struct interfaceName * ifn = find_interfaceName(NULL);
+
+    if (ifn) {
+      ifn->gw = gw;
+      strncpy(&name[0], &ifn->name[0], sizeof(ifn->name));
+      *interfaceName = ifn;
+      return;
+    }
+
+    assert(ifn);
+    /* do not return, fall-through to classic naming as fallback */
+  }
+
   memset(name, 0, IFNAMSIZ);
-  snprintf(name, IFNAMSIZ, "tnl_%08x", olsr_cnf->ip_version == AF_INET ? target->v4.s_addr : ++counter);
+  snprintf(name, IFNAMSIZ, "tnl_%08x", (olsr_cnf->ip_version == AF_INET) ? gw->originator.v4.s_addr : ++counter);
+  *interfaceName = NULL;
+}
+
+/**
+ * Set an olsr ipip tunnel name that is used by a certain gateway as unused
+ *
+ * @param gw pointer to the gateway
+ */
+static void set_unused_iptunnel_name(struct gateway_entry *gw) {
+  struct interfaceName * ifn;
+
+  if (olsr_cnf->smart_gw_use_count <= 1) {
+    return;
+  }
+
+  assert(gw);
+  assert(sgwTunnel4InterfaceNames);
+  assert(sgwTunnel6InterfaceNames);
+
+  ifn = find_interfaceName(gw);
+  if (ifn) {
+    ifn->gw = NULL;
+    return;
+  }
+
+  assert(ifn);
 }
 
 /*
@@ -577,6 +649,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
 
         if (gw_in_list->tunnel) {
           olsr_os_del_ipip_tunnel(gw_in_list->tunnel);
+          set_unused_iptunnel_name(gw_in_list->gw);
           gw_in_list->tunnel = NULL;
         }
 
@@ -594,6 +667,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
 
         if (gw_in_list->tunnel) {
           olsr_os_del_ipip_tunnel(gw_in_list->tunnel);
+          set_unused_iptunnel_name(gw_in_list->gw);
           gw_in_list->tunnel = NULL;
         }
 
@@ -687,6 +761,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
       /* new gw is not yet in the gw list */
       char name[IFNAMSIZ];
       struct olsr_iptunnel_entry *new_v4gw_tunnel;
+      struct interfaceName * interfaceName;
 
       if (olsr_gw_list_full(&gw_list_ipv4)) {
         /* the list is full: remove the worst active gateway */
@@ -695,13 +770,14 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
 
         if (worst->tunnel) {
           olsr_os_del_ipip_tunnel(worst->tunnel);
+          set_unused_iptunnel_name(worst->gw);
           worst->tunnel = NULL;
         }
         worst->gw = NULL;
         olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv4, worst));
       }
 
-      generate_iptunnel_name(&new_gw->originator, name);
+      get_unused_iptunnel_name(new_gw, name, &interfaceName);
       new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true, name);
       if (new_v4gw_tunnel) {
         olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, NULL);
@@ -713,6 +789,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
         current_ipv4_gw = olsr_gw_list_add(&gw_list_ipv4, new_gw_in_list);
       } else {
         /* adding the tunnel failed, we try again in the next cycle */
+        set_unused_iptunnel_name(new_gw);
         ipv4 = false;
       }
     }
@@ -732,6 +809,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
       /* new gw is not yet in the gw list */
       char name[IFNAMSIZ];
       struct olsr_iptunnel_entry *new_v6gw_tunnel;
+      struct interfaceName * interfaceName;
 
       if (olsr_gw_list_full(&gw_list_ipv6)) {
         /* the list is full: remove the worst active gateway */
@@ -740,13 +818,14 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
 
         if (worst->tunnel) {
           olsr_os_del_ipip_tunnel(worst->tunnel);
+          set_unused_iptunnel_name(worst->gw);
           worst->tunnel = NULL;
         }
         worst->gw = NULL;
         olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv6, worst));
       }
 
-      generate_iptunnel_name(&new_gw->originator, name);
+      get_unused_iptunnel_name(new_gw, name, &interfaceName);
       new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false, name);
       if (new_v6gw_tunnel) {
         olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, NULL);
@@ -758,6 +837,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
         current_ipv6_gw = olsr_gw_list_add(&gw_list_ipv6, new_gw_in_list);
       } else {
         /* adding the tunnel failed, we try again in the next cycle */
+        set_unused_iptunnel_name(new_gw);
         ipv6 = false;
       }
     }
