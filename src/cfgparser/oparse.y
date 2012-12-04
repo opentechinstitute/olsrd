@@ -218,6 +218,8 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_SMART_GW
 %token TOK_SMART_GW_USE_COUNT
 %token TOK_SMART_GW_EGRESS_IFS
+%token TOK_SMART_GW_MARK_OFFSET_EGRESS
+%token TOK_SMART_GW_MARK_OFFSET_TUNNELS
 %token TOK_SMART_GW_ALLOW_NAT
 %token TOK_SMART_GW_PERIOD
 %token TOK_SMART_GW_STABLECOUNT
@@ -306,6 +308,8 @@ stmt:       idebug
           | suse_niit
           | bsmart_gw
           | ismart_gw_use_count
+          | ismart_gw_mark_offset_egress
+          | ismart_gw_mark_offset_tunnels
           | bsmart_gw_allow_nat
           | ismart_gw_period
           | asmart_gw_stablecount
@@ -1383,6 +1387,22 @@ sgw_egress_if: TOK_STRING
     olsr_cnf->smart_gw_egress_interfaces = in;
     free($1);
   }
+}
+;
+
+ismart_gw_mark_offset_egress: TOK_SMART_GW_MARK_OFFSET_EGRESS TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway mark offset egress interfaces: %d\n", $2->integer);
+  olsr_cnf->smart_gw_mark_offset_egress = $2->integer;
+  free($2);
+}
+;
+
+ismart_gw_mark_offset_tunnels: TOK_SMART_GW_MARK_OFFSET_TUNNELS TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway mark offset tunnel interfaces: %d\n", $2->integer);
+  olsr_cnf->smart_gw_mark_offset_tunnels = $2->integer;
+  free($2);
 }
 ;
 

@@ -465,6 +465,28 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   }
   abuf_puts(out,
     "\n"
+    "# Determines the offset of the smart gateway egress interfaces mark that are\n"
+    "# used in the policy routing rules in a multi-gateway setup. Only relevant\n"
+    "# when a multi-gateway setup is used.\n"
+    "# (default is 91)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayMarkOffsetEgress %u\n",
+      cnf->smart_gw_mark_offset_egress == DEF_GW_MARK_OFFSET_EGRESS ? "# " : "",
+      cnf->smart_gw_mark_offset_egress);
+  abuf_puts(out,
+    "\n"
+    "# Determines the offset of the smart gateway tunnel interfaces mark that are\n"
+    "# used in the policy routing rules in a multi-gateway setup. Only relevant\n"
+    "# when a multi-gateway setup is used.\n"
+    "# The ranges [egress offset, egress offset + egress count] and\n"
+    "# [tunnel offset, tunnel offset + use count] are not allowed to overlap.\n"
+    "# (default is 101)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayMarkOffsetTunnels %u\n",
+      cnf->smart_gw_mark_offset_tunnels == DEF_GW_MARK_OFFSET_TUNNELS ? "# " : "",
+      cnf->smart_gw_mark_offset_tunnels);
+  abuf_puts(out,
+    "\n"
     "# Allows the selection of a smartgateway with NAT (only for IPv4)\n"
     "# (default is \"yes\")\n"
     "\n");

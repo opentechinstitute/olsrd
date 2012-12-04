@@ -588,6 +588,39 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
           cnf->smart_gw_egress_interfaces_count, MAX_SMARTGW_EGRESS_INTERFACE_COUNT_MAX);
       return -1;
     }
+
+    {
+      uint8_t egressLow = cnf->smart_gw_mark_offset_egress;
+      uint8_t egressHigh = egressLow + cnf->smart_gw_egress_interfaces_count - 1;
+      uint8_t tunnelsLow = cnf->smart_gw_mark_offset_tunnels;
+      uint8_t tunnelsHigh = tunnelsLow + cnf->smart_gw_use_count - 1;
+      bool overlap = false;
+
+      /* check that the egress interface marks range does not overflow */
+      if (egressLow > (UINT8_MAX - cnf->smart_gw_egress_interfaces_count)) {
+        fprintf(stderr, "Error, egress interface mark offset %u together with egress interface count %u overflows range [0, %u]\n",
+            egressLow, cnf->smart_gw_egress_interfaces_count, UINT8_MAX);
+        return -1;
+      }
+
+      /* check that the tunnel interface marks range does not overflow */
+      if (tunnelsLow > (UINT8_MAX - cnf->smart_gw_use_count)) {
+        fprintf(stderr, "Error, tunnel interface mark offset %u together with use count %u overflows range [0, %u]\n",
+            tunnelsLow, cnf->smart_gw_use_count, UINT8_MAX);
+        return -1;
+      }
+
+      /* check that the egress and tunnel marks ranges do not overlap */
+      overlap =            ((tunnelsLow <= egressLow)   && (egressLow   <= tunnelsHigh));
+      overlap = overlap || ((tunnelsLow <= egressHigh)  && (egressHigh  <= tunnelsHigh));
+      overlap = overlap || ((egressLow  <= tunnelsLow)  && (tunnelsLow  <= egressHigh));
+      overlap = overlap || ((egressLow  <= tunnelsHigh) && (tunnelsHigh <= egressHigh));
+      if (overlap) {
+        fprintf(stderr, "Error, egress interface mark range [%u, %u] overlaps with tunnel interface mark range [%u, %u]\n",
+            egressLow, egressHigh, tunnelsLow, tunnelsHigh);
+        return -1;
+      }
+    }
   }
 
   if (cnf->smart_gw_period < MIN_SMARTGW_PERIOD || cnf->smart_gw_period > MAX_SMARTGW_PERIOD) {
@@ -826,6 +859,8 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->smart_gw_use_count = DEF_GW_USE_COUNT;
   cnf->smart_gw_egress_interfaces = NULL;
   cnf->smart_gw_egress_interfaces_count = 0;
+  cnf->smart_gw_mark_offset_egress = DEF_GW_MARK_OFFSET_EGRESS;
+  cnf->smart_gw_mark_offset_tunnels = DEF_GW_MARK_OFFSET_TUNNELS;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
   cnf->smart_gw_period = DEF_GW_PERIOD;
   cnf->smart_gw_stablecount = DEF_GW_STABLE_COUNT;
@@ -965,6 +1000,10 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     }
   }
   printf("\n");
+
+  printf("SmGw. Mark Egress: %u\n", cnf->smart_gw_mark_offset_egress);
+
+  printf("SmGw. Mark Tunnel: %u\n", cnf->smart_gw_mark_offset_tunnels);
 
   printf("SmGw. Allow NAT  : %s\n", cnf->smart_gw_allow_nat ? "yes" : "no");
 
