@@ -118,6 +118,18 @@ static uint8_t serialize_gw_speed(uint32_t speed) {
   return ((speed - 1) << 3) | exp;
 }
 
+/**
+ * Dummy for generating an interface name for an olsr ipip tunnel
+ * @param target IP destination of the tunnel
+ * @param name pointer to output buffer (length IFNAMSIZ)
+ */
+static void generate_iptunnel_name(union olsr_ip_addr *target, char * name) {
+  static uint32_t counter = 0;
+
+  memset(name, 0, IFNAMSIZ);
+  snprintf(name, IFNAMSIZ, "tnl_%08x", olsr_cnf->ip_version == AF_INET ? target->v4.s_addr : ++counter);
+}
+
 /*
  * Callback Functions
  */
@@ -612,7 +624,11 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
       current_ipv4_gw = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list, path_cost);
     } else {
       /* new gw is not yet in the gw list */
-      struct olsr_iptunnel_entry *new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true);
+      char name[IFNAMSIZ];
+      struct olsr_iptunnel_entry *new_v4gw_tunnel;
+
+      generate_iptunnel_name(&new_gw->originator, name);
+      new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true, name);
       if (new_v4gw_tunnel) {
         olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, NULL);
 
@@ -653,7 +669,11 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
       current_ipv6_gw = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list, path_cost);
     } else {
       /* new gw is not yet in the gw list */
-  	  struct olsr_iptunnel_entry *new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false);
+      char name[IFNAMSIZ];
+      struct olsr_iptunnel_entry *new_v6gw_tunnel;
+
+      generate_iptunnel_name(&new_gw->originator, name);
+      new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false, name);
       if (new_v6gw_tunnel) {
         olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, NULL);
 
