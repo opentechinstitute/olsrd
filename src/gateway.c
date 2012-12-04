@@ -26,6 +26,20 @@
 #include <assert.h>
 #include <net/if.h>
 
+/*
+ * Defines for the multi-gateway script
+ */
+
+#define SCRIPT_IPVERSION      ((olsr_cnf->ip_version == AF_INET) ? "ipv4" : "ipv6")
+
+#define SCRIPT_MODE_GENERIC   "generic"
+#define SCRIPT_MODE_OLSRIF    "olsrif"
+#define SCRIPT_MODE_SGWSRVTUN "sgwsrvtun"
+#define SCRIPT_MODE_EGRESSIF  "egressif"
+#define SCRIPT_MODE_SGWTUN    "sgwtun"
+
+#define SCRIPT_ADDMODE(add)   (add ? "add" : "del")
+
 /** structure that holds an interface name, mark and a pointer to the gateway that uses it */
 struct interfaceName {
   char name[IFNAMSIZ]; /**< interface name */
@@ -218,6 +232,174 @@ static void set_unused_iptunnel_name(struct gateway_entry *gw) {
   assert(ifn);
 }
 
+/**
+ * Run the multi-gateway script/
+ *
+ * @param mode the mode (see SCRIPT_MODE_* defines)
+ * @param add true to add policy routing, false to remove it
+ * @param ifname the interface name (optional)
+ * @param ifmark the interface mark (optional
+ * @return true when successful
+ */
+static bool multiGwRunScript(const char * mode, bool add, const char * ifname, uint8_t * ifmark) {
+  struct autobuf buf;
+  int r;
+
+  abuf_init(&buf, 1024);
+
+  abuf_appendf(&buf, "\"%s\"", olsr_cnf->smart_gw_policyrouting_script);
+
+  abuf_appendf(&buf, " \"%s\"", SCRIPT_IPVERSION);
+
+  assert(!strcmp(mode, SCRIPT_MODE_GENERIC) || !strcmp(mode, SCRIPT_MODE_OLSRIF) ||
+      !strcmp(mode, SCRIPT_MODE_SGWSRVTUN) || !strcmp(mode, SCRIPT_MODE_EGRESSIF) ||
+      !strcmp(mode, SCRIPT_MODE_SGWTUN));
+  abuf_appendf(&buf, " \"%s\"", mode);
+
+  abuf_appendf(&buf, " \"%s\"", SCRIPT_ADDMODE(add));
+
+  if (ifname) {
+    assert(!strcmp(mode, SCRIPT_MODE_OLSRIF) || !strcmp(mode, SCRIPT_MODE_SGWSRVTUN) ||
+        !strcmp(mode, SCRIPT_MODE_EGRESSIF) || !strcmp(mode, SCRIPT_MODE_SGWTUN));
+    abuf_appendf(&buf, " \"%s\"", ifname);
+  } else {
+    assert(!strcmp(mode, SCRIPT_MODE_GENERIC));
+  }
+  if (ifmark) {
+    assert(!strcmp(mode, SCRIPT_MODE_EGRESSIF) || !strcmp(mode, SCRIPT_MODE_SGWTUN));
+    assert(ifname);
+    abuf_appendf(&buf, " \"%u\"", *ifmark);
+  } else {
+    assert(!strcmp(mode, SCRIPT_MODE_GENERIC) || !strcmp(mode, SCRIPT_MODE_OLSRIF) ||
+      !strcmp(mode, SCRIPT_MODE_SGWSRVTUN));
+  }
+
+  r = system(buf.buf);
+
+  abuf_free(&buf);
+
+  return (r == 0);
+}
+
+/**
+ * Setup generic multi-gateway iptables and ip rules
+ *
+ * - generic (on olsrd up/down)
+ * iptablesExecutable -t mangle -A OUTPUT -j CONNMARK --restore-mark
+ *
+ * @param add true to add policy routing, false to remove it
+ * @return true when successful
+ */
+static bool multiGwRulesGeneric(bool add) {
+  return multiGwRunScript(SCRIPT_MODE_GENERIC, add, NULL, NULL);
+}
+
+/**
+ * Setup multi-gateway iptables and ip rules for all OLSR interfaces.
+ *
+ * - olsr interfaces (on olsrd up/down)
+ * iptablesExecutable -t mangle -A PREROUTING -i ${olsrInterface} -j CONNMARK --restore-mark
+ *
+ * @param add true to add policy routing, false to remove it
+ * @return true when successful
+ */
+static bool multiGwRulesOlsrInterfaces(bool add) {
+  bool ok = true;
+  struct interface * ifn;
+
+  for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+    if (!multiGwRunScript(SCRIPT_MODE_OLSRIF, add, ifn->int_name, NULL)) {
+      ok = false;
+      if (add) {
+        return ok;
+      }
+    }
+  }
+
+  return ok;
+}
+
+/**
+ * Setup multi-gateway iptables and ip rules for the smart gateway server tunnel.
+ *
+ * - sgw server tunnel interface (on olsrd up/down)
+ * iptablesExecutable -t mangle -A PREROUTING  -i tunl0 -j CONNMARK --restore-mark
+ *
+ * @param add true to add policy routing, false to remove it
+ * @return true when successful
+ */
+static bool multiGwRulesSgwServerTunnel(bool add) {
+  return multiGwRunScript(SCRIPT_MODE_SGWSRVTUN, add, TUNNEL_NAME, NULL);
+}
+
+/**
+ * Setup multi-gateway iptables and ip rules for all egress interfaces.
+ *
+ * - egress interfaces (on interface up/down)
+ * iptablesExecutable -t mangle -A POSTROUTING -m conntrack --ctstate NEW -o ${egressInterface} -j CONNMARK --set-mark ${egressInterfaceMark}
+ * iptablesExecutable -t mangle -A INPUT       -m conntrack --ctstate NEW -i ${egressInterface} -j CONNMARK --set-mark ${egressInterfaceMark}
+ * ip rule add fwmark ${egressInterfaceMark} table ${egressInterfaceMark} pref ${egressInterfaceMark}
+ *
+ * like table:
+ * ppp0 91
+ * eth0 92
+ *
+ * @param add true to add policy routing, false to remove it
+ * @return true when successful
+ */
+static bool multiGwRulesEgressInterfaces(bool add) {
+  bool ok = true;
+  unsigned int i = 0;
+
+  for (i = 0; i < olsr_cnf->smart_gw_use_count; i++) {
+    struct interfaceName * ifn = &sgwEgressInterfaceNames[i];
+    if (!multiGwRunScript(SCRIPT_MODE_EGRESSIF, add, ifn->name, &ifn->mark)) {
+      ok = false;
+      if (add) {
+        return ok;
+      }
+    }
+  }
+
+  return ok;
+}
+
+/**
+ * Setup multi-gateway iptables and ip rules for the smart gateway client tunnels.
+ *
+ * - sgw tunnels (on sgw tunnel up/down)
+ * iptablesExecutable -t mangle -A POSTROUTING -m conntrack --ctstate NEW -o ${sgwTunnelInterface} -j CONNMARK --set-mark ${sgwTunnelInterfaceMark}
+ * ip rule add fwmark ${sgwTunnelInterfaceMark} table ${sgwTunnelInterfaceMark} pref ${sgwTunnelInterfaceMark}
+ *
+ * like table:
+ * tnl_101 101
+ * tnl_102 102
+ * tnl_103 103
+ * tnl_104 104
+ * tnl_105 105
+ * tnl_106 106
+ * tnl_107 107
+ * tnl_108 108
+ */
+static bool multiGwRulesSgwTunnels(bool add) {
+  bool ok = true;
+  unsigned int i = 0;
+
+  while (i < olsr_cnf->smart_gw_use_count) {
+    struct interfaceName * ifn = (olsr_cnf->ip_version == AF_INET) ? &sgwTunnel4InterfaceNames[i] : &sgwTunnel6InterfaceNames[i];
+    if (!multiGwRunScript(SCRIPT_MODE_SGWTUN, add, ifn->name, &ifn->mark)) {
+      ok = false;
+      if (add) {
+        return ok;
+      }
+    }
+
+    i++;
+  }
+
+  return ok;
+}
+
 /*
  * Callback Functions
  */
@@ -322,6 +504,45 @@ int olsr_init_gateways(void) {
   olsr_add_ifchange_handler(smartgw_tunnel_monitor);
 
   return 0;
+}
+
+/**
+ * Startup gateway system
+ */
+int olsr_startup_gateways(void) {
+  bool ok = true;
+
+  if (olsr_cnf->smart_gw_use_count <= 1) {
+    return 0;
+  }
+
+  ok = ok && multiGwRulesGeneric(true);
+  ok = ok && multiGwRulesSgwServerTunnel(true);
+  ok = ok && multiGwRulesOlsrInterfaces(true);
+  ok = ok && multiGwRulesEgressInterfaces(true);
+  ok = ok && multiGwRulesSgwTunnels(true);
+  if (!ok) {
+    olsr_printf(0, "Could not setup multi-gateway iptables and ip rules\n");
+    olsr_shutdown_gateways();
+    return 1;
+  }
+
+  return 0;
+}
+
+/**
+ * Shutdown gateway tunnel system
+ */
+void olsr_shutdown_gateways(void) {
+  if (olsr_cnf->smart_gw_use_count <= 1) {
+    return;
+  }
+
+  (void)multiGwRulesSgwTunnels(false);
+  (void)multiGwRulesEgressInterfaces(false);
+  (void)multiGwRulesOlsrInterfaces(false);
+  (void)multiGwRulesSgwServerTunnel(false);
+  (void)multiGwRulesGeneric(false);
 }
 
 /**

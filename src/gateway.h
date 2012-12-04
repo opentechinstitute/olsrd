@@ -138,6 +138,8 @@ struct olsr_gw_handler {
  */
 
 int olsr_init_gateways(void);
+int olsr_startup_gateways(void);
+void olsr_shutdown_gateways(void);
 void olsr_cleanup_gateways(void);
 void olsr_trigger_inetgw_startup(void);
 #ifndef NODEBUG
