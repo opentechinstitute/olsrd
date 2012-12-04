@@ -627,23 +627,23 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
       char name[IFNAMSIZ];
       struct olsr_iptunnel_entry *new_v4gw_tunnel;
 
+      if (olsr_gw_list_full(&gw_list_ipv4)) {
+        /* the list is full: remove the worst active gateway */
+        struct gw_container_entry* worst = olsr_gw_list_get_worst_entry(&gw_list_ipv4);
+        assert(worst);
+
+        if (worst->tunnel) {
+          olsr_os_del_ipip_tunnel(worst->tunnel);
+          worst->tunnel = NULL;
+        }
+        worst->gw = NULL;
+        olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv4, worst));
+      }
+
       generate_iptunnel_name(&new_gw->originator, name);
       new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true, name);
       if (new_v4gw_tunnel) {
         olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, NULL);
-
-        if (olsr_gw_list_full(&gw_list_ipv4)) {
-          /* the list is full: remove the worst active gateway */
-          struct gw_container_entry* worst = olsr_gw_list_get_worst_entry(&gw_list_ipv4);
-          assert(worst);
-
-          worst->gw = NULL;
-          if (worst->tunnel) {
-            olsr_os_del_ipip_tunnel(worst->tunnel);
-            worst->tunnel = NULL;
-          }
-          olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv4, worst));
-        }
 
         new_gw_in_list = olsr_cookie_malloc(gw_container_entry_mem_cookie);
         new_gw_in_list->gw = new_gw;
@@ -672,23 +672,23 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
       char name[IFNAMSIZ];
       struct olsr_iptunnel_entry *new_v6gw_tunnel;
 
+      if (olsr_gw_list_full(&gw_list_ipv6)) {
+        /* the list is full: remove the worst active gateway */
+        struct gw_container_entry* worst = olsr_gw_list_get_worst_entry(&gw_list_ipv6);
+        assert(worst);
+
+        if (worst->tunnel) {
+          olsr_os_del_ipip_tunnel(worst->tunnel);
+          worst->tunnel = NULL;
+        }
+        worst->gw = NULL;
+        olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv6, worst));
+      }
+
       generate_iptunnel_name(&new_gw->originator, name);
       new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false, name);
       if (new_v6gw_tunnel) {
         olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, NULL);
-
-        if (olsr_gw_list_full(&gw_list_ipv6)) {
-          /* the list is full: remove the worst active gateway */
-          struct gw_container_entry* worst = olsr_gw_list_get_worst_entry(&gw_list_ipv6);
-          assert(worst);
-
-          worst->gw = NULL;
-          if (worst->tunnel) {
-            olsr_os_del_ipip_tunnel(worst->tunnel);
-            worst->tunnel = NULL;
-          }
-          olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv6, worst));
-        }
 
         new_gw_in_list = olsr_cookie_malloc(gw_container_entry_mem_cookie);
         new_gw_in_list->gw = new_gw;
