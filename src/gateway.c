@@ -26,6 +26,13 @@
 #include <assert.h>
 #include <net/if.h>
 
+/** structure that holds an interface name, mark and a pointer to the gateway that uses it */
+struct interfaceName {
+  char name[IFNAMSIZ]; /**< interface name */
+  uint8_t mark; /**< marking */
+  struct gateway_entry *gw; /**< gateway that uses this interface name */
+};
+
 /** the gateway tree */
 struct avl_tree gateway_tree;
 
@@ -52,6 +59,12 @@ static struct gw_container_entry *current_ipv4_gw;
 
 /** the current IPv6 gateway */
 static struct gw_container_entry *current_ipv6_gw;
+
+/** interface names for smart gateway tunnel interfaces, IPv4 */
+struct interfaceName * sgwTunnel4InterfaceNames;
+
+/** interface names for smart gateway tunnel interfaces, IPv6 */
+struct interfaceName * sgwTunnel6InterfaceNames;
 
 /*
  * Forward Declarations
@@ -184,6 +197,28 @@ int olsr_init_gateways(void) {
   olsr_gw_list_init(&gw_list_ipv4, olsr_cnf->smart_gw_use_count);
   olsr_gw_list_init(&gw_list_ipv6, olsr_cnf->smart_gw_use_count);
 
+  if (olsr_cnf->smart_gw_use_count <= 1) {
+    sgwTunnel4InterfaceNames = NULL;
+    sgwTunnel6InterfaceNames = NULL;
+  } else {
+    uint8_t i;
+
+    /* setup the SGW tunnel name/mark pairs */
+    sgwTunnel4InterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_use_count, "sgwTunnel4InterfaceNames");
+    sgwTunnel6InterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_use_count, "sgwTunnel6InterfaceNames");
+    for (i = 0; i < olsr_cnf->smart_gw_use_count; i++) {
+      struct interfaceName * ifn = &sgwTunnel4InterfaceNames[i];
+      ifn->gw = NULL;
+      ifn->mark = i + olsr_cnf->smart_gw_mark_offset_tunnels;
+      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl4_%03u", ifn->mark);
+
+      ifn = &sgwTunnel6InterfaceNames[i];
+      ifn->gw = NULL;
+      ifn->mark = i + olsr_cnf->smart_gw_mark_offset_tunnels;
+      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl6_%03u", ifn->mark);
+    }
+  }
+
   current_ipv4_gw = NULL;
   current_ipv6_gw = NULL;
 
@@ -247,6 +282,15 @@ void olsr_cleanup_gateways(void) {
   assert(gw_handler);
   gw_handler->cleanup();
   gw_handler = NULL;
+
+  if (sgwTunnel4InterfaceNames) {
+    free(sgwTunnel4InterfaceNames);
+    sgwTunnel4InterfaceNames = NULL;
+  }
+  if (sgwTunnel6InterfaceNames) {
+    free(sgwTunnel6InterfaceNames);
+    sgwTunnel6InterfaceNames = NULL;
+  }
 
   olsr_gw_list_cleanup(&gw_list_ipv6);
   olsr_gw_list_cleanup(&gw_list_ipv4);
