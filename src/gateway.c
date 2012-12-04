@@ -60,6 +60,9 @@ static struct gw_container_entry *current_ipv4_gw;
 /** the current IPv6 gateway */
 static struct gw_container_entry *current_ipv6_gw;
 
+/** interface names for smart gateway egress interfaces */
+struct interfaceName * sgwEgressInterfaceNames;
+
 /** interface names for smart gateway tunnel interfaces, IPv4 */
 struct interfaceName * sgwTunnel4InterfaceNames;
 
@@ -198,10 +201,20 @@ int olsr_init_gateways(void) {
   olsr_gw_list_init(&gw_list_ipv6, olsr_cnf->smart_gw_use_count);
 
   if (olsr_cnf->smart_gw_use_count <= 1) {
+    sgwEgressInterfaceNames = NULL;
     sgwTunnel4InterfaceNames = NULL;
     sgwTunnel6InterfaceNames = NULL;
   } else {
     uint8_t i;
+
+    /* setup the egress interface name/mark pairs */
+    sgwEgressInterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_egress_interfaces_count, "sgwEgressInterfaceNames");
+    for (i = 0; i < olsr_cnf->smart_gw_egress_interfaces_count; i++) {
+      struct interfaceName * ifn = &sgwEgressInterfaceNames[i];
+      ifn->gw = NULL;
+      ifn->mark = i + olsr_cnf->smart_gw_mark_offset_egress;
+      snprintf(&ifn->name[0], sizeof(ifn->name), "egress_%03u", ifn->mark);
+    }
 
     /* setup the SGW tunnel name/mark pairs */
     sgwTunnel4InterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_use_count, "sgwTunnel4InterfaceNames");
@@ -283,6 +296,10 @@ void olsr_cleanup_gateways(void) {
   gw_handler->cleanup();
   gw_handler = NULL;
 
+  if (sgwEgressInterfaceNames) {
+    free(sgwEgressInterfaceNames);
+    sgwEgressInterfaceNames = NULL;
+  }
   if (sgwTunnel4InterfaceNames) {
     free(sgwTunnel4InterfaceNames);
     sgwTunnel4InterfaceNames = NULL;
