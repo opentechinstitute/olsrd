@@ -40,6 +40,8 @@
 
 #define SCRIPT_ADDMODE(add)   (add ? "add" : "del")
 
+#define MULTI_GW_MODE (olsr_cnf->smart_gw_use_count > 1)
+
 /** structure that holds an interface name, mark and a pointer to the gateway that uses it */
 struct interfaceName {
   char name[IFNAMSIZ]; /**< interface name */
@@ -188,7 +190,7 @@ static void get_unused_iptunnel_name(struct gateway_entry *gw, char * name, stru
   assert(name);
   assert(interfaceName);
 
-  if (olsr_cnf->smart_gw_use_count > 1) {
+  if (MULTI_GW_MODE) {
     struct interfaceName * ifn = find_interfaceName(NULL);
 
     if (ifn) {
@@ -215,7 +217,7 @@ static void get_unused_iptunnel_name(struct gateway_entry *gw, char * name, stru
 static void set_unused_iptunnel_name(struct gateway_entry *gw) {
   struct interfaceName * ifn;
 
-  if (olsr_cnf->smart_gw_use_count <= 1) {
+  if (!MULTI_GW_MODE) {
     return;
   }
 
@@ -454,7 +456,7 @@ int olsr_init_gateways(void) {
   olsr_gw_list_init(&gw_list_ipv4, olsr_cnf->smart_gw_use_count);
   olsr_gw_list_init(&gw_list_ipv6, olsr_cnf->smart_gw_use_count);
 
-  if (olsr_cnf->smart_gw_use_count <= 1) {
+  if (!MULTI_GW_MODE) {
     sgwEgressInterfaceNames = NULL;
     sgwTunnel4InterfaceNames = NULL;
     sgwTunnel6InterfaceNames = NULL;
@@ -512,7 +514,7 @@ int olsr_init_gateways(void) {
 int olsr_startup_gateways(void) {
   bool ok = true;
 
-  if (olsr_cnf->smart_gw_use_count <= 1) {
+  if (!MULTI_GW_MODE) {
     return 0;
   }
 
@@ -534,7 +536,7 @@ int olsr_startup_gateways(void) {
  * Shutdown gateway tunnel system
  */
 void olsr_shutdown_gateways(void) {
-  if (olsr_cnf->smart_gw_use_count <= 1) {
+  if (!MULTI_GW_MODE) {
     return;
   }
 
