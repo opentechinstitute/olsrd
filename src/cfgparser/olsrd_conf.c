@@ -554,6 +554,11 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   }
 
 #ifdef __linux__
+  if ((cnf->smart_gw_use_count < MIN_SMARTGW_USE_COUNT_MIN) || (cnf->smart_gw_use_count > MAX_SMARTGW_USE_COUNT_MAX)) {
+    fprintf(stderr, "Error, bad gateway use count %d, outside of range [%d, %d]\n",
+        cnf->smart_gw_use_count, MIN_SMARTGW_USE_COUNT_MIN, MAX_SMARTGW_USE_COUNT_MAX);
+    return -1;
+  }
   if (cnf->smart_gw_period < MIN_SMARTGW_PERIOD || cnf->smart_gw_period > MAX_SMARTGW_PERIOD) {
     fprintf(stderr, "Error, bad gateway period: %d msec (should be %d-%d)\n",
         cnf->smart_gw_period, MIN_SMARTGW_PERIOD, MAX_SMARTGW_PERIOD);
@@ -787,6 +792,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->niit6to4_if_index = 0;
 
   cnf->smart_gw_active = DEF_SMART_GW;
+  cnf->smart_gw_use_count = DEF_GW_USE_COUNT;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
   cnf->smart_gw_period = DEF_GW_PERIOD;
   cnf->smart_gw_stablecount = DEF_GW_STABLE_COUNT;
@@ -914,6 +920,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("Use niit         : %s\n", cnf->use_niit ? "yes" : "no");
 
   printf("Smart Gateway    : %s\n", cnf->smart_gw_active ? "yes" : "no");
+
+  printf("SmGw. Use Count  : %u\n", cnf->smart_gw_use_count);
 
   printf("SmGw. Allow NAT  : %s\n", cnf->smart_gw_allow_nat ? "yes" : "no");
 

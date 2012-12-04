@@ -215,6 +215,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_LOCK_FILE
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
+%token TOK_SMART_GW_USE_COUNT
 %token TOK_SMART_GW_ALLOW_NAT
 %token TOK_SMART_GW_PERIOD
 %token TOK_SMART_GW_STABLECOUNT
@@ -302,6 +303,7 @@ stmt:       idebug
           | alock_file
           | suse_niit
           | bsmart_gw
+          | ismart_gw_use_count
           | bsmart_gw_allow_nat
           | ismart_gw_period
           | asmart_gw_stablecount
@@ -1301,6 +1303,14 @@ bsmart_gw: TOK_SMART_GW TOK_BOOLEAN
 	PARSER_DEBUG_PRINTF("Smart gateway system: %s\n", $2->boolean ? "enabled" : "disabled");
 	olsr_cnf->smart_gw_active = $2->boolean;
 	free($2);
+}
+;
+
+ismart_gw_use_count: TOK_SMART_GW_USE_COUNT TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway use count: %d\n", $2->integer);
+  olsr_cnf->smart_gw_use_count = $2->integer;
+  free($2);
 }
 ;
 

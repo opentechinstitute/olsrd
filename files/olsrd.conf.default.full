@@ -144,6 +144,13 @@
 
 # SmartGateway no
 
+# Determines the maximum number of gateways that can be in use at any given
+# time. This setting is used to mitigate the effects of breaking connections
+# (due to the selection of a new gateway) on a dynamic network.
+# (default is 1)
+
+# SmartGatewayUseCount 1
+
 # Allows the selection of a smartgateway with NAT (only for IPv4)
 # (default is "yes")
 

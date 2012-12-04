@@ -438,6 +438,16 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->smart_gw_active ? "yes" : "no");
   abuf_puts(out,
     "\n"
+    "# Determines the maximum number of gateways that can be in use at any given\n"
+    "# time. This setting is used to mitigate the effects of breaking connections\n"
+    "# (due to the selection of a new gateway) on a dynamic network.\n"
+    "# (default is 1)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayUseCount %d\n",
+      cnf->smart_gw_use_count == DEF_GW_USE_COUNT ? "# " : "",
+      cnf->smart_gw_use_count);
+  abuf_puts(out,
+    "\n"
     "# Allows the selection of a smartgateway with NAT (only for IPv4)\n"
     "# (default is \"yes\")\n"
     "\n");

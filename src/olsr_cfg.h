@@ -81,6 +81,7 @@
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
+#define DEF_GW_USE_COUNT     1
 #define DEF_GW_PERIOD        10*1000
 #define DEF_GW_STABLE_COUNT  6
 #define DEF_GW_ALLOW_NAT     true
@@ -121,6 +122,9 @@
 #define MIN_LQ_LEVEL         0
 #define MAX_LQ_AGING         1.0
 #define MIN_LQ_AGING         0.01
+
+#define MIN_SMARTGW_USE_COUNT_MIN  1
+#define MAX_SMARTGW_USE_COUNT_MAX  1
 
 #define MIN_SMARTGW_PERIOD   1*1000
 #define MAX_SMARTGW_PERIOD   320000*1000
@@ -276,6 +280,7 @@ struct olsrd_config {
   bool use_niit;
 
   bool smart_gw_active, smart_gw_allow_nat, smart_gw_uplink_nat;
+  uint8_t smart_gw_use_count;
   uint32_t smart_gw_period;
   uint8_t smart_gw_stablecount;
   uint8_t smart_gw_thresh;

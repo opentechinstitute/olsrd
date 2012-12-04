@@ -986,6 +986,7 @@ ipc_print_config(struct autobuf *abuf)
 #ifdef __linux__
   abuf_json_boolean(abuf, "smartGateway", olsr_cnf->smart_gw_active);
   if (olsr_cnf->smart_gw_active) {
+    abuf_json_int(abuf, "smartGatewayUseCount", olsr_cnf->smart_gw_use_count);
     abuf_json_boolean(abuf, "smartGatewayAllowNat", olsr_cnf->smart_gw_allow_nat);
     abuf_json_boolean(abuf, "smartGatewayUplinkNat", olsr_cnf->smart_gw_uplink_nat);
     abuf_json_int(abuf, "smartGatewayPeriod", olsr_cnf->smart_gw_period);
