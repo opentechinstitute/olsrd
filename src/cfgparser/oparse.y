@@ -217,6 +217,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
 %token TOK_SMART_GW_USE_COUNT
+%token TOK_SMART_GW_POLICYROUTING_SCRIPT
 %token TOK_SMART_GW_EGRESS_IFS
 %token TOK_SMART_GW_MARK_OFFSET_EGRESS
 %token TOK_SMART_GW_MARK_OFFSET_TUNNELS
@@ -308,6 +309,7 @@ stmt:       idebug
           | suse_niit
           | bsmart_gw
           | ismart_gw_use_count
+          | ssmart_gw_policyrouting_script
           | ismart_gw_mark_offset_egress
           | ismart_gw_mark_offset_tunnels
           | bsmart_gw_allow_nat
@@ -1317,6 +1319,14 @@ ismart_gw_use_count: TOK_SMART_GW_USE_COUNT TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("Smart gateway use count: %d\n", $2->integer);
   olsr_cnf->smart_gw_use_count = $2->integer;
+  free($2);
+}
+;
+
+ssmart_gw_policyrouting_script: TOK_SMART_GW_POLICYROUTING_SCRIPT TOK_STRING
+{
+  PARSER_DEBUG_PRINTF("Smart gateway policy routing script: %s\n", $2->string);
+  olsr_cnf->smart_gw_policyrouting_script = $2->string;
   free($2);
 }
 ;

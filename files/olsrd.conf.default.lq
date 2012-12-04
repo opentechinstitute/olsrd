@@ -88,6 +88,14 @@
 
 # SmartGatewayUseCount 1
 
+# Determines the policy routing script that is executed during startup and
+# shutdown of olsrd. The script is only executed when SmartGatewayUseCount
+# is set to a value larger than 1. The script must setup policy routing
+# rules such that multi-gateway mode works. A sample script is included.
+# (default is not set)
+
+# SmartGatewayPolicyRoutingScript ""
+
 # Determines the egress interfaces that are part of the multi-gateway setup and
 # therefore only relevant when SmartGatewayUseCount is larger than 1 (in which
 # case it must be explicitly set).

@@ -987,6 +987,7 @@ ipc_print_config(struct autobuf *abuf)
   abuf_json_boolean(abuf, "smartGateway", olsr_cnf->smart_gw_active);
   if (olsr_cnf->smart_gw_active) {
     abuf_json_int(abuf, "smartGatewayUseCount", olsr_cnf->smart_gw_use_count);
+    abuf_json_string(abuf, "smartGatewayPolicyRoutingScript", olsr_cnf->smart_gw_policyrouting_script);
     {
       struct autobuf egressbuf;
       struct sgw_egress_if * egressif = olsr_cnf->smart_gw_egress_interfaces;

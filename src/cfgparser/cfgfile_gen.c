@@ -448,6 +448,17 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->smart_gw_use_count);
   abuf_puts(out,
     "\n"
+    "# Determines the policy routing script that is executed during startup and\n"
+    "# shutdown of olsrd. The script is only executed when SmartGatewayUseCount\n"
+    "# is set to a value larger than 1. The script must setup policy routing\n"
+    "# rules such that multi-gateway mode works. A sample script is included.\n"
+    "# (default is not set)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayPolicyRoutingScript %s\n",
+      !cnf->smart_gw_policyrouting_script ? "# " : "",
+      !cnf->smart_gw_policyrouting_script ? "" : cnf->smart_gw_policyrouting_script);
+  abuf_puts(out,
+    "\n"
     "# Determines the egress interfaces that are part of the multi-gateway setup and\n"
     "# therefore only relevant when SmartGatewayUseCount is larger than 1 (in which\n"
     "# case it must be explicitly set).\n"

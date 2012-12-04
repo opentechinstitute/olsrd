@@ -59,6 +59,7 @@
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #include <linux/version.h>
+#include <sys/stat.h>
 #endif /* __linux__ */
 
 extern FILE *yyin;
@@ -563,6 +564,36 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   if (cnf->smart_gw_use_count > 1) {
     struct sgw_egress_if * sgwegressif = cnf->smart_gw_egress_interfaces;
 
+    if (!cnf->smart_gw_policyrouting_script) {
+      fprintf(stderr, "Error, no policy routing script configured in multi-gateway mode\n");
+      return -1;
+    }
+
+    {
+      struct stat statbuf;
+
+      int r = stat(cnf->smart_gw_policyrouting_script, &statbuf);
+      if (r) {
+        fprintf(stderr, "Error, policy routing script not found: %s\n", strerror(errno));
+        return -1;
+      }
+
+      if (!S_ISREG(statbuf.st_mode)) {
+        fprintf(stderr, "Error, policy routing script not a regular file\n");
+        return -1;
+      }
+
+      if (statbuf.st_uid) {
+        fprintf(stderr, "Error, policy routing script must be owned by root\n");
+        return -1;
+      }
+
+      if (statbuf.st_mode & S_IXUSR) {
+        fprintf(stderr, "Error, policy routing script is not executable\n");
+        return -1;
+      }
+    }
+
     /* egress interface(s) must be set */
     if (!sgwegressif) {
       fprintf(stderr, "Error, no egress interfaces configured in multi-gateway mode\n");
@@ -857,6 +888,7 @@ set_default_cnf(struct olsrd_config *cnf)
 
   cnf->smart_gw_active = DEF_SMART_GW;
   cnf->smart_gw_use_count = DEF_GW_USE_COUNT;
+  cnf->smart_gw_policyrouting_script = NULL;
   cnf->smart_gw_egress_interfaces = NULL;
   cnf->smart_gw_egress_interfaces_count = 0;
   cnf->smart_gw_mark_offset_egress = DEF_GW_MARK_OFFSET_EGRESS;
@@ -990,6 +1022,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("Smart Gateway    : %s\n", cnf->smart_gw_active ? "yes" : "no");
 
   printf("SmGw. Use Count  : %u\n", cnf->smart_gw_use_count);
+
+  printf("SmGw. Pol. Script: %s\n", cnf->smart_gw_policyrouting_script);
 
   printf("SmGw. Egress I/Fs:");
   {
