@@ -983,6 +983,7 @@ ipc_print_config(struct autobuf *abuf)
   abuf_json_string(abuf, "lockFile", olsr_cnf->lock_file);
   abuf_json_boolean(abuf, "useNiit", olsr_cnf->use_niit);
 
+#ifdef __linux__
   abuf_json_boolean(abuf, "smartGateway", olsr_cnf->smart_gw_active);
   if (olsr_cnf->smart_gw_active) {
     abuf_json_boolean(abuf, "smartGatewayAllowNat", olsr_cnf->smart_gw_allow_nat);
@@ -997,6 +998,7 @@ ipc_print_config(struct autobuf *abuf)
                      olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->smart_gw_prefix.prefix));
     abuf_json_int(abuf, "smartGatewayPrefixLength", olsr_cnf->smart_gw_prefix.prefix_len);
   }
+#endif /* __linux__ */
 
   abuf_json_string(abuf, "mainIpAddress",
                    olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
