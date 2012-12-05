@@ -20,22 +20,22 @@ DOC_DEFINES = $(shell ./getdefines.bash $(CPPFLAGS) $(CFLAGS))
 
 
 # All excludes
-# DOC_INPUT   = ../src ../gui ../android
-# DOC_EXCLUDE = ../src/linux ../gui/linux-gtk ../src/unix ../android ../src/win32 ../gui/win32 ../src/bsd
+# DOC_INPUT   = ../src ../android
+# DOC_EXCLUDE = ../src/linux ../src/unix ../android ../src/win32 ../src/bsd
 
-DOC_INPUT   = ../src ../gui ../android
+DOC_INPUT   = ../src ../android
 
 ifeq ($(OS), linux)
 DOC_DEFINES += __linux__
-DOC_EXCLUDE = ../android ../src/win32 ../gui/win32 ../src/bsd
+DOC_EXCLUDE = ../android ../src/win32 ../src/bsd
 else
 ifeq ($(OS), android)
 DOC_DEFINES += __linux__ _ANDROID
-DOC_EXCLUDE = ../src/win32 ../gui/win32 ../src/bsd
+DOC_EXCLUDE = ../src/win32 ../src/bsd
 else
 ifeq ($(OS), win32)
 DOC_DEFINES += _WIN32
-DOC_EXCLUDE = ../src/linux ../gui/linux-gtk ../src/unix ../android ../src/bsd
+DOC_EXCLUDE = ../src/linux ../src/unix ../android ../src/bsd
 else
 $(error $(OS) not known to the doc makefile)
 endif
