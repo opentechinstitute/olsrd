@@ -602,7 +602,7 @@ add_hemu_if(struct olsr_if *iface)
 }
 
 int
-chk_if_changed(struct olsr_if *IntConf)
+chk_if_changed(struct olsr_if *iface)
 {
   struct ipaddr_str buf;
   struct interface *Int;
@@ -617,19 +617,19 @@ chk_if_changed(struct olsr_if *IntConf)
     return 0;
   }
 #ifdef DEBUG
-  OLSR_PRINTF(3, "Checking if %s is set down or changed\n", IntConf->name);
+  OLSR_PRINTF(3, "Checking if %s is set down or changed\n", iface->name);
 #endif /* DEBUG */
 
-  Int = IntConf->interf;
+  Int = iface->interf;
 
-  if (GetIntInfo(&Info, IntConf->name) < 0) {
-    olsr_remove_interface(IntConf);
+  if (GetIntInfo(&Info, iface->name) < 0) {
+    olsr_remove_interface(iface);
     return 1;
   }
 
   Res = 0;
 
-  IsWlan = IsWireless(IntConf->name);
+  IsWlan = IsWireless(iface->name);
 
   if (IsWlan < 0)
     IsWlan = 1;
@@ -639,8 +639,8 @@ chk_if_changed(struct olsr_if *IntConf)
 
     Int->is_wireless = IsWlan;
 
-    if (IntConf->cnf->weight.fixed)
-      Int->int_metric = IntConf->cnf->weight.value;
+    if (iface->cnf->weight.fixed)
+      Int->int_metric = iface->cnf->weight.value;
 
     else
       Int->int_metric = Info.Metric;
@@ -746,7 +746,7 @@ chk_if_changed(struct olsr_if *IntConf)
 }
 
 int
-chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
+chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 {
   struct ipaddr_str buf;
   struct InterfaceInfo Info;
@@ -761,19 +761,19 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
     return 0;
   }
 
-  if (GetIntInfo(&Info, IntConf->name) < 0)
+  if (GetIntInfo(&Info, iface->name) < 0)
     return 0;
 
   New = olsr_malloc(sizeof(struct interface), "Interface 1");
   /* initialize backpointer */
-  New->olsr_if = IntConf;
+  New->olsr_if = iface;
 
 
-  New->immediate_send_tc = (IntConf->cnf->tc_params.emission_interval < IntConf->cnf->hello_params.emission_interval);
+  New->immediate_send_tc = (iface->cnf->tc_params.emission_interval < iface->cnf->hello_params.emission_interval);
   if (olsr_cnf->max_jitter == 0) {
     /* max_jitter determines the max time to store to-be-send-messages, correlated with random() */
     olsr_cnf->max_jitter =
-      New->immediate_send_tc ? IntConf->cnf->tc_params.emission_interval : IntConf->cnf->hello_params.emission_interval;
+      New->immediate_send_tc ? iface->cnf->tc_params.emission_interval : iface->cnf->hello_params.emission_interval;
   }
 
   New->gen_properties = NULL;
@@ -796,8 +796,8 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
   AddrIn->sin_port = 0;
   AddrIn->sin_addr.s_addr = Info.Broad;
 
-  if (IntConf->cnf->ipv4_multicast.v4.s_addr != 0)
-    AddrIn->sin_addr = IntConf->cnf->ipv4_multicast.v4;
+  if (iface->cnf->ipv4_multicast.v4.s_addr != 0)
+    AddrIn->sin_addr = iface->cnf->ipv4_multicast.v4;
 
   New->int_flags = 0;
 
@@ -805,19 +805,19 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
 
   New->int_mtu = Info.Mtu;
 
-  name_size = strlen(IntConf->name) + 1;
+  name_size = strlen(iface->name) + 1;
   New->int_name = olsr_malloc(name_size, "Interface 2");
-  strscpy(New->int_name, IntConf->name, name_size);
+  strscpy(New->int_name, iface->name, name_size);
 
-  IsWlan = IsWireless(IntConf->name);
+  IsWlan = IsWireless(iface->name);
 
   if (IsWlan < 0)
     IsWlan = 1;
 
   New->is_wireless = IsWlan;
 
-  if (IntConf->cnf->weight.fixed)
-    New->int_metric = IntConf->cnf->weight.value;
+  if (iface->cnf->weight.fixed)
+    New->int_metric = iface->cnf->weight.value;
 
   else
     New->int_metric = Info.Metric;
@@ -826,7 +826,7 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
 
   New->ttl_index = -32;         /* For the first 32 TC's, fish-eye is disabled */
 
-  OLSR_PRINTF(1, "\tInterface %s set up for use with index %d\n\n", IntConf->name, New->if_index);
+  OLSR_PRINTF(1, "\tInterface %s set up for use with index %d\n\n", iface->name, New->if_index);
 
   OLSR_PRINTF(1, "\tMTU: %d\n", New->int_mtu);
   OLSR_PRINTF(1, "\tAddress: %s\n", sockaddr4_to_string(&buf, (const struct sockaddr *)&New->int_addr));
@@ -852,8 +852,8 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
   New->int_next = ifnet;
   ifnet = New;
 
-  IntConf->interf = New;
-  IntConf->configured = 1;
+  iface->interf = New;
+  iface->configured = 1;
 
   memset(&NullAddr, 0, olsr_cnf->ipsize);
 
@@ -869,28 +869,28 @@ chk_if_up(struct olsr_if *IntConf, int DebugLevel __attribute__ ((unused)))
    * Register functions for periodic message generation
    */
   New->hello_gen_timer =
-    olsr_start_timer(IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(iface->cnf->hello_params.emission_interval * MSEC_PER_SEC, HELLO_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_hello : &olsr_output_lq_hello, New, hello_gen_timer_cookie);
   New->tc_gen_timer =
-    olsr_start_timer(IntConf->cnf->tc_params.emission_interval * MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
+    olsr_start_timer(iface->cnf->tc_params.emission_interval * MSEC_PER_SEC, TC_JITTER, OLSR_TIMER_PERIODIC,
                      olsr_cnf->lq_level == 0 ? &generate_tc : &olsr_output_lq_tc, New, tc_gen_timer_cookie);
   New->mid_gen_timer =
-    olsr_start_timer(IntConf->cnf->mid_params.emission_interval * MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New,
+    olsr_start_timer(iface->cnf->mid_params.emission_interval * MSEC_PER_SEC, MID_JITTER, OLSR_TIMER_PERIODIC, &generate_mid, New,
                      mid_gen_timer_cookie);
   New->hna_gen_timer =
-    olsr_start_timer(IntConf->cnf->hna_params.emission_interval * MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New,
+    olsr_start_timer(iface->cnf->hna_params.emission_interval * MSEC_PER_SEC, HNA_JITTER, OLSR_TIMER_PERIODIC, &generate_hna, New,
                      hna_gen_timer_cookie);
 
-  if (olsr_cnf->max_tc_vtime < IntConf->cnf->tc_params.emission_interval)
-    olsr_cnf->max_tc_vtime = IntConf->cnf->tc_params.emission_interval;
+  if (olsr_cnf->max_tc_vtime < iface->cnf->tc_params.emission_interval)
+    olsr_cnf->max_tc_vtime = iface->cnf->tc_params.emission_interval;
 
-  New->hello_etime = (olsr_reltime) (IntConf->cnf->hello_params.emission_interval * MSEC_PER_SEC);
-  New->valtimes.hello = reltime_to_me(IntConf->cnf->hello_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.tc = reltime_to_me(IntConf->cnf->tc_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.mid = reltime_to_me(IntConf->cnf->mid_params.validity_time * MSEC_PER_SEC);
-  New->valtimes.hna = reltime_to_me(IntConf->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  New->hello_etime = (olsr_reltime) (iface->cnf->hello_params.emission_interval * MSEC_PER_SEC);
+  New->valtimes.hello = reltime_to_me(iface->cnf->hello_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
+  New->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
-  New->mode = IntConf->cnf->mode;
+  New->mode = iface->cnf->mode;
 
   olsr_trigger_ifchange(New->if_index, New, IFCHG_IF_ADD);
 

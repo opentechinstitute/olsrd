@@ -58,7 +58,7 @@ char *StrError(unsigned int ErrNo);
 /**
  *Insert a route in the kernel routing table
  *
- *@param destination the route to add
+ *@param rt the route to add
  *
  *@return negative on error
  */
@@ -137,7 +137,7 @@ olsr_ioctl_add_route6(const struct rt_entry *rt __attribute__ ((unused)))
 /**
  *Remove a route from the kernel
  *
- *@param destination the route to remove
+ *@param rt the route to remove
  *
  *@return negative on error
  */
