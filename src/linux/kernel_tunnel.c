@@ -248,6 +248,7 @@ struct olsr_iptunnel_entry *olsr_os_add_ipip_tunnel(union olsr_ip_addr *target, 
  * Release an olsr ipip tunnel. Tunnel will be deleted
  * if this was the last user
  * @param t pointer to olsr_iptunnel_entry
+ * @param cleanup true to free t's memory
  */
 static void internal_olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t, bool cleanup) {
   if (!cleanup) {

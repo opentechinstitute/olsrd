@@ -591,7 +591,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
 /**
  * Insert a route in the kernel routing table
  *
- * @param destination the route to add
+ * @param rt the route to add
  *
  * @return negative on error
  */
@@ -605,7 +605,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
 /**
  *Insert a route in the kernel routing table
  *
- *@param destination the route to add
+ *@param rt the route to add
  *
  *@return negative on error
  */
@@ -619,7 +619,7 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
 /**
  *Remove a route from the kernel
  *
- *@param destination the route to remove
+ *@param rt the route to remove
  *
  *@return negative on error
  */
@@ -633,7 +633,7 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
 /**
  *Remove a route from the kernel
  *
- *@param destination the route to remove
+ *@param rt the route to remove
  *
  *@return negative on error
  */
