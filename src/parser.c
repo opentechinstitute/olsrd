@@ -254,10 +254,10 @@ olsr_packetparser_remove_function(packetparser_function * function)
  *Process a newly received OLSR packet. Checks the type
  *and to the neccessary convertions and call the
  *corresponding functions to handle the information.
- *@param from the sockaddr struct describing the sender
  *@param olsr the olsr struct containing the message
  *@param size the size of the message
- *@return nada
+ *@param in_if the incoming interface
+ *@param from_addr the sockaddr struct describing the sender
  */
 
 void
@@ -413,7 +413,8 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
  *and passes the packet on to parse_packet().
  *
  *@param fd the filedescriptor that data should be read from.
- *@return nada
+ *@param data unused
+ *@param flags unused
  */
 void
 olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
@@ -508,7 +509,8 @@ olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
  *and passes the packet on to parse_packet().
  *
  *@param fd the filedescriptor that data should be read from.
- *@return nada
+ *@param data unused
+ *@param flags unused
  */
 void
 olsr_input_hostemu(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))

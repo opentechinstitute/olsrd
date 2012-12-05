@@ -582,7 +582,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, bool ipv4, bool ipv6)
 }
 
 /**
- * @param if set to true then the IPv6 gateway is returned, otherwise the IPv4
+ * @param ipv6 if set to true then the IPv6 gateway is returned, otherwise the IPv4
  * gateway is returned
  * @return a pointer to the gateway_entry of the current ipv4 internet gw or
  * NULL if not set.

@@ -517,6 +517,7 @@ olsr_rt_best(struct rt_entry *rt)
  *@param dst the destination
  *@param plen the prefix length
  *@param originator the originating router
+ *@param origin the origin of the route
  *
  *@return the new rt_path struct
  */

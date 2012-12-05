@@ -178,7 +178,7 @@ queue_tc(struct tc_message * message, struct interface * ifp)
  *Build a MID message to the outputbuffer
  *
  *<b>NO INTERNAL BUFFER</b>
- *@param ifn use this interfaces address as main address
+ *@param ifp a pointer to the interface with the main address
  *@return 1 on success
  */
 

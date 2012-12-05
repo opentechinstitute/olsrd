@@ -185,7 +185,9 @@ ipc_check_allowed_ip(const union olsr_ip_addr *addr)
 /**
  *Sends a olsr packet on the IPC socket.
  *
- *@param olsr the olsr struct representing the packet
+ *@param msg the olsr struct representing the packet
+ *@param in_if the incoming interface
+ *@param from_addr the sender address
  *
  *@return true for not preventing forwarding
  */
@@ -214,7 +216,9 @@ frontend_msgparser(union olsr_message * msg, struct interface * in_if __attribut
 /**
  *Send a route table update to the front-end.
  *
- *@param kernel_route a rtentry describing the route update
+ *@param dst the destination of the route
+ *@param gw the gateway for the route
+ *@param met the metric for the route
  *@param add 1 if the route is to be added 0 if it is to be deleted
  *@param int_name the name of the interface the route is set to go by
  *

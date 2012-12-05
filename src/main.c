@@ -93,7 +93,7 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 /*
  * Local function prototypes
  */
-void olsr_reconfigure(int) __attribute__ ((noreturn));
+void olsr_reconfigure(int signo) __attribute__ ((noreturn));
 
 static void print_usage(bool error);
 
@@ -663,12 +663,12 @@ int main(int argc, char *argv[]) {
   return 1;
 } /* main */
 
+#ifndef _WIN32
 /**
  * Reconfigure olsrd. Currently kind of a hack...
  *
- *@param signal the signal that triggered this callback
+ *@param signo the signal that triggered this callback
  */
-#ifndef _WIN32
 void olsr_reconfigure(int signo __attribute__ ((unused))) {
   /* if we are started with -nofork, we do not want to go into the
    * background here. So we can simply stop on -HUP
@@ -723,7 +723,7 @@ static void olsr_shutdown_messages(void) {
 /**
  *Function called at shutdown. Signal handler
  *
- * @param signal the signal that triggered this call
+ * @param signo the signal that triggered this call
  */
 #ifdef _WIN32
 int __stdcall

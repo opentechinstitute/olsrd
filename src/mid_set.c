@@ -144,6 +144,7 @@ olsr_set_mid_timer(struct mid_entry *mid, olsr_reltime rel_timer)
  *
  * @param m_addr the main address of the node
  * @param alias the alias address to insert
+ * @param vtime the expiration time
  * @return false if mid_address is unnecessary, true otherwise
  */
 
@@ -252,8 +253,7 @@ insert_mid_tuple(union olsr_ip_addr *m_addr, struct mid_address *alias, olsr_rel
  *
  * @param main_add the main address of the node
  * @param alias the alias address to insert
- * @param seq the sequence number to register a new node with
- * @return nada
+ * @param vtime the expiration time
  */
 void
 insert_mid_alias(union olsr_ip_addr *main_add, const union olsr_ip_addr *alias, olsr_reltime vtime)
@@ -378,6 +378,7 @@ mid_lookup_aliases(const union olsr_ip_addr *adr)
  * Update the timer for an MID entry
  *
  * @param adr the main address of the entry
+ * @param vtime the expiration time
  * @return 1 if the node was updated, 0 if not
  */
 int
@@ -405,9 +406,7 @@ olsr_update_mid_table(const union olsr_ip_addr *adr, olsr_reltime vtime)
 /**
  * Remove aliases from 'entry' which are not listed in 'declared_aliases'.
  *
- * @param entry the MID entry
- * @param declared_aliases the list of declared aliases for the MID entry
- * @return nada
+ * @param message the MID message
  */
 static void
 olsr_prune_aliases(struct mid_message *message)
@@ -489,7 +488,7 @@ olsr_prune_aliases(struct mid_message *message)
 /**
  * Delete a MID entry
  *
- * @param entry the entry to delete
+ * @param mid the entry to delete
  */
 void
 olsr_delete_mid_entry(struct mid_entry *mid)
@@ -556,6 +555,8 @@ olsr_print_mid_set(void)
  *registered with it and update its addresses.
  *
  *@param m the OLSR message received.
+ *@param in_if the incoming interface
+ *@param from_addr the sender address
  *@return 1 on success
  */
 

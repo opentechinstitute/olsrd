@@ -68,7 +68,7 @@ olsr_init_two_hop_table(void)
  *
  *@param two_hop_entry the two hop neighbor to remove the
  *one hop neighbor from
- *@param address the address of the one hop neighbor to remove
+ *@param neigh address the address of the one hop neighbor to remove
  *
  *@return nada
  */

@@ -96,7 +96,7 @@ olsr_cleanup_hna(union olsr_ip_addr *orig) {
  *
  * @param nets the network list to look in
  * @param net the network to look for
- * @param mask the netmask to look for
+ * @param prefixlen the prefix length
  *
  * @return the localized entry or NULL of not found
  */
@@ -177,8 +177,8 @@ olsr_add_hna_entry(const union olsr_ip_addr *addr)
  * Adds a network entry to a HNA gateway.
  *
  * @param hna_gw the gateway entry to add the network to
- * @param net the networkaddress to add
- * @param mask the netmask
+ * @param net the network address to add
+ * @param prefixlen the prefix length
  *
  * @return the newly created entry
  */
@@ -266,10 +266,8 @@ olsr_expire_hna_net_entry(void *context)
  *
  *@param gw address of the gateway
  *@param net address of the network
- *@param mask the netmask
+ *@param prefixlen the prefix length
  *@param vtime the validitytime of the entry
- *
- *@return nada
  */
 void
 olsr_update_hna_entry(const union olsr_ip_addr *gw, const union olsr_ip_addr *net, uint8_t prefixlen, olsr_reltime vtime)
@@ -357,6 +355,8 @@ olsr_print_hna_set(void)
  *Forwards the message if that is to be done.
  *
  *@param m the incoming OLSR message
+ *@param in_if the incoming interface
+ *@param from_addr the originator address
  *the OLSR message.
  *@return 1 on success
  */

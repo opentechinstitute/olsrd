@@ -45,13 +45,13 @@
 #include "defs.h"
 #include "routing_table.h"
 
-int olsr_ioctl_add_route(const struct rt_entry *);
+int olsr_ioctl_add_route(const struct rt_entry *rt);
 
-int olsr_ioctl_add_route6(const struct rt_entry *);
+int olsr_ioctl_add_route6(const struct rt_entry *rt);
 
-int olsr_ioctl_del_route(const struct rt_entry *);
+int olsr_ioctl_del_route(const struct rt_entry *rt);
 
-int olsr_ioctl_del_route6(const struct rt_entry *);
+int olsr_ioctl_del_route6(const struct rt_entry *rt);
 
 #ifdef __linux__
 int rtnetlink_register_socket(int);
