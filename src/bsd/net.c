@@ -263,7 +263,7 @@ net_os_restore_ifoptions(void) {
 
 /**
  *Creates a nonblocking broadcast socket.
- *@param sa sockaddr struct. Used for bind(2).
+ *@param pin sockaddr struct. Used for bind(2).
  *@return the FD of the socket or -1 on error.
  */
 int
