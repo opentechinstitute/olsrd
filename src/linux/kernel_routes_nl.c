@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef __linux__
+
 #include "kernel_routes.h"
 #include "ipc_frontend.h"
 #include "log.h"
@@ -641,6 +643,7 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
   OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
   return olsr_os_process_rt_entry(AF_INET6, rt, false);
 }
+#endif /* __linux__ */
 
 /*
  * Local Variables:

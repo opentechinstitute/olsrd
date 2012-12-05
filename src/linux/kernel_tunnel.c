@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef __linux__
+
 #include "kernel_tunnel.h"
 #include "kernel_routes.h"
 #include "log.h"
@@ -58,11 +60,9 @@
 #include <linux/if_tunnel.h>
 #include <linux/version.h>
 
-#ifdef __linux__
-  #if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
-    #error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
-  #endif /* !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION */
-#endif /* __linux__ */
+#if !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION
+  #error "Both LINUX_VERSION_CODE and KERNEL_VERSION need to be defined"
+#endif /* !defined LINUX_VERSION_CODE || !defined KERNEL_VERSION */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
   #define LINUX_IPV6_TUNNEL
@@ -273,3 +273,4 @@ static void internal_olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t, bool
 void olsr_os_del_ipip_tunnel(struct olsr_iptunnel_entry *t) {
   internal_olsr_os_del_ipip_tunnel(t, false);
 }
+#endif /* __linux__ */

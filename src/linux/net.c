@@ -43,6 +43,7 @@
  * Linux specific code
  */
 
+#ifdef __linux__
 #define __BSD_SOURCE 1
 
 #include "../net_os.h"
@@ -757,6 +758,7 @@ int olsr_if_set_state(const char *dev, bool up) {
   }
   return 0;
 }
+#endif /* __linux__ */
 
 /*
  * Local Variables:

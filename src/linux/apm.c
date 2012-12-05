@@ -44,6 +44,8 @@
  * Acpi-Power Enlightenment epplet
  */
 
+#ifdef __linux__
+
 #include "apm.h"
 #include "defs.h"
 #include <stdio.h>
@@ -358,6 +360,7 @@ acpi_probe(void)
   /* No battery found */
   return -1;
 }
+#endif /* __linux__ */
 
 /*
  * Local Variables:
