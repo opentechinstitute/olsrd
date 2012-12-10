@@ -118,6 +118,41 @@ function checkIsOlsrdGitCheckout() {
 
 
 #
+# Check that a signing key is configured
+#
+function checkGitSigningKeyIsConfigured() {
+  local gpgKeyId="$(git config --get user.signingkey)"
+  if [[ -z "${gpgKeyId}" ]]; then
+    cat >&1 << EOF
+* No signing key is setup for git, please run
+    git config --global user.signingkey <key ID>
+
+  You can get keys and IDs by running 'gpg --list-keys'
+EOF
+    exit 1
+  fi
+
+  #
+  # Check that the signing key is present
+  #
+	set +e
+	gpg --list-key "${gpgKeyId}" &> /dev/null
+	local -i gpgKeyIdPresentResult=${?}
+	set -e
+	if [[ ${gpgKeyIdPresentResult} -ne 0 ]]; then
+	  cat >&1 << EOF
+* Your signing key with ID ${gpgKeyId} is not found, please run
+    git config --global user.signingkey <key ID>
+  to setup a valid key ID.
+
+  You can get keys and IDs by running 'gpg --list-keys'
+EOF
+	  exit 1
+	fi
+}
+
+
+#
 # Get the version digits from a release tag version
 #
 # 1=release tag version
@@ -365,40 +400,7 @@ fi
 
 
 checkIsOlsrdGitCheckout
-
-
-#
-# Check that a signing key is configured
-#
-declare gpgKeyId="$(git config --get user.signingkey)"
-if [[ -z "${gpgKeyId}" ]]; then
-  cat >&1 << EOF
-* No signing key is setup for git, please run
-    git config --global user.signingkey <key ID>
-
-  You can get keys and IDs by running 'gpg --list-keys'
-EOF
-  exit 1
-fi
-
-
-#
-# Check that the signing key is present
-#
-set +e
-gpg --list-key "${gpgKeyId}" &> /dev/null
-declare -i gpgKeyIdPresentResult=${?}
-set -e
-if [[ ${gpgKeyIdPresentResult} -ne 0 ]]; then
-  cat >&1 << EOF
-* Your signing key with ID ${gpgKeyId} is not found, please run
-    git config --global user.signingkey <key ID>
-  to setup a valid key ID.
-
-  You can get keys and IDs by running 'gpg --list-keys'
-EOF
-  exit 1
-fi
+checkGitSigningKeyIsConfigured
 
 
 #
