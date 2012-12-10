@@ -339,6 +339,8 @@ declare scriptDir="$(dirname "${script}")"
 declare baseDir="$(dirname "${scriptDir}")"
 unset script
 
+cd "${baseDir}"
+
 
 #
 # Check the number of arguments
@@ -352,7 +354,6 @@ fi
 #
 # Go into the root of the checkout and check some key files
 #
-cd "${baseDir}"
 if [[ "$(gitIsGitDirectory ".")" == "0" ]] || \
    [[ ! -r ./Makefile.inc ]] || \
    [[ ! -r ./files/olsrd.conf.default.full ]]; then
