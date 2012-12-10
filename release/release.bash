@@ -105,6 +105,19 @@ function gitIsGitDirectory() {
 
 
 #
+# Go into the root of the checkout and check some key files
+#
+function checkIsOlsrdGitCheckout() {
+  if [[ "$(gitIsGitDirectory ".")" == "0" ]] || \
+     [[ ! -r ./Makefile.inc ]] || \
+     [[ ! -r ./files/olsrd.conf.default.full ]]; then
+    echo "* You do not appear to be running the script from an olsrd git checkout"
+    exit 1
+  fi
+}
+
+
+#
 # Get the version digits from a release tag version
 #
 # 1=release tag version
@@ -351,15 +364,7 @@ if [[ ${#} -ne 0 ]]; then
 fi
 
 
-#
-# Go into the root of the checkout and check some key files
-#
-if [[ "$(gitIsGitDirectory ".")" == "0" ]] || \
-   [[ ! -r ./Makefile.inc ]] || \
-   [[ ! -r ./files/olsrd.conf.default.full ]]; then
-  echo "* You do not appear to be running the script from an olsrd git checkout"
-  exit 1
-fi
+checkIsOlsrdGitCheckout
 
 
 #
