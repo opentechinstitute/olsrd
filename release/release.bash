@@ -8,8 +8,24 @@ set -u
 # # Settings
 # ##############################################################################
 
-# The digit representation of a version can be in the format 0.6.4 or 0.6.4.1
-declare versionRegexDigits="([[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+)(\.[[:digit:]]+)?"
+declare MODE_BRANCH="branch"
+declare MODE_RELEASE="release"
+
+declare MODE_BRANCH_TXT="Branch"
+declare MODE_BRANCH_TXT_LOWER="branch"
+declare MODE_RELEASE_TXT="Release"
+declare MODE_RELEASE_TXT_LOWER="release"
+
+declare MODE_TXT=""
+declare MODE_TXT_LOWER=""
+
+
+# The digit representation of a basic version can be in the format 0.6.4
+declare versionRegexDigitsBasic="([[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+)"
+
+# The digit representation of a release branch version can be in the format
+# 0.6.4 or 0.6.4.1
+declare versionRegexDigits="${versionRegexDigitsBasic}(\.[[:digit:]]+)?"
 
 # The version for source code can be in the format:
 # - 0.6.4 or 0.6.4.1 or pre-0.6.4 or pre-0.6.4.1
@@ -27,6 +43,18 @@ declare relBranchRegex="release-(${versionRegexDigits})"
 # ##############################################################################
 # # Functions
 # ##############################################################################
+
+#
+# Print script usage
+#
+function usage() {
+  echo ""
+  echo "  $(basename "${script}") ${MODE_BRANCH} 0.6.4"
+  echo "    - create the release branch for version 0.6.4"
+  echo "  $(basename "${script}") ${MODE_RELEASE}"
+  echo "    - release the (checked-out) release branch"
+}
+
 
 #
 # Trim a string: remove spaces from the beginning and end of the string
@@ -401,7 +429,6 @@ function signTextFile() {
 declare script="$(pathCanonicalPath "${0}")"
 declare scriptDir="$(dirname "${script}")"
 declare baseDir="$(dirname "${scriptDir}")"
-unset script
 
 cd "${baseDir}"
 
@@ -409,36 +436,117 @@ cd "${baseDir}"
 #
 # Check the number of arguments
 #
-if [[ ${#} -ne 0 ]]; then
-  echo "* Need no arguments"
+if [[ ${#} -lt 1 ]]; then
+  echo "* Need at least 1 argument:"
+  usage
   exit 1
 fi
 
 
+#
+# Get the mode and check it
+#
+declare mode="$(stringTrim "${1}")"
+shift 1
+if [[ ! "${mode}" == "${MODE_BRANCH}" ]] && \
+   [[ ! "${mode}" == "${MODE_RELEASE}" ]]; then
+  echo "* Wrong mode: ${mode}"
+  usage
+  exit 1
+fi
+
+
+#
+# Further mode/argument parsing
+#
+declare branchVersion=""
+if [[ "${mode}" == "${MODE_BRANCH}" ]]; then
+  MODE_TXT="${MODE_BRANCH_TXT}"
+  MODE_TXT_LOWER="${MODE_BRANCH_TXT_LOWER}"
+
+  #
+  # Get the branch version to create
+  #
+  if [[ ${#} -ne 1 ]]; then
+    echo "* Need the version to branch:"
+    usage
+    exit 1
+  fi
+  branchVersion="$(stringTrim "${1}")"
+  shift 1
+
+  #
+  # Check branch version
+  #
+  if [[ -z "$(echo "${branchVersion}" | grep -E "^${versionRegexDigitsBasic}\$")" ]]; then
+    echo "* Version to branch ${branchVersion} has invalid format"
+    echo "  Expected format is: 0.6.4"
+    exit 1
+  fi
+else
+  MODE_TXT="${MODE_RELEASE_TXT}"
+  MODE_TXT_LOWER="${MODE_RELEASE_TXT_LOWER}"
+
+  if [[ ${#} -ne 0 ]]; then
+    echo "* Need no additional arguments."
+    usage
+    exit 1
+  fi
+fi
+
+
 checkIsOlsrdGitCheckout
-checkGitSigningKeyIsConfigured
+
+if [[ "${mode}" == "${MODE_RELEASE}" ]]; then
+  checkGitSigningKeyIsConfigured
+fi
+
 getPrevRelTag
 declare prevTagVersionDigits="$(getVersionDigitsFromReleaseTag "${prevRelTagVersion}")"
 
 
 #
-# Get the current branch and check that we're on a release branch
+# Get the current branch and check that we're on a release branch (for the
+# release mode) or on the master branch (for the branch mode)
 #
 declare relBranch="$(git rev-parse --abbrev-ref HEAD)"
 declare relBranch="$(stringTrim "${relBranch}")"
-if [[ -z "$(echo "${relBranch}" | grep -E "^${relBranchRegex}\$")" ]]; then
-  echo "* You are not on a release branch (format: release-0.6.4 or release-0.6.4.1)"
-  exit 1
+if [[ "${mode}" == "${MODE_BRANCH}" ]]; then
+  if [[ -z "$(echo "${relBranch}" | grep -E "^master\$")" ]]; then
+    echo "* You are not on the master branch"
+    exit 1
+  fi
+  relBranch="release-${branchVersion}"
+
+  # check that the branch does not yet exist
+  declare -i branchTestResult=0
+  set +e
+  git rev-parse --abbrev-ref "${relBranch}" &> /dev/null
+  branchTestResult=${?}
+  set -e
+  if [[ ${branchTestResult} -eq 0 ]]; then
+    echo "* Branch ${relBranch} already exists"
+    exit 1
+  fi
+else
+  if [[ -z "$(echo "${relBranch}" | grep -E "^${relBranchRegex}\$")" ]]; then
+    echo "* You are not on a release branch (format: release-0.6.4 or release-0.6.4.1)"
+    exit 1
+  fi
 fi
 
 
 #
 # Get the version to release from the current branch
 #
-declare relBranchVersionDigits="$(echo "${relBranch}" | \
-                                  sed -r "s/${relBranchRegex}/\1/")"
-
-adjustBranchName
+declare relBranchVersionDigits=""
+if [[ "${mode}" == "${MODE_BRANCH}" ]]; then
+  relBranchVersionDigits="${branchVersion}"
+else
+  relBranchVersionDigits="$(echo "${relBranch}" | \
+                            sed -r "s/${relBranchRegex}/\1/")"
+  adjustBranchName
+fi
 
 declare relTagVersion="v${relBranchVersionDigits}"
 declare relBranchVersionDigitsNextMicro="$(getNextVersionDigitsMicro "${relBranchVersionDigits}")"
@@ -457,7 +565,7 @@ checkVersionIncrementing "${prevTagVersionDigits}" "${relBranchVersionDigits}"
 cat >&1 << EOF
 
 
-* All checks pass, ready to release ${relBranchVersionDigits}.
+* All checks pass, ready to ${MODE_TXT_LOWER} ${relBranchVersionDigits}.
 
   * The previous version found is: ${prevTagVersionDigits}
     Note: If this is not the version you were expecting, then maybe that
@@ -478,86 +586,106 @@ git clean -fdq
 git reset -q --hard
 
 
-#
-# Update the versions for release
-#
-echo "Updating the version to ${relBranchVersionDigits}..."
-updateVersions "${relBranchVersionDigits}"
-commitChanges 1 "Release ${relTagVersion}"
+if [[ "${mode}" == "${MODE_BRANCH}" ]]; then
+  #
+  # Update the versions for branch
+  #
+  echo "Updating the version to pre-${relBranchVersionDigits}..."
+  updateVersions "pre-${relBranchVersionDigits}"
+  commitChanges 1 "${MODE_TXT} ${relTagVersion}"
+
+  # create release branch
+  echo "Creating the release branch ${relBranch}..."
+  git branch "${relBranch}"
 
 
+  #
+  # Update the version to the next release
+  #
+  echo "Updating the version to pre-${relBranchVersionDigitsNextMicro}..."
+  updateVersions "pre-${relBranchVersionDigitsNextMicro}"
+  commitChanges 0 "Update version after ${MODE_TXT_LOWER} of ${relTagVersion}"
+else
+  #
+  # Update the versions for release
+  #
+  echo "Updating the version to ${relBranchVersionDigits}..."
+  updateVersions "${relBranchVersionDigits}"
+  commitChanges 1 "${MODE_TXT} ${relTagVersion}"
 
-#
-# Generate the changelog
-#
-echo "Generating the changelog..."
-declare src="CHANGELOG"
-declare dst="mktemp -q -p . -t "${src}.XXXXXXXXXX""
-cat > "${dst}" << EOF
+
+  #
+  # Generate the changelog
+  #
+  echo "Generating the changelog..."
+  declare src="CHANGELOG"
+  declare dst="mktemp -q -p . -t "${src}.XXXXXXXXXX""
+  cat > "${dst}" << EOF
 ${relBranchVersionDigits} -------------------------------------------------------------------
 
 EOF
-git rev-list --pretty=short "${prevRelTagVersion}..HEAD" | \
-  git shortlog -w80 -- >> "${dst}"
-cat "${src}" >> "${dst}"
-mv "${dst}" "${src}"
-set +e
-git add "${src}"
-set -e
-commitChanges 1 "Release ${relTagVersion}"
+  git rev-list --pretty=short "${prevRelTagVersion}..HEAD" | \
+    git shortlog -w80 -- >> "${dst}"
+  cat "${src}" >> "${dst}"
+  mv "${dst}" "${src}"
+  set +e
+  git add "${src}"
+  set -e
+  commitChanges 1 "${MODE_TXT} ${relTagVersion}"
 
 
-#
-# Tag the release
-#
-echo "Tagging ${relTagVersion}..."
-set +e
-git tag -d "${relTagVersion}" &> /dev/null
-set -e
-git tag -s -m "OLSRd release ${relBranchVersionDigits}" "${relTagVersion}"
+  #
+  # Tag the release
+  #
+  echo "Tagging ${relTagVersion}..."
+  set +e
+  git tag -d "${relTagVersion}" &> /dev/null
+  set -e
+  git tag -s -m "OLSRd release ${relBranchVersionDigits}" "${relTagVersion}"
 
 
-#
-# Update the version to the next release
-#
-echo "Updating the version to pre-${relBranchVersionDigitsNextPatchLevel}..."
-updateVersions "pre-${relBranchVersionDigitsNextPatchLevel}"
-commitChanges 1 "Update version after release of ${relTagVersion}"
+  #
+  # Update the version to the next release
+  #
+  echo "Updating the version to pre-${relBranchVersionDigitsNextPatchLevel}..."
+  updateVersions "pre-${relBranchVersionDigitsNextPatchLevel}"
+  commitChanges 1 "Update version after ${MODE_TXT_LOWER} of ${relTagVersion}"
 
 
-#
-# Update the version (on the master branch) to the next release
-#
-echo "Updating the version to pre-${relBranchVersionDigitsNextMicro} on the master branch..."
-git checkout -q master
-git clean -fdq
-git reset -q --hard
-updateVersions "pre-${relBranchVersionDigitsNextMicro}"
-commitChanges 0 "Update version after release of ${relTagVersion}"
-git checkout -q "${relBranch}"
-git clean -fdq
-git reset -q --hard
+  #
+  # Update the version (on the master branch) to the next release
+  #
+  echo "Updating the version to pre-${relBranchVersionDigitsNextMicro} on the master branch..."
+  git checkout -q master
+  git clean -fdq
+  git reset -q --hard
+  updateVersions "pre-${relBranchVersionDigitsNextMicro}"
+  commitChanges 0 "Update version after ${MODE_TXT_LOWER} of ${relTagVersion}"
+  git checkout -q "${relBranch}"
+  git clean -fdq
+  git reset -q --hard
 
 
-#
-# Make the release tarballs
-#
-echo "Generating the release tarballs..."
-declare tarFile="${scriptDir}/olsrd-${relBranchVersionDigits}.tar"
-declare tarGzFile="${tarFile}.gz"
-declare tarBz2File="${tarFile}.bz2"
-git archive --format=tar --output="${tarFile}" "${relTagVersion}"
-gzip   -c "${tarFile}" > "${tarGzFile}"
-bzip2  -c "${tarFile}" > "${tarBz2File}"
-rm -f "${tarFile}"
-echo "Generating the release tarball checksums..."
-declare md5File="${scriptDir}/MD5SUM-${relBranchVersionDigits}"
-declare sha256File="${scriptDir}/SHA256SUM-${relBranchVersionDigits}"
-md5sum    "${tarGzFile}" "${tarBz2File}" > "${md5File}"
-sha256sum "${tarGzFile}" "${tarBz2File}" > "${sha256File}"
-echo "Signing the release tarball checksums..."
-signTextFile "${md5File}"
-signTextFile "${sha256File}"
+  #
+  # Make the release tarballs
+  #
+  echo "Generating the release tarballs..."
+  declare tarFile="${scriptDir}/olsrd-${relBranchVersionDigits}.tar"
+  declare tarGzFile="${tarFile}.gz"
+  declare tarBz2File="${tarFile}.bz2"
+  git archive --format=tar --output="${tarFile}" "${relTagVersion}"
+  gzip   -c "${tarFile}" > "${tarGzFile}"
+  bzip2  -c "${tarFile}" > "${tarBz2File}"
+  rm -f "${tarFile}"
+  echo "Generating the release tarball checksums..."
+  declare md5File="${scriptDir}/MD5SUM-${relBranchVersionDigits}"
+  declare sha256File="${scriptDir}/SHA256SUM-${relBranchVersionDigits}"
+  md5sum    "${tarGzFile}" "${tarBz2File}" > "${md5File}"
+  sha256sum "${tarGzFile}" "${tarBz2File}" > "${sha256File}"
+  echo "Signing the release tarball checksums..."
+  signTextFile "${md5File}"
+  signTextFile "${sha256File}"
+fi
 
 
 echo "Done."
@@ -570,33 +698,44 @@ echo "=   Git Updates   ="
 echo "==================="
 echo "Branch : master"
 echo "Branch : ${relBranch}"
-echo "Tag    : ${relTagVersion}"
-echo ""
-echo ""
+if [[ "${mode}" == "${MODE_RELEASE}" ]]; then
+  echo "Tag    : ${relTagVersion}"
+  echo ""
+  echo ""
 
 
-echo "==================="
-echo "= Generated Files ="
-echo "==================="
-cat >&1 << EOF
+  echo "==================="
+  echo "= Generated Files ="
+  echo "==================="
+  cat >&1 << EOF
 ${tarGzFile}
 ${tarGzFile}
 ${md5File}
 ${sha256File}"
 EOF
-echo ""
-echo ""
+fi
 
 
+echo ""
+echo ""
 echo "==================="
 echo "= Manual Actions  ="
 echo "==================="
-echo "1. Check that everything is in order. For example, run:"
-echo "     gitk master ${relBranch} ${relTagVersion} "
-echo "2. Push. For example, run:"
-echo "     git push origin master ${relBranch} ${relTagVersion}"
-echo "3. Upload the generated files to"
-echo "     http://www.olsr.org/releases/${relBranchVersionDigits}"
-echo "4. Add a release article on olsr.org."
-echo ""
+if [[ "${mode}" == "${MODE_RELEASE}" ]]; then
+  echo "1. Check that everything is in order. For example, run:"
+  echo "     gitk master ${relBranch} ${relTagVersion}"
+  echo "2. Push. For example, run:"
+  echo "     git push origin master ${relBranch} ${relTagVersion}"
+  echo "3. Upload the generated files to"
+  echo "     http://www.olsr.org/releases/${relBranchVersionDigits}"
+  echo "4. Add a release article on olsr.org."
+  echo ""
+else
+  echo "1. Check that everything is in order. For example, run:"
+  echo "     gitk master ${relBranch}"
+  echo "2. Push. For example, run:"
+  echo "     git push origin master ${relBranch}"
+  echo "3. Send a 'release branch created' email to olsr-dev@lists.olsr.org."
+  echo ""
+fi
 
