@@ -29,6 +29,24 @@ declare relBranchRegex="release-(${versionRegexDigits})"
 # ##############################################################################
 
 #
+# Trim a string: remove spaces from the beginning and end of the string
+#
+# 1=string to trim
+# return=trimmed string
+function stringTrim() {
+  if [[ -z "${1}" ]]; then
+    return
+  fi
+
+  # remove leading whitespace characters
+  local var="${1#${1%%[![:space:]]*}}"
+
+  # remove trailing whitespace characters
+  echo "${var%${var##*[![:space:]]}}"
+}
+
+
+#
 # Get the canonical path of a file or directory
 # This is the physical path without any links
 #
@@ -57,24 +75,6 @@ function pathCanonicalPath() {
   cd -P "$(dirname "${src}")" &> /dev/null
   echo "$(pwd -P)/$(basename "${src}")"
   popd &> /dev/null
-}
-
-
-#
-# Trim a string: remove spaces from the beginning and end of the string
-#
-# 1=string to trim
-# return=trimmed string
-function stringTrim() {
-  if [[ -z "${1}" ]]; then
-    return
-  fi
-
-  # remove leading whitespace characters
-  local var="${1#${1%%[![:space:]]*}}"
-
-  # remove trailing whitespace characters
-  echo "${var%${var##*[![:space:]]}}"
 }
 
 
