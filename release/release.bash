@@ -163,6 +163,22 @@ function getVersionDigitsFromReleaseTag() {
 
 
 #
+# Get the previous release tag and check
+#
+declare prevRelTagVersion=""
+function getPrevRelTag() {
+  set +e
+  prevRelTagVersion="$(git describe --abbrev=0 | \
+                       grep -E "^${versionRegexReleaseTag}$")"
+  set -e
+  if [[ -z "${prevRelTagVersion}" ]]; then
+    echo "* Could not find the previous release tag"
+    exit 1
+  fi
+}
+
+
+#
 # Get the next version digits by incrementing the micro digit
 #
 # 1=version in format 0.6.4 or 0.6.4.1
@@ -401,19 +417,7 @@ fi
 
 checkIsOlsrdGitCheckout
 checkGitSigningKeyIsConfigured
-
-
-#
-# Get the previous release tag and check
-#
-set +e
-declare prevRelTagVersion="$(git describe --abbrev=0 | \
-                             grep -E "^${versionRegexReleaseTag}$")"
-set -e
-if [[ -z "${prevRelTagVersion}" ]]; then
-  echo "* Could not find the previous release tag"
-  exit 1
-fi
+getPrevRelTag
 declare prevTagVersionDigits="$(getVersionDigitsFromReleaseTag "${prevRelTagVersion}")"
 
 
