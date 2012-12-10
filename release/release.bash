@@ -9,7 +9,7 @@ set -u
 # ##############################################################################
 
 # The digit representation of a version can be in the format 0.6.4 or 0.6.4.1
-declare versionRegexDigits="([[:digit:]]+.[[:digit:]]+.[[:digit:]]+)(.[[:digit:]]+)?"
+declare versionRegexDigits="([[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+)(\.[[:digit:]]+)?"
 
 # The version for source code can be in the format:
 # - 0.6.4 or 0.6.4.1 or pre-0.6.4 or pre-0.6.4.1
@@ -296,7 +296,7 @@ function updateVersions() {
   # Adjust version in win32 gui installer
   #
   local src="gui/win32/Inst/installer.nsi"
-  local grepStr="^([[:space:]]*MessageBox[[:space:]]+MB_YESNO[[:space:]]+\".+?[[:space:]]+olsr.org[[:space:]]+)${versionRegexSources}([[:space:]]+.+?\"[[:space:]]+IDYES[[:space:]]+NoAbort)[[:space:]]*$"
+  local grepStr="^([[:space:]]*MessageBox[[:space:]]+MB_YESNO[[:space:]]+\".+?[[:space:]]+olsr\.org[[:space:]]+)${versionRegexSources}([[:space:]]+.+?\"[[:space:]]+IDYES[[:space:]]+NoAbort)[[:space:]]*$"
   local replStr="\1${newVersion}\6"
   sed -ri "s/${grepStr}/${replStr}/" "${src}"
   set +e
@@ -308,7 +308,7 @@ function updateVersions() {
   # Adjust version in win32 gui front-end
   #
   local src="gui/win32/Main/Frontend.rc"
-  local grepStr="^([[:space:]]*CAPTION[[:space:]]+\"olsr.org[[:space:]]+Switch[[:space:]]+)${versionRegexSources}([[:space:]]*\")[[:space:]]*\$"
+  local grepStr="^([[:space:]]*CAPTION[[:space:]]+\"olsr\.org[[:space:]]+Switch[[:space:]]+)${versionRegexSources}([[:space:]]*\")[[:space:]]*\$"
   local replStr="\1${newVersion}\6"
   sed -ri "s/${grepStr}/${replStr}/" "${src}"
   set +e
