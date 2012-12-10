@@ -90,7 +90,7 @@ function gitIsGitDirectory() {
   if [[ -d "${place}" ]]; then
     pushd "${place}" &> /dev/null
     set +e
-    git rev-parse --git-dir #&> /dev/null
+    git rev-parse --git-dir &> /dev/null
     result=${?}
     set -e
     popd &> /dev/null
