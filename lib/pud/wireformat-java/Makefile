@@ -43,7 +43,7 @@ LIBDIR_BUILD = lib
 INC_DIR_WIREFORMAT = ../wireformat/include
 INC_DIR_WIREFORMAT_FULL = $(INC_DIR_WIREFORMAT)/$(WIREFORMAT_PROJECT)
 
-INC_DIR_JVM = /usr/lib/jvm/java-1.6.0-openjdk$(ARCH)/include
+INC_DIR_JVM = /usr/lib/jvm/java/include
 INC_DIR_JVM_OS = $(INC_DIR_JVM)/$(OS)
 
 
