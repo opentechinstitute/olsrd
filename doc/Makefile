@@ -72,10 +72,11 @@ doc: $(DOX_FILE)
 	  "$(DOX_FILE)" > "$(TMP_DOX_FILE)"
 	@echo "  Running doxygen to create HTML..."
 	@doxygen "$(TMP_DOX_FILE)"
-	@rm "$(TMP_DOX_FILE)"
+	@rm -f "$(TMP_DOX_FILE)"
 	@echo "  Running latex to create a PDF..."
 	@$(MAKE) -s -C $(LATEX_OUTPUT) all > /dev/null 2>&1
 	@mkdir -p "$(PDF_DIR)"
 	@mv "$(LATEX_OUTPUT)/refman.pdf" "$(PDF_OUTPUT)"
 	@rm -fr "$(LATEX_OUTPUT)"
+	@rmdir --ignore-fail-on-non-empty "$(LATEX_DIR)"
 	@echo "  Done"
