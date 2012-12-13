@@ -540,6 +540,15 @@ int main(int argc, char *argv[]) {
     }
   }
 
+#ifdef __linux__
+  /* startup gateway system */
+  if (olsr_cnf->smart_gw_active) {
+    if (olsr_startup_gateways()) {
+      olsr_exit("Cannot startup gateway tunnels", 1);
+    }
+  }
+#endif /* __linux__ */
+
   olsr_do_startup_sleep();
 
   /* Print heartbeat to stdout */
@@ -775,6 +784,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #ifdef __linux__
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
+    olsr_shutdown_gateways();
     olsr_cleanup_gateways();
   }
 

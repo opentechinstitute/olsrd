@@ -22,6 +22,7 @@ static struct timer_entry *gw_def_timer;
 static void gw_default_init(void);
 static void gw_default_cleanup(void);
 static void gw_default_startup_handler(void);
+static uint64_t gw_default_getcosts(struct gateway_entry *gw);
 static void gw_default_choosegw_handler(bool ipv4, bool ipv6);
 static void gw_default_update_handler(struct gateway_entry *);
 static void gw_default_delete_handler(struct gateway_entry *);
@@ -33,6 +34,7 @@ struct olsr_gw_handler gw_def_handler = {
     &gw_default_init,
     &gw_default_cleanup,
     &gw_default_startup_handler,
+    &gw_default_getcosts,
     &gw_default_choosegw_handler,
     &gw_default_update_handler,
     &gw_default_delete_handler
@@ -164,53 +166,30 @@ static void gw_default_choose_gateway(void) {
   uint64_t cost_ipv4 = UINT64_MAX;
   uint64_t cost_ipv6 = UINT64_MAX;
   struct gateway_entry *gw;
-  struct tc_entry *tc;
   bool dual;
 
   if (olsr_cnf->smart_gw_thresh) {
     /* determine the path cost thresholds */
 
-    gw = olsr_get_inet_gateway(false);
-    if (gw) {
-      tc = olsr_lookup_tc_entry(&gw->originator);
-      if (tc) {
-        uint64_t cost = gw_default_weigh_costs(tc->path_cost, gw->uplink, gw->downlink);
-        cost_ipv4_threshold = gw_default_calc_threshold(cost);
-        eval_cost_ipv4_threshold = true;
-      }
+    uint64_t cost = gw_default_getcosts(olsr_get_inet_gateway(false));
+    if (cost != UINT64_MAX) {
+      cost_ipv4_threshold = gw_default_calc_threshold(cost);
+      eval_cost_ipv4_threshold = true;
     }
-    gw = olsr_get_inet_gateway(true);
-    if (gw) {
-      tc = olsr_lookup_tc_entry(&gw->originator);
-      if (tc) {
-        uint64_t cost = gw_default_weigh_costs(tc->path_cost, gw->uplink, gw->downlink);
-        cost_ipv6_threshold = gw_default_calc_threshold(cost);
-        eval_cost_ipv6_threshold = true;
-      }
+
+    cost = gw_default_getcosts(olsr_get_inet_gateway(true));
+    if (cost != UINT64_MAX) {
+      cost_ipv6_threshold = gw_default_calc_threshold(cost);
+      eval_cost_ipv6_threshold = true;
     }
   }
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    uint64_t path_cost;
-    tc = olsr_lookup_tc_entry(&gw->originator);
+    uint64_t path_cost = gw_default_getcosts(gw);
 
-    if (!tc) {
-      /* gateways should not exist without tc entry */
+    if (path_cost == UINT64_MAX) {
       continue;
     }
-
-    if (tc->path_cost == ROUTE_COST_BROKEN) {
-      /* do not consider nodes with an infinite ETX */
-      continue;
-    }
-
-    if (!gw->uplink || !gw->downlink) {
-      /* do not consider nodes without bandwidth or with a uni-directional link */
-      continue;
-    }
-
-    /* determine the path cost */
-    path_cost = gw_default_weigh_costs(tc->path_cost, gw->uplink, gw->downlink);
 
     if (!gw_def_finished_ipv4 && gw->ipv4 && gw->ipv4nat == olsr_cnf->smart_gw_allow_nat && path_cost < cost_ipv4
         && (!eval_cost_ipv4_threshold || (path_cost < cost_ipv4_threshold))) {
@@ -233,11 +212,11 @@ static void gw_default_choose_gateway(void) {
 
   if (inet_ipv4) {
     /* we are dealing with an IPv4 or dual stack gateway */
-    olsr_set_inet_gateway(&inet_ipv4->originator, true, dual);
+    olsr_set_inet_gateway(&inet_ipv4->originator, cost_ipv4, true, dual);
   }
   if (inet_ipv6 && !dual) {
     /* we are dealing with an IPv6-only gateway */
-    olsr_set_inet_gateway(&inet_ipv6->originator, false, true);
+    olsr_set_inet_gateway(&inet_ipv6->originator, cost_ipv6, false, true);
   }
 
   if ((olsr_cnf->smart_gw_thresh == 0) && gw_def_finished_ipv4 && gw_def_finished_ipv6) {
@@ -340,6 +319,32 @@ static void gw_default_startup_handler(void) {
 
   /* (re)start gateway lazy selection timer */
   olsr_set_timer(&gw_def_timer, olsr_cnf->smart_gw_period, 0, true, &gw_default_timer, NULL, 0);
+}
+
+/**
+ * Called when the costs of a gateway must be determined.
+ *
+ * @param gw the gateway
+ * @return the costs, or UINT64_MAX in case the gateway has inifinite costs
+ */
+static uint64_t gw_default_getcosts(struct gateway_entry *gw) {
+  struct tc_entry* tc;
+
+  if (!gw) {
+    return UINT64_MAX;
+  }
+
+  tc = olsr_lookup_tc_entry(&gw->originator);
+
+  if (!tc || (tc->path_cost == ROUTE_COST_BROKEN) || (!gw->uplink || !gw->downlink)) {
+    /* gateways should not exist without tc entry */
+    /* do not consider nodes with an infinite ETX */
+    /* do not consider nodes without bandwidth or with a uni-directional link */
+    return UINT64_MAX;
+  }
+
+  /* determine the path cost */
+  return gw_default_weigh_costs(tc->path_cost, gw->uplink, gw->downlink);
 }
 
 /**

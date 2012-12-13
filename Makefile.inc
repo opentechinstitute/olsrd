@@ -68,6 +68,7 @@ MANDIR   ?= $(SHAREDIR)/man
 EXENAME  ?= olsrd
 CFGNAME  ?= $(EXENAME).conf
 CFGFILE  ?= $(ETCDIR)/$(CFGNAME)
+SGW_POLICY_SCRIPT ?= sgw_policy_routing_setup.sh
 
 DOCDIR_OLSRD ?= $(DOCDIR)/$(EXENAME)
 
