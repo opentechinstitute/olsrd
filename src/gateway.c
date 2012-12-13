@@ -216,7 +216,6 @@ static void get_unused_iptunnel_name(struct gateway_entry *gw, char * name, stru
       return;
     }
 
-    assert(ifn);
     /* do not return, fall-through to classic naming as fallback */
   }
 
@@ -246,8 +245,6 @@ static void set_unused_iptunnel_name(struct gateway_entry *gw) {
     ifn->gw = NULL;
     return;
   }
-
-  assert(ifn);
 }
 
 /**
