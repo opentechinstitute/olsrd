@@ -805,6 +805,7 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
   if (new_gw_in_list) {
     assert(gw_handler);
     new_gw_in_list = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list, gw_handler->getcosts(new_gw_in_list->gw));
+    assert(new_gw_in_list);
   }
 
   /* call update handler */
