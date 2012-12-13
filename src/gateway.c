@@ -808,6 +808,13 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
     assert(new_gw_in_list);
   }
 
+  new_gw_in_list = olsr_gw_list_find(&gw_list_ipv6, gw);
+  if (new_gw_in_list) {
+    assert(gw_handler);
+    new_gw_in_list = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list, gw_handler->getcosts(new_gw_in_list->gw));
+    assert(new_gw_in_list);
+  }
+
   /* call update handler */
   assert(gw_handler);
   gw_handler->update(gw);
