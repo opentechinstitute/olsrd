@@ -30,17 +30,11 @@
  * Defines for the multi-gateway script
  */
 
-#define SCRIPT_IPVERSION      ((olsr_cnf->ip_version == AF_INET) ? "ipv4" : "ipv6")
-
 #define SCRIPT_MODE_GENERIC   "generic"
 #define SCRIPT_MODE_OLSRIF    "olsrif"
 #define SCRIPT_MODE_SGWSRVTUN "sgwsrvtun"
 #define SCRIPT_MODE_EGRESSIF  "egressif"
 #define SCRIPT_MODE_SGWTUN    "sgwtun"
-
-#define SCRIPT_ADDMODE(add)   (add ? "add" : "del")
-
-#define MULTI_GW_MODE (olsr_cnf->smart_gw_use_count > 1)
 
 /** structure that holds an interface name, mark and a pointer to the gateway that uses it */
 struct interfaceName {
@@ -95,9 +89,31 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
  * Helper Functions
  */
 
-#define TUNNEL_NAME (olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6)
+/**
+ * @return the gateway 'server' tunnel name to use
+ */
+static inline const char * server_tunnel_name(void) {
+  return (olsr_cnf->ip_version == AF_INET ? TUNNEL_ENDPOINT_IF : TUNNEL_ENDPOINT_IF6);
+}
 
-#define OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen) (((uint8_t *)mask) + ((prefixlen+7)/8))
+/**
+ * Convert the netmask of the HNA (in the form of an IP address) to a HNA
+ * pointer.
+ *
+ * @param mask the netmask of the HNA (in the form of an IP address)
+ * @param prefixlen the prefix length
+ * @return a pointer to the HNA
+ */
+static inline uint8_t * hna_mask_to_hna_pointer(union olsr_ip_addr *mask, int prefixlen) {
+  return (((uint8_t *)mask) + ((prefixlen+7)/8));
+}
+
+/**
+ * @return true if multi-gateway mode is enabled
+ */
+static inline bool multi_gateway_mode(void) {
+  return (olsr_cnf->smart_gw_use_count > 1);
+}
 
 /**
  * Convert an encoded 1 byte transport value (5 bits mantissa, 3 bits exponent)
@@ -190,7 +206,7 @@ static void get_unused_iptunnel_name(struct gateway_entry *gw, char * name, stru
   assert(name);
   assert(interfaceName);
 
-  if (MULTI_GW_MODE) {
+  if (multi_gateway_mode()) {
     struct interfaceName * ifn = find_interfaceName(NULL);
 
     if (ifn) {
@@ -217,7 +233,7 @@ static void get_unused_iptunnel_name(struct gateway_entry *gw, char * name, stru
 static void set_unused_iptunnel_name(struct gateway_entry *gw) {
   struct interfaceName * ifn;
 
-  if (!MULTI_GW_MODE) {
+  if (!multi_gateway_mode()) {
     return;
   }
 
@@ -251,14 +267,14 @@ static bool multiGwRunScript(const char * mode, bool add, const char * ifname, u
 
   abuf_appendf(&buf, "\"%s\"", olsr_cnf->smart_gw_policyrouting_script);
 
-  abuf_appendf(&buf, " \"%s\"", SCRIPT_IPVERSION);
+  abuf_appendf(&buf, " \"%s\"", (olsr_cnf->ip_version == AF_INET) ? "ipv4" : "ipv6");
 
   assert(!strcmp(mode, SCRIPT_MODE_GENERIC) || !strcmp(mode, SCRIPT_MODE_OLSRIF) ||
       !strcmp(mode, SCRIPT_MODE_SGWSRVTUN) || !strcmp(mode, SCRIPT_MODE_EGRESSIF) ||
       !strcmp(mode, SCRIPT_MODE_SGWTUN));
   abuf_appendf(&buf, " \"%s\"", mode);
 
-  abuf_appendf(&buf, " \"%s\"", SCRIPT_ADDMODE(add));
+  abuf_appendf(&buf, " \"%s\"", add ? "add" : "del");
 
   if (ifname) {
     assert(!strcmp(mode, SCRIPT_MODE_OLSRIF) || !strcmp(mode, SCRIPT_MODE_SGWSRVTUN) ||
@@ -331,7 +347,7 @@ static bool multiGwRulesOlsrInterfaces(bool add) {
  * @return true when successful
  */
 static bool multiGwRulesSgwServerTunnel(bool add) {
-  return multiGwRunScript(SCRIPT_MODE_SGWSRVTUN, add, TUNNEL_NAME, NULL);
+  return multiGwRunScript(SCRIPT_MODE_SGWSRVTUN, add, server_tunnel_name(), NULL);
 }
 
 /**
@@ -456,7 +472,7 @@ int olsr_init_gateways(void) {
   olsr_gw_list_init(&gw_list_ipv4, olsr_cnf->smart_gw_use_count);
   olsr_gw_list_init(&gw_list_ipv6, olsr_cnf->smart_gw_use_count);
 
-  if (!MULTI_GW_MODE) {
+  if (!multi_gateway_mode()) {
     sgwEgressInterfaceNames = NULL;
     sgwTunnel4InterfaceNames = NULL;
     sgwTunnel6InterfaceNames = NULL;
@@ -499,7 +515,7 @@ int olsr_init_gateways(void) {
   gw_handler = &gw_def_handler;
   gw_handler->init();
 
-  if (olsr_os_init_iptunnel(TUNNEL_NAME)) {
+  if (olsr_os_init_iptunnel(server_tunnel_name())) {
     return 1;
   }
 
@@ -514,7 +530,7 @@ int olsr_init_gateways(void) {
 int olsr_startup_gateways(void) {
   bool ok = true;
 
-  if (!MULTI_GW_MODE) {
+  if (!multi_gateway_mode()) {
     return 0;
   }
 
@@ -536,7 +552,7 @@ int olsr_startup_gateways(void) {
  * Shutdown gateway tunnel system
  */
 void olsr_shutdown_gateways(void) {
-  if (!MULTI_GW_MODE) {
+  if (!multi_gateway_mode()) {
     return;
   }
 
@@ -556,7 +572,7 @@ void olsr_cleanup_gateways(void) {
 
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
-  olsr_os_cleanup_iptunnel(TUNNEL_NAME);
+  olsr_os_cleanup_iptunnel(server_tunnel_name());
 
   /* remove all gateways in the gateway tree that are not the active gateway */
   while ((avlnode = avl_walk_first(&gateway_tree))) {
@@ -658,7 +674,7 @@ void olsr_print_gateway_entries(void) {
  * @param prefixlen of the HNA
  */
 void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
-  uint8_t *ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
+  uint8_t *ptr = hna_mask_to_hna_pointer(mask, prefixlen);
 
   memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen / 8);
   if (olsr_cnf->has_ipv4_gateway) {
@@ -722,7 +738,7 @@ bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *ma
     return false;
   }
 
-  ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefix->prefix_len);
+  ptr = hna_mask_to_hna_pointer(mask, prefix->prefix_len);
   return ptr[GW_HNA_PAD] == 0 && ptr[GW_HNA_FLAGS] != 0;
 }
 
@@ -753,7 +769,7 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
   /* keep new HNA seqno */
   gw->seqno = seqno;
 
-  ptr = OLSR_IP_ADDR_2_HNA_PTR(mask, prefixlen);
+  ptr = hna_mask_to_hna_pointer(mask, prefixlen);
   if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_LINKSPEED) != 0) {
     gw->uplink = deserialize_gw_speed(ptr[GW_HNA_UPLINK]);
     gw->downlink = deserialize_gw_speed(ptr[GW_HNA_DOWNLINK]);
