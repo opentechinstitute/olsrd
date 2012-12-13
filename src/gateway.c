@@ -882,14 +882,14 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
       gw_in_list = olsr_gw_list_find(&gw_list_ipv4, gw);
       if (gw_in_list) {
         if (current_ipv4_gw && current_ipv4_gw->gw == gw) {
-          olsr_os_inetgw_tunnel_route(current_ipv4_gw->tunnel->if_index, true, false, NULL);
+          olsr_os_inetgw_tunnel_route(current_ipv4_gw->tunnel->if_index, true, false, olsr_cnf->rt_table_tunnel);
           current_ipv4_gw = NULL;
         }
 
         if (gw_in_list->tunnel) {
           struct interfaceName * ifn = find_interfaceName(gw_in_list->gw);
           if (ifn) {
-            olsr_os_inetgw_tunnel_route(gw_in_list->tunnel->if_index, true, false, &ifn->mark);
+            olsr_os_inetgw_tunnel_route(gw_in_list->tunnel->if_index, true, false, ifn->mark);
           }
           olsr_os_del_ipip_tunnel(gw_in_list->tunnel);
           set_unused_iptunnel_name(gw_in_list->gw);
@@ -904,14 +904,14 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
       gw_in_list = olsr_gw_list_find(&gw_list_ipv6, gw);
       if (gw_in_list) {
         if (current_ipv6_gw && current_ipv6_gw->gw == gw) {
-          olsr_os_inetgw_tunnel_route(current_ipv6_gw->tunnel->if_index, false, false, NULL);
+          olsr_os_inetgw_tunnel_route(current_ipv6_gw->tunnel->if_index, false, false, olsr_cnf->rt_table_tunnel);
           current_ipv6_gw = NULL;
         }
 
         if (gw_in_list->tunnel) {
           struct interfaceName * ifn = find_interfaceName(gw_in_list->gw);
           if (ifn) {
-            olsr_os_inetgw_tunnel_route(gw_in_list->tunnel->if_index, false, false, &ifn->mark);
+            olsr_os_inetgw_tunnel_route(gw_in_list->tunnel->if_index, false, false, ifn->mark);
           }
           olsr_os_del_ipip_tunnel(gw_in_list->tunnel);
           set_unused_iptunnel_name(gw_in_list->gw);
@@ -1002,7 +1002,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
     if (new_gw_in_list) {
       /* new gw is already in the gw list */
       assert(new_gw_in_list->tunnel);
-      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, NULL);
+      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, olsr_cnf->rt_table_tunnel);
       current_ipv4_gw = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list, path_cost);
     } else {
       /* new gw is not yet in the gw list */
@@ -1018,7 +1018,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
         if (worst->tunnel) {
           struct interfaceName * ifn = find_interfaceName(worst->gw);
           if (ifn) {
-            olsr_os_inetgw_tunnel_route(worst->tunnel->if_index, true, false, &ifn->mark);
+            olsr_os_inetgw_tunnel_route(worst->tunnel->if_index, true, false, ifn->mark);
           }
           olsr_os_del_ipip_tunnel(worst->tunnel);
           set_unused_iptunnel_name(worst->gw);
@@ -1032,9 +1032,9 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
       new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true, name);
       if (new_v4gw_tunnel) {
         if (interfaceName) {
-          olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, &interfaceName->mark);
+          olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, interfaceName->mark);
         }
-        olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, NULL);
+        olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, olsr_cnf->rt_table_tunnel);
 
         new_gw_in_list = olsr_cookie_malloc(gw_container_entry_mem_cookie);
         new_gw_in_list->gw = new_gw;
@@ -1057,7 +1057,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
     if (new_gw_in_list) {
       /* new gw is already in the gw list */
       assert(new_gw_in_list->tunnel);
-      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, NULL);
+      olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, olsr_cnf->rt_table_tunnel);
       current_ipv6_gw = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list, path_cost);
     } else {
       /* new gw is not yet in the gw list */
@@ -1073,7 +1073,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
         if (worst->tunnel) {
           struct interfaceName * ifn = find_interfaceName(worst->gw);
           if (ifn) {
-            olsr_os_inetgw_tunnel_route(worst->tunnel->if_index, false, false, &ifn->mark);
+            olsr_os_inetgw_tunnel_route(worst->tunnel->if_index, false, false, ifn->mark);
           }
           olsr_os_del_ipip_tunnel(worst->tunnel);
           set_unused_iptunnel_name(worst->gw);
@@ -1087,9 +1087,9 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
       new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false, name);
       if (new_v6gw_tunnel) {
         if (interfaceName) {
-          olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, &interfaceName->mark);
+          olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, interfaceName->mark);
         }
-        olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, NULL);
+        olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, olsr_cnf->rt_table_tunnel);
 
         new_gw_in_list = olsr_cookie_malloc(gw_container_entry_mem_cookie);
         new_gw_in_list->gw = new_gw;
