@@ -43,7 +43,7 @@ function usage() {
 }
 
 function error() {
-local -i firstLine=1
+  local -i firstLine=1
   while [ ${#} -gt 0 ]; do
     if [ ${firstLine} -eq 1 ]; then
       echo "Error: ${1}"
