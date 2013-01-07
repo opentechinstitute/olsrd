@@ -163,11 +163,14 @@ if [ "${ipVersion}" == "${IPVERSION_6}" ]; then
 fi
 
 # process addMode argument
-declare ADDMODE_IPTABLES="-I"
-declare ADDMODE_IP="add"
-if [ "${addMode}" == "${ADDMODE_DEL}" ]; then
-  ADDMODE_IPTABLES="-D"
-  ADDMODE_IP="del"
+declare ADDMODE_IPTABLES="-D"
+declare ADDMODE_IP="del"
+if [ "${addMode}" == "${ADDMODE_ADD}" ]; then
+  # first call the delete mode to remove any left-over rules
+  "${mode}" "${@}"
+
+  ADDMODE_IPTABLES="-I"
+  ADDMODE_IP="add"
 fi
 
 # call the mode
