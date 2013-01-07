@@ -167,7 +167,9 @@ declare ADDMODE_IPTABLES="-D"
 declare ADDMODE_IP="del"
 if [ "${addMode}" == "${ADDMODE_ADD}" ]; then
   # first call the delete mode to remove any left-over rules
+  set +e
   "${mode}" "${@}"
+  set -e
 
   ADDMODE_IPTABLES="-I"
   ADDMODE_IP="add"
