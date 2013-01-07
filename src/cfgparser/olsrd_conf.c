@@ -588,7 +588,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
         return -1;
       }
 
-      if (statbuf.st_mode & S_IXUSR) {
+      if (!(statbuf.st_mode & (S_IRUSR | S_IXUSR))) {
         fprintf(stderr, "Error, policy routing script is not executable\n");
         return -1;
       }
