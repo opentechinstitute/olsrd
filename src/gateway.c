@@ -366,7 +366,7 @@ static bool multiGwRulesEgressInterfaces(bool add) {
   bool ok = true;
   unsigned int i = 0;
 
-  for (i = 0; i < olsr_cnf->smart_gw_use_count; i++) {
+  for (i = 0; i < olsr_cnf->smart_gw_egress_interfaces_count; i++) {
     struct interfaceName * ifn = &sgwEgressInterfaceNames[i];
     if (!multiGwRunScript(SCRIPT_MODE_EGRESSIF, add, ifn->name, &ifn->mark)) {
       ok = false;
