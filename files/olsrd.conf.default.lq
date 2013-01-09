@@ -81,6 +81,12 @@
 
 # SmartGateway no
 
+# Signals that the server tunnel must always be removed on shutdown,
+# irrespective of the interface up/down state during startup.
+# (default is "no")
+
+# SmartGatewayAlwaysRemoveServerTunnel no
+
 # Determines the maximum number of gateways that can be in use at any given
 # time. This setting is used to mitigate the effects of breaking connections
 # (due to the selection of a new gateway) on a dynamic network.

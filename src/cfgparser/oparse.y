@@ -216,6 +216,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_LOCK_FILE
 %token TOK_USE_NIIT
 %token TOK_SMART_GW
+%token TOK_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL
 %token TOK_SMART_GW_USE_COUNT
 %token TOK_SMART_GW_POLICYROUTING_SCRIPT
 %token TOK_SMART_GW_EGRESS_IFS
@@ -308,6 +309,7 @@ stmt:       idebug
           | alock_file
           | suse_niit
           | bsmart_gw
+          | bsmart_gw_always_remove_server_tunnel
           | ismart_gw_use_count
           | ssmart_gw_policyrouting_script
           | ismart_gw_mark_offset_egress
@@ -1311,6 +1313,14 @@ bsmart_gw: TOK_SMART_GW TOK_BOOLEAN
 {
 	PARSER_DEBUG_PRINTF("Smart gateway system: %s\n", $2->boolean ? "enabled" : "disabled");
 	olsr_cnf->smart_gw_active = $2->boolean;
+	free($2);
+}
+;
+
+bsmart_gw_always_remove_server_tunnel: TOK_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL TOK_BOOLEAN
+{
+	PARSER_DEBUG_PRINTF("Smart gateway always remove server tunnel: %s\n", $2->boolean ? "enabled" : "disabled");
+	olsr_cnf->smart_gw_always_remove_server_tunnel = $2->boolean;
 	free($2);
 }
 ;

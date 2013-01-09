@@ -81,6 +81,7 @@
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
+#define DEF_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL  false
 #define DEF_GW_USE_COUNT     1
 #define DEF_GW_MARK_OFFSET_EGRESS   91
 #define DEF_GW_MARK_OFFSET_TUNNELS 101
@@ -289,7 +290,7 @@ struct olsrd_config {
   char *lock_file;
   bool use_niit;
 
-  bool smart_gw_active, smart_gw_allow_nat, smart_gw_uplink_nat;
+  bool smart_gw_active, smart_gw_always_remove_server_tunnel, smart_gw_allow_nat, smart_gw_uplink_nat;
   uint8_t smart_gw_use_count;
   char *smart_gw_policyrouting_script;
   struct sgw_egress_if * smart_gw_egress_interfaces;

@@ -352,6 +352,9 @@ All other parameters will be ignored if SmartGateway is set to "no"
    local IPv6 address to use the IPv6 gateway without any kind of address
    translation. The maximum prefix length is 64 bits,
    the default is ::/0 (no prefix).
+5- SmartGatewayAlwaysRemoveServerTunnel can be used to signal that the
+   server tunnel must always be removed on shutdown, irrespective of the
+   interface up/down state during startup.
 
 
     5.4) Architecture & Notes

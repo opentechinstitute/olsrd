@@ -438,6 +438,15 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->smart_gw_active ? "yes" : "no");
   abuf_puts(out,
     "\n"
+    "# Signals that the server tunnel must always be removed on shutdown,\n"
+    "# irrespective of the interface up/down state during startup.\n"
+    "# (default is \"no\")\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayAlwaysRemoveServerTunnel %s\n",
+      cnf->smart_gw_always_remove_server_tunnel == DEF_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL ? "# " : "",
+      cnf->smart_gw_always_remove_server_tunnel ? "yes" : "no");
+  abuf_puts(out,
+    "\n"
     "# Determines the maximum number of gateways that can be in use at any given\n"
     "# time. This setting is used to mitigate the effects of breaking connections\n"
     "# (due to the selection of a new gateway) on a dynamic network.\n"

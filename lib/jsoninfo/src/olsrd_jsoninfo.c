@@ -986,6 +986,7 @@ ipc_print_config(struct autobuf *abuf)
 #ifdef __linux__
   abuf_json_boolean(abuf, "smartGateway", olsr_cnf->smart_gw_active);
   if (olsr_cnf->smart_gw_active) {
+    abuf_json_boolean(abuf, "smartGatewayAlwaysRemoveServerTunnel", olsr_cnf->smart_gw_always_remove_server_tunnel);
     abuf_json_int(abuf, "smartGatewayUseCount", olsr_cnf->smart_gw_use_count);
     abuf_json_string(abuf, "smartGatewayPolicyRoutingScript", olsr_cnf->smart_gw_policyrouting_script);
     {

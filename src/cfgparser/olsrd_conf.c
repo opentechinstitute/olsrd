@@ -887,6 +887,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->niit6to4_if_index = 0;
 
   cnf->smart_gw_active = DEF_SMART_GW;
+  cnf->smart_gw_always_remove_server_tunnel = DEF_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL;
   cnf->smart_gw_use_count = DEF_GW_USE_COUNT;
   cnf->smart_gw_policyrouting_script = NULL;
   cnf->smart_gw_egress_interfaces = NULL;
@@ -1020,6 +1021,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("Use niit         : %s\n", cnf->use_niit ? "yes" : "no");
 
   printf("Smart Gateway    : %s\n", cnf->smart_gw_active ? "yes" : "no");
+
+  printf("SmGw. Del Srv Tun: %s\n", cnf->smart_gw_always_remove_server_tunnel ? "yes" : "no");
 
   printf("SmGw. Use Count  : %u\n", cnf->smart_gw_use_count);
 
