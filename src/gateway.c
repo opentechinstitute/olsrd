@@ -492,12 +492,12 @@ int olsr_init_gateways(void) {
       struct interfaceName * ifn = &sgwTunnel4InterfaceNames[i];
       ifn->gw = NULL;
       ifn->mark = i + olsr_cnf->smart_gw_mark_offset_tunnels;
-      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl4_%03u", ifn->mark);
+      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl_4%03u", ifn->mark);
 
       ifn = &sgwTunnel6InterfaceNames[i];
       ifn->gw = NULL;
       ifn->mark = i + olsr_cnf->smart_gw_mark_offset_tunnels;
-      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl6_%03u", ifn->mark);
+      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl_6%03u", ifn->mark);
     }
   }
 
