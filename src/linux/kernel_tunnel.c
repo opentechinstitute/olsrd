@@ -108,7 +108,7 @@ void olsr_os_cleanup_iptunnel(const char * dev) {
 
     olsr_os_del_ipip_tunnel(t);
   }
-  if (!store_iptunnel_state) {
+  if (olsr_cnf->smart_gw_always_remove_server_tunnel || !store_iptunnel_state) {
     olsr_if_set_state(dev, false);
   }
 
