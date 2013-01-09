@@ -169,8 +169,7 @@ static int os_ip_tunnel(const char *name, void *target) {
 #endif /* LINUX_IPV6_TUNNEL */
 	}
 
-	strscpy(ifr.ifr_name, name, IFNAMSIZ);
-	strncpy(ifr.ifr_name, target != NULL ? tunName : name, IFNAMSIZ);
+	strscpy(ifr.ifr_name, target != NULL ? tunName : name, IFNAMSIZ);
 	ifr.ifr_ifru.ifru_data = p;
 
 	if ((err = ioctl(olsr_cnf->ioctl_s, target != NULL ? SIOCADDTUNNEL : SIOCDELTUNNEL, &ifr))) {
