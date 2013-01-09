@@ -569,8 +569,6 @@ void olsr_cleanup_gateways(void) {
 
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
-  olsr_os_cleanup_iptunnel(server_tunnel_name());
-
   /* remove all gateways in the gateway tree that are not the active gateway */
   while ((avlnode = avl_walk_first(&gateway_tree))) {
     struct gateway_entry* tree_gw = node2gateway(avlnode);
@@ -599,6 +597,8 @@ void olsr_cleanup_gateways(void) {
   assert(!avl_walk_first(&gateway_tree));
   assert(!current_ipv4_gw);
   assert(!current_ipv6_gw);
+
+  olsr_os_cleanup_iptunnel(server_tunnel_name());
 
   assert(gw_handler);
   gw_handler->cleanup();
