@@ -475,15 +475,23 @@ int olsr_init_gateways(void) {
     sgwTunnel6InterfaceNames = NULL;
   } else {
     uint8_t i;
+    struct sgw_egress_if * egressif;
 
     /* setup the egress interface name/mark pairs */
     sgwEgressInterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_egress_interfaces_count, "sgwEgressInterfaceNames");
-    for (i = 0; i < olsr_cnf->smart_gw_egress_interfaces_count; i++) {
+    i = 0;
+    egressif = olsr_cnf->smart_gw_egress_interfaces;
+    while (egressif) {
       struct interfaceName * ifn = &sgwEgressInterfaceNames[i];
       ifn->gw = NULL;
       ifn->mark = i + olsr_cnf->smart_gw_mark_offset_egress;
-      snprintf(&ifn->name[0], sizeof(ifn->name), "egress_%03u", ifn->mark);
+      egressif->mark = ifn->mark;
+      snprintf(&ifn->name[0], sizeof(ifn->name), egressif->name, egressif->mark);
+
+      egressif = egressif->next;
+      i++;
     }
+    assert(i == olsr_cnf->smart_gw_egress_interfaces_count);
 
     /* setup the SGW tunnel name/mark pairs */
     sgwTunnel4InterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_use_count, "sgwTunnel4InterfaceNames");
