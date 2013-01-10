@@ -1000,6 +1000,7 @@ ipc_print_config(struct autobuf *abuf)
           abuf_puts(&egressbuf, ",");
         }
         abuf_appendf(&egressbuf, "%s", egressif->name);
+        egressif = egressif->next;
       }
       abuf_json_string(abuf, "smartGatewayEgressInterfaces", egressbuf.buf);
       abuf_free(&egressbuf);
