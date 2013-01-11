@@ -116,8 +116,8 @@ static inline uint64_t gw_default_weigh_costs(uint64_t path_cost, uint32_t exitU
    * bwM = ----       bwK = bandwidth in Kbps
    *       1000       bwM = bandwidth in Mbps
    *
-   * exitUm = the gateway exit link uplink   bandwidth, in Kbps
-   * exitDm = the gateway exit link downlink bandwidth, in Kbps
+   * exitUk = the gateway exit link uplink   bandwidth, in Kbps
+   * exitDk = the gateway exit link downlink bandwidth, in Kbps
    *
    *                      1000 * WexitU   1000 * WexitD   Wetx
    * path_cost_weighed =  ------------- + ------------- + ---- * path_cost
