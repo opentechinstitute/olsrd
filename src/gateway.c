@@ -571,18 +571,17 @@ void olsr_shutdown_gateways(void) {
  * Cleanup gateway tunnel system
  */
 void olsr_cleanup_gateways(void) {
-  struct avl_node * avlnode = NULL;
+  struct gateway_entry * tree_gw;
   struct gw_container_entry * gw;
 
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
   /* remove all gateways in the gateway tree that are not the active gateway */
-  while ((avlnode = avl_walk_first(&gateway_tree))) {
-    struct gateway_entry* tree_gw = node2gateway(avlnode);
+  OLSR_FOR_ALL_GATEWAY_ENTRIES(tree_gw) {
     if ((tree_gw != olsr_get_inet_gateway(false)) && (tree_gw != olsr_get_inet_gateway(true))) {
       olsr_delete_gateway_tree_entry(tree_gw, FORCE_DELETE_GW_ENTRY, true);
     }
-  }
+  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 
   /* remove all active IPv4 gateways (should be at most 1 now) */
   OLSR_FOR_ALL_GWS(&gw_list_ipv4.head, gw) {
