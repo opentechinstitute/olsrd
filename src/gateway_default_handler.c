@@ -185,18 +185,26 @@ static void gw_default_choose_gateway(void) {
   }
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
+    bool gw_eligible_v4;
+    bool gw_eligible_v6;
     uint64_t path_cost = gw_default_getcosts(gw);
 
     if (path_cost == UINT64_MAX) {
       continue;
     }
 
-    if (!gw_def_finished_ipv4 && gw->ipv4 && gw->ipv4nat == olsr_cnf->smart_gw_allow_nat && path_cost < cost_ipv4
+    gw_eligible_v4 = gw->ipv4
+        /* && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit) */
+        && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat);
+    if (!gw_def_finished_ipv4 && gw_eligible_v4 && path_cost < cost_ipv4
         && (!eval_cost_ipv4_threshold || (path_cost < cost_ipv4_threshold))) {
       inet_ipv4 = gw;
       cost_ipv4 = path_cost;
     }
-    if (!gw_def_finished_ipv6 && gw->ipv6 && path_cost < cost_ipv6
+
+    gw_eligible_v6 = gw->ipv6
+        /* && olsr_cnf->ip_version == AF_INET6 */;
+    if (!gw_def_finished_ipv6 && gw_eligible_v6 && path_cost < cost_ipv6
         && (!eval_cost_ipv6_threshold || (path_cost < cost_ipv6_threshold))) {
       inet_ipv6 = gw;
       cost_ipv6 = path_cost;
