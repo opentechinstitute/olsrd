@@ -238,8 +238,6 @@ static void set_unused_iptunnel_name(struct gateway_entry *gw) {
   }
 
   assert(gw);
-  assert(sgwTunnel4InterfaceNames);
-  assert(sgwTunnel6InterfaceNames);
 
   ifn = find_interfaceName(gw);
   if (ifn) {
