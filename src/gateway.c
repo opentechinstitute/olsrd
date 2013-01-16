@@ -206,20 +206,21 @@ static void get_unused_iptunnel_name(struct gateway_entry *gw, char * name, stru
   assert(name);
   assert(interfaceName);
 
+  memset(name, 0, IFNAMSIZ);
+
   if (multi_gateway_mode()) {
     struct interfaceName * ifn = find_interfaceName(NULL);
 
     if (ifn) {
-      ifn->gw = gw;
       strncpy(&name[0], &ifn->name[0], sizeof(ifn->name));
       *interfaceName = ifn;
+      ifn->gw = gw;
       return;
     }
 
     /* do not return, fall-through to classic naming as fallback */
   }
 
-  memset(name, 0, IFNAMSIZ);
   snprintf(name, IFNAMSIZ, "tnl_%08x", (olsr_cnf->ip_version == AF_INET) ? gw->originator.v4.s_addr : ++counter);
   *interfaceName = NULL;
 }
