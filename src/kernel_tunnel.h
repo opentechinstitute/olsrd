@@ -22,6 +22,12 @@
 #define TUNNEL_ENDPOINT_IF "tunl0"
 #define TUNNEL_ENDPOINT_IF6 "ip6tnl0"
 
+#ifdef __ANDROID__
+  #define OS_TUNNEL_PATH "/dev/tun"
+#else
+  #define OS_TUNNEL_PATH "/dev/net/tun"
+#endif
+
 struct olsr_iptunnel_entry {
   struct avl_node node;
   union olsr_ip_addr target;
