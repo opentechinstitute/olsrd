@@ -64,6 +64,7 @@
 #include "tc_set.h" /* olsr_lookup_tc_entry(), olsr_lookup_tc_edge() */
 #include "net_olsr.h" /* ipequal */
 #include "lq_plugin.h"
+#include "kernel_tunnel.h"
 
 /* Plugin includes */
 #include "Packet.h" /* IFHWADDRLEN */
@@ -1201,7 +1202,7 @@ static int CreateEncapsulateSocket(const char* ifName)
  * ------------------------------------------------------------------------- */
 static int CreateLocalEtherTunTap(void)
 {
-  static const char deviceName[] = "/dev/net/tun";
+  static const char * deviceName = OS_TUNNEL_PATH;
   struct ifreq ifreq;
   int etfd;
   int ioctlSkfd;
