@@ -13,7 +13,7 @@
 #include <net/if.h>
 
 
-#ifdef __ANDROID_API__
+#ifdef __ANDROID__
 typedef __in_port_t in_port_t;
 #endif /* __ANDROID_API__ */
 
