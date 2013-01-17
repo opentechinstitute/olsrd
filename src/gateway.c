@@ -679,6 +679,7 @@ void olsr_print_gateway_entries(void) {
 void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
   uint8_t *ptr = hna_mask_to_hna_pointer(mask, prefixlen);
 
+  /* copy the current settings for uplink/downlink into the mask */
   memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen / 8);
   if (olsr_cnf->has_ipv4_gateway) {
     ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4;
@@ -704,6 +705,8 @@ void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
  */
 void refresh_smartgw_netmask(void) {
   uint8_t *ip;
+
+  /* clear the mask */
   memset(&smart_gateway_netmask, 0, sizeof(smart_gateway_netmask));
 
   if (olsr_cnf->smart_gw_active) {
