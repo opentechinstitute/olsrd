@@ -177,6 +177,10 @@ static struct interfaceName * find_interfaceName(struct gateway_entry *gw) {
   struct interfaceName * sgwTunnelInterfaceNames;
   uint8_t i = 0;
 
+  if (!multi_gateway_mode()) {
+    return NULL;
+  }
+
   assert(sgwTunnel4InterfaceNames);
   assert(sgwTunnel6InterfaceNames);
 
