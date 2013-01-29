@@ -1007,8 +1007,11 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
   }
 
   /* handle IPv4 */
-  if (ipv4 && new_gw->ipv4 && (!new_gw->ipv4nat || olsr_cnf->smart_gw_allow_nat) && (!current_ipv4_gw || current_ipv4_gw->gw != new_gw)) {
-    /* new gw is different than the current gw */
+  if (ipv4 &&
+      new_gw->ipv4 &&
+      (!new_gw->ipv4nat || olsr_cnf->smart_gw_allow_nat) &&
+      (!current_ipv4_gw || current_ipv4_gw->gw != new_gw || current_ipv4_gw->path_cost != path_cost)) {
+    /* new gw is different than the current gw, or costs have changed */
 
     struct gw_container_entry * new_gw_in_list = olsr_gw_list_find(&gw_list_ipv4, new_gw);
     if (new_gw_in_list) {
@@ -1062,8 +1065,10 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
   }
 
   /* handle IPv6 */
-  if (ipv6 && new_gw->ipv6 && (!current_ipv6_gw || current_ipv6_gw->gw != new_gw)) {
-    /* new gw is different than the current gw */
+  if (ipv6 &&
+      new_gw->ipv6 &&
+      (!current_ipv6_gw || current_ipv6_gw->gw != new_gw || current_ipv6_gw->path_cost != path_cost)) {
+    /* new gw is different than the current gw, or costs have changed */
 
   	struct gw_container_entry * new_gw_in_list = olsr_gw_list_find(&gw_list_ipv6, new_gw);
     if (new_gw_in_list) {
