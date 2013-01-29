@@ -709,12 +709,10 @@ void refresh_smartgw_netmask(void) {
   if (olsr_cnf->smart_gw_active) {
     ip = (uint8_t *) &smart_gateway_netmask;
 
-    if (olsr_cnf->smart_gw_uplink > 0 && olsr_cnf->smart_gw_downlink > 0) {
-      /* the link is bi-directional with a non-zero bandwidth */
-      ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_LINKSPEED;
-      ip[GW_HNA_DOWNLINK] = serialize_gw_speed(olsr_cnf->smart_gw_downlink);
-      ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gw_uplink);
-    }
+    ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_LINKSPEED;
+    ip[GW_HNA_DOWNLINK] = serialize_gw_speed(olsr_cnf->smart_gw_downlink);
+    ip[GW_HNA_UPLINK] = serialize_gw_speed(olsr_cnf->smart_gw_uplink);
+
     if (olsr_cnf->ip_version == AF_INET6 && olsr_cnf->smart_gw_prefix.prefix_len > 0) {
       ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6PREFIX;
       ip[GW_HNA_V6PREFIXLEN] = olsr_cnf->smart_gw_prefix.prefix_len;
