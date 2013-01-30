@@ -738,6 +738,7 @@ set_default_cnf(struct olsrd_config *cnf)
 
   cnf->debug_level = DEF_DEBUGLVL;
   cnf->no_fork = false;
+  cnf->pidfile = NULL;
   cnf->host_emul = false;
   cnf->ip_version = AF_INET;
   cnf->ipsize = sizeof(struct in_addr);
