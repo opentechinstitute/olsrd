@@ -254,6 +254,7 @@ struct olsrd_config {
   uint16_t olsrport;
   int debug_level;
   bool no_fork;
+  char * pidfile;
   bool host_emul;
   int ip_version;
   bool allow_no_interfaces;

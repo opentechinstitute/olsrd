@@ -210,6 +210,50 @@ static int olsr_create_lock_file(bool noExitOnFail) {
 }
 
 /**
+ * Write the current PID to the configured PID file (if one is configured)
+ */
+static void writePidFile(void) {
+  if (olsr_cnf->pidfile) {
+    char buf[PATH_MAX + 256];
+
+    /* create / open the PID file */
+    int fd = open(olsr_cnf->pidfile, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (fd < 0) {
+      snprintf(buf, sizeof(buf), "Could not open PID file %s", olsr_cnf->pidfile);
+      perror(buf);
+      olsr_shutdown(0);
+    }
+
+    /* write the PID */
+    {
+      pid_t pid = getpid();
+      int chars = snprintf(buf, sizeof(buf), "%d", pid);
+      ssize_t chars_written = write(fd, buf, chars);
+      if (chars_written != chars) {
+        close(fd);
+        snprintf(buf, sizeof(buf), "Could not write the PID %d to the PID file %s", pid, olsr_cnf->pidfile);
+        perror(buf);
+        if (remove(olsr_cnf->pidfile) < 0) {
+          snprintf(buf, sizeof(buf), "Could not remove the PID file %s", olsr_cnf->pidfile);
+          perror(buf);
+        }
+        olsr_shutdown(0);
+      }
+    }
+
+    if (close(fd) < 0) {
+      snprintf(buf, sizeof(buf), "Could not close PID file %s", olsr_cnf->pidfile);
+      perror(buf);
+      if (remove(olsr_cnf->pidfile) < 0) {
+        snprintf(buf, sizeof(buf), "Could not remove the PID file %s", olsr_cnf->pidfile);
+        perror(buf);
+      }
+      olsr_shutdown(0);
+    }
+  }
+}
+
+/**
  * loads a config file
  * @return <0 if load failed, 0 otherwise
  */
@@ -581,6 +625,8 @@ int main(int argc, char *argv[]) {
   }
 #endif /* _WIN32 */
 
+  writePidFile();
+
   /*
    * Create locking file for olsrd, will be cleared after olsrd exits
    */
@@ -880,7 +926,8 @@ static void print_usage(bool error) {
         "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
         "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
         "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n"
-        "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n",
+        "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n"
+        "  [-pidfile <pid file>]\n",
         error ? "Error in command line parameters!\n" : "");
 }
 
@@ -1171,6 +1218,14 @@ static int olsr_process_arguments(int argc, char *argv[],
 
     if (strcmp(*argv, "-nofork") == 0) {
       cnf->no_fork = true;
+      continue;
+    }
+
+    if (strcmp(*argv, "-pidfile") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+
+      cnf->pidfile = *argv;
       continue;
     }
 
