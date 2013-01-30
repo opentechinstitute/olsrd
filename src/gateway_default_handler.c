@@ -240,7 +240,10 @@ static void gw_default_choose_gateway(void) {
  */
 static void gw_default_timer(void *unused __attribute__ ((unused))) {
   /* accept a 10% increase/decrease in the number of gateway nodes without triggering a stablecount reset */
-  if (((tc_tree.count * 10) <= (gw_def_nodecount * 11)) || ((tc_tree.count * 10) >= (gw_def_nodecount * 9))) {
+  unsigned int tree100percent = tc_tree.count * 10;
+  uint32_t nodecount090percent = gw_def_nodecount * 9;
+  uint32_t nodecount110percent = gw_def_nodecount * 11;
+  if ((tree100percent >= nodecount090percent) && (tree100percent <= nodecount110percent)) {
     gw_def_nodecount = tc_tree.count;
   }
 
