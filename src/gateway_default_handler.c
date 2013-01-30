@@ -14,8 +14,8 @@
 
 static uint32_t gw_def_nodecount;
 static uint32_t gw_def_stablecount;
-static bool gw_def_ipv4_gw_was_chosen;
-static bool gw_def_ipv6_gw_was_chosen;
+static bool gw_def_choose_new_ipv4_gw;
+static bool gw_def_choose_new_ipv6_gw;
 static struct timer_entry *gw_def_timer;
 
 /* forward declarations */
@@ -188,9 +188,9 @@ static void gw_default_choose_gateway(void) {
       continue;
     }
 
-    if (!gw_def_ipv4_gw_was_chosen) {
+    if (gw_def_choose_new_ipv4_gw) {
       bool gw_eligible_v4 = gw->ipv4
-          /* && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit) *//* contained in !gw_def_ipv4_gw_was_chosen */
+          /* && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit) *//* contained in gw_def_choose_new_ipv4_gw */
           && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat);
       if (gw_eligible_v4 && gw_cost < chosen_gw_ipv4_costs
           && (!cost_ipv4_threshold_valid || (gw_cost < cost_ipv4_threshold))) {
@@ -199,9 +199,9 @@ static void gw_default_choose_gateway(void) {
       }
     }
 
-    if (!gw_def_ipv6_gw_was_chosen) {
+    if (gw_def_choose_new_ipv6_gw) {
       bool gw_eligible_v6 = gw->ipv6
-          /* && olsr_cnf->ip_version == AF_INET6 *//* contained in !gw_def_ipv6_gw_was_chosen */;
+          /* && olsr_cnf->ip_version == AF_INET6 *//* contained in gw_def_choose_new_ipv6_gw */;
       if (gw_eligible_v6 && gw_cost < chosen_gw_ipv6_costs
           && (!cost_ipv6_threshold_valid || (gw_cost < cost_ipv6_threshold))) {
         chosen_gw_ipv6 = gw;
@@ -210,9 +210,9 @@ static void gw_default_choose_gateway(void) {
     }
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 
-  /* determine if we found an IPv4 and IPv6 gateway */
-  gw_def_ipv4_gw_was_chosen = gw_def_ipv4_gw_was_chosen || (chosen_gw_ipv4 != NULL);
-  gw_def_ipv6_gw_was_chosen = gw_def_ipv6_gw_was_chosen || (chosen_gw_ipv6 != NULL);
+  /* determine if we should keep looking for IPv4 and/or IPv6 gateways */
+  gw_def_choose_new_ipv4_gw = gw_def_choose_new_ipv4_gw && (chosen_gw_ipv4 == NULL);
+  gw_def_choose_new_ipv6_gw = gw_def_choose_new_ipv6_gw && (chosen_gw_ipv6 == NULL);
 
   /* determine if we are dealing with a dual stack gateway */
   dual = chosen_gw_ipv4 && (chosen_gw_ipv4 == chosen_gw_ipv6);
@@ -226,7 +226,7 @@ static void gw_default_choose_gateway(void) {
     olsr_set_inet_gateway(&chosen_gw_ipv6->originator, chosen_gw_ipv6_costs, false, true);
   }
 
-  if ((olsr_cnf->smart_gw_thresh == 0) && gw_def_ipv4_gw_was_chosen && gw_def_ipv6_gw_was_chosen) {
+  if ((olsr_cnf->smart_gw_thresh == 0) && !gw_def_choose_new_ipv4_gw && !gw_def_choose_new_ipv6_gw) {
     /* stop looking for a better gateway */
     olsr_stop_timer(gw_def_timer);
     gw_def_timer = NULL;
@@ -271,14 +271,14 @@ static void gw_default_timer(void *unused __attribute__ ((unused))) {
 static void gw_default_lookup_gateway(bool ipv4, bool ipv6) {
   if (ipv4) {
     /* get a new IPv4 gateway if we use OLSRv4 or NIIT */
-    gw_def_ipv4_gw_was_chosen = !(olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
+    gw_def_choose_new_ipv4_gw = (olsr_cnf->ip_version == AF_INET) || olsr_cnf->use_niit;
   }
   if (ipv6) {
     /* get a new IPv6 gateway if we use OLSRv6 */
-    gw_def_ipv6_gw_was_chosen = !(olsr_cnf->ip_version == AF_INET6);
+    gw_def_choose_new_ipv6_gw = olsr_cnf->ip_version == AF_INET6;
   }
 
-  if (!(gw_def_ipv4_gw_was_chosen && gw_def_ipv6_gw_was_chosen)) {
+  if (gw_def_choose_new_ipv4_gw || gw_def_choose_new_ipv6_gw) {
     gw_default_choose_gateway();
   }
 }
@@ -298,8 +298,8 @@ static void gw_default_init(void) {
   /* initialize values */
   gw_def_nodecount = 0;
   gw_def_stablecount = 0;
-  gw_def_ipv4_gw_was_chosen = false;
-  gw_def_ipv6_gw_was_chosen = false;
+  gw_def_choose_new_ipv4_gw = true;
+  gw_def_choose_new_ipv6_gw = true;
   gw_def_timer = NULL;
 }
 
@@ -318,14 +318,14 @@ static void gw_default_startup_handler(void) {
   gw_def_stablecount = 0;
 
   /* get a new IPv4 gateway if we use OLSRv4 or NIIT */
-  gw_def_ipv4_gw_was_chosen = !(olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
+  gw_def_choose_new_ipv4_gw = (olsr_cnf->ip_version == AF_INET) || olsr_cnf->use_niit;
 
   /* get a new IPv6 gateway if we use OLSRv6 */
-  gw_def_ipv6_gw_was_chosen = !(olsr_cnf->ip_version == AF_INET6);
+  gw_def_choose_new_ipv6_gw = olsr_cnf->ip_version == AF_INET6;
 
   /* keep in mind we might be a gateway ourself */
-  gw_def_ipv4_gw_was_chosen = gw_def_ipv4_gw_was_chosen || olsr_cnf->has_ipv4_gateway;
-  gw_def_ipv6_gw_was_chosen = gw_def_ipv6_gw_was_chosen || olsr_cnf->has_ipv6_gateway;
+  gw_def_choose_new_ipv4_gw = gw_def_choose_new_ipv4_gw && !olsr_cnf->has_ipv4_gateway;
+  gw_def_choose_new_ipv6_gw = gw_def_choose_new_ipv6_gw && !olsr_cnf->has_ipv6_gateway;
 
   /* (re)start gateway lazy selection timer */
   olsr_set_timer(&gw_def_timer, olsr_cnf->smart_gw_period, 0, true, &gw_default_timer, NULL, 0);
@@ -366,7 +366,7 @@ static uint64_t gw_default_getcosts(struct gateway_entry *gw) {
 static void gw_default_choosegw_handler(bool ipv4, bool ipv6) {
   gw_default_lookup_gateway(ipv4, ipv6);
 
-  if (!(gw_def_ipv4_gw_was_chosen && gw_def_ipv6_gw_was_chosen)) {
+  if (gw_def_choose_new_ipv4_gw || gw_def_choose_new_ipv6_gw) {
     gw_default_startup_handler();
   }
 }
