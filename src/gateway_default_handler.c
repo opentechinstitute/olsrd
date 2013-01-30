@@ -211,8 +211,8 @@ static void gw_default_choose_gateway(void) {
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
 
   /* determine if we found an IPv4 and IPv6 gateway */
-  gw_def_ipv4_gw_was_chosen |= (chosen_gw_ipv4 != NULL);
-  gw_def_ipv6_gw_was_chosen |= (chosen_gw_ipv6 != NULL);
+  gw_def_ipv4_gw_was_chosen = gw_def_ipv4_gw_was_chosen || (chosen_gw_ipv4 != NULL);
+  gw_def_ipv6_gw_was_chosen = gw_def_ipv6_gw_was_chosen || (chosen_gw_ipv6 != NULL);
 
   /* determine if we are dealing with a dual stack gateway */
   dual = chosen_gw_ipv4 && (chosen_gw_ipv4 == chosen_gw_ipv6);
@@ -324,8 +324,8 @@ static void gw_default_startup_handler(void) {
   gw_def_ipv6_gw_was_chosen = !(olsr_cnf->ip_version == AF_INET6);
 
   /* keep in mind we might be a gateway ourself */
-  gw_def_ipv4_gw_was_chosen |= olsr_cnf->has_ipv4_gateway;
-  gw_def_ipv6_gw_was_chosen |= olsr_cnf->has_ipv6_gateway;
+  gw_def_ipv4_gw_was_chosen = gw_def_ipv4_gw_was_chosen || olsr_cnf->has_ipv4_gateway;
+  gw_def_ipv6_gw_was_chosen = gw_def_ipv6_gw_was_chosen || olsr_cnf->has_ipv6_gateway;
 
   /* (re)start gateway lazy selection timer */
   olsr_set_timer(&gw_def_timer, olsr_cnf->smart_gw_period, 0, true, &gw_default_timer, NULL, 0);
