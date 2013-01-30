@@ -51,15 +51,11 @@ struct olsr_gw_handler gw_def_handler = {
  * @return the threshold path cost
  */
 static inline uint64_t gw_default_calc_threshold(uint64_t path_cost) {
-  uint64_t path_cost_times_threshold;
-
   if (olsr_cnf->smart_gw_thresh == 0) {
-    path_cost_times_threshold = path_cost;
-  } else {
-    path_cost_times_threshold = (path_cost * (uint64_t) olsr_cnf->smart_gw_thresh + (uint64_t) 50) / (uint64_t) 100;
+    return path_cost;
   }
 
-  return path_cost_times_threshold;
+  return ((path_cost * (uint64_t) olsr_cnf->smart_gw_thresh) + (uint64_t) 50) / (uint64_t) 100;
 }
 
 /**
