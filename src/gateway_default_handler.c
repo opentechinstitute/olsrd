@@ -101,9 +101,9 @@ static inline uint64_t gw_default_weigh_costs(uint64_t path_cost, uint32_t exitU
    * Wetx   = the ETX path cost weight                          (configured)
    * Detx   = the ETX path cost divider                         (configured)
    *
-   *                      WexitU   WexitD   Wetx
-   * path_cost_weighed =  ------ + ------ + ---- * path_cost
-   *                      exitUm   exitDm   Detx
+   *                     WexitU   WexitD   Wetx
+   * path_cost_weight =  ------ + ------ + ---- * path_cost
+   *                     exitUm   exitDm   Detx
    *
    * Since the gateway exit link bandwidths are in Kbps, the following formula
    * is used to convert them to the desired Mbps:
@@ -115,27 +115,27 @@ static inline uint64_t gw_default_weigh_costs(uint64_t path_cost, uint32_t exitU
    * exitUk = the gateway exit link uplink   bandwidth, in Kbps
    * exitDk = the gateway exit link downlink bandwidth, in Kbps
    *
-   *                      1000 * WexitU   1000 * WexitD   Wetx
-   * path_cost_weighed =  ------------- + ------------- + ---- * path_cost
-   *                          exitUk          exitDk      Detx
+   *                     1000 * WexitU   1000 * WexitD   Wetx
+   * path_cost_weight =  ------------- + ------------- + ---- * path_cost
+   *                         exitUk          exitDk      Detx
    *
    *
    * Analysis of the required bit width of the result:
    *
-   * exitUk    = 29 bits = [1,   320,000,000]
-   * exitDk    = 29 bits = [1,   320,000,000]
-   * WexitU    =  8 bits = [1,           255]
-   * WexitD    =  8 bits = [1,           255]
-   * Wetx      =  8 bits = [1,           255]
-   * Detx      =  8 bits = [1,           255]
-   * path_cost = 32 bits = [1, 4,294,967,295]
+   * exitUk    = [1,   320,000,000] = 29 bits
+   * exitDk    = [1,   320,000,000] = 29 bits
+   * WexitU    = [1,           255] =  8 bits
+   * WexitD    = [1,           255] =  8 bits
+   * Wetx      = [1,           255] =  8 bits
+   * Detx      = [1,           255] =  8 bits
+   * path_cost = [1, 4,294,967,295] = 32 bits
    *
-   *                          1000 * 255   1000 * 255   255
-   * path_cost_weighed(max) = ---------- + ---------- + --- * 4,294,967,295
-   *                               1             1       1
+   *                         1000 * 255   1000 * 255   255
+   * path_cost_weight(max) = ---------- + ---------- + --- * 4,294,967,295
+   *                              1             1       1
    *
-   * path_cost_weighed(max) = 0x3E418    + 0x3E418    + 0xFEFFFFFF01
-   * path_cost_weighed(max) = 0xFF0007C731
+   * path_cost_weight(max) = 0x3E418    + 0x3E418    + 0xFEFFFFFF01
+   * path_cost_weight(max) = 0xFF0007C731
    *
    * Because we can multiply 0xFF0007C731 by 2^24 without overflowing a
    * 64 bits number, we do this to increase accuracy.
