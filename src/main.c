@@ -69,7 +69,9 @@
 #endif /* __linux__ */
 
 #ifdef _WIN32
+#include <process.h>
 #include <winbase.h>
+#define olsr_shutdown(x) SignalHandler(x)
 #define close(x) closesocket(x)
 int __stdcall SignalHandler(unsigned long signo) __attribute__ ((noreturn));
 void ListInterfaces(void);
@@ -217,7 +219,12 @@ static void writePidFile(void) {
     char buf[PATH_MAX + 256];
 
     /* create / open the PID file */
-    int fd = open(olsr_cnf->pidfile, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+#ifdef __WIN32
+    mode_t mode = S_IRUSR | S_IWUSR;
+#else
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+#endif
+    int fd = open(olsr_cnf->pidfile, O_CREAT | O_WRONLY, mode);
     if (fd < 0) {
       snprintf(buf, sizeof(buf), "Could not open PID file %s", olsr_cnf->pidfile);
       perror(buf);
