@@ -34,7 +34,7 @@ function usage() {
   echo "  ${script} ${arguments[@]:-}"
   echo ""
   echo "Usage:"
-  echo "  ${scriptBasename} ipVersion mode addMode [ifname [ifmark]]"
+  echo "  ${script} ipVersion mode addMode [ifname [ifmark]]"
   echo "    - ipVersion: ${IPVERSION_4} or ${IPVERSION_6}"
   echo "    - mode     : ${MODE_GENERIC}, ${MODE_OLSRIF}, ${MODE_SGWSRVTUN}, ${MODE_EGRESSIF} or ${MODE_SGWTUN}"
   echo "    - addMode  : ${ADDMODE_ADD} or ${ADDMODE_DEL}"
@@ -93,8 +93,6 @@ function sgwtun() {
 ###############################################################################
 
 declare script="${0}"
-declare scriptBasename="$(basename "${script}")"
-declare scriptDir="$(dirname "${script}")"
 declare -a arguments=( ${@} )
 declare -i argc=${#}
 
