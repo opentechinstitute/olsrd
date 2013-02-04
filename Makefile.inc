@@ -190,6 +190,17 @@ LIBS +=		$(OS_LIB_PTHREAD)
 # extra options from the outside
 CPPFLAGS +=	$(EXTRA_CPPFLAGS)
 
+
+# 32/64 cross compilation
+ifdef M32
+CFLAGS +=	-m32
+LDFLAGS +=	-m32
+else ifdef M64
+CFLAGS +=	-m64
+LDFLAGS +=	-m64
+endif
+
+
 ###################################
 #
 # options to save space on small systems

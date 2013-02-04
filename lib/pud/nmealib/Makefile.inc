@@ -52,3 +52,15 @@ CFLAGS+= -O2
 else
 CFLAGS+= -O0
 endif
+
+
+LDFLAGS = -shared -Wl,--warn-common -fPIC
+
+# 32/64 cross compilation
+ifdef M32
+CFLAGS +=	-m32
+LDFLAGS +=	-m32
+else ifdef M64
+CFLAGS +=	-m64
+LDFLAGS +=	-m64
+endif
