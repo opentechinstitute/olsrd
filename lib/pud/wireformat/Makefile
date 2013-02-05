@@ -59,7 +59,7 @@ $(LIBDIR_BUILD)/$(SONAME): $(OBJECTS_C)
 ifeq ($(VERBOSE),0)
 	@echo "[LD] $@"
 endif
-	$(MAKECMDPREFIX)$(CC) ${LDFLAGS} -Wl,-soname=$(SONAME) $(LIBRARIES) -o "$@" $(OBJECTS_C)
+	$(MAKECMDPREFIX)$(CC) $(LDFLAGS) -Wl,-soname=$(SONAME) $(LIBRARIES) -o "$@" $(OBJECTS_C)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR_C)/%.c $(INC_DIR_C)/compiler.h
 ifeq ($(VERBOSE),0)
