@@ -12,7 +12,8 @@ LDFLAGS = -shared -Wl,--warn-common -fPIC
 ifdef M32
 CFLAGS +=	-m32
 LDFLAGS +=	-m32
-else ifdef M64
+endif
+ifdef M64
 CFLAGS +=	-m64
 LDFLAGS +=	-m64
 endif
