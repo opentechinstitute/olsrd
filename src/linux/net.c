@@ -586,16 +586,7 @@ join_mcast(struct interface *ifs, int sock)
   mcastreq.ipv6mr_multiaddr = ifs->int6_multaddr.sin6_addr;
   mcastreq.ipv6mr_interface = ifs->if_index;
 
-#if !defined __FreeBSD__ && !defined __FreeBSD_kernel__ && !defined __APPLE__ && !defined __NetBSD__
   OLSR_PRINTF(3, "Interface %s joining multicast %s...", ifs->int_name, ip6_to_string(&buf, &ifs->int6_multaddr.sin6_addr));
-  /* Send multicast */
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0) {
-    perror("Join multicast");
-    return -1;
-  }
-#else /* !defined __FreeBSD__ && !defined __FreeBSD_kernel__ && !defined __APPLE__ && !defined __NetBSD__ */
-#warning implement IPV6_ADD_MEMBERSHIP
-#endif /* !defined __FreeBSD__ && !defined __FreeBSD_kernel__ && !defined __APPLE__ && !defined __NetBSD__ */
 
   /* Old libc fix */
 #ifdef IPV6_JOIN_GROUP
@@ -606,7 +597,7 @@ join_mcast(struct interface *ifs, int sock)
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mcastreq, sizeof(struct ipv6_mreq)) < 0)
 #endif /* IPV6_JOIN_GROUP */
   {
-    perror("Join multicast send");
+    perror("Join multicast group for receiving socket");
     return -1;
   }
 
