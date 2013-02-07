@@ -113,7 +113,7 @@ void olsr_reset_all_links(void) {
  * Get the status of a link. The status is based upon different
  * timeouts in the link entry.
  *
- * @param remote address of the remote interface
+ * @param entry link entry
  * @return the link status of the link
  */
 int
@@ -739,8 +739,8 @@ update_link_entry(const union olsr_ip_addr *local, const union olsr_ip_addr *rem
  * one neighbor entry with another pointer
  * Used by MID updates.
  *
- * @old the pointer to replace
- * @new the pointer to use instead of "old"
+ * @param old the pointer to replace
+ * @param new the pointer to use instead of "old"
  * @return the number of entries updated
  */
 int
@@ -770,6 +770,7 @@ replace_neighbor_link_set(const struct neighbor_entry *old, struct neighbor_entr
  *looking in a received HELLO message.
  *
  *@param message the HELLO message to check
+ *@param in_if the incoming interface
  *
  *@return the link status
  */

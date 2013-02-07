@@ -40,6 +40,7 @@
  *
  */
 
+#ifdef __linux__
 #ifdef LINUX_NL80211 /* Optional - not supported on all platforms */
 
 #ifndef LQ_ETX_FFETH_NL80211_
@@ -82,6 +83,7 @@ extern struct lq_handler lq_etx_ffeth_nl80211_handler;
 #endif /* LQ_ETX_FFETH_NL80211_ */
 
 #endif /* LINUX_NL80211 */
+#endif /* __linux__ */
 
 /*
  * Local Variables:

@@ -69,7 +69,9 @@
 #endif /* __linux__ */
 
 #ifdef _WIN32
+#include <process.h>
 #include <winbase.h>
+#define olsr_shutdown(x) SignalHandler(x)
 #define close(x) closesocket(x)
 int __stdcall SignalHandler(unsigned long signo) __attribute__ ((noreturn));
 void ListInterfaces(void);
@@ -93,7 +95,7 @@ static void olsr_shutdown(int) __attribute__ ((noreturn));
 /*
  * Local function prototypes
  */
-void olsr_reconfigure(int) __attribute__ ((noreturn));
+void olsr_reconfigure(int signo) __attribute__ ((noreturn));
 
 static void print_usage(bool error);
 
@@ -207,6 +209,55 @@ static int olsr_create_lock_file(bool noExitOnFail) {
   }
 #endif /* _WIN32 */
   return 0;
+}
+
+/**
+ * Write the current PID to the configured PID file (if one is configured)
+ */
+static void writePidFile(void) {
+  if (olsr_cnf->pidfile) {
+    char buf[PATH_MAX + 256];
+
+    /* create / open the PID file */
+#ifdef __WIN32
+    mode_t mode = S_IRUSR | S_IWUSR;
+#else
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+#endif
+    int fd = open(olsr_cnf->pidfile, O_CREAT | O_WRONLY, mode);
+    if (fd < 0) {
+      snprintf(buf, sizeof(buf), "Could not open PID file %s", olsr_cnf->pidfile);
+      perror(buf);
+      olsr_shutdown(0);
+    }
+
+    /* write the PID */
+    {
+      pid_t pid = getpid();
+      int chars = snprintf(buf, sizeof(buf), "%d", pid);
+      ssize_t chars_written = write(fd, buf, chars);
+      if (chars_written != chars) {
+        close(fd);
+        snprintf(buf, sizeof(buf), "Could not write the PID %d to the PID file %s", pid, olsr_cnf->pidfile);
+        perror(buf);
+        if (remove(olsr_cnf->pidfile) < 0) {
+          snprintf(buf, sizeof(buf), "Could not remove the PID file %s", olsr_cnf->pidfile);
+          perror(buf);
+        }
+        olsr_shutdown(0);
+      }
+    }
+
+    if (close(fd) < 0) {
+      snprintf(buf, sizeof(buf), "Could not close PID file %s", olsr_cnf->pidfile);
+      perror(buf);
+      if (remove(olsr_cnf->pidfile) < 0) {
+        snprintf(buf, sizeof(buf), "Could not remove the PID file %s", olsr_cnf->pidfile);
+        perror(buf);
+      }
+      olsr_shutdown(0);
+    }
+  }
 }
 
 /**
@@ -540,6 +591,15 @@ int main(int argc, char *argv[]) {
     }
   }
 
+#ifdef __linux__
+  /* startup gateway system */
+  if (olsr_cnf->smart_gw_active) {
+    if (olsr_startup_gateways()) {
+      olsr_exit("Cannot startup gateway tunnels", 1);
+    }
+  }
+#endif /* __linux__ */
+
   olsr_do_startup_sleep();
 
   /* Print heartbeat to stdout */
@@ -571,6 +631,8 @@ int main(int argc, char *argv[]) {
     }
   }
 #endif /* _WIN32 */
+
+  writePidFile();
 
   /*
    * Create locking file for olsrd, will be cleared after olsrd exits
@@ -663,12 +725,12 @@ int main(int argc, char *argv[]) {
   return 1;
 } /* main */
 
+#ifndef _WIN32
 /**
  * Reconfigure olsrd. Currently kind of a hack...
  *
- *@param signal the signal that triggered this callback
+ *@param signo the signal that triggered this callback
  */
-#ifndef _WIN32
 void olsr_reconfigure(int signo __attribute__ ((unused))) {
   /* if we are started with -nofork, we do not want to go into the
    * background here. So we can simply stop on -HUP
@@ -723,7 +785,7 @@ static void olsr_shutdown_messages(void) {
 /**
  *Function called at shutdown. Signal handler
  *
- * @param signal the signal that triggered this call
+ * @param signo the signal that triggered this call
  */
 #ifdef _WIN32
 int __stdcall
@@ -775,6 +837,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #ifdef __linux__
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
+    olsr_shutdown_gateways();
     olsr_cleanup_gateways();
   }
 
@@ -870,7 +933,8 @@ static void print_usage(bool error) {
         "  [-hint <hello interval (secs)>] [-tcint <tc interval (secs)>]\n"
         "  [-midint <mid interval (secs)>] [-hnaint <hna interval (secs)>]\n"
         "  [-T <Polling Rate (secs)>] [-nofork] [-hemu <ip_address>]\n"
-        "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n",
+        "  [-lql <LQ level>] [-lqa <LQ aging factor>]\n"
+        "  [-pidfile <pid file>]\n",
         error ? "Error in command line parameters!\n" : "");
 }
 
@@ -1161,6 +1225,14 @@ static int olsr_process_arguments(int argc, char *argv[],
 
     if (strcmp(*argv, "-nofork") == 0) {
       cnf->no_fork = true;
+      continue;
+    }
+
+    if (strcmp(*argv, "-pidfile") == 0) {
+      NEXT_ARG;
+      CHECK_ARGC;
+
+      cnf->pidfile = *argv;
       continue;
     }
 

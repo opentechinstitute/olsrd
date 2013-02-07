@@ -39,7 +39,7 @@
 # Please also write a new version to:
 # gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
 # gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
-VERS =		pre-0.6.5
+VERS =		pre-0.6.6
 
 TOPDIR = .
 INSTALLOVERWRITE ?=
@@ -122,6 +122,12 @@ install_bin:
 		mkdir -p $(SBINDIR)
 		install -m 755 $(EXENAME) $(SBINDIR)
 		$(STRIP) $(SBINDIR)/$(EXENAME)
+		$(MAKECMDPREFIX)if [ -e $(SBINDIR)/$(SGW_POLICY_SCRIPT) ]; then \
+			cp -f files/$(SGW_POLICY_SCRIPT) $(SBINDIR)/$(SGW_POLICY_SCRIPT).new; \
+			echo "Policy routing script was saved as $(SBINDIR)/$(SGW_POLICY_SCRIPT).new"; \
+		else \
+			cp -f files/$(SGW_POLICY_SCRIPT) $(SBINDIR)/$(SGW_POLICY_SCRIPT); \
+		fi
 
 uninstall_bin:
 		rm -f $(SBINDIR)/$(EXENAME)
@@ -205,6 +211,16 @@ libs_install install_libs:
 libs_uninstall uninstall_libs:
 		$(MAKECMDPREFIX)set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) uninstall;done
 		rmdir -p --ignore-fail-on-non-empty $(LIBDIR)
+
+#
+# DOCUMENTATION
+#
+.PHONY: doc doc_clean
+doc:
+		$(MAKECMDPREFIX)$(MAKECMD) -C doc OS=$(OS)
+
+doc_clean:
+		$(MAKECMDPREFIX)$(MAKECMD) -C doc OS=$(OS) clean
 
 #
 # PLUGINS

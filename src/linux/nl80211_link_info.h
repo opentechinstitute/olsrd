@@ -39,6 +39,7 @@
  *
  */
 
+#ifdef __linux__
 #ifdef LINUX_NL80211 /* Optional - not supported on all platforms */
 
 #ifndef OLSR_LINUX_NL80211_LINK_INFO_H_INCLUDED
@@ -61,3 +62,4 @@ void nl80211_link_info_get(void);
 #endif // OLSR_LINUX_NL80211_LINK_INFO_H_INCLUDED
 
 #endif /* LINUX_NL80211 */
+#endif /* __linux__ */

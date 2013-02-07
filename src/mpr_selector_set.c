@@ -133,7 +133,7 @@ olsr_set_mpr_sel_timer(struct mpr_selector *mpr_sel, olsr_reltime rel_timer)
 /**
  *Add a MPR selector to the MPR selector set
  *
- *@param add address of the MPR selector
+ *@param addr address of the MPR selector
  *@param vtime validity time for the new entry
  *
  *@return a pointer to the new entry

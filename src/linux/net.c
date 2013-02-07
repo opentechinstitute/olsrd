@@ -43,6 +43,7 @@
  * Linux specific code
  */
 
+#ifdef __linux__
 #define __BSD_SOURCE 1
 
 #include "../net_os.h"
@@ -358,7 +359,7 @@ net_os_restore_ifoptions(void)
 
 /**
  *Creates a blocking tcp socket for communication with switch daemon.
- *@param sa sockaddr struct. Used for bind(2).
+ *@param pin sockaddr struct. Used for bind(2).
  *@return the FD of the socket or -1 on error.
  */
 int
@@ -395,7 +396,8 @@ gethemusocket(struct sockaddr_in *pin)
 
 /**
  *Creates a nonblocking broadcast socket.
- *@param sa sockaddr struct. Used for bind(2).
+ *@param bufspace the number of bytes in the buffer
+ *@param ifp interface struct. Used for bind(2).
  *@return the FD of the socket or -1 on error.
  */
 int
@@ -479,7 +481,8 @@ getsocket(int bufspace, struct interface *ifp)
 
 /**
  *Creates a nonblocking IPv6 socket
- *@param sin sockaddr_in6 struct. Used for bind(2).
+ *@param bufspace the number of bytes in the buffer
+ *@param ifp interface struct. Used for bind(2).
  *@return the FD of the socket or -1 on error.
  */
 int
@@ -748,6 +751,7 @@ int olsr_if_set_state(const char *dev, bool up) {
   }
   return 0;
 }
+#endif /* __linux__ */
 
 /*
  * Local Variables:

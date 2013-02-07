@@ -40,6 +40,7 @@
  *
  */
 
+#ifdef __linux__
 #ifdef LINUX_NL80211 /* Optional - not supported on all platforms */
 
 #include "lq_plugin_ffeth_nl80211.h"
@@ -517,6 +518,7 @@ lq_print_cost_ffeth_nl80211(olsr_linkcost cost, struct lqtextbuffer *buffer)
 }
 
 #endif /* LINUX_NL80211 */
+#endif /* __linux__ */
 
 /*
  * Local Variables:

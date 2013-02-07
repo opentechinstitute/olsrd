@@ -81,6 +81,7 @@ olsr_load_plugins(void)
  *the required information
  *
  *@param libname the name of the library(file)
+ *@param params plugin parameters
  *
  *@return negative on error
  */

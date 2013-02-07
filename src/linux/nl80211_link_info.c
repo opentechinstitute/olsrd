@@ -39,6 +39,7 @@
  *
  */
 
+#ifdef __linux__
 #ifdef LINUX_NL80211 /* Optional - not supported on all platforms */
 
 #include <stdlib.h>
@@ -490,4 +491,4 @@ void nl80211_link_info_get(void) {
 }
 
 #endif /* LINUX_NL80211 */
-
+#endif /* __linux__ */

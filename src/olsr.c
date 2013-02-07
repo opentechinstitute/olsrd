@@ -304,7 +304,8 @@ olsr_init_tables(void)
  *it if necessary.
  *
  *@param m the OLSR message to be forwarded
- *@param neighbour we received message from
+ *@param in_if the incoming interface
+ *@param from_addr neighbour we received message from
  *
  *@returns positive if forwarded
  */
@@ -549,6 +550,7 @@ olsr_status_to_string(uint8_t status)
  *that requires the daemon to terminate
  *
  *@param msg the message to write to the syslog and possibly stdout
+ *@param val the exit code
  */
 
 void
@@ -569,7 +571,7 @@ olsr_exit(const char *msg, int val)
  * Wrapper for malloc(3) that does error-checking
  *
  * @param size the number of bytes to allocalte
- * @param caller a string identifying the caller for
+ * @param id a string identifying the caller for
  * use in error messaging
  *
  * @return a void pointer to the memory allocated

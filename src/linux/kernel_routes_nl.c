@@ -39,6 +39,8 @@
  *
  */
 
+#ifdef __linux__
+
 #include "kernel_routes.h"
 #include "ipc_frontend.h"
 #include "log.h"
@@ -464,14 +466,14 @@ void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set) {
   }
 }
 
-void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set) {
+void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set, uint8_t table) {
   const struct olsr_ip_prefix *dst;
 
   assert(olsr_cnf->ip_version == AF_INET6 || ipv4);
 
   dst = ipv4 ? &ipv4_internet_route : &ipv6_internet_route;
 
-  if (olsr_new_netlink_route(ipv4 ? AF_INET : AF_INET6, olsr_cnf->rt_table_tunnel,
+  if (olsr_new_netlink_route(ipv4 ? AF_INET : AF_INET6, table,
       if_idx, RT_METRIC_DEFAULT, olsr_cnf->rt_proto, NULL, NULL, dst, set, false)) {
     olsr_syslog(OLSR_LOG_ERR, ". error while %s inetgw tunnel route to %s for if %d",
         set ? "setting" : "removing", olsr_ip_prefix_to_string(dst), if_idx);
@@ -589,7 +591,7 @@ static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bo
 /**
  * Insert a route in the kernel routing table
  *
- * @param destination the route to add
+ * @param rt the route to add
  *
  * @return negative on error
  */
@@ -603,7 +605,7 @@ olsr_ioctl_add_route(const struct rt_entry *rt)
 /**
  *Insert a route in the kernel routing table
  *
- *@param destination the route to add
+ *@param rt the route to add
  *
  *@return negative on error
  */
@@ -617,7 +619,7 @@ olsr_ioctl_add_route6(const struct rt_entry *rt)
 /**
  *Remove a route from the kernel
  *
- *@param destination the route to remove
+ *@param rt the route to remove
  *
  *@return negative on error
  */
@@ -631,7 +633,7 @@ olsr_ioctl_del_route(const struct rt_entry *rt)
 /**
  *Remove a route from the kernel
  *
- *@param destination the route to remove
+ *@param rt the route to remove
  *
  *@return negative on error
  */
@@ -641,6 +643,7 @@ olsr_ioctl_del_route6(const struct rt_entry *rt)
   OLSR_PRINTF(2, "KERN: Deleting %s\n", olsr_rt_to_string(rt));
   return olsr_os_process_rt_entry(AF_INET6, rt, false);
 }
+#endif /* __linux__ */
 
 /*
  * Local Variables:

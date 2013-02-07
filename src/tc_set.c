@@ -128,7 +128,7 @@ olsr_seq_inrange_high(int beg, int end, uint16_t seq)
 /**
  * Add a new tc_entry to the tc tree
  *
- * @param (last)adr address of the entry
+ * @param adr (last)adr address of the entry
  * @return a pointer to the created entry
  */
 static struct tc_entry *
@@ -272,8 +272,7 @@ olsr_unlock_tc_entry(struct tc_entry *tc)
 /**
  * Delete a TC entry.
  *
- * @param entry the TC entry to delete
- *
+ * @param tc the TC entry to delete
  */
 void
 olsr_delete_tc_entry(struct tc_entry *tc)
@@ -424,7 +423,9 @@ olsr_calc_tc_edge_entry_etx(struct tc_edge_entry *tc_edge)
 /**
  * Add a new tc_edge_entry to the tc_edge_tree
  *
- * @param (last)adr address of the entry
+ * @param tc the tc entry
+ * @param addr (last)adr address of the entry
+ * @param ansn ansn of this edge
  * @return a pointer to the created entry
  */
 struct tc_edge_entry *
@@ -497,7 +498,6 @@ olsr_add_tc_edge_entry(struct tc_entry *tc, union olsr_ip_addr *addr, uint16_t a
 /**
  * Delete a TC edge entry.
  *
- * @param tc the TC entry
  * @param tc_edge the TC edge entry
  */
 void
@@ -554,6 +554,8 @@ olsr_delete_outdated_tc_edges(struct tc_entry *tc)
  *
  * @param tc the entry to delete edges from
  * @param ansn the advertised neighbor set sequence number
+ * @param lower_border the lower border
+ * @param upper_border the upper border
  * @return 1 if any destinations were deleted 0 if not
  */
 static int
@@ -596,8 +598,10 @@ olsr_delete_revoked_tc_edges(struct tc_entry *tc, uint16_t ansn, union olsr_ip_a
  * Creates new edge-entries if not registered.
  * Bases update on a received TC message
  *
- * @param entry the TC entry to check
- * @pkt the TC edge entry in the packet
+ * @param tc the TC entry to check
+ * @param ansn the ansn of the edge
+ * @param curr pointer to the packet
+ * @param neighbor the neighbor of the edge
  * @return 1 if entries are added 0 if not
  */
 static int
@@ -665,8 +669,8 @@ olsr_tc_update_edge(struct tc_entry *tc, uint16_t ansn, const unsigned char **cu
 /**
  * Lookup an edge hanging off a TC entry.
  *
- * @param entry the entry to check
- * @param dst_addr the destination address to check for
+ * @param tc the entry to check
+ * @param edge_addr the destination address to check for
  * @return a pointer to the tc_edge found - or NULL
  */
 struct tc_edge_entry *

@@ -121,7 +121,7 @@ nmealib:
 library:
 	$(MAKECMDPREFIX)$(MAKE) -C "$(LIBRARY_PATH)" all
 
-java:
+java:	library
 	$(MAKECMDPREFIX)$(MAKE) -C "$(JAVA_PATH)" all
 
 java-install: java

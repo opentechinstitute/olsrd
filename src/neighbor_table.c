@@ -99,7 +99,7 @@ olsr_del_nbr2_list(struct neighbor_2_list_entry *nbr2_list)
  * Delete a two hop neighbor from a neighbors two hop neighbor list.
  *
  * @param neighbor the neighbor to delete the two hop neighbor from.
- * @param address the IP address of the two hop neighbor to delete.
+ * @param neigh2 the IP address of the two hop neighbor to delete.
  *
  * @return positive if entry deleted
  */
@@ -168,9 +168,9 @@ olsr_update_neighbor_main_addr(struct neighbor_entry *entry, const union olsr_ip
  *
  *Remember: Deleting a neighbor entry results
  *the deletion of its 2 hop neighbors list!!!
- *@param neighbor the neighbor entry to delete
+ *@param neighbor_addr the neighbor entry to delete
  *
- *@return nada
+ *@return always 1
  */
 
 int

@@ -149,6 +149,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
  * has been changed.
  *
  *@param iface the olsr_if struct describing the interface
+ *@return 1 when the interface changed, 0 if it did not change
  */
 int
 chk_if_changed(struct olsr_if *iface)
@@ -519,8 +520,8 @@ if_basename(const char *name)
  * if it is set up and is of the correct type.
  *
  *@param iface the olsr_if struct describing the interface
- *@param so the socket to use for ioctls
- *
+ *@param debuglvl the debug level
+ *@return -1 when emulated (iface->host_emul), 0 on error, 1 on succes
  */
 int
 chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
