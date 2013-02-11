@@ -673,7 +673,7 @@ EOF
   declare tarFile="${scriptDir}/olsrd-${relBranchVersionDigits}.tar"
   declare tarGzFile="${tarFile}.gz"
   declare tarBz2File="${tarFile}.bz2"
-  git archive --format=tar --output="${tarFile}" "${relTagVersion}"
+  git archive --format=tar --prefix="olsrd-${relBranchVersionDigits}/" --output="${tarFile}" "${relTagVersion}"
   gzip   -c "${tarFile}" > "${tarGzFile}"
   bzip2  -c "${tarFile}" > "${tarBz2File}"
   rm -f "${tarFile}"
