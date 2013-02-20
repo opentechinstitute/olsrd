@@ -59,6 +59,15 @@ CFGDIR =	src/cfgparser
 include $(CFGDIR)/local.mk
 TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
 
+SGW_SUPPORT = 0
+ifeq ($(OS),linux)
+  SGW_SUPPORT = 1
+endif
+ifeq ($(OS),android)
+  SGW_SUPPORT = 1
+endif
+
+
 .PHONY: default_target switch
 default_target: $(EXENAME)
 
@@ -122,12 +131,14 @@ install_bin:
 		mkdir -p $(SBINDIR)
 		install -m 755 $(EXENAME) $(SBINDIR)
 		$(STRIP) $(SBINDIR)/$(EXENAME)
+ifeq ($(SGW_SUPPORT),1)
 		$(MAKECMDPREFIX)if [ -e $(SBINDIR)/$(SGW_POLICY_SCRIPT) ]; then \
 			cp -f files/$(SGW_POLICY_SCRIPT) $(SBINDIR)/$(SGW_POLICY_SCRIPT).new; \
 			echo "Policy routing script was saved as $(SBINDIR)/$(SGW_POLICY_SCRIPT).new"; \
 		else \
 			cp -f files/$(SGW_POLICY_SCRIPT) $(SBINDIR)/$(SGW_POLICY_SCRIPT); \
 		fi
+endif
 
 uninstall_bin:
 		rm -f $(SBINDIR)/$(EXENAME)
