@@ -91,7 +91,7 @@ static uint16_t ip_checksum(char* data, int len)
     else
         len = (len >> 1) + 1;
     while (len > 0) {
-        sum += *((unsigned short int*)data);
+        sum += *((unsigned short int*)(void *)data);
         data += sizeof(unsigned short int);
         len--;
     }
