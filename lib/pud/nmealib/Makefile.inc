@@ -58,10 +58,24 @@ LDFLAGS = -shared -Wl,--warn-common -fPIC
 
 # 32/64 cross compilation
 ifdef M32
-CFLAGS +=	-m32
-LDFLAGS +=	-m32
-endif
+MYARCH=32
+else
 ifdef M64
-CFLAGS +=	-m64
-LDFLAGS +=	-m64
+MYARCH=64
+else
+ifeq ($(shell uname -m),x86_64)
+MYARCH=64
+else
+MYARCH=32
+endif
+endif
+endif
+
+ifeq ($(MYARCH),32)
+CFLAGS += -m32
+LDFLAGS += -m32
+endif
+ifeq ($(MYARCH),64)
+CFLAGS += -m64
+LDFLAGS += -m64
 endif
