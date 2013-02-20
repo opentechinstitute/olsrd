@@ -234,11 +234,11 @@ static void writePidFile(void) {
     /* write the PID */
     {
       pid_t pid = getpid();
-      int chars = snprintf(buf, sizeof(buf), "%d", pid);
+      int chars = snprintf(buf, sizeof(buf), "%d", (int)pid);
       ssize_t chars_written = write(fd, buf, chars);
       if (chars_written != chars) {
         close(fd);
-        snprintf(buf, sizeof(buf), "Could not write the PID %d to the PID file %s", pid, olsr_cnf->pidfile);
+        snprintf(buf, sizeof(buf), "Could not write the PID %d to the PID file %s", (int)pid, olsr_cnf->pidfile);
         perror(buf);
         if (remove(olsr_cnf->pidfile) < 0) {
           snprintf(buf, sizeof(buf), "Could not remove the PID file %s", olsr_cnf->pidfile);
