@@ -1,3 +1,16 @@
+0.6.5.2 -------------------------------------------------------------------
+
+Henning Rogge (2):
+      Update version after release of v0.6.5.1
+      Release v0.6.5.2
+
+Saverio Proto (1):
+      main: fix the check on inet_pton return value because it returns 1 on
+         success.
+
+Vasilis Tsiligiannis (1):
+      olsrd-quagga: Fix memory leak when adding and deleting routes
+
 0.6.5.1 -------------------------------------------------------------------
 
 Ferry Huberts (1):
