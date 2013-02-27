@@ -532,7 +532,7 @@ int olsr_init_gateways(void) {
    * initialising the IPIP server tunnel (loading the IPIP module), so we retry
    * a few times before giving up
    */
-  while (retries-- >= 0) {
+  while (retries-- > 0) {
     if (!olsr_os_init_iptunnel(server_tunnel_name())) {
       retries = 5;
       break;
