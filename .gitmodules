@@ -1,3 +1,0 @@
-[submodule "lib/dnssd"]
-	path = lib/dnssd
-	url = git://github.com/danstaples/olsrd-dnssd.git
