@@ -25,7 +25,7 @@ PKG_INSTALL:=1
 include $(INCLUDE_DIR)/package.mk
 
 TARGET_CFLAGS += $(FPIC) -idirafter$(BUILD_DIR)/serval-dna-$(SERVAL_VERSION) -I$(BUILD_DIR)/serval-dna-$(SERVAL_VERSION)/nacl/include
-TARGET_LDFLAGS += -L$(BUILD_DIR)/serval-dna-$(SERVAL_VERSION)/ -lservald
+TARGET_LDFLAGS += -L$(BUILD_DIR)/serval-dna-$(SERVAL_VERSION)/
 
 define Package/olsrd/template
   SECTION:=net
