@@ -680,7 +680,7 @@ int nmea_parse_GPRMC(const char *s, const int len, nmeaGPRMC *pack) {
 
 	/* parse */
 	token_count = nmea_scanf(s, len, "$GPRMC,%s,%c,%f,%c,%f,%c,%f,%f,%d,%f,%c,%c*", &time_buff[0], &pack->status,
-			&pack->lat, &pack->ns, &pack->lon, &pack->ew, &pack->speed, &pack->track, date,
+			&pack->lat, &pack->ns, &pack->lon, &pack->ew, &pack->speed, &pack->track, &date,
 			&pack->magvar, &pack->magvar_ew, &pack->mode);
 
 	/* see that we have enough tokens */
@@ -753,7 +753,7 @@ int nmea_parse_GPRMC(const char *s, const int len, nmeaGPRMC *pack) {
 
 		nmea_INFO_set_present(&pack->present, MAGVAR);
 	}
-	if (token_count == 13) {
+	if (token_count == 11) {
 		pack->mode = 'A';
 	} else {
 		if (!pack->mode) {
