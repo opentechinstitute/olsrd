@@ -702,6 +702,8 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 #ifdef INCLUDE_DEBUG_OUTPUT
       OLSR_PRINTF(1, "%s: Error getting ipv4 dns packet\n", PLUGIN_NAME_SHORT);
 #endif
+      ldns_pkt_free(p);
+      olsr_p2pd_gen(encapsulationUdpData, nBytes, NULL);
       return;
     }
     
@@ -755,6 +757,8 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 #ifdef INCLUDE_DEBUG_OUTPUT
       OLSR_PRINTF(1, "%s: Error getting ipv6 dns packet\n", PLUGIN_NAME_SHORT);
 #endif
+      ldns_pkt_free(p);
+      olsr_p2pd_gen(encapsulationUdpData, nBytes, NULL);
       return;
     }
     
@@ -767,30 +771,41 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   
   // go through RR sections of mDNS packets, and yank out ones that represent local services
   for (i = 0; i < 3; ++i) {
-    if (ldns_pkt_section_count(p, i + 1) == 0)
-      full_list = NULL;
-    else {
+    if (ldns_pkt_section_count(p, i + 1) != 0) {
       full_list = ldns_pkt_get_section_clone(p, i + 1);
-      nonlocal_list[i] = ldns_rr_list_new();
-    }
-    if (!full_list || ldns_pkt_section_count(p, i + 1) == 0)
-      continue;
-    for(j = 0; j < ldns_rr_list_rr_count(full_list); ++j) {
-      rr = ldns_rr_list_rr(full_list, j);
-      // check if RR is local service
-      if (IsRrLocal(rr, &ttl)) {
-        // if so, add to list
-        AddToRrBuffer(&rr_buf, ttl, rr, i);
-      } else {
-	// if not, add to non-local RR list
-	ldns_rr_list_push_rr(nonlocal_list[i], rr);
-	nonlocal_list_count[i] += 1;
+      if (!full_list) {
+	ldns_pkt_free(p);
+	OLSR_PRINTF(1, "%s: Error cloning rr_list\n", PLUGIN_NAME_SHORT);
+	return;
       }
+      nonlocal_list[i] = ldns_rr_list_new();
+      if (!nonlocal_list[i]) {
+	ldns_rr_list_deep_free(full_list);
+	ldns_pkt_free(p);
+	OLSR_PRINTF(1, "%s: Error allocating rr_list\n", PLUGIN_NAME_SHORT);
+	return;
+      }
+      for(j = 0; j < ldns_rr_list_rr_count(full_list); ++j) {
+        rr = ldns_rr_list_rr(full_list, j);
+        // check if RR is local service
+        if (IsRrLocal(rr, &ttl)) {
+          // if so, add to list
+          AddToRrBuffer(&rr_buf, ttl, rr, i);
+        } else {
+	  // if not, add to non-local RR list
+	  ldns_rr_list_push_rr(nonlocal_list[i], rr);
+	  nonlocal_list_count[i] += 1;
+        }
+      }
+      ldns_rr_list_free(full_list);
     }
   }
   
   // Send packet with non-local RR list (this will include any question RRs)
   p2 = ldns_pkt_clone(p);  // create new mDNS packet p2 cloned from original packet
+  ldns_rr_list_deep_free(p2->_answer);
+  ldns_rr_list_deep_free(p2->_additional);
+  ldns_rr_list_deep_free(p2->_authority);
   ldns_pkt_set_answer(p2, (nonlocal_list_count[0]) ? nonlocal_list[0] : NULL);
   ldns_pkt_set_authority(p2, (nonlocal_list_count[1]) ? nonlocal_list[1] : NULL);
   ldns_pkt_set_additional(p2, (nonlocal_list_count[2]) ? nonlocal_list[2] : NULL);
@@ -802,6 +817,10 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   // For each batch of RRs grouped by TTL, populate new mDNS packet to encapsulate in an OLSR packet and send to mesh
   for (ttl_bucket = rr_buf; ttl_bucket != NULL; ttl_bucket=ttl_bucket->hh.next) {    
     p2 = ldns_pkt_clone(p);
+    ldns_rr_list_deep_free(p2->_answer);
+    ldns_rr_list_deep_free(p2->_additional);
+    ldns_rr_list_deep_free(p2->_authority);
+    ldns_rr_list_deep_free(p2->_question);
     ldns_pkt_set_question(p2, NULL);
     ldns_pkt_set_qdcount(p2, 0);
     ldns_pkt_set_answer(p2, (ttl_bucket->rr_count[0]) ? ttl_bucket->rr_list[0] : NULL);
@@ -812,7 +831,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     DnssdSendPacket(p2, pkt_type, encapsulationUdpData, nBytes, ttl_bucket->ttl);
     ldns_pkt_free(p2);
   }
-  
+
   DeleteListArray(&rr_buf);
   ldns_pkt_free(p);
 }                               /* P2pdPacketCaptured */
@@ -846,7 +865,11 @@ void DnssdSendPacket(ldns_pkt *pkt, PKT_TYPE pkt_type, unsigned char *encapsulat
   } pshdr;
 
   // convert packet to wire format buffer
-  ldns_pkt2wire(&buf_ptr, pkt, &buf_size);
+  if (ldns_pkt2wire(&buf_ptr, pkt, &buf_size) != LDNS_STATUS_OK) {
+    OLSR_PRINTF(1, "%s: Error converting dns packet to wire format\n", PLUGIN_NAME_SHORT);
+    free(buf_ptr);
+    return;
+  }
   
   // Set up packet headers
   if (pkt_type == IPv4) {
