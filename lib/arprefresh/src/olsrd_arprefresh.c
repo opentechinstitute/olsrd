@@ -112,14 +112,7 @@ olsr_arp_event(void *foo __attribute__ ((unused)))
                             MSG_TRUNC, (struct sockaddr *)&from,
                             &fromlen);
 
-    if (0 <= size && size >= (ssize_t) sizeof(buf)
-
-                                                 /*** &&
-		    ETH_P_IP == ntohs(buf.eth.h_proto) &&
-		    IPPROTO_UDP == buf.ip.protocol &&
-		    arprefresh_portnum == ntohs(buf.udp.source) &&
-		    arprefresh_portnum == ntohs(buf.udp.dest) ***/
-      ) {
+    if (0 <= size && size >= (ssize_t) sizeof(buf)) {
       union {
         struct arpreq arp;
         struct sockaddr_in in_pa;
