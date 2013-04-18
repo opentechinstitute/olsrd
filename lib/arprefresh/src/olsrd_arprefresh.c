@@ -191,7 +191,7 @@ olsrd_plugin_init(void)
 /* ignore */ {BPF_RET | BPF_K              , 0,        0,         0x00000000}              //                                                 : accept 0 bytes
 
     };
-    filter.len = sizeof(BPF_code) / sizeof(BPF_code[0]);
+    filter.len = ARRAYSIZE(BPF_code);
     filter.filter = BPF_code;
     if (0 <= (arprefresh_sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_IP)))
         && 0 <= (flags = fcntl(arprefresh_sockfd, F_GETFL))
