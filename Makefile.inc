@@ -151,8 +151,6 @@ CFLAGS +=	$(WARNINGS)
 CFLAGS +=	$(OPTIMIZE)
 CFLAGS +=	$(EXTRA_CFLAGS)
 
-# Must be specified along with -lpthread on linux
-CPPFLAGS +=	$(OS_CFLAG_PTHREAD)
 endif
 ifneq ($(MUDFLAP),0)
 CFLAGS +=	-fmudflapth
@@ -185,7 +183,6 @@ LDFLAGS +=	-Wl,--warn-common
 ifneq ($(MUDFLAP),0)
 LIBS +=		-lmudflapth
 endif
-LIBS +=		$(OS_LIB_PTHREAD)
 
 # extra options from the outside
 CPPFLAGS +=	$(EXTRA_CPPFLAGS)
