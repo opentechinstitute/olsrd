@@ -313,7 +313,7 @@ olsrd_plugin_init(void)
 
   if (http_socket < 0) {
     fprintf(stderr, "(HTTPINFO) could not initialize HTTP socket\n");
-    exit(0);
+    exit(1);
   }
 
   /* Register socket */
