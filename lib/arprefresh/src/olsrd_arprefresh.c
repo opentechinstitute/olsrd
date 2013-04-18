@@ -165,13 +165,8 @@ olsrd_plugin_init(void)
       /*      code                          jump-true jump-false generic-multiuse-field */
              {BPF_LD  | BPF_H    | BPF_ABS , 0,        0,         0x0000000c},             // 0x28: A <- P[k:2], get 2-bytes from offset 0x0c : get Ethernet type
 
-/* test6  */ {BPF_JMP | BPF_JEQ  | BPF_K   , 0,        4,         0x000086dd},             // 0x15: pc += (A == k) ? ipv6 : test4             : IPv6?
-/* ipv6   */ {BPF_LD  | BPF_B    | BPF_ABS , 0,        0,         0x00000014},             // 0x30: A <- P[k:1], get 1-byte from offset 0x14  : get IPv6 protocol/next header
-             {BPF_JMP | BPF_JEQ  | BPF_K   , 0,        11,        0x00000011},             // 0x15: pc += (A == k) ? udp6 : ignore            : UDP?
-/* udp6   */ {BPF_LD  | BPF_H    | BPF_ABS , 0,        0,         0x00000038},             // 0x28: A <- P[k:2], get 2-bytes from offset 0x38 : get UDP destination port
-             {BPF_JMP | BPF_JEQ  | BPF_K   , 8,        9,         arprefresh_portnum},     // 0x15: pc += (A == k) ? ok : ignore              : sent to port arprefresh_portnum?
-
 /* test4  */ {BPF_JMP | BPF_JEQ  | BPF_K   , 0,        8,         0x00000800},             // 0x15: pc += (A == k) ? ipv4 : ignore            : IPv4?
+
 /* ipv4   */ {BPF_LD  | BPF_B    | BPF_ABS , 0,        0,         0x00000017},             // 0x30: A <- P[k:1], get 1-byte from offset 0x17  : get IPv4 protocol
              {BPF_JMP | BPF_JEQ  | BPF_K   , 0,        6,         0x00000011},             // 0x15: pc += (A == k) ? udp4 : ignore            : UDP?
 /* udp4   */ {BPF_LD  | BPF_H    | BPF_ABS , 0,        0,         0x00000014},             // 0x28: A <- P[k:2], get 2-bytes from offset 0x14 : get fragment offset
