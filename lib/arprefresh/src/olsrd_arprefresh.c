@@ -31,7 +31,9 @@
  */
 
 /*
- * Plugin to refresh the local ARP cache from received OLSR broadcasts
+ * Plugin to refresh the local ARP cache from received OLSR broadcasts.
+ *
+ * Note: this code does not work with IPv6 and not with VLANs (on IPv4 or IPv6)
  */
 
 #include <stdio.h>
