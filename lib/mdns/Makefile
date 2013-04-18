@@ -6,11 +6,6 @@ PLUGIN_VER =	1.0.1
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-LIBS +=	$(OS_LIB_PTHREAD)
-
-# Must be specified along with -lpthread on linux
-CPPFLAGS += $(OS_CFLAG_PTHREAD)
-
 SUPPORTED = 0
 ifeq ($(OS),linux)
 SUPPORTED = 1
