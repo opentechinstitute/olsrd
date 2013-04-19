@@ -157,6 +157,16 @@
 
 # SmartGatewayUseCount 1
 
+# Determines the take-down percentage for a non-current smart gateway tunnel.
+# If the cost of the current smart gateway tunnel is less than this percentage
+# of the cost of the non-current smart gateway tunnel, then the non-current smart
+# gateway tunnel is taken down because it is then presumed to be 'too expensive'.
+# This setting is only relevant when SmartGatewayUseCount is larger than 1;
+# a value of 0 will result in the tunnels not being taken down proactively.
+# (default is 0)
+
+# SmartGatewayTakeDownPercentage 0
+
 # Determines the policy routing script that is executed during startup and
 # shutdown of olsrd. The script is only executed when SmartGatewayUseCount
 # is set to a value larger than 1. The script must setup policy routing
