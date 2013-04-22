@@ -55,6 +55,7 @@
 #endif /* _WIN32 */
 
 #include "olsr.h"
+#include "builddata.h"
 #include "olsr_cfg.h"
 #include "interfaces.h"
 #include "olsr_protocol.h"
