@@ -72,7 +72,7 @@ static inline uint64_t gw_default_calc_threshold(uint64_t path_cost) {
  * @param exitDk the gateway exit link downlink bandwidth (in kbps)
  * @return the weighed path cost
  */
-static inline uint64_t gw_default_weigh_costs(uint64_t path_cost, uint32_t exitUk, uint32_t exitDk) {
+static inline uint64_t gw_default_weigh_costs(uint32_t path_cost, uint32_t exitUk, uint32_t exitDk) {
   uint8_t WexitU = olsr_cnf->smart_gw_weight_exitlink_up;
   uint8_t WexitD = olsr_cnf->smart_gw_weight_exitlink_down;
   uint8_t Wetx = olsr_cnf->smart_gw_weight_etx;
@@ -82,8 +82,8 @@ static inline uint64_t gw_default_weigh_costs(uint64_t path_cost, uint32_t exitU
   uint64_t costE;
 
   if (!Detx) {
-    /* only consider path costs (classic behaviour) */
-    return path_cost;
+    /* only consider path costs (classic behaviour) (but scale to 64 bit) */
+    return (uint64_t)path_cost << 32;
   }
 
   if (!exitUk || !exitDk) {
