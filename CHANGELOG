@@ -1,3 +1,19 @@
+0.6.5.3 -------------------------------------------------------------------
+
+Ferry Huberts (5):
+      pud: detect the java include directory
+      pud: better detection of java jdk
+      gateway: work around kernel IPIP module initialisation bug
+      main: use /dev/urandom by default
+      pud: set local loopback for multicast tx
+
+Henning Rogge (2):
+      Update version after release of v0.6.5.2
+      Release v0.6.5.3
+
+Ronald in 't Velt (1):
+      Fix setsockopt for setting Traffic Class in IPv6
+
 0.6.5.2 -------------------------------------------------------------------
 
 Henning Rogge (2):
