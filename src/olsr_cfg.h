@@ -83,6 +83,7 @@
 #define DEF_SMART_GW         false
 #define DEF_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL  false
 #define DEF_GW_USE_COUNT     1
+#define DEF_GW_TAKEDOWN_PERCENTAGE 25
 #define DEF_GW_MARK_OFFSET_EGRESS   91
 #define DEF_GW_MARK_OFFSET_TUNNELS 101
 #define DEF_GW_PERIOD        10*1000
@@ -293,6 +294,7 @@ struct olsrd_config {
 
   bool smart_gw_active, smart_gw_always_remove_server_tunnel, smart_gw_allow_nat, smart_gw_uplink_nat;
   uint8_t smart_gw_use_count;
+  uint8_t smart_gw_takedown_percentage;
   char *smart_gw_policyrouting_script;
   struct sgw_egress_if * smart_gw_egress_interfaces;
   uint8_t smart_gw_egress_interfaces_count;

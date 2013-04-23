@@ -39,6 +39,7 @@
  */
 
 #include "olsrd_conf.h"
+#include "builddata.h"
 #include "../ipcalc.h"
 #include "../net_olsr.h"
 #include "../common/autobuf.h"
@@ -455,6 +456,19 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_appendf(out, "%sSmartGatewayUseCount %d\n",
       cnf->smart_gw_use_count == DEF_GW_USE_COUNT ? "# " : "",
       cnf->smart_gw_use_count);
+  abuf_puts(out,
+    "\n"
+    "# Determines the take-down percentage for a non-current smart gateway tunnel.\n"
+    "# If the cost of the current smart gateway tunnel is less than this percentage\n"
+    "# of the cost of the non-current smart gateway tunnel, then the non-current smart\n"
+    "# gateway tunnel is taken down because it is then presumed to be 'too expensive'.\n"
+    "# This setting is only relevant when SmartGatewayUseCount is larger than 1;\n"
+    "# a value of 0 will result in the tunnels not being taken down proactively.\n"
+    "# (default is 0)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayTakeDownPercentage %d\n",
+      cnf->smart_gw_takedown_percentage == DEF_GW_TAKEDOWN_PERCENTAGE ? "# " : "",
+      cnf->smart_gw_takedown_percentage);
   abuf_puts(out,
     "\n"
     "# Determines the policy routing script that is executed during startup and\n"

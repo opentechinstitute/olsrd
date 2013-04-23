@@ -564,6 +564,13 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   if (cnf->smart_gw_use_count > 1) {
     struct sgw_egress_if * sgwegressif = cnf->smart_gw_egress_interfaces;
 
+	/* check that the sgw takedown percentage is in the range [0, 100] */
+	if (/*(cnf->smart_gw_takedown_percentage < 0) ||*/ (cnf->smart_gw_takedown_percentage > 100)) {
+	  fprintf(stderr, "Error, smart gateway takedown percentage (%u) is not in the range [0, 100]\n",
+		  cnf->smart_gw_takedown_percentage);
+	  return -1;
+	}
+
     if (!cnf->smart_gw_policyrouting_script) {
       fprintf(stderr, "Error, no policy routing script configured in multi-gateway mode\n");
       return -1;
@@ -890,6 +897,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->smart_gw_active = DEF_SMART_GW;
   cnf->smart_gw_always_remove_server_tunnel = DEF_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL;
   cnf->smart_gw_use_count = DEF_GW_USE_COUNT;
+  cnf->smart_gw_takedown_percentage = DEF_GW_TAKEDOWN_PERCENTAGE;
   cnf->smart_gw_policyrouting_script = NULL;
   cnf->smart_gw_egress_interfaces = NULL;
   cnf->smart_gw_egress_interfaces_count = 0;
@@ -1026,6 +1034,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("SmGw. Del Srv Tun: %s\n", cnf->smart_gw_always_remove_server_tunnel ? "yes" : "no");
 
   printf("SmGw. Use Count  : %u\n", cnf->smart_gw_use_count);
+
+  printf("SmGw. Takedown%%  : %u\n", cnf->smart_gw_takedown_percentage);
 
   printf("SmGw. Pol. Script: %s\n", cnf->smart_gw_policyrouting_script);
 

@@ -46,6 +46,7 @@
 
 #include "ipcalc.h"
 #include "defs.h"
+#include "builddata.h"
 #include "olsr.h"
 #include "log.h"
 #include "scheduler.h"
