@@ -79,6 +79,9 @@ struct interfaceName * sgwTunnel4InterfaceNames;
 /** interface names for smart gateway tunnel interfaces, IPv6 */
 struct interfaceName * sgwTunnel6InterfaceNames;
 
+/** the timer for proactive takedown */
+static struct timer_entry *gw_takedown_timer;
+
 /*
  * Forward Declarations
  */
@@ -474,6 +477,67 @@ static void removeGatewayFromList(struct gw_list * gw_list, bool ipv4, struct gw
   olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(gw_list, gw));
 }
 
+/**
+ * Remove expensive gateways from the gateway list.
+ * It uses the smart_gw_takedown_percentage configuration parameter
+ *
+ * @param gw_list a pointer to the gateway list
+ * @param ipv4 true when dealing with an IPv4 gateway / gateway list
+ * @param current_gw the current gateway
+ */
+static void takeDownExpensiveGateways(struct gw_list * gw_list, bool ipv4, struct gw_container_entry * current_gw) {
+  uint64_t current_gw_cost_boundary;
+
+  /*
+   * exit immediately when takedown is disabled, there is no current gateway, or
+   * when there is only a single gateway
+   */
+  if ((olsr_cnf->smart_gw_takedown_percentage == 0) || (current_gw == NULL ) || (gw_list->count <= 1)) {
+    return;
+  }
+
+  /* get the cost boundary */
+
+  /* scale down because otherwise the percentage calculation can overflow */
+  current_gw_cost_boundary = (current_gw->path_cost >> 2);
+
+  if (olsr_cnf->smart_gw_takedown_percentage < 100) {
+    current_gw_cost_boundary = (current_gw_cost_boundary * 100) / olsr_cnf->smart_gw_takedown_percentage;
+  }
+
+  /* loop while we still have gateways */
+  while (gw_list->count > 1) {
+    /* get the worst gateway */
+    struct gw_container_entry * worst_gw = olsr_gw_list_get_worst_entry(gw_list);
+
+    /* exit when it's the current gateway */
+    if (worst_gw == current_gw) {
+      return;
+    }
+
+    /*
+     * exit when it (and further ones; the list is sorted on costs) has lower
+     * costs than the boundary costs
+     */
+    if ((worst_gw->path_cost >> 2) < current_gw_cost_boundary) {
+      return;
+    }
+
+    /* it's is too expensive: take it down */
+    removeGatewayFromList(gw_list, ipv4, worst_gw);
+  }
+}
+
+/**
+ * Timer callback for proactive gateway takedown
+ *
+ * @param unused unused
+ */
+static void gw_takedown_timer_callback(void *unused __attribute__ ((unused))) {
+  takeDownExpensiveGateways(&gw_list_ipv4, true, current_ipv4_gw);
+  takeDownExpensiveGateways(&gw_list_ipv6, false, current_ipv6_gw);
+}
+
 /*
  * Main Interface
  */
@@ -591,6 +655,11 @@ int olsr_startup_gateways(void) {
     return 1;
   }
 
+  if (olsr_cnf->smart_gw_takedown_percentage > 0) {
+    /* start gateway takedown timer */
+    olsr_set_timer(&gw_takedown_timer, olsr_cnf->smart_gw_period, 0, true, &gw_takedown_timer_callback, NULL, 0);
+  }
+
   return 0;
 }
 
@@ -600,6 +669,12 @@ int olsr_startup_gateways(void) {
 void olsr_shutdown_gateways(void) {
   if (!multi_gateway_mode()) {
     return;
+  }
+
+  if (olsr_cnf->smart_gw_takedown_percentage > 0) {
+    /* stop gateway takedown timer */
+    olsr_stop_timer(gw_takedown_timer);
+    gw_takedown_timer = NULL;
   }
 
   (void)multiGwRulesSgwTunnels(false);
