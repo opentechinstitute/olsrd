@@ -453,6 +453,27 @@ static void cleanup_gateway_handler(void *ptr) {
   olsr_cookie_free(gateway_entry_mem_cookie, gw);
 }
 
+/**
+ * Remove a gateway from a gateway list.
+ *
+ * @param gw_list a pointer to the gateway list
+ * @param ipv4 true when dealing with an IPv4 gateway / gateway list
+ * @param gw a pointer to the gateway to remove from the list
+ */
+static void removeGatewayFromList(struct gw_list * gw_list, bool ipv4, struct gw_container_entry * gw) {
+  if (gw->tunnel) {
+    struct interfaceName * ifn = find_interfaceName(gw->gw);
+    if (ifn) {
+      olsr_os_inetgw_tunnel_route(gw->tunnel->if_index, ipv4, false, ifn->mark);
+    }
+    olsr_os_del_ipip_tunnel(gw->tunnel);
+    set_unused_iptunnel_name(gw->gw);
+    gw->tunnel = NULL;
+  }
+  gw->gw = NULL;
+  olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(gw_list, gw));
+}
+
 /*
  * Main Interface
  */
@@ -1051,17 +1072,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
         struct gw_container_entry* worst = olsr_gw_list_get_worst_entry(&gw_list_ipv4);
         assert(worst);
 
-        if (worst->tunnel) {
-          struct interfaceName * ifn = find_interfaceName(worst->gw);
-          if (ifn) {
-            olsr_os_inetgw_tunnel_route(worst->tunnel->if_index, true, false, ifn->mark);
-          }
-          olsr_os_del_ipip_tunnel(worst->tunnel);
-          set_unused_iptunnel_name(worst->gw);
-          worst->tunnel = NULL;
-        }
-        worst->gw = NULL;
-        olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv4, worst));
+        removeGatewayFromList(&gw_list_ipv4, true, worst);
       }
 
       get_unused_iptunnel_name(new_gw, name, &interfaceName);
@@ -1108,17 +1119,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
         struct gw_container_entry* worst = olsr_gw_list_get_worst_entry(&gw_list_ipv6);
         assert(worst);
 
-        if (worst->tunnel) {
-          struct interfaceName * ifn = find_interfaceName(worst->gw);
-          if (ifn) {
-            olsr_os_inetgw_tunnel_route(worst->tunnel->if_index, false, false, ifn->mark);
-          }
-          olsr_os_del_ipip_tunnel(worst->tunnel);
-          set_unused_iptunnel_name(worst->gw);
-          worst->tunnel = NULL;
-        }
-        worst->gw = NULL;
-        olsr_cookie_free(gw_container_entry_mem_cookie, olsr_gw_list_remove(&gw_list_ipv6, worst));
+        removeGatewayFromList(&gw_list_ipv6, false, worst);
       }
 
       get_unused_iptunnel_name(new_gw, name, &interfaceName);
