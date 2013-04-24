@@ -359,6 +359,16 @@ function commitChanges() {
 
 
 #
+# Get the version from the Makefile
+#
+function getVersionFromMakefile() {
+  local src="Makefile"
+  local regex="([[:space:]]*VERS[[:space:]]*=[[:space:]]*)${versionRegexSources}[[:space:]]*"
+  grep -E "^${regex}\$" "${src}" | sed -r "s/^${regex}\$/\3/"
+}
+
+
+#
 # Update the version in all relevant files
 #
 # 1=the new version (in the format of versionRegexSources)
@@ -667,8 +677,18 @@ EOF
   git checkout -q master
   git clean -fdq
   git reset -q --hard
-  updateVersions "pre-${relBranchVersionDigitsNextMicro}"
-  commitChanges 0 "Update version after ${MODE_TXT_LOWER} of ${relTagVersion}"
+
+  declare oldMasterVersion="$(getVersionFromMakefile)"
+  declare newMasterVersion="${relBranchVersionDigitsNextMicro}"
+  checkVersionIncrementing "${oldMasterVersion}" "${newMasterVersion}"
+  if [[ ${checkVersionIncrementingResult} -ne 0 ]]; then
+    echo "* Skipped updating the version on the master branch:"
+    echo "  The new version ${newMasterVersion} is not greater than the previous version ${oldMasterVersion}"
+  else
+    updateVersions "pre-${relBranchVersionDigitsNextMicro}"
+    commitChanges 0 "Update version after ${MODE_TXT_LOWER} of ${relTagVersion}"
+  fi
+
   git checkout -q "${relBranch}"
   git clean -fdq
   git reset -q --hard
