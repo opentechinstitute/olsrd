@@ -583,6 +583,20 @@ fi
 
 
 #
+# When branching, check that the version is incrementing (allow equal versions),
+# w.r.t. the version in the Makefile
+#
+if [[ "${mode}" == "${MODE_BRANCH}" ]]; then
+  declare currentMasterVersion="$(getVersionFromMakefile)"
+  checkVersionIncrementing "${currentMasterVersion}" "${relBranchVersionDigits}" 1
+  if [[ ${checkVersionIncrementingResult} -ne 0 ]]; then
+    echo "* The new version ${relBranchVersionDigits} is not greater than the current version ${currentMasterVersion}"
+    exit 1
+  fi
+fi
+
+
+#
 # Confirm the branch/release
 #
 cat >&1 << EOF
