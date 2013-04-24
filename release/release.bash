@@ -446,6 +446,7 @@ declare baseDir="$(dirname "${scriptDir}")"
 
 cd "${baseDir}"
 
+declare -i masterWasUpdated=0
 
 #
 # Check the number of arguments
@@ -611,6 +612,7 @@ if [[ "${mode}" == "${MODE_BRANCH}" ]]; then
   echo "Updating the version to pre-${relBranchVersionDigits}..."
   updateVersions "pre-${relBranchVersionDigits}"
   commitChanges 1 "${MODE_TXT} ${relTagVersion}"
+  masterWasUpdated=1
 
   # create release branch
   echo "Creating the release branch ${relBranch}..."
@@ -687,6 +689,7 @@ EOF
   else
     updateVersions "pre-${relBranchVersionDigitsNextMicro}"
     commitChanges 0 "Update version after ${MODE_TXT_LOWER} of ${relTagVersion}"
+    masterWasUpdated=1
   fi
 
   git checkout -q "${relBranch}"
@@ -724,7 +727,9 @@ echo ""
 echo "==================="
 echo "=   Git Updates   ="
 echo "==================="
-echo "Branch : master"
+if [[ ${masterWasUpdated} -ne 0 ]]; then
+  echo "Branch : master"
+fi
 echo "Branch : ${relBranch}"
 if [[ "${mode}" == "${MODE_RELEASE}" ]]; then
   echo "Tag    : ${relTagVersion}"
@@ -751,18 +756,34 @@ echo "= Manual Actions  ="
 echo "==================="
 if [[ "${mode}" == "${MODE_RELEASE}" ]]; then
   echo "1. Check that everything is in order. For example, run:"
-  echo "     gitk master ${relBranch} ${relTagVersion}"
+  if [[ ${masterWasUpdated} -ne 0 ]]; then
+    echo "     gitk master ${relBranch} ${relTagVersion}"
+  else
+    echo "     gitk ${relBranch} ${relTagVersion}"
+  fi
   echo "2. Push. For example, run:"
-  echo "     git push origin master ${relBranch} ${relTagVersion}"
+  if [[ ${masterWasUpdated} -ne 0 ]]; then
+    echo "     git push origin master ${relBranch} ${relTagVersion}"
+  else
+    echo "     git push origin ${relBranch} ${relTagVersion}"
+  fi
   echo "3. Upload the generated files to"
   echo "     http://www.olsr.org/releases/${relBranchVersionDigits}"
   echo "4. Add a release article on olsr.org."
   echo ""
 else
   echo "1. Check that everything is in order. For example, run:"
-  echo "     gitk master ${relBranch}"
+  if [[ ${masterWasUpdated} -ne 0 ]]; then
+    echo "     gitk master ${relBranch}"
+  else
+    echo "     gitk ${relBranch}"
+  fi
   echo "2. Push. For example, run:"
-  echo "     git push origin master ${relBranch}"
+  if [[ ${masterWasUpdated} -ne 0 ]]; then
+    echo "     git push origin master ${relBranch}"
+  else
+    echo "     git push origin ${relBranch}"
+  fi
   echo "3. Send a 'release branch created' email to olsr-dev@lists.olsr.org."
   echo ""
 fi
