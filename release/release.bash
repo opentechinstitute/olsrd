@@ -270,10 +270,13 @@ function adjustBranchName() {
 #
 # 1=last version
 # 2=new version
+# return (in checkVersionIncrementingResult) = 0 when new version > last version,
+#                                              1 otherwise
+declare -i checkVersionIncrementingResult=0
 function checkVersionIncrementing() {
+  checkVersionIncrementingResult=0
   local lastVersion="$(stringTrim "${1}")"
   local newVersion="$(stringTrim "${2}")"
-  local errorstr="* The new version ${newVersion} is not greater than the previous version ${lastVersion}"
 
   local -a lastVersionDigits=( ${lastVersion//\./ } )
   local -a newVersionDigits=( ${newVersion//\./ } )
@@ -290,8 +293,8 @@ function checkVersionIncrementing() {
 
   # major
   if [[ ${newVersionDigits[0]} -lt ${lastVersionDigits[0]} ]]; then
-    echo "${errorstr}"
-    exit 1
+    checkVersionIncrementingResult=1
+    return
   fi
   if [[ ${newVersionDigits[0]} -gt ${lastVersionDigits[0]} ]]; then
     return
@@ -299,8 +302,8 @@ function checkVersionIncrementing() {
 
   # minor
   if [[ ${newVersionDigits[1]} -lt ${lastVersionDigits[1]} ]]; then
-    echo "${errorstr}"
-    exit 1
+    checkVersionIncrementingResult=1
+    return
   fi
   if [[ ${newVersionDigits[1]} -gt ${lastVersionDigits[1]} ]]; then
     return
@@ -308,8 +311,8 @@ function checkVersionIncrementing() {
 
   # micro
   if [[ ${newVersionDigits[2]} -lt ${lastVersionDigits[2]} ]]; then
-    echo "${errorstr}"
-    exit 1
+    checkVersionIncrementingResult=1
+    return
   fi
   if [[ ${newVersionDigits[2]} -gt ${lastVersionDigits[2]} ]]; then
     return
@@ -317,16 +320,16 @@ function checkVersionIncrementing() {
 
   # patch level
   if [[ ${newVersionDigits[3]} -lt ${lastVersionDigits[3]} ]]; then
-    echo "${errorstr}"
-    exit 1
+    checkVersionIncrementingResult=1
+    return
   fi
   if [[ ${newVersionDigits[3]} -gt ${lastVersionDigits[3]} ]]; then
     return
   fi
 
   # everything is equal
-  echo "${errorstr}"
-  exit 1
+  checkVersionIncrementingResult=1
+  return
 }
 
 
@@ -558,6 +561,10 @@ declare relBranchVersionDigitsNextPatchLevel="$(getNextVersionDigitsPatchLevel "
 # Check that the version is incrementing
 #
 checkVersionIncrementing "${prevTagVersionDigits}" "${relBranchVersionDigits}"
+if [[ ${checkVersionIncrementingResult} -ne 0 ]]; then
+  echo "* The new version ${relBranchVersionDigits} is not greater than the previous version ${prevTagVersionDigits}"
+  exit 1
+fi
 
 
 #
