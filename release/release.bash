@@ -270,6 +270,7 @@ function adjustBranchName() {
 #
 # 1=last version
 # 2=new version
+# 3= 0 to disallow equal versions as ok
 # return (in checkVersionIncrementingResult) = 0 when new version > last version,
 #                                              1 otherwise
 declare -i checkVersionIncrementingResult=0
@@ -277,6 +278,7 @@ function checkVersionIncrementing() {
   checkVersionIncrementingResult=0
   local lastVersion="$(stringTrim "${1}")"
   local newVersion="$(stringTrim "${2}")"
+  local -i allowEqualVersions=${3}
 
   local -a lastVersionDigits=( ${lastVersion//\./ } )
   local -a newVersionDigits=( ${newVersion//\./ } )
@@ -328,7 +330,9 @@ function checkVersionIncrementing() {
   fi
 
   # everything is equal
-  checkVersionIncrementingResult=1
+  if [[ ${allowEqualVersions} -eq 0 ]]; then
+    checkVersionIncrementingResult=1
+  fi
   return
 }
 
@@ -571,7 +575,7 @@ declare relBranchVersionDigitsNextPatchLevel="$(getNextVersionDigitsPatchLevel "
 #
 # Check that the version is incrementing
 #
-checkVersionIncrementing "${prevTagVersionDigits}" "${relBranchVersionDigits}"
+checkVersionIncrementing "${prevTagVersionDigits}" "${relBranchVersionDigits}" 0
 if [[ ${checkVersionIncrementingResult} -ne 0 ]]; then
   echo "* The new version ${relBranchVersionDigits} is not greater than the previous version ${prevTagVersionDigits}"
   exit 1
@@ -682,7 +686,7 @@ EOF
 
   declare oldMasterVersion="$(getVersionFromMakefile)"
   declare newMasterVersion="${relBranchVersionDigitsNextMicro}"
-  checkVersionIncrementing "${oldMasterVersion}" "${newMasterVersion}"
+  checkVersionIncrementing "${oldMasterVersion}" "${newMasterVersion}" 0
   if [[ ${checkVersionIncrementingResult} -ne 0 ]]; then
     echo "* Skipped updating the version on the master branch:"
     echo "  The new version ${newMasterVersion} is not greater than the previous version ${oldMasterVersion}"
