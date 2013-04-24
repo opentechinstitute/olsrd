@@ -334,7 +334,8 @@ function checkVersionIncrementing() {
 # Commit the current changes, allow an empty commit, or amend (when the commit
 # message is the same as that of the last commit)
 #
-# 1=commit message
+# 1=non-zero to allow an empty commit
+# 2=commit message
 function commitChanges() {
   local -i allowEmpty=${1}
   local msg="$(stringTrim "${2}")"
@@ -560,7 +561,7 @@ checkVersionIncrementing "${prevTagVersionDigits}" "${relBranchVersionDigits}"
 
 
 #
-# Confirm the release
+# Confirm the branch/release
 #
 cat >&1 << EOF
 
