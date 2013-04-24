@@ -709,7 +709,7 @@ if [[ "${mode}" == "${MODE_RELEASE}" ]]; then
   echo "==================="
   cat >&1 << EOF
 ${tarGzFile}
-${tarGzFile}
+${tarBz2File}
 ${md5File}
 ${sha256File}"
 EOF
