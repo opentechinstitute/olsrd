@@ -59,7 +59,7 @@
 			<manifest>
 				<attribute name="Class-Path" value="." />
 				<attribute name="Version" value="${version}" />
-				<attribute name="Git-SHA1" value="${git.commit.sha}" />
+				<attribute name="Git-SHA" value="${git.commit.sha}" />
 			</manifest>
 		</jar>
 	</target>
