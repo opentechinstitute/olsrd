@@ -129,10 +129,12 @@ bool check_and_mark_recent_packet(unsigned char *data, int len);
 static void
 PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
 {
-  struct ip *ipHeader;        /* IP header inside the encapsulated IP packet */
-  struct ip6_hdr *ip6Header;  /* IP header inside the encapsulated IP packet */
-  struct udphdr *udpHeader;
-  struct NonOlsrInterface *walker;
+  struct ip *ipHeader = NULL;       /* IP header inside the encapsulated 
+                                     * IP packet */
+  struct ip6_hdr *ip6Header = NULL; /* IP header inside the encapsulated 
+                                     * IP6 packet */
+  struct udphdr *udpHeader = NULL;
+  struct NonOlsrInterface *walker = NULL;
   int stripped_len = 0;
   union olsr_ip_addr destAddr;
   int destPort;
@@ -303,7 +305,7 @@ fd_set InputSet;
 bool
 p2pd_message_seen(struct node **head, struct node **tail, union olsr_message *m)
 {
-  struct node * curr;
+  struct node *curr = NULL;
   time_t now;
 
   now = time(NULL);
@@ -311,7 +313,7 @@ p2pd_message_seen(struct node **head, struct node **tail, union olsr_message *m)
   // Check whether any entries have aged
   curr = *head;
   while (curr) {
-    struct DupFilterEntry *filter;
+    struct DupFilterEntry *filter = NULL;
     struct node * next = curr->next; // Save the current pointer since curr may
                                      // be destroyed
 
@@ -473,7 +475,7 @@ olsr_p2pd_gen(unsigned char *packet, int len, int ttl)
   char buffer[10240] = {'\0',};
   int aligned_size, pkt_ttl;
   union olsr_message *message = (union olsr_message *)buffer;
-  struct interface *ifn;
+  struct interface *ifn = NULL;
 
   aligned_size=len;
 
@@ -580,7 +582,7 @@ P2pdPError(const char *format, ...)
 union olsr_ip_addr *
 MainAddressOf(union olsr_ip_addr *ip)
 {
-  union olsr_ip_addr *result;
+  union olsr_ip_addr *result = NULL;
 
   /* TODO: mid_lookup_main_addr() is not thread-safe! */
   result = mid_lookup_main_addr(ip);
@@ -605,7 +607,7 @@ MainAddressOf(union olsr_ip_addr *ip)
 bool
 InUdpDestPortList(int ip_version, union olsr_ip_addr *addr, uint16_t port)
 {
-  struct UdpDestPort *walker;
+  struct UdpDestPort *walker = NULL;
 
   for (walker = UdpDestPortList; walker; walker = walker->next) {
     if (walker->ip_version == ip_version) {
@@ -643,17 +645,17 @@ static void
 P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 {
   union olsr_ip_addr dst;      /* Destination IP address in captured packet */
-  struct ip *ipHeader;         /* The IP header inside the captured IP packet */
-  struct ip6_hdr *ipHeader6;   /* The IP header inside the captured IP packet */
-  struct udphdr *udpHeader;
+  struct ip *ipHeader = NULL;         /* The IP header inside the captured IP packet */
+  struct ip6_hdr *ipHeader6 = NULL;   /* The IP header inside the captured IP packet */
+  struct udphdr *udpHeader = NULL;
   u_int16_t destPort;
-  ldns_pkt *p, *p2;
+  ldns_pkt *p = NULL, *p2 = NULL;
   int p_size, ttl, nonlocal_list_count[3] = {0, 0, 0};
   unsigned int i, j;
   ldns_status s;
-  ldns_rr_list *full_list, *nonlocal_list[3];
-  ldns_rr *rr;
-  struct RrListByTtl *ttl_bucket, *rr_buf = NULL;
+  ldns_rr_list *full_list = NULL, *nonlocal_list[3];
+  ldns_rr *rr = NULL;
+  struct RrListByTtl *ttl_bucket = NULL, *rr_buf = NULL;
   PKT_TYPE pkt_type;
 
   if ((encapsulationUdpData[0] & 0xf0) == 0x40) {       //IPV4
@@ -851,13 +853,13 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
  * Data Used  :
  * ------------------------------------------------------------------------- */
 void DnssdSendPacket(ldns_pkt *pkt, PKT_TYPE pkt_type, unsigned char *encapsulationUdpData, int nBytes, int ttl) {
-  uint8_t *buf_ptr;
+  uint8_t *buf_ptr = NULL;
   size_t buf_size;
   int packet_size, full_header_len, ip_header_len;
-  struct ip *ipHeader;
-  struct ip6_hdr *ipHeader6;
-  struct udphdr *udpHeader;
-  unsigned char *pseudogram, *new_pkt;
+  struct ip *ipHeader = NULL;
+  struct ip6_hdr *ipHeader6 = NULL;
+  struct udphdr *udpHeader = NULL;
+  unsigned char *pseudogram = NULL, *new_pkt = NULL;
   size_t pgram_size;
   union {
     struct pseudo_header psh;
@@ -987,8 +989,8 @@ unsigned short CheckSum(unsigned short *ptr,int nbytes)
  * Data Used  :
  * ------------------------------------------------------------------------- */
 int IsRrLocal(ldns_rr *rr, int *ttl) {
-  struct MdnsService *s;
-  ldns_rdf *owner;
+  struct MdnsService *s = NULL;
+  ldns_rdf *owner = NULL;
   char *id, *owner_str, *rdata_str;
   
   // if owner == <service name>.<type>.<domain>.
@@ -1101,7 +1103,7 @@ DoP2pd(int skfd,
     struct sockaddr_ll pktAddr;
     socklen_t addrLen = sizeof(pktAddr);
     int nBytes;
-    unsigned char *ipPacket;
+    unsigned char *ipPacket = NULL;
 
     /* Receive the captured Ethernet frame, leaving space for the BMF
      * encapsulation header */
@@ -1514,11 +1516,12 @@ int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set
  * ------------------------------------------------------------------------- */
 int UpdateServices(void) {
   char file_suffix[9], line[BUFFER_LENGTH + 1], *ttl_string, *service_name, *service_type, *dirpath, *fullpath, hostname[HOSTNAME_LEN + 1];
-  DIR *dp;
-  FILE *fp;
-  struct dirent *ep;
+  DIR *dp = NULL;
+  FILE *fp = NULL;
+  struct dirent *ep = NULL;
   const char ttl_pattern[] = "^[[:space:]]*<txt-record>ttl=([[:digit:]]+)</txt-record>[[:space:]]*$";
-  char *domain_pattern;
+  int domain_pattern_size = 0;
+  char *domain_pattern = NULL;
   const char name_pattern[] = "^[[:space:]]*<name( replace-wildcards=\"yes\")?>(.*)</name>[[:space:]]*$";
   const char type_pattern[] = "^[[:space:]]*<type>(.*)</type>[[:space:]]*$";
   regex_t ttl_regex, domain_regex, name_regex, type_regex;
@@ -1527,7 +1530,7 @@ int UpdateServices(void) {
   unsigned int found_domain, ttl, match_string_len;
   size_t dname_len, service_name_len, service_type_len, service_file_dir_len;
   int ret;
-  struct MdnsService *service;
+  struct MdnsService *service = NULL;
   
   dp = opendir(ServiceFileDir);
   if (dp == NULL) {
@@ -1547,14 +1550,16 @@ int UpdateServices(void) {
     dirpath[service_file_dir_len] = '/';
     dirpath[service_file_dir_len + 1] = '\0';
   }
-  
-  // Compile regex objects
-  if (asprintf(&domain_pattern, "^[[:space:]]*<domain-name>%s</domain-name>[[:space:]]*$",ServiceDomain) == -1) {
-#ifdef INCLUDE_DEBUG_OUTPUT
-    OLSR_PRINTF(1, "%s: Unable to allocate domain_pattern", PLUGIN_NAME_SHORT);
-#endif
-    return -1;
-  }
+
+  domain_pattern_size = strlen("^[[:space:]]*<domain-name>") + 
+                   strlen(ServiceDomain) +
+		   strlen("</domain-name>[[:space:]]*$") + 1;
+  domain_pattern = (char*)calloc(domain_pattern_size, sizeof(char)); 
+
+  strcpy(domain_pattern, "^[[:space:]]*<domain-name>");
+  strcat(domain_pattern, ServiceDomain);
+  strcat(domain_pattern, "</domain-name>[[:space:]]*$");
+
   if (regcomp(&ttl_regex, ttl_pattern, REG_NEWLINE | REG_EXTENDED) || 
 		regcomp(&domain_regex, domain_pattern, REG_NOSUB | REG_NEWLINE | REG_EXTENDED) ||
 		regcomp(&name_regex, name_pattern, REG_NEWLINE | REG_EXTENDED) || 
@@ -1747,7 +1752,7 @@ int SetDomain(const char *value, void *data __attribute__ ((unused)), set_plugin
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 void AddToRrBuffer(struct RrListByTtl **buf, int ttl, ldns_rr *entry, int section) {
-  struct RrListByTtl *s;
+  struct RrListByTtl *s = NULL;
   int i;
   
   HASH_FIND_INT(*buf, &ttl, s);
@@ -1784,8 +1789,8 @@ void AddToRrBuffer(struct RrListByTtl **buf, int ttl, ldns_rr *entry, int sectio
  * Data Used  : ServiceList
  * ------------------------------------------------------------------------- */
 void AddToServiceList(char *name, size_t name_len, char *type, size_t type_len, char *path, size_t path_len, int ttl) {
-  struct MdnsService *s;
-  char *id;
+  struct MdnsService *s = NULL;
+  char *id = NULL;
   
   if (name_len > MAX_FIELD_LEN || type_len > MAX_FIELD_LEN || path_len > MAX_FILE_LEN)
     return;
@@ -1811,20 +1816,20 @@ void AddToServiceList(char *name, size_t name_len, char *type, size_t type_len, 
 }
 
 struct RrListByTtl *GetRrListByTtl(const struct RrListByTtl **buf, int ttl) {
-  struct RrListByTtl *s;
+  struct RrListByTtl *s = NULL;
   
   HASH_FIND_INT(*buf, &ttl, s);
   return s;
 }
 
 struct MdnsService *GetServiceById(char *id) {
-  struct MdnsService *s;
+  struct MdnsService *s = NULL;
   HASH_FIND_STR(ServiceList, id, s);
   return s;
 }
 
 void DeleteListByTtl(struct RrListByTtl **buf, int ttl) {
-  struct RrListByTtl *s;
+  struct RrListByTtl *s = NULL;
   HASH_FIND_INT(*buf, &ttl, s);
   if (s!=NULL) {
     DeleteList(buf, s);
