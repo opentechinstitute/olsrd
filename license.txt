@@ -34,3 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 Note: the nmealib library that is included in the PUD plugin directory
       is LGPL licensed (as explained in its LICENSE.TXT)
+
+Note: the dnssd and mdp plugins and any Commotion specific modfications
+      are explicitly licensed under the same BSD-style license as the
+      upstream code from which they are forked

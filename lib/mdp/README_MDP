@@ -1,0 +1,47 @@
+
+
+Serval MDP Secure OLSR 0.1 implementation notes
+(c)Open Technology Institute 2012
+(c)Andreas Tonnesen 2004
+
+This document contains information on how to
+use the Serval MDP Secure OLSR plugin.
+It does _not_ cover secure OLSR protocol issues.
+
+Lines starting with '# ' indicates shell commands.
+
+NOTES
+
+  The plugin interface and olsrd output buffering was
+  heavily rewritten for the 0.4.8 release. The plugin
+  should work with this release - but has not been
+  tested much.
+
+COMPILING
+
+  To compile edit the SERVALD_ROOT variable to point 
+  to the serval-dna directory. Then, simply run make.
+  # make
+
+INSTALLING
+
+  To install:
+  # make install
+
+  This will run ldconfig to update the dynamic linker.
+  It might take a while.
+
+USAGE
+
+  To make olsrd load the Serval MDP Secure OLSR plugin 
+  add the following in the olsrd configuration file:
+
+LoadPlugin "olsrd_mdp.so.0.1"
+{
+    PlParam     "sid"   "<Serval SID>"
+    PlParam     "servalpath"   "<Serval Instance Path>"
+}
+
+  The plugin uses this public key of sid for signature
+  generation and verification. For nodes to participate 
+  in the OLSR routing domain they need to use the same SID.
