@@ -59,10 +59,10 @@ static uint8_t smart_gateway_netmask[sizeof(union olsr_ip_addr)];
 static struct olsr_gw_handler *gw_handler;
 
 /** the IPv4 gateway list */
-static struct gw_list gw_list_ipv4;
+struct gw_list gw_list_ipv4;
 
 /** the IPv6 gateway list */
-static struct gw_list gw_list_ipv6;
+struct gw_list gw_list_ipv6;
 
 /** the current IPv4 gateway */
 static struct gw_container_entry *current_ipv4_gw;

@@ -58,6 +58,7 @@
 #include "builddata.h"
 #include "olsr_cfg.h"
 #include "interfaces.h"
+#include "gateway.h"
 #include "olsr_protocol.h"
 #include "net_olsr.h"
 #include "link_set.h"
@@ -185,6 +186,10 @@ static void build_nodes_body(struct autobuf *);
 
 static void build_all_body(struct autobuf *);
 
+#ifdef __linux__
+static void build_sgw_body(struct autobuf *);
+#endif /* __linux__ */
+
 #ifdef HTTPINFO_PUD
 static void build_pud_body(struct autobuf *);
 #endif /* HTTPINFO_PUD */
@@ -219,6 +224,9 @@ static const struct tab_entry tab_entries[] = {
   {"Configuration", "config", build_config_body, true},
   {"Routes", "routes", build_routes_body, true},
   {"Links/Topology", "nodes", build_nodes_body, true},
+#ifdef __linux__
+  {"Smart Gateway", "sgw", build_sgw_body, true},
+#endif /* __linux__ */
 #ifdef HTTPINFO_PUD
   {"Position", "position", build_pud_body, true},
 #endif /* HTTPINFO_PUD */
@@ -1099,6 +1107,9 @@ build_all_body(struct autobuf *abuf)
   build_neigh_body(abuf);
   build_topo_body(abuf);
   build_mid_body(abuf);
+#ifdef __linux__
+  build_sgw_body(abuf);
+#endif /* __linux__ */
 #ifdef HTTPINFO_PUD
   build_pud_body(abuf);
 #endif /* HTTPINFO_PUD */
@@ -1445,6 +1456,104 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 }
 #endif /* HTTPINFO_PUD */
+
+#ifdef __linux__
+
+/**
+ * Construct the sgw table for a given ip version
+ *
+ * @param abuf the string buffer
+ * @param ipv6 true for IPv6, false for IPv4
+ */
+static void sgw_ipvx(struct autobuf *abuf, bool ipv6) {
+  struct gateway_entry * current_gw;
+  struct gw_list * list;
+  struct gw_container_entry * gw;
+
+  list = ipv6 ? &gw_list_ipv6 : &gw_list_ipv4;
+  if (!list->count) {
+    abuf_appendf(abuf, "<p><b>No IPv%s Gateways</b></p>\n", ipv6 ? "6" : "4");
+  } else {
+    char buf[INET6_ADDRSTRLEN];
+    memset(buf, 0, sizeof(buf));
+
+    abuf_appendf(abuf, "<p><b>IPv%s Gateways</b></p>\n", ipv6 ? "6" : "4");
+    abuf_puts(abuf, "<p>\n");
+    abuf_appendf(abuf, "<table border=\"1\" cellpadding=\"2\" cellspacing=\"0\" id=\"sgw_ipv%s\">\n", ipv6 ? "6" : "4");
+    abuf_puts(abuf, "  <tbody align=\"center\">\n");
+    abuf_puts(abuf, "    <tr>\n");
+    abuf_puts(abuf, "      <th>Originator</th>\n");
+    abuf_puts(abuf, "      <th>Prefix</th>\n");
+    abuf_puts(abuf, "      <th>Uplink (kbps)</th>\n");
+    abuf_puts(abuf, "      <th>Downlink (kbps)</th>\n");
+    abuf_puts(abuf, "      <th>IPv4</th>\n");
+    abuf_puts(abuf, "      <th>IPv4 NAT</th>\n");
+    abuf_puts(abuf, "      <th>IPv6</th>\n");
+    abuf_puts(abuf, "      <th>Tunnel Name</th>\n");
+    abuf_puts(abuf, "      <th>Destination</th>\n");
+    abuf_puts(abuf, "      <th>Cost</th>\n");
+    abuf_puts(abuf, "    </tr>\n");
+
+    current_gw = olsr_get_inet_gateway(false);
+    OLSR_FOR_ALL_GWS(&list->head, gw) {
+      if (gw) {
+        bool is_current = (current_gw && (gw->gw == current_gw));
+
+        if (is_current) {
+          abuf_puts(abuf, "    <tr bgcolor=\"lime\">\n");
+        } else {
+          abuf_puts(abuf, "    <tr>\n");
+        }
+
+        if (!gw->gw) {
+          int i;
+          for (i = 0; i < 7; i++) {
+            abuf_puts(abuf, "      <td></td>\n");
+          }
+        } else {
+          abuf_appendf(abuf, "      <td>%s</td>\n", inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->gw->originator, buf, sizeof(buf)));
+          abuf_appendf(abuf, "      <td>%s</td>\n", olsr_ip_prefix_to_string(&gw->gw->external_prefix));
+          abuf_appendf(abuf, "      <td>%u</td>\n", gw->gw->uplink);
+          abuf_appendf(abuf, "      <td>%u</td>\n", gw->gw->downlink);
+          abuf_appendf(abuf, "      <td>%s</td>\n", gw->gw->ipv4 ? "yes" : "no");
+          abuf_appendf(abuf, "      <td>%s</td>\n", gw->gw->ipv4nat ? "yes" : "no");
+          abuf_appendf(abuf, "      <td>%s</td>\n", gw->gw->ipv6 ? "yes" : "no");
+        }
+        if (!gw->tunnel) {
+          int i;
+          for (i = 0; i < 2; i++) {
+            abuf_puts(abuf, "      <td></td>\n");
+          }
+        } else {
+          abuf_appendf(abuf, "      <td>%s</td>\n", gw->tunnel->if_name);
+          abuf_appendf(abuf, "      <td>%s</td>\n", inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->tunnel->target, buf, sizeof(buf)));
+        }
+        if (!gw->gw) {
+          abuf_puts(abuf, "      <td></td>\n");
+        } else {
+          abuf_appendf(abuf, "      <td>%llu</td>\n", (long long unsigned int)gw->path_cost);
+        }
+        abuf_puts(abuf, "    </tr>\n");
+      }
+    } OLSR_FOR_ALL_GWS_END(gw);
+    abuf_puts(abuf, "  </tbody>\n");
+    abuf_puts(abuf, "</table>\n");
+    abuf_puts(abuf, "</p>\n");
+  }
+}
+
+static void build_sgw_body(struct autobuf *abuf) {
+  abuf_puts(abuf, "<h2>Smart Gateway System</h2>\n");
+
+  if (!olsr_cnf->smart_gw_active) {
+    abuf_puts(abuf, "<p><b>Smart Gateway system is not enabled</b></p>\n");
+    return;
+  }
+
+  sgw_ipvx(abuf, false);
+  sgw_ipvx(abuf, true);
+}
+#endif /* __linux__ */
 
 static void
 build_about_body(struct autobuf *abuf)
