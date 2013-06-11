@@ -116,6 +116,8 @@ static void ipc_print_config(struct autobuf *);
 
 static void ipc_print_interface(struct autobuf *);
 
+static void ipc_print_sgw(struct autobuf *);
+
 #define TXT_IPC_BUFSIZE 256
 
 #define SIW_NEIGH 0x0001
@@ -129,6 +131,7 @@ static void ipc_print_interface(struct autobuf *);
 #define SIW_CONFIG 0x0100
 #define SIW_2HOP 0x0200
 #define SIW_VERSION 0x0400
+#define SIW_SGW 0x0800
 
 /* ALL = neigh link route hna mid topo */
 #define SIW_ALL 0x003F
@@ -327,6 +330,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         if (0 != strstr(requ, "/int")) send_what |= SIW_INTERFACE;
         if (0 != strstr(requ, "/2ho")) send_what |= SIW_2HOP;
         if (0 != strstr(requ, "/ver")) send_what |= SIW_VERSION;
+        if (0 != strstr(requ, "/sgw")) send_what |= SIW_SGW;
       }
     }
     if ( send_what == 0 ) send_what = SIW_ALL;
@@ -505,6 +509,89 @@ ipc_print_hna(struct autobuf *abuf)
   OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);
 
   abuf_puts(abuf, "\n");
+}
+
+
+#ifdef __linux__
+/**
+ * Construct the sgw table for a given ip version
+ *
+ * @param abuf the string buffer
+ * @param ipv6 true for IPv6, false for IPv4
+ * @param fmtv the format for printing
+ */
+static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const char * fmtv) {
+  struct gateway_entry * current_gw;
+  struct gw_list * list;
+  struct gw_container_entry * gw;
+
+  abuf_appendf(abuf, "Table: Smart Gateway IPv%s\n", ipv6 ? "6" : "4");
+
+  list = ipv6 ? &gw_list_ipv6 : &gw_list_ipv4;
+  if (list->count) {
+    char current[2] = { 0, 0 };
+    char originator[INET6_ADDRSTRLEN];
+    char prefix[(INET6_ADDRSTRLEN * 2) + 1];
+    uint32_t uplink = 0;
+    uint32_t downlink = 0;
+    char sipv4[2] = { 0, 0 };
+    char sipv4nat[2] = { 0, 0 };
+    char sipv6[2] = { 0, 0 };
+    char if_name[IF_NAMESIZE];
+    char destination[INET6_ADDRSTRLEN];
+    long long unsigned int cost = 0;
+    memset(originator, 0, sizeof(originator));
+    memset(prefix, 0, sizeof(prefix));
+    memset(if_name, 0, sizeof(if_name));
+    memset(destination, 0, sizeof(destination));
+
+    abuf_appendf(abuf, fmth, " ", "Originator", "Prefix", "Uplink", "Downlink", "IPv4", "IPv4-NAT", "IPv6", "Tunnel-Name", "Destination", "Cost");
+
+    current_gw = olsr_get_inet_gateway(false);
+    OLSR_FOR_ALL_GWS(&list->head, gw) {
+      if (gw) {
+        current[0] = (current_gw && (gw->gw == current_gw)) ? '*' : ' ';
+
+        if (gw->gw) {
+          inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->gw->originator, originator, sizeof(originator));
+          strncpy(prefix, olsr_ip_prefix_to_string(&gw->gw->external_prefix), sizeof(prefix));
+          uplink = gw->gw->uplink;
+          downlink = gw->gw->downlink;
+          sipv4[0] = gw->gw->ipv4 ? 'Y' : 'N';
+          sipv4nat[0] = gw->gw->ipv4nat ? 'Y' : 'N';
+          sipv6[0] = gw->gw->ipv6 ? 'Y' : 'N';
+        }
+        if (gw->tunnel) {
+          strncpy(if_name, gw->tunnel->if_name, sizeof(if_name));
+          inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->tunnel->target, destination, sizeof(destination));
+        }
+        if (gw->gw) {
+          cost = (long long unsigned int)gw->path_cost;
+        }
+        abuf_appendf(abuf, fmtv, current, originator, prefix, uplink, downlink, sipv4, sipv4nat, sipv6, if_name, destination, cost);
+      }
+    } OLSR_FOR_ALL_GWS_END(gw);
+  }
+}
+#endif /* __linux__ */
+
+static void
+ipc_print_sgw(struct autobuf *abuf)
+{
+#ifndef __linux__
+  abuf_puts(abuf, "Gateway mode is only supported in linux\n");
+#else
+
+  static const char * fmth4 = "%s%-16s %-33s %-8s %-8s %-4s %-8s %-4s %-16s %-16s %s\n";
+  static const char * fmtv4 = "%s%-16s %-33s %-8u %-8u %-4s %-8s %-4s %-16s %-16s %llu\n";
+  static const char * fmth6 = "%s%-46s %-93s %-8s %-8s %-4s %-8s %-4s %-16s %-46s %s\n";
+  static const char * fmtv6 = "%s%-46s %-93s %-8u %-8u %-4s %-8s %-4s %-16s %-46s %llu\n";
+
+  sgw_ipvx(abuf, false, fmth4, fmtv4);
+  abuf_puts(abuf, "\n");
+  sgw_ipvx(abuf, true, fmth6, fmtv6);
+  abuf_puts(abuf, "\n");
+#endif /* __linux__ */
 }
 
 static void
@@ -729,6 +816,8 @@ send_info(unsigned int send_what, int the_socket)
   if ((send_what & SIW_TOPO) == SIW_TOPO) ipc_print_topology(&abuf);
   /* hna */
   if ((send_what & SIW_HNA) == SIW_HNA) ipc_print_hna(&abuf);
+  /* sgw */
+  if ((send_what & SIW_SGW) == SIW_SGW) ipc_print_sgw(&abuf);
   /* mid */
   if ((send_what & SIW_MID) == SIW_MID) ipc_print_mid(&abuf);
   /* routes */
