@@ -100,17 +100,17 @@ struct olsrd_config *olsr_cnf;         /* The global configuration */
 int
 main(int argc, char *argv[])
 {
-  struct olsrd_config *cnf;
-
   if (argc == 1) {
     fprintf(stderr, "Usage: olsrd_cfgparser [filename] -print\n\n");
     exit(EXIT_FAILURE);
   }
 
-  if ((cnf = olsrd_parse_cnf(argv[1])) == 0) {
+  olsr_cnf = olsrd_get_default_cnf();
+
+  if (olsrd_parse_cnf(argv[1]) == 0) {
     if ((argc > 2) && (!strcmp(argv[2], "-print"))) {
-      olsrd_print_cnf(cnf);
-      olsrd_write_cnf(cnf, "./out.conf");
+      olsrd_print_cnf(olsr_cnf);
+      olsrd_write_cnf(olsr_cnf, "./out.conf");
     } else
       printf("Use -print to view parsed values\n");
     printf("Configfile parsed OK\n");
@@ -119,6 +119,10 @@ main(int argc, char *argv[])
   }
 
   return 0;
+}
+
+void
+olsr_startup_sleep(int seconds __attribute__((unused))) {
 }
 
 #else /* MAKEBIN */
