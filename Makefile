@@ -93,7 +93,7 @@ src/builddata.c:
 	$(MAKECMDPREFIX)echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
 
 
-.PHONY: help libs clean_libs libs_clean clean distclean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all gui clean_gui 
+.PHONY: help libs clean_libs libs_clean clean distclean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all gui clean_gui cfgparser_install cfgparser_clean
 
 clean:
 	-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c $(TMPFILES)
@@ -126,6 +126,12 @@ uberclean:	clean clean_libs clean_gui
 install: install_olsrd
 
 uninstall: uninstall_olsrd
+
+cfgparser_install: cfgparser
+		$(MAKECMDPREFIX)$(MAKECMD) -C $(CFGDIR) install
+
+cfgparser_clean:
+		$(MAKECMDPREFIX)$(MAKECMD) -C $(CFGDIR) clean
 
 install_bin:
 		mkdir -p $(SBINDIR)
