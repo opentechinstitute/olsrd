@@ -228,6 +228,9 @@ OBJS +=		$(SRCS:%.c=%.o)
 ifeq ($(DEBUG),1)
 CPPFLAGS +=	-DDEBUG
 CFLAGS +=	-ggdb
+ifeq ($(OS),linux)
+LDFLAGS  += -rdynamic
+endif
 else
 CPPFLAGS +=	-DNDEBUG
 ifeq ($(OPTIMIZE),)
@@ -240,7 +243,6 @@ endif
 
 ifeq ($(OS),linux)
 CPPFLAGS+=-DHTTPINFO_PUD -I$(TOPDIR)/lib -I$(TOPDIR)/lib/pud/nmealib/include -I$(TOPDIR)/lib/pud/wireformat/include
-LDFLAGS+=-rdynamic
 endif
 
 # a make function to quote "/" and "."
