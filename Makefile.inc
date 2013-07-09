@@ -240,6 +240,7 @@ endif
 
 ifeq ($(OS),linux)
 CPPFLAGS+=-DHTTPINFO_PUD -I$(TOPDIR)/lib -I$(TOPDIR)/lib/pud/nmealib/include -I$(TOPDIR)/lib/pud/wireformat/include
+LDFLAGS+=-rdynamic
 endif
 
 # a make function to quote "/" and "."
