@@ -79,7 +79,7 @@ switch:
 src/builddata.c:
 	$(MAKECMDPREFIX)$(RM) "$@"
 	$(MAKECMDPREFIX)echo "#include \"defs.h\"" >> "$@" 
-	$(MAKECMDPREFIX)echo "const char olsrd_version[] = \"olsr.org -  $(VERS)-git_`git log -1 --pretty=%h`-hash_`./make/hash_source.sh`\";"  >> "$@"
+	$(MAKECMDPREFIX)echo "const char olsrd_version[] = \"olsr.org -  $(VERS)`./make/hash_source.sh`\";"  >> "$@"
 	$(MAKECMDPREFIX)date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
 	$(MAKECMDPREFIX)echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
 
