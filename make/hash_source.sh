@@ -4,4 +4,4 @@ os=$(uname)
 if [ "xDarwin" = "x$os" ] ; then
   md5cmd=md5
 fi
-cat `find . -name *.[ch] | grep -v -E '[/\\]?builddata.c$'`| $md5cmd
+cat `find . -name *.[ch] | grep -v -E '[/\\]?builddata.c$'`| $md5cmd | awk '{ print $1; }'
