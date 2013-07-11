@@ -20,6 +20,7 @@
 /.project
 /.settings
 /build-stamp
+/builddata.txt
 /configure-stamp
 /olsrd
 /olsrd.exe

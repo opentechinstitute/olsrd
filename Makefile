@@ -84,14 +84,13 @@ switch:
 	$(MAKECMDPREFIX)$(MAKECMD) -C $(SWITCHDIR)
 
 # generate it always
-.PHONY: src/builddata.c
-src/builddata.c:
-	$(MAKECMDPREFIX)$(RM) "$@"
-	$(MAKECMDPREFIX)echo "#include \"defs.h\"" >> "$@" 
-	$(MAKECMDPREFIX)echo "const char olsrd_version[] = \"olsr.org -  $(VERS)`./make/hash_source.sh`\";"  >> "$@"
-	$(MAKECMDPREFIX)date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
-	$(MAKECMDPREFIX)echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
+.PHONY: builddata.txt
+builddata.txt:
+	$(MAKECMDPREFIX)./make/hash_source.sh "$@" "$(VERS)" "$(VERBOSE)"
 
+# only overwrite it when it doesn't exists or when it has changed
+src/builddata.c: builddata.txt
+	$(MAKECMDPREFIX)if [ ! -f "$@" ] || [ -n "$$(diff "$<" "$@")" ]; then cp -a -v "$<" "$@"; fi
 
 .PHONY: help libs clean_libs libs_clean clean distclean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all gui clean_gui cfgparser_install cfgparser_clean
 
