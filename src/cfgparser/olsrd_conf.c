@@ -223,55 +223,55 @@ static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
   if (!cnf->smart_gw_active) {
     /* default is "no policy rules" and "everything into the main table" */
     if (cnf->rt_table == DEF_RT_AUTO) {
-      cnf->rt_table = 254;
+      cnf->rt_table = DEF_RT_TABLE_NR;
     }
     if (cnf->rt_table_default == DEF_RT_AUTO) {
-      cnf->rt_table_default = cnf->rt_table;
+      cnf->rt_table_default = DEF_RT_TABLE_DEFAULT_NR;
     }
     if (cnf->rt_table_tunnel != DEF_RT_AUTO) {
       fprintf(stderr, "Warning, setting a table for tunnels without SmartGW does not make sense.\n");
     }
-    cnf->rt_table_tunnel = cnf->rt_table_default;
+    cnf->rt_table_tunnel = DEF_RT_TABLE_TUNNEL_NR;
 
     /* priority rules default is "none" */
     if (cnf->rt_table_pri == DEF_RT_AUTO) {
-      cnf->rt_table_pri = DEF_RT_NONE;
+      cnf->rt_table_pri = DEF_RT_TABLE_PRI;
     }
     if (cnf->rt_table_defaultolsr_pri == DEF_RT_AUTO) {
-      cnf->rt_table_defaultolsr_pri = DEF_RT_NONE;
+      cnf->rt_table_defaultolsr_pri = DEF_RT_TABLE_DEFAULTOLSR_PRI;
     }
     if (cnf->rt_table_tunnel_pri == DEF_RT_AUTO) {
-      cnf->rt_table_tunnel_pri = DEF_RT_NONE;
+      cnf->rt_table_tunnel_pri = DEF_RT_TABLE_TUNNEL_PRI;
     }
     if (cnf->rt_table_default_pri == DEF_RT_AUTO) {
-      cnf->rt_table_default_pri = DEF_RT_NONE;
+      cnf->rt_table_default_pri = DEF_RT_TABLE_DEFAULT_PRI;
     }
   }
   else {
     /* default is "policy rules" and "everything into separate tables (254, 223, 224)" */
     if (cnf->rt_table == DEF_RT_AUTO) {
-      cnf->rt_table = 254;
+      cnf->rt_table = DEF_SGW_RT_TABLE_NR;
     }
     if (cnf->rt_table_default == DEF_RT_AUTO) {
-      cnf->rt_table_default = 223;
+      cnf->rt_table_default = DEF_SGW_RT_TABLE_DEFAULT_NR;
     }
     if (cnf->rt_table_tunnel == DEF_RT_AUTO) {
-      cnf->rt_table_tunnel = 224;
+      cnf->rt_table_tunnel = DEF_SGW_RT_TABLE_TUNNEL_NR;
     }
 
     /* default for "rt_table_pri" is none (main table already has a policy rule */
-    prio = 32766;
+    prio = DEF_SGW_RT_TABLE_PRI_BASE;
     if (cnf->rt_table_pri > 0) {
       prio = cnf->rt_table_pri;
     }
     else if (cnf->rt_table_pri == DEF_RT_AUTO) {
       /* choose default */
-      olsr_cnf->rt_table_pri = DEF_RT_NONE;
+      olsr_cnf->rt_table_pri = DEF_SGW_RT_TABLE_PRI;
       fprintf(stderr, "No policy rule for rt_table_pri\n");
     }
 
     /* default for "rt_table_defaultolsr_pri" is +10 */
-    prio += 10;
+    prio += DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER;
     if (cnf->rt_table_defaultolsr_pri > 0) {
       prio = cnf->rt_table_defaultolsr_pri;
     }
@@ -280,7 +280,7 @@ static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
       fprintf(stderr, "Choose priority %u for rt_table_defaultolsr_pri\n", prio);
     }
 
-    prio += 10;
+    prio += DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER;
     if (cnf->rt_table_tunnel_pri > 0) {
       prio = cnf->rt_table_tunnel_pri;
     }
@@ -289,8 +289,11 @@ static int olsrd_sanity_check_rtpolicy(struct olsrd_config *cnf) {
       fprintf(stderr, "Choose priority %u for rt_table_tunnel_pri\n", prio);
     }
 
-    prio += 10;
-    if (cnf->rt_table_default_pri == DEF_RT_AUTO) {
+    prio += DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER;
+    if (cnf->rt_table_default_pri > 0) {
+      prio = cnf->rt_table_default_pri;
+    }
+    else if (cnf->rt_table_default_pri == DEF_RT_AUTO) {
       olsr_cnf->rt_table_default_pri = prio;
       fprintf(stderr, "Choose priority %u for rt_table_default_pri\n", prio);
     }

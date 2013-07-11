@@ -78,6 +78,26 @@
 #define DEF_RTPROTO          0 /* 0 means OS-specific default */
 #define DEF_RT_NONE          -1
 #define DEF_RT_AUTO          0
+
+#define DEF_RT_TABLE_NR                   254
+#define DEF_RT_TABLE_DEFAULT_NR           254
+#define DEF_RT_TABLE_TUNNEL_NR            254
+
+#define DEF_SGW_RT_TABLE_NR               254
+#define DEF_SGW_RT_TABLE_DEFAULT_NR       223
+#define DEF_SGW_RT_TABLE_TUNNEL_NR        224
+
+#define DEF_RT_TABLE_PRI                  DEF_RT_NONE
+#define DEF_RT_TABLE_DEFAULTOLSR_PRI      DEF_RT_NONE
+#define DEF_RT_TABLE_TUNNEL_PRI           DEF_RT_NONE
+#define DEF_RT_TABLE_DEFAULT_PRI          DEF_RT_NONE
+
+#define DEF_SGW_RT_TABLE_PRI                    DEF_RT_NONE
+#define DEF_SGW_RT_TABLE_PRI_BASE               32766
+#define DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER  10
+#define DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER       10
+#define DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER      10
+
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false

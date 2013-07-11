@@ -388,23 +388,40 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_appendf(out, "%sRtProto %u\n",
       cnf->rt_proto == DEF_RTPROTO ? "# " : "",
       cnf->rt_proto);
-  abuf_puts(out,
+  abuf_appendf(out,
     "\n"
     "# Specifies the routing Table olsr uses\n"
     "# RtTable is for host routes, RtTableDefault for the route to the default\n"
     "# internet gateway (2 in case of IPv6+NIIT) and RtTableTunnel is for\n"
     "# routes to the ipip tunnels, valid values are 1 to 254\n"
     "# There is a special parameter \"auto\" (choose default below)\n"
-    "# (with    smartgw: default is 254/223/224)\n"
-    "# (without smartgw: default is 254/254/254, linux main table)\n"
-    "\n");
-  abuf_appendf(out, "RtTable %u\n",
-      cnf->rt_table);
-  abuf_appendf(out, "RtTableDefault %u\n",
-      cnf->rt_table_default);
-  abuf_appendf(out, "RtTableTunnel %u\n",
-      cnf->rt_table_tunnel);
-  abuf_puts(out,
+    "# (with    smartgw: default is %u/%u/%u)\n"
+    "# (without smartgw: default is %u/%u/%u, linux main table)\n"
+    "\n",
+    DEF_SGW_RT_TABLE_NR, DEF_SGW_RT_TABLE_DEFAULT_NR, DEF_SGW_RT_TABLE_TUNNEL_NR,
+    DEF_RT_TABLE_NR, DEF_RT_TABLE_DEFAULT_NR, DEF_RT_TABLE_TUNNEL_NR);
+  if (!cnf->smart_gw_active) {
+    abuf_appendf(out, "%sRtTable        %u\n",
+        cnf->rt_table == DEF_RT_TABLE_NR ? "# " : "",
+        cnf->rt_table);
+    abuf_appendf(out, "%sRtTableDefault %u\n",
+        cnf->rt_table_default == DEF_RT_TABLE_DEFAULT_NR ? "# " : "",
+        cnf->rt_table_default);
+    abuf_appendf(out, "%sRtTableTunnel  %u\n",
+        cnf->rt_table_tunnel == DEF_RT_TABLE_TUNNEL_NR ? "# " : "",
+        cnf->rt_table_tunnel);
+  } else {
+    abuf_appendf(out, "%sRtTable        %u\n",
+        cnf->rt_table == DEF_SGW_RT_TABLE_NR ? "# " : "",
+        cnf->rt_table);
+    abuf_appendf(out, "%sRtTableDefault %u\n",
+        cnf->rt_table_default == DEF_SGW_RT_TABLE_DEFAULT_NR ? "# " : "",
+        cnf->rt_table_default);
+    abuf_appendf(out, "%sRtTableTunnel  %u\n",
+        cnf->rt_table_tunnel == DEF_SGW_RT_TABLE_TUNNEL_NR ? "# " : "",
+        cnf->rt_table_tunnel);
+  }
+  abuf_appendf(out,
     "\n"
     "# Specifies the policy rule priorities for the three routing tables and\n"
     "# a special rule for smartgateway routing (see README-Olsr-Extensions)\n"
@@ -414,17 +431,64 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# less than RtTableTunnelPriority less than RtTableDefaultPriority\n"
     "# There are two special parameters, \"auto\" (choose fitting to SmartGW\n"
     "# mode) and \"none\" (do not set policy rule)\n"
-    "# (with    smartgw: default is none/32776/32786/32796)\n"
-    "# (without smartgw: default is none/none /none /none )\n"
-    "\n");
-  abuf_appendf(out, "RtTablePriority %u\n",
-      cnf->rt_table_pri);
-  abuf_appendf(out, "RtTableDefaultOlsrPriority %u\n",
-      cnf->rt_table_default_pri);
-  abuf_appendf(out, "RtTableTunnelPriority %u\n",
-      cnf->rt_table_tunnel_pri);
-  abuf_appendf(out, "RtTableDefaultPriority %u\n",
-      cnf->rt_table_defaultolsr_pri);
+    "# (with    smartgw: default is %d/%u/%u/%u)\n"
+    "# (without smartgw: default is %d/%d   /%d   /%d   )\n"
+    "\n",
+    DEF_SGW_RT_TABLE_PRI,
+    DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER,
+    DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER,
+    DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER + DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER,
+    DEF_RT_TABLE_PRI,
+    DEF_RT_TABLE_DEFAULTOLSR_PRI,
+    DEF_RT_TABLE_TUNNEL_PRI,
+    DEF_RT_TABLE_DEFAULT_PRI);
+  if (!cnf->smart_gw_active) {
+    if (cnf->rt_table_pri == DEF_RT_TABLE_PRI) {
+      abuf_appendf(out, "# RtTablePriority            %d\n",
+          cnf->rt_table_pri);
+    } else {
+      abuf_appendf(out, "RtTablePriority            %u\n",
+          cnf->rt_table_pri);
+    }
+    if (cnf->rt_table_defaultolsr_pri == DEF_RT_TABLE_DEFAULTOLSR_PRI) {
+      abuf_appendf(out, "# RtTableDefaultOlsrPriority %d\n",
+          cnf->rt_table_defaultolsr_pri);
+    } else {
+      abuf_appendf(out, "RtTableDefaultOlsrPriority %u\n",
+          cnf->rt_table_defaultolsr_pri);
+    }
+    if (cnf->rt_table_tunnel_pri == DEF_RT_TABLE_TUNNEL_PRI) {
+      abuf_appendf(out, "# RtTableTunnelPriority      %d\n",
+          cnf->rt_table_tunnel_pri);
+    } else {
+      abuf_appendf(out, "RtTableTunnelPriority      %u\n",
+          cnf->rt_table_tunnel_pri);
+    }
+    if (cnf->rt_table_default_pri == DEF_RT_TABLE_DEFAULT_PRI) {
+      abuf_appendf(out, "# RtTableDefaultPriority     %d\n",
+          cnf->rt_table_default_pri);
+    } else {
+      abuf_appendf(out, "RtTableDefaultPriority     %u\n",
+          cnf->rt_table_default_pri);
+    }
+  } else {
+    if (cnf->rt_table_pri == DEF_SGW_RT_TABLE_PRI) {
+      abuf_appendf(out, "# RtTablePriority            %d\n",
+          cnf->rt_table_pri);
+    } else {
+      abuf_appendf(out, "RtTablePriority            %u\n",
+          cnf->rt_table_pri);
+    }
+    abuf_appendf(out, "%sRtTableDefaultOlsrPriority %u\n",
+        cnf->rt_table_defaultolsr_pri == (DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER) ? "# " : "",
+        cnf->rt_table_defaultolsr_pri);
+    abuf_appendf(out, "%sRtTableTunnelPriority      %u\n",
+        cnf->rt_table_tunnel_pri == (DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER) ? "# " : "",
+        cnf->rt_table_tunnel_pri);
+    abuf_appendf(out, "%sRtTableDefaultPriority     %u\n",
+        cnf->rt_table_default_pri == (DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER + DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER) ? "# " : "",
+        cnf->rt_table_default_pri);
+  }
   abuf_appendf(out,
     "\n"
     "# Activates (in IPv6 mode) the automatic use of NIIT\n"
