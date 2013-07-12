@@ -18,7 +18,7 @@ uint64_t gw_costs_weigh(const struct costs_weights weights, uint32_t path_cost, 
   }
 
   if (!exitUk || !exitDk) {
-    /* no weighing factors or zero bandwidth */
+    /* zero bandwidth */
     return UINT64_MAX;
   }
 
