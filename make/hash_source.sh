@@ -13,7 +13,7 @@ verbose="$3"
 
 md5Command="md5sum"
 osName="$(uname)"
-if [ "x$osName" == "xDarwin" ] ; then
+if [ "x$osName" = "xDarwin" ] ; then
   md5Command="md5"
 fi
 
@@ -37,14 +37,14 @@ EOF
 
 if [ ! -e "$buildDataTxt" ]; then
   echo "[CREATE] $buildDataTxt"
-  if [ "$verbose" == "0" ]; then
+  if [ "$verbose" = "0" ]; then
     cp -a "$tmpBuildDataTxt" "$buildDataTxt"
   else
     cp -a -v "$tmpBuildDataTxt" "$buildDataTxt"
   fi
 elif [ -n "$(diff -I "^const char build_date\[\].*\$" "$tmpBuildDataTxt" "$buildDataTxt" | sed 's/"/\\"/g')" ]; then
   echo "[UPDATE] $buildDataTxt"
-  if [ "$verbose" == "0" ]; then
+  if [ "$verbose" = "0" ]; then
     cp -a "$tmpBuildDataTxt" "$buildDataTxt"
   else
     cp -a -v "$tmpBuildDataTxt" "$buildDataTxt"
