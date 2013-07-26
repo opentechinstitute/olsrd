@@ -644,13 +644,16 @@ InUdpDestPortList(int ip_version, union olsr_ip_addr *addr, uint16_t port)
 static void
 P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 {
+  union olsr_ip_addr src;      /* Destination IP address in captured packet */
   union olsr_ip_addr dst;      /* Destination IP address in captured packet */
   struct ip *ipHeader = NULL;         /* The IP header inside the captured IP packet */
   struct ip6_hdr *ipHeader6 = NULL;   /* The IP header inside the captured IP packet */
   struct udphdr *udpHeader = NULL;
+  struct NonOlsrInterface *walker;
   u_int16_t destPort;
   ldns_pkt *p = NULL, *p2 = NULL;
   int p_size, ttl, nonlocal_list_count[3] = {0, 0, 0};
+  int found = 0;
   unsigned int i, j;
   ldns_status s;
   ldns_rr_list *full_list = NULL, *nonlocal_list[3];
@@ -663,7 +666,21 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     
     ipHeader = (struct ip *) ARM_NOWARN_ALIGN(encapsulationUdpData);
 
+    src.v4 = ipHeader->ip_src;
     dst.v4 = ipHeader->ip_dst;
+    
+    for (walker = nonOlsrInterfaces; walker != NULL; walker = walker->next) {
+      if (walker->intAddr.v4.s_addr == src.v4.s_addr) {
+	found = 1;
+      }
+    }
+    if (!found) {
+#ifdef INCLUDE_DEBUG_OUTPUT
+      OLSR_PRINTF(1,"%s: NON SOURCE PACKET\n", PLUGIN_NAME_SHORT);
+#endif
+      olsr_p2pd_gen(encapsulationUdpData, nBytes, NULL);
+      return;
+    }
 
     if (ipHeader->ip_p != SOL_UDP) {
       /* Not UDP */
@@ -716,7 +733,21 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 
     ipHeader6 = (struct ip6_hdr *) ARM_NOWARN_ALIGN(encapsulationUdpData);
 
+    memcpy(&src.v6, &ipHeader6->ip6_src, sizeof(struct in6_addr));
     memcpy(&dst.v6, &ipHeader6->ip6_dst, sizeof(struct in6_addr));
+    
+    for (walker = nonOlsrInterfaces; walker != NULL; walker = walker->next) {
+      if (walker->intAddr.v6.s6_addr == src.v6.s6_addr) {
+	found = 1;
+      }
+    }
+    if (!found) {
+#ifdef INCLUDE_DEBUG_OUTPUT
+      OLSR_PRINTF(1,"%s: NON SOURCE PACKET\n", PLUGIN_NAME_SHORT);
+#endif
+      olsr_p2pd_gen(encapsulationUdpData, nBytes, NULL);
+      return;
+    }
 
     if (ipHeader6->ip6_dst.s6_addr[0] == 0xff)  //Multicast
     {
@@ -817,21 +848,23 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   ldns_pkt_free(p2);
   
   // For each batch of RRs grouped by TTL, populate new mDNS packet to encapsulate in an OLSR packet and send to mesh
-  for (ttl_bucket = rr_buf; ttl_bucket != NULL; ttl_bucket=ttl_bucket->hh.next) {    
-    p2 = ldns_pkt_clone(p);
-    ldns_rr_list_deep_free(p2->_answer);
-    ldns_rr_list_deep_free(p2->_additional);
-    ldns_rr_list_deep_free(p2->_authority);
-    ldns_rr_list_deep_free(p2->_question);
-    ldns_pkt_set_question(p2, NULL);
-    ldns_pkt_set_qdcount(p2, 0);
-    ldns_pkt_set_answer(p2, (ttl_bucket->rr_count[0]) ? ttl_bucket->rr_list[0] : NULL);
-    ldns_pkt_set_authority(p2, (ttl_bucket->rr_count[1]) ? ttl_bucket->rr_list[1] : NULL);
-    ldns_pkt_set_additional(p2, (ttl_bucket->rr_count[2]) ? ttl_bucket->rr_list[2] : NULL);
-    for (i = 0; i < 3; ++i)
-      ldns_pkt_set_section_count(p2, i + 1, ttl_bucket->rr_count[i]);
-    DnssdSendPacket(p2, pkt_type, encapsulationUdpData, nBytes, ttl_bucket->ttl);
-    ldns_pkt_free(p2);
+  for (ttl_bucket = rr_buf; ttl_bucket != NULL; ttl_bucket=ttl_bucket->hh.next) {
+    if (ttl_bucket->ttl > 0) {
+      p2 = ldns_pkt_clone(p);
+      ldns_rr_list_deep_free(p2->_answer);
+      ldns_rr_list_deep_free(p2->_additional);
+      ldns_rr_list_deep_free(p2->_authority);
+      ldns_rr_list_deep_free(p2->_question);
+      ldns_pkt_set_question(p2, NULL);
+      ldns_pkt_set_qdcount(p2, 0);
+      ldns_pkt_set_answer(p2, (ttl_bucket->rr_count[0]) ? ttl_bucket->rr_list[0] : NULL);
+      ldns_pkt_set_authority(p2, (ttl_bucket->rr_count[1]) ? ttl_bucket->rr_list[1] : NULL);
+      ldns_pkt_set_additional(p2, (ttl_bucket->rr_count[2]) ? ttl_bucket->rr_list[2] : NULL);
+      for (i = 0; i < 3; ++i)
+        ldns_pkt_set_section_count(p2, i + 1, ttl_bucket->rr_count[i]);
+      DnssdSendPacket(p2, pkt_type, encapsulationUdpData, nBytes, ttl_bucket->ttl);
+      ldns_pkt_free(p2);
+    }
   }
 
   DeleteListArray(&rr_buf);
