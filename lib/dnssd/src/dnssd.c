@@ -848,21 +848,23 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   ldns_pkt_free(p2);
   
   // For each batch of RRs grouped by TTL, populate new mDNS packet to encapsulate in an OLSR packet and send to mesh
-  for (ttl_bucket = rr_buf; ttl_bucket != NULL; ttl_bucket=ttl_bucket->hh.next) {    
-    p2 = ldns_pkt_clone(p);
-    ldns_rr_list_deep_free(p2->_answer);
-    ldns_rr_list_deep_free(p2->_additional);
-    ldns_rr_list_deep_free(p2->_authority);
-    ldns_rr_list_deep_free(p2->_question);
-    ldns_pkt_set_question(p2, NULL);
-    ldns_pkt_set_qdcount(p2, 0);
-    ldns_pkt_set_answer(p2, (ttl_bucket->rr_count[0]) ? ttl_bucket->rr_list[0] : NULL);
-    ldns_pkt_set_authority(p2, (ttl_bucket->rr_count[1]) ? ttl_bucket->rr_list[1] : NULL);
-    ldns_pkt_set_additional(p2, (ttl_bucket->rr_count[2]) ? ttl_bucket->rr_list[2] : NULL);
-    for (i = 0; i < 3; ++i)
-      ldns_pkt_set_section_count(p2, i + 1, ttl_bucket->rr_count[i]);
-    DnssdSendPacket(p2, pkt_type, encapsulationUdpData, nBytes, ttl_bucket->ttl);
-    ldns_pkt_free(p2);
+  for (ttl_bucket = rr_buf; ttl_bucket != NULL; ttl_bucket=ttl_bucket->hh.next) {
+    if (ttl_bucket->ttl > 0) {
+      p2 = ldns_pkt_clone(p);
+      ldns_rr_list_deep_free(p2->_answer);
+      ldns_rr_list_deep_free(p2->_additional);
+      ldns_rr_list_deep_free(p2->_authority);
+      ldns_rr_list_deep_free(p2->_question);
+      ldns_pkt_set_question(p2, NULL);
+      ldns_pkt_set_qdcount(p2, 0);
+      ldns_pkt_set_answer(p2, (ttl_bucket->rr_count[0]) ? ttl_bucket->rr_list[0] : NULL);
+      ldns_pkt_set_authority(p2, (ttl_bucket->rr_count[1]) ? ttl_bucket->rr_list[1] : NULL);
+      ldns_pkt_set_additional(p2, (ttl_bucket->rr_count[2]) ? ttl_bucket->rr_list[2] : NULL);
+      for (i = 0; i < 3; ++i)
+        ldns_pkt_set_section_count(p2, i + 1, ttl_bucket->rr_count[i]);
+      DnssdSendPacket(p2, pkt_type, encapsulationUdpData, nBytes, ttl_bucket->ttl);
+      ldns_pkt_free(p2);
+    }
   }
 
   DeleteListArray(&rr_buf);
