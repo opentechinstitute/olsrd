@@ -48,7 +48,7 @@ start-up information:
 * /plugins - currently loaded plugins and their config parameters
 
 start-up information not in JSON format:
-* /olsrd.conf - the current config, formatted for writing directly to /etc/olsrd.conf
+* /olsrd.conf - the current config, formatted for writing directly to /etc/olsrd/olsrd.conf
 
 
 PLUGIN CONFIGURATION

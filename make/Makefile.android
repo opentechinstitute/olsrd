@@ -12,7 +12,7 @@
 #    sudo make OS=android DEBUG=0 install_all
 #    which creates a /data directory on your PC.
 #
-# 4) Change /data/local/etc/olsrd.conf. You need
+# 4) Change /data/local/etc/olsrd/olsrd.conf. You need
 #    to adapt the 'Interfaces' line, e.g. to use
 #    the eth0 on your android mobile. Also, the
 #    LoadPlugin lines needs adaption, e.g. you
@@ -29,7 +29,7 @@
 DESTDIR ?=
 prefix ?=
 sbindir ?= $(prefix)/bin
-etcdir ?= $(prefix)/etc
+etcdir ?= $(prefix)/etc/olsrd
 libdir ?= $(prefix)/lib
 datarootdir ?= $(prefix)/usr/share
 

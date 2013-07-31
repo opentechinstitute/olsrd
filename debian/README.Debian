@@ -6,8 +6,7 @@ Configuration
 -------------
 
 Before running olsrd you must edit the default configuration file
-/etc/olsrd/olsrd.conf (the location differs in the debian package from the 
-upstream default /etc/olsrd.conf). The one change you must make is to define
+/etc/olsrd/olsrd.conf. The one change you must make is to define
 on which interfaces olsrd is supposed to act on.
 
 If you want, you can run olsrd via init.d by editing /etc/default/olsrd - the

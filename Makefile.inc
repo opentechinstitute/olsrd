@@ -57,7 +57,7 @@ TAGCMD ?=	etags
 
 # target directories and names
 DESTDIR  ?=
-ETCDIR   ?= $(DESTDIR)/etc
+ETCDIR   ?= $(DESTDIR)/etc/olsrd
 USRDIR   ?= $(DESTDIR)/usr
 INCLUDEDIR ?= $(DESTDIR)/usr/include
 LIBDIR   ?= $(USRDIR)/lib
