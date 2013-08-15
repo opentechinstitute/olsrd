@@ -1259,7 +1259,7 @@ send_info(unsigned int send_what, int the_socket)
   abuf_init(&abuf, 32768);
 
  // only add if outputing JSON
-  if (send_what & SIW_ALL) abuf_puts(&abuf, "{\n");
+  if (send_what & SIW_ALL) abuf_json_open_array_entry(&abuf);
 
   if ((send_what & SIW_LINKS) == SIW_LINKS) ipc_print_links(&abuf);
   if ((send_what & SIW_NEIGHBORS) == SIW_NEIGHBORS) ipc_print_neighbors(&abuf);
@@ -1281,7 +1281,7 @@ send_info(unsigned int send_what, int the_socket)
     abuf_json_int(&abuf, "timeSinceStartup", now_times);
     if(*uuid != 0)
       abuf_json_string(&abuf, "uuid", uuid);
-    abuf_puts(&abuf, "}\n");
+    abuf_json_close_array_entry(&abuf);
   }
 
   /* this outputs the olsrd.conf text directly, not JSON */
