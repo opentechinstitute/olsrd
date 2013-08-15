@@ -27,7 +27,7 @@ hostName="$(hostname)"
 buildDate="$(date +"%Y-%m-%d %H:%M:%S")"
 
 
-tmpBuildDataTxt="$(mktemp)"
+tmpBuildDataTxt="$(mktemp -t olsrd.hash_source.XXXXXXXXXX)"
 cat > "$tmpBuildDataTxt" << EOF
 const char olsrd_version[] = "olsr.org - $version-git_$gitSha-hash_$sourceHash";
 const char build_host[]    = "$hostName";
