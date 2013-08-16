@@ -1482,16 +1482,16 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6) {
     abuf_appendf(abuf, "<table border=\"1\" cellpadding=\"2\" cellspacing=\"0\" id=\"sgw_ipv%s\">\n", ipv6 ? "6" : "4");
     abuf_puts(abuf, "  <tbody align=\"center\">\n");
     abuf_puts(abuf, "    <tr>\n");
-    abuf_puts(abuf, "      <th>Originator</th>\n");
-    abuf_puts(abuf, "      <th>Prefix</th>\n");
-    abuf_puts(abuf, "      <th>Uplink (kbps)</th>\n");
-    abuf_puts(abuf, "      <th>Downlink (kbps)</th>\n");
-    abuf_puts(abuf, "      <th>IPv4</th>\n");
-    abuf_puts(abuf, "      <th>IPv4 NAT</th>\n");
-    abuf_puts(abuf, "      <th>IPv6</th>\n");
-    abuf_puts(abuf, "      <th>Tunnel Name</th>\n");
-    abuf_puts(abuf, "      <th>Destination</th>\n");
-    abuf_puts(abuf, "      <th>Cost</th>\n");
+    abuf_puts(abuf, "      <th><center>Originator</center></th>\n");
+    abuf_puts(abuf, "      <th><center>Prefix</center></th>\n");
+    abuf_puts(abuf, "      <th><center>Uplink (kbps)</center></th>\n");
+    abuf_puts(abuf, "      <th><center>Downlink (kbps)</center></th>\n");
+    abuf_puts(abuf, "      <th><center>IPv4</center></th>\n");
+    abuf_puts(abuf, "      <th><center>IPv4 NAT</center></th>\n");
+    abuf_puts(abuf, "      <th><center>IPv6</center></th>\n");
+    abuf_puts(abuf, "      <th><center>Tunnel Name</center></th>\n");
+    abuf_puts(abuf, "      <th><center>Destination</center></th>\n");
+    abuf_puts(abuf, "      <th><center>Cost</center></th>\n");
     abuf_puts(abuf, "    </tr>\n");
 
     current_gw = olsr_get_inet_gateway(false);
