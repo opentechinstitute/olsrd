@@ -1,3 +1,19 @@
+0.6.5.5 -------------------------------------------------------------------
+
+Ferry Huberts (4):
+      build: really _ignore_ builddata.c when hashing sources
+      build: only print the md5 hash in hash_source.sh
+      Makefile: fix builddata when building from tarball
+      pud: fix readIPAddress function
+
+Henning Rogge (3):
+      Update version after release of v0.6.5.4
+      Fix build break for MinGW compilation on Fedora 19.
+      Release v0.6.5.5
+
+Scott Kidder (1):
+      jsoninfo: ensure output is wrapped in curly braces.
+
 0.6.5.4 -------------------------------------------------------------------
 
 Ferry Huberts (11):
