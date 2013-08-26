@@ -1079,13 +1079,12 @@ timeout_timestamps(void *foo __attribute__ ((unused)))
 static int 
 read_key_from_servald(const char *sid)
 {
-  const char *pins = {"",};
   unsigned char stowedSid[SID_SIZE];
   unsigned char *found_private_key = NULL;
   int found_private_key_len = 0;
   int cn = 0, in = 0, kp = 0;
  
-  keyring = keyring_open_with_pins(pins);
+  keyring = keyring_open_instance();
   stowSid(stowedSid, 0, sid);
   
   if (!keyring_find_sid(keyring, &cn, &in, &kp, stowedSid))
