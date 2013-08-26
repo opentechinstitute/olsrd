@@ -43,10 +43,11 @@ PLUGIN_VER =	0.1
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-SERVALD_ROOT=/home/hawkinsw/serval/serval-dna
+SERVALD_ROOT?=/home/hawkinsw/serval/serval-dna
+SERVALD_LIB_ROOT?=/home/hawkinsw/serval/serval-dna
 
 CPPFLAGS+=-I$(SERVALD_ROOT)/ -I$(SERVALD_ROOT)/nacl/include
-LIBS+=-L$(SERVALD_ROOT) -lservald
+LIBS+=-L$(SERVALD_LIB_ROOT) -lserval
 
 default_target: $(PLUGIN_FULLNAME)
 
