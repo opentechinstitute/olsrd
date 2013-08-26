@@ -148,7 +148,7 @@ print_data(const char *label, const uint8_t *data, size_t len)
 static void
 mdp_checksum(uint8_t *data, const uint16_t data_len, uint8_t *hashbuf)
 {
-  unsigned long long signature_bytes = SIGNATURE_BYTES;
+  int signature_bytes = SIGNATURE_BYTES;
   print_data("Key", servald_key, servald_key_len);
   print_data("Data", data, data_len);
 
