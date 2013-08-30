@@ -47,7 +47,7 @@ SERVALD_ROOT?=/home/hawkinsw/serval/serval-dna
 SERVALD_LIB_ROOT?=/home/hawkinsw/serval/serval-dna
 
 CPPFLAGS+=-I$(SERVALD_ROOT)/ -I$(SERVALD_ROOT)/nacl/include
-LIBS+=-L$(SERVALD_LIB_ROOT) -lserval
+LIBS+=-L$(SERVALD_LIB_ROOT) -lservald
 
 default_target: $(PLUGIN_FULLNAME)
 

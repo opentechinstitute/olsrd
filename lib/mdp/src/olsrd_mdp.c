@@ -1085,6 +1085,7 @@ read_key_from_servald(const char *sid)
   int cn = 0, in = 0, kp = 0;
  
   keyring = keyring_open_instance();
+  keyring_enter_pin(keyring, "");
   stowSid(stowedSid, 0, sid);
   
   if (!keyring_find_sid(keyring, &cn, &in, &kp, stowedSid))
