@@ -1,0 +1,13 @@
+Index: olsrd-0.5.4/Makefile
+===================================================================
+--- olsrd-0.6.1.orig/Makefile	2010-11-27 19:53:01.000000000 +0100
++++ olsrd-0.6.1/Makefile	2011-05-03 15:01:40.000000000 +0200
+@@ -71,8 +71,6 @@
+ switch:		
+ 	$(MAKECMDPREFIX)$(MAKECMD) -C $(SWITCHDIR)
+ 
+-# generate it always
+-.PHONY: src/builddata.c
+ src/builddata.c:
+ 	$(MAKECMDPREFIX)$(RM) "$@"
+ 	$(MAKECMDPREFIX)echo "#include \"defs.h\"" >> "$@" 

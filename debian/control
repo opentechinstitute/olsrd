@@ -1,9 +1,18 @@
 Source: olsrd
 Section: net
 Priority: extra
-Maintainer: Holger Levsen <holger@debian.org>
-Build-Depends: debhelper (>= 5), quilt, bison, flex
-Standards-Version: 3.8.3
+Maintainer: Dan Staples <danstaples@opentechinstitute.org>
+Uploaders: Dan Staples <danstaples@opentechinstitute.org>
+Build-Depends: debhelper (>= 9),
+               bison,
+               flex,
+               pkg-config,
+               libgtk2.0-dev,
+               python-gtk2-dev,
+               liblua50-dev,
+               serval-dna,
+               libldns-dev
+Standards-Version: 3.9.4
 Homepage: http://olsr.org/
 Vcs-Svn: svn://svn.debian.org/svn/collab-maint/deb-maint/olsrd/
 Vcs-Browser: http://svn.debian.org/wsvn/collab-maint/deb-maint/olsrd/
@@ -11,6 +20,7 @@ Vcs-Browser: http://svn.debian.org/wsvn/collab-maint/deb-maint/olsrd/
 Package: olsrd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: olsrd-plugins, olsrd-commotion-plugins
 Description: optimized link-state routing daemon (unik-olsrd)
  unik-olsrd is an implementation of the Optimized Link State Routing protocol 
  for Mobile Ad-Hoc networks(MANET). The protocol is described in RFC3626. It 
@@ -38,3 +48,41 @@ Description: various plugins to enhance olsrd
   * bmf           - basic multicast forwarding
   * quagga        - import external routes from quagga
   * txtinfo       - display information about the OSLR node
+ .
+ The following plugins are also included, even though experimental and demo
+ plugins:
+ .
+  * pgraph        - performance graph
+  * watchdog      - detection of olsrd freeze
+  * tas           - tiny application server
+  * mini          - minimal example plugin (demo)
+  * dyn_gw_plain  - dyn_gw without ping/libthread
+  * arprefresh    - optimize kernel arp cache from olsr UDP sniffing
+  * mdnsp         - multicast DNS via OLSR mesh network
+  * p2pd          - distribute P2P Discovery messages
+
+Package: olsrd-commotion-plugins
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, olsrd (= ${binary:Version}), libldns1, serval-dna
+Description: Commotion plugins to enhance olsrd
+ olsrd is an implementation of the Optimized Link State Routing protocol
+ for Mobile Ad-Hoc networks(MANET)
+ .
+ The following plugins are available:
+ .
+  * dnssd         - DNS Service Discovery (enhanced p2pd)
+  * mdp           - Serval MDP Secure
+ .
+
+Package: olsrd-gui
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, olsrd (= ${binary:Version})
+Description: GTK GUI to control and get info about olsrd
+ olsrd-gui is a GTK GUI for controlling and getting information from a running
+ olsrd, a daemon for OLSR mesh networking.  It uses IPC to talk to olsrd, so
+ /etc/olsrd/olsrd.conf must enable IPC connections for olsrd-gui to work.
+ .
+ OLSR operates as a table driven, proactive protocol, i.e., it exchanges 
+ topology information with other nodes of the network regularly. It is 
+ developed to work independently from other protocols. Likewise, OLSR makes no
+ assumptions about the underlying link-layer.

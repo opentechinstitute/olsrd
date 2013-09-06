@@ -181,6 +181,8 @@ rpm:
 # This is quite ugly but at least it works
 ifeq ($(OS),linux)
 SUBDIRS = arprefresh bmf dnssd dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mdns mdp mini nameservice p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog
+NO_CO_SUBDIRS = arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mdns mini nameservice p2pd pgraph pud quagga secure sgwdynspeed txtinfo watchdog
+CO_SUBDIRS = dnssd mdp
 else
 ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo jsoninfo mini pgraph secure txtinfo
@@ -201,6 +203,12 @@ libs_clean clean_libs:
 
 libs_install install_libs:
 		$(MAKECMDPREFIX)set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) install;done
+
+no_co_libs_install install_no_co_libs:
+		$(MAKECMDPREFIX)set -e;for dir in $(NO_CO_SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) install;done
+
+co_libs_install install_co_libs:
+		$(MAKECMDPREFIX)set -e;for dir in $(CO_SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) install;done
 
 libs_uninstall uninstall_libs:
 		$(MAKECMDPREFIX)set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) uninstall;done

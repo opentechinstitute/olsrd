@@ -1,0 +1,15 @@
+Index: olsrd-0.6.3/lib/quagga/src/quagga.h
+===================================================================
+--- olsrd-0.6.3.orig/lib/quagga/src/quagga.h	2012-06-03 10:07:07.000000000 +0200
++++ olsrd-0.6.3/lib/quagga/src/quagga.h	2012-06-08 13:21:14.000000000 +0200
+@@ -33,6 +33,10 @@
+ void zebra_redistribute(uint16_t cmd);
+ void zebra_hello(uint16_t cmd);
+ 
++#ifndef ZEBRA_HEADER_MARKER
++#define ZEBRA_HEADER_MARKER 255
++#endif
++
+ /*
+  * Local Variables:
+  * c-basic-offset: 2
