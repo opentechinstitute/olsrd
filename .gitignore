@@ -22,6 +22,7 @@
 /build-stamp
 /builddata.txt
 /configure-stamp
+/debian/
 /olsrd
 /olsrd.exe
 /olsr_switch
