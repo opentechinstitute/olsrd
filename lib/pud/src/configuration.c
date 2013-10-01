@@ -253,6 +253,10 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_DNS: /* DNS name */
 			return intSetupNodeIdBinaryString();
 
+		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
+		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
+			return intSetupNodeIdBinaryIp();
+
 		case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
 			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_MMSI_MIN,
 				PUD_NODEIDTYPE_MMSI_MAX, PUD_NODEIDTYPE_MMSI_BYTES);
@@ -273,10 +277,9 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_194_MIN,
 				PUD_NODEIDTYPE_194_MAX, PUD_NODEIDTYPE_194_BYTES);
 
-		case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
-		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
-		default: /* unsupported */
-			return intSetupNodeIdBinaryIp();
+		default:
+		  pudError(false, "nodeId type %u is not supported", nodeIdTypeNumber);
+		  return false;
 	}
 
 	return false;
