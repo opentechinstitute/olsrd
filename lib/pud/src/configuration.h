@@ -29,8 +29,7 @@ int setNodeIdType(const char *value, void *data,
 /** The name of the nodeId plugin parameter */
 #define PUD_NODE_ID_NAME						"nodeId"
 
-unsigned char * getNodeId(void);
-unsigned char * getNodeIdWithLength(size_t *length);
+unsigned char * getNodeId(size_t *length);
 nodeIdBinaryType * getNodeIdBinary(void);
 int setNodeId(const char *value, void *data, set_plugin_parameter_addon addon);
 

@@ -73,14 +73,6 @@ static bool nodeIdSet = false;
 static nodeIdBinaryType nodeIdBinary;
 
 /**
- @return
- The node ID
- */
-unsigned char * getNodeId(void) {
-	return getNodeIdWithLength(NULL);
-}
-
-/**
  Get the nodeId and its length
 
  @param length
@@ -90,7 +82,7 @@ unsigned char * getNodeId(void) {
  @return
  The node ID
  */
-unsigned char * getNodeIdWithLength(size_t *length) {
+unsigned char * getNodeId(size_t *length) {
 	if (!nodeIdSet) {
 		setNodeId("", NULL, (set_plugin_parameter_addon) {.pc = NULL});
 	}
@@ -176,7 +168,7 @@ static bool intSetupNodeIdBinaryMAC(void) {
 static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
 		unsigned long long max, unsigned int bytes) {
 	unsigned long long longValue = 0;
-	if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(), &longValue)) {
+	if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(NULL), &longValue)) {
 		return false;
 	}
 
@@ -200,7 +192,7 @@ static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
 static bool intSetupNodeIdBinaryString(void) {
 	char report[256];
 	size_t nodeidlength;
-	char * nodeid = (char *)getNodeIdWithLength(&nodeidlength);
+	char * nodeid = (char *)getNodeId(&nodeidlength);
 
 	if (nmea_parse_sentence_has_invalid_chars(nodeid, nodeidlength, PUD_NODE_ID_NAME, &report[0], sizeof(report))) {
 		pudError(false, "%s", &report[0]);

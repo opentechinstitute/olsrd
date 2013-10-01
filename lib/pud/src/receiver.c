@@ -795,7 +795,7 @@ bool startReceiver(void) {
 
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	transmitGpsInformation.positionUpdated = false;
-	transmitGpsInformation.nodeId = getNodeId();
+	transmitGpsInformation.nodeId = getNodeId(NULL);
 
 #ifdef HTTPINFO_PUD
 	olsr_cnf->pud_position = &transmitGpsInformation;
