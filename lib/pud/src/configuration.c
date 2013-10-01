@@ -9,12 +9,16 @@
 
 /* OLSR includes */
 #include <olsr_protocol.h>
+#include <olsr.h>
 
 /* System includes */
 #include <unistd.h>
 #include <nmea/parse.h>
 #include <OlsrdPudWireFormat/nodeIdConversion.h>
 #include <limits.h>
+
+/* forward declarations */
+static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber);
 
 /*
  * Note:
@@ -36,9 +40,7 @@ NodeIdType getNodeIdTypeNumber(void) {
 	return nodeIdType;
 }
 
-int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
-		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	static const char * valueName = PUD_NODE_ID_TYPE_NAME;
+static int setNodeIdType(const char *value, const char * valueName) {
 	unsigned long long nodeIdTypeNew;
 
 	if (!readULL(valueName, value, &nodeIdTypeNew)) {
@@ -46,7 +48,7 @@ int setNodeIdType(const char *value, void *data __attribute__ ((unused)),
 	}
 
 	if (!isValidNodeIdType(nodeIdTypeNew)) {
-		pudError(false, "Value of parameter %s (%llu) is reserved", valueName,
+		pudError(false, "Value in parameter %s (%llu) is reserved", valueName,
 				nodeIdTypeNew);
 		return true;
 	}
@@ -110,23 +112,79 @@ nodeIdBinaryType * getNodeIdBinary(void) {
 
 int setNodeId(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	size_t valueLength;
+	char * number;
+	char * identification;
 
 	assert (value != NULL);
 
+  nodeId[0] = '\0';
+  nodeIdLength = 0;
+  nodeIdSet = false;
+  nodeIdBinary.set = false;
+
 	valueLength = strlen(value);
-	if (valueLength > (PUD_TX_NODEID_BUFFERSIZE - 1)) {
-		pudError(false, "Value of parameter %s is too long, maximum length is"
-			" %u, current length is %lu", PUD_NODE_ID_NAME, (PUD_TX_NODEID_BUFFERSIZE - 1),
-				(unsigned long) valueLength);
-		return true;
-	}
+  number = olsr_malloc(valueLength + 1, "setNodeId");
+  strcpy(number, value);
 
-	strcpy((char *) &nodeId[0], value);
-	nodeIdLength = valueLength;
-	nodeIdSet = true;
-	nodeIdBinary.set = false;
+  /* split "number,identification" */
+  identification = strchr(number, ',');
+  if (identification) {
+    *identification = '\0';
+    identification++;
+  }
 
-	return false;
+  /* parse number into nodeIdType (if present) */
+  valueLength = strlen(number);
+  if (valueLength && setNodeIdType(number, PUD_NODE_ID_NAME)) {
+    free(number);
+    return true;
+  }
+
+  /* copy identification into nodeId (if present) */
+  if (identification) {
+    valueLength = strlen(identification);
+    if (valueLength > (PUD_TX_NODEID_BUFFERSIZE - 1)) {
+      pudError(false, "Value in parameter %s is too long, maximum length is"
+        " %u, current length is %lu", PUD_NODE_ID_NAME, (PUD_TX_NODEID_BUFFERSIZE - 1),
+          (unsigned long) valueLength);
+      free(number);
+      return true;
+    }
+
+    if (valueLength) {
+      strcpy((char *) &nodeId[0], identification);
+      nodeIdLength = valueLength;
+      nodeIdSet = true;
+    }
+  }
+
+  free(number);
+
+  /* fill in automatic values */
+  if (!nodeIdSet) {
+    if (nodeIdType == PUD_NODEIDTYPE_DNS) {
+      memset(nodeId, 0, sizeof(nodeId));
+      errno = 0;
+      if (gethostname((char *)&nodeId[0], sizeof(nodeId) - 1) < 0) {
+        pudError(true, "Could not get the host name");
+        return true;
+      }
+
+      nodeIdLength = strlen((char *)nodeId);
+      nodeIdSet = true;
+    } else if ((nodeIdType != PUD_NODEIDTYPE_MAC) && (nodeIdType != PUD_NODEIDTYPE_IPV4)
+        && (nodeIdType != PUD_NODEIDTYPE_IPV6)) {
+      pudError(false, "No node ID set while one is required for nodeId type %u", nodeIdType);
+      return true;
+    }
+  }
+
+  if (!setupNodeIdBinaryAndValidate(nodeIdType)) {
+    pudError(false, "nodeId (type %u) is incorrectly configured", nodeIdType);
+    return true;
+  }
+
+  return false;
 }
 
 /*
@@ -1423,31 +1481,6 @@ unsigned int checkConfig(void) {
 
 	if (txNonOlsrInterfaceCount == 0) {
 		pudError(false, "No transmit non-OLSR interfaces configured");
-		retval = false;
-	}
-
-	if (!nodeIdSet) {
-		if (nodeIdType == PUD_NODEIDTYPE_DNS) {
-			char name[PUD_TX_NODEID_BUFFERSIZE];
-
-			errno = 0;
-			if (gethostname(&name[0], sizeof(name)) < 0) {
-				pudError(true, "Could not get the host name");
-				retval = false;
-			} else {
-				setNodeId(&name[0], NULL,
-						(set_plugin_parameter_addon) {.pc = NULL});
-			}
-			name[PUD_TX_NODEID_BUFFERSIZE - 1] = '\0';
-		} else if ((nodeIdType != PUD_NODEIDTYPE_MAC) && (nodeIdType
-				!= PUD_NODEIDTYPE_IPV4) && (nodeIdType != PUD_NODEIDTYPE_IPV6)) {
-			pudError(false, "No node ID set while one is required for"
-				" node type %u", nodeIdType);
-			retval = false;
-		}
-	}
-
-	if (!setupNodeIdBinaryAndValidate(nodeIdType)) {
 		retval = false;
 	}
 
