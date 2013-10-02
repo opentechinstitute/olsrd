@@ -121,7 +121,12 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 		break;
 
 	case PUD_NODEIDTYPE_DNS: /* DNS name */
-		*nodeIdStr = (char *) nodeId;
+		if (nodeIdSize >= nodeIdStrBufferSize) {
+		  nodeIdSize = nodeIdStrBufferSize - 1;
+		}
+		memcpy(nodeIdStrBuffer, nodeId, nodeIdSize);
+		nodeIdStrBuffer[nodeIdSize] = '\0';
+		*nodeIdStr = &nodeIdStrBuffer[0];
 		break;
 
 	case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */

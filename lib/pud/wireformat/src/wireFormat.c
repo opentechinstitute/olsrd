@@ -715,10 +715,16 @@ void getPositionUpdateNodeId(int ipVersion, union olsr_message * olsrMessage,
 		break;
 
 	case PUD_NODEIDTYPE_DNS: /* DNS name */
-		*nodeIdSize = strlen((char *) *nodeId);
-		/* FIXME for no '\0' at the end, need to scan from the end until
-		 * encountering a non-zero byte: end of string address and
-		 * subtract the string start address */
+	  {
+	    unsigned int len = 0;
+	    unsigned char * idx = *nodeId;
+	    unsigned char * lastPayloadByte = &((unsigned char *)olsrMessage)[getOlsrMessageSize(ipVersion, olsrMessage) - 1];
+	    while ((*idx != '\0') && (idx <= lastPayloadByte)) {
+	      idx++;
+	      len++;
+	    }
+	    *nodeIdSize = len;
+	  }
 		break;
 
 	case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
@@ -830,6 +836,7 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 			length = charsAvailable;
 		}
 
+		// FIXME do not pad with a null byte (compatibility breaking change!)
 		setPositionUpdateNodeId(olsrGpsMessage, nodeId, length, true);
 	}
 		break;
