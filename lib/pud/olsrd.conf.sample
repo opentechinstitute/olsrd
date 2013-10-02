@@ -22,7 +22,8 @@ LoadPlugin "<olsrd plugin library path>/olsrd_pud.so.1.1.0"
     #           6 : IPv6 address (OLSR main address) of the sending node
     #               (identification is not relevant)
     #           7 : an AIS MMSI number with 9 digits
-    #           8 : a URN number with 8 digits
+    #           8 : a URN number (a plain 24 bits number) with 8 digits. See
+    #               http://www.dtic.mil/cjcs_directives/cdata/unlimit/3156_01.pdf
     #         192 : a 7 digit number conforming to 'Nationaal Nummerplan
     #               Brandweer Nederland'
     #         193 : a 6 digit number conforming to 'Nationaal Nummerplan
