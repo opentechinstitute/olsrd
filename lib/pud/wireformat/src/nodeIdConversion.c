@@ -140,6 +140,19 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 				nodeIdStrBuffer, nodeIdStrBufferSize);
 		break;
 
+	case PUD_NODEIDTYPE_MIP: /* a MIP OID number */
+	  *nodeIdStr = getNodeIdNumberFromOlsr(
+	      &nodeId[0],
+	      PUD_NODEIDTYPE_MIP_BYTES1,
+	      &nodeIdStrBuffer[0],
+	      PUD_NODEIDTYPE_MIP_CHARS1 + 1);
+	  getNodeIdNumberFromOlsr(
+	      &nodeId[PUD_NODEIDTYPE_MIP_BYTES1],
+	      nodeIdSize - PUD_NODEIDTYPE_MIP_BYTES1,
+	      &nodeIdStrBuffer[PUD_NODEIDTYPE_MIP_CHARS1],
+	      nodeIdStrBufferSize - PUD_NODEIDTYPE_MIP_CHARS1);
+	  break;
+
 	case PUD_NODEIDTYPE_IPV4: /* IPv4 address */
 	case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
 	default: /* unsupported */
@@ -200,6 +213,56 @@ bool setupNodeIdBinaryLongLong(nodeIdBinaryType * nodeIdBinary,
 	assert(longValue == 0);
 
 	nodeIdBinary->length = bytes;
+	nodeIdBinary->set = true;
+	return true;
+}
+
+/**
+ Convert two given unsigned long longs to the binary/wireformat representation
+ of them.
+
+ @param nodeIdBinary
+ a pointer to the buffer in which to store the binary/wireformat representation
+ @param value1
+ the first value to convert (in machine byte-order)
+ @param dst1
+ A pointer where to store the conversion of value1
+ @param bytes1
+ the number of bytes used by value1
+ @param value2
+ the second value to convert (in machine byte-order)
+ @param dst2
+ A pointer where to store the conversion of value2
+ @param bytes2
+ the number of bytes used by value2
+
+ @return
+ - true when ok
+ - false on failure
+ */
+bool setupNodeIdBinaryDoubleLongLong(nodeIdBinaryType * nodeIdBinary,
+    unsigned long long value1, unsigned char * dst1, size_t bytes1,
+    unsigned long long value2, unsigned char * dst2, size_t bytes2) {
+	unsigned long long longValue1 = value1;
+	unsigned long long longValue2 = value2;
+	int i1 = bytes1 - 1;
+	int i2 = bytes2 - 1;
+
+	while (i1 >= 0) {
+		dst1[i1] = longValue1 & 0xff;
+		longValue1 >>= 8;
+		i1--;
+	}
+	assert(longValue1 == 0);
+
+	while (i2 >= 0) {
+		dst2[i2] = longValue2 & 0xff;
+		longValue2 >>= 8;
+		i2--;
+	}
+	assert(longValue2 == 0);
+
+	nodeIdBinary->length = bytes1 + bytes2;
 	nodeIdBinary->set = true;
 	return true;
 }

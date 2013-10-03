@@ -735,6 +735,10 @@ void getPositionUpdateNodeId(int ipVersion, union olsr_message * olsrMessage,
 		*nodeIdSize = PUD_NODEIDTYPE_URN_BYTES;
 		break;
 
+	case PUD_NODEIDTYPE_MIP: /* a MIP OID number */
+		*nodeIdSize = PUD_NODEIDTYPE_MIP_BYTES;
+		break;
+
 	case PUD_NODEIDTYPE_192:
 		*nodeIdSize = PUD_NODEIDTYPE_192_BYTES;
 		break;
@@ -787,7 +791,7 @@ void setPositionUpdateNodeId(
 /**
  Convert the node information to the node information for an OLSR message and
  put it in the PUD message in the OLSR message. Also updates the PUD message
- smask.
+ smask to signal whether or not an ID is in the message.
 
  @param ipVersion
  The IP version (AF_INET or AF_INET6)
@@ -818,6 +822,7 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 	case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
 	case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
 	case PUD_NODEIDTYPE_URN: /* a URN number */
+	case PUD_NODEIDTYPE_MIP: /* a MIP OID number */
 	case PUD_NODEIDTYPE_192:
 	case PUD_NODEIDTYPE_193:
 	case PUD_NODEIDTYPE_194:

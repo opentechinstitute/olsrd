@@ -160,8 +160,11 @@ typedef enum _NodeIdType {
 	/** URN number, 24 bits, 3 bytes */
 	PUD_NODEIDTYPE_URN = 8,
 
+	/** MIP OID number, 67 bits, 9 bytes */
+	PUD_NODEIDTYPE_MIP = 9,
+
 	/** the last id of the globally unique node type IDs */
-	PUD_NODEIDTYPE_GLOBAL_LAST = PUD_NODEIDTYPE_URN,
+	PUD_NODEIDTYPE_GLOBAL_LAST = PUD_NODEIDTYPE_MIP,
 
 	/** the first id of the locally unique node type IDs */
 	PUD_NODEIDTYPE_LOCAL_FIRST = 192,
@@ -201,6 +204,18 @@ typedef enum _NodeIdType {
 #define PUD_NODEIDTYPE_URN_BYTES		3
 #define PUD_NODEIDTYPE_URN_MIN			0LLU
 #define PUD_NODEIDTYPE_URN_MAX			16777215LLU
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_MIP */
+#define PUD_NODEIDTYPE_MIP_BYTES    9
+#define PUD_NODEIDTYPE_MIP_BYTES1   1
+#define PUD_NODEIDTYPE_MIP_BYTES2   (PUD_NODEIDTYPE_MIP_BYTES - PUD_NODEIDTYPE_MIP_BYTES1)
+#define PUD_NODEIDTYPE_MIP_CHARS    20
+#define PUD_NODEIDTYPE_MIP_CHARS1   1
+#define PUD_NODEIDTYPE_MIP_CHARS2   (PUD_NODEIDTYPE_MIP_CHARS - PUD_NODEIDTYPE_MIP_CHARS1)
+#define PUD_NODEIDTYPE_MIP_MIN1     0LLU
+#define PUD_NODEIDTYPE_MIP_MAX1     9LLU
+#define PUD_NODEIDTYPE_MIP_MIN2     0LLU
+#define PUD_NODEIDTYPE_MIP_MAX2     9999999999999999999LLU
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_192 */
 #define PUD_NODEIDTYPE_192_BYTES		3
@@ -245,6 +260,7 @@ typedef struct _nodeIdBinaryType {
 				union olsr_ip_addr ip;
 				unsigned long long longValue;
 				unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE];
+				unsigned char mip[PUD_NODEIDTYPE_MIP_BYTES];
 		} buffer;
 } nodeIdBinaryType;
 

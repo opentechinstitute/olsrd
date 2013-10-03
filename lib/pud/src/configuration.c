@@ -224,19 +224,95 @@ static bool intSetupNodeIdBinaryMAC(void) {
  - false on failure
  */
 static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
-		unsigned long long max, unsigned int bytes) {
-	unsigned long long longValue = 0;
-	if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(NULL), &longValue)) {
-		return false;
+    unsigned long long max, unsigned int bytes) {
+  unsigned long long longValue = 0;
+  if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(NULL), &longValue)) {
+    return false;
+  }
+
+  if ((longValue < min) || (longValue > max)) {
+    pudError(false, "%s value %llu is out of range [%llu,%llu]",
+        PUD_NODE_ID_NAME, longValue, min, max);
+    return false;
+  }
+
+  return setupNodeIdBinaryLongLong(&nodeIdBinary, longValue, bytes);
+}
+
+/**
+ Validate whether the configured nodeId is valid w.r.t. the configured
+ nodeIdType, for types that fit in a double unsigned long long (128 bits) with
+ a certain split that defined by chars1
+
+ @param chars1
+ the number of characters of the first part
+ @param min1
+ the minimum value of the first part
+ @param max1
+ the maximum value of the first part
+ @param bytes1
+ the number of bytes of the first part in the buffer
+ @param min2
+ the minimum value of the second part
+ @param max2
+ the maximum value of the second part
+ @param bytes2
+ the number of bytes of the second part in the buffer
+
+ @return
+ - true when ok
+ - false on failure
+ */
+static bool intSetupNodeIdBinaryDoubleLongLong(
+    unsigned int chars1,
+    unsigned long long min1, unsigned long long max1,
+    unsigned int bytes1,
+		unsigned long long min2, unsigned long long max2,
+		unsigned int bytes2) {
+	unsigned long long longValue1 = 0;
+	unsigned long long longValue2 = 0;
+
+	unsigned char * node_id = getNodeId(NULL);
+	size_t node_id_len = strlen((char *)node_id);
+
+	assert(chars1 > 0);
+	assert(bytes1 > 0);
+	assert(bytes2 > 0);
+
+  /* part 1 */
+	if (node_id_len > 0) {
+    unsigned char first[chars1 + 1];
+
+    memcpy(first, node_id, chars1);
+    first[chars1] = '\0';
+
+    if (!readULL(PUD_NODE_ID_NAME, (char *)first, &longValue1)) {
+      return false;
+    }
+
+    if ((longValue1 < min1) || (longValue1 > max1)) {
+      pudError(false, "First %u character(s) of %s value %llu are out of range [%llu,%llu]",
+          chars1, PUD_NODE_ID_NAME, longValue1, min1, max1);
+      return false;
+    }
 	}
 
-	if ((longValue < min) || (longValue > max)) {
-		pudError(false, "%s value %llu is out of range [%llu,%llu]",
-				PUD_NODE_ID_NAME, longValue, min, max);
-		return false;
-	}
+  /* part 2 */
+	if (node_id_len > chars1) {
+    if (!readULL(PUD_NODE_ID_NAME, (char *)&node_id[chars1], &longValue2)) {
+      return false;
+    }
 
-	return setupNodeIdBinaryLongLong(&nodeIdBinary, longValue, bytes);
+    if ((longValue2 < min2) || (longValue2 > max2)) {
+      pudError(false, "Last %u character(s) of %s value %llu are out of range [%llu,%llu]",
+          (unsigned int)(node_id_len - chars1), PUD_NODE_ID_NAME, longValue2, min2, max2);
+      return false;
+    }
+  }
+
+	return setupNodeIdBinaryDoubleLongLong(&nodeIdBinary,
+	    longValue1, (unsigned char *)&nodeIdBinary.buffer.mip[0], bytes1,
+	    longValue2, (unsigned char *)&nodeIdBinary.buffer.mip[bytes1], bytes2);
 }
 
 /**
@@ -322,6 +398,14 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_URN: /* a URN number */
 			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_URN_MIN,
 				PUD_NODEIDTYPE_URN_MAX, PUD_NODEIDTYPE_URN_BYTES);
+
+		case PUD_NODEIDTYPE_MIP: /* a MIP OID number */
+			return intSetupNodeIdBinaryDoubleLongLong(
+			    PUD_NODEIDTYPE_MIP_CHARS1,
+			    PUD_NODEIDTYPE_MIP_MIN1, PUD_NODEIDTYPE_MIP_MAX1,
+			    PUD_NODEIDTYPE_MIP_BYTES1,
+			    PUD_NODEIDTYPE_MIP_MIN2, PUD_NODEIDTYPE_MIP_MAX2,
+			    PUD_NODEIDTYPE_MIP_BYTES - PUD_NODEIDTYPE_MIP_BYTES1);
 
 		case PUD_NODEIDTYPE_192:
 			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_192_MIN,
