@@ -70,6 +70,37 @@ static char *getNodeIdNumberFromOlsr(unsigned char * buffer,
 }
 
 /**
+ Get a nodeId hexadecimal number (in string representation), using a certain
+ number of bytes, from the message of an OLSR message.
+
+ @param buffer
+ A pointer to the buffer that holds the nodeId
+ @param bufferSize
+ The number of bytes used by the number in the buffer
+ @param nodeIdBuffer
+ The buffer in which to place the nodeId number in string representation
+ @param nodeIdBufferSize
+ The size of the nodeIdbuffer
+
+ @return
+ A pointer to the nodeId string representation (&nodeIdBuffer[0])
+ */
+static char *getNodeIdHexNumberFromOlsr(unsigned char * buffer,
+		unsigned int bufferSize, char *nodeIdBuffer, socklen_t nodeIdBufferSize) {
+	unsigned long long val = 0;
+	unsigned int i = 0;
+
+	while (i < bufferSize) {
+		val <<= 8;
+		val += buffer[i];
+		i++;
+	}
+
+	snprintf(nodeIdBuffer, nodeIdBufferSize, "%llx", val);
+	return &nodeIdBuffer[0];
+}
+
+/**
  Convert the nodeId of an OLSR message into a string.
 
  @param ipVersion
@@ -138,6 +169,19 @@ void getNodeIdStringFromOlsr(int ipVersion, union olsr_message *olsrMessage,
 	case PUD_NODEIDTYPE_194:
 		*nodeIdStr = getNodeIdNumberFromOlsr(nodeId, nodeIdSize,
 				nodeIdStrBuffer, nodeIdStrBufferSize);
+		break;
+
+	case PUD_NODEIDTYPE_UUID: /* a UUID number */
+	  *nodeIdStr = getNodeIdHexNumberFromOlsr(
+	      &nodeId[0],
+	      PUD_NODEIDTYPE_UUID_BYTES1,
+	      &nodeIdStrBuffer[0],
+	      PUD_NODEIDTYPE_UUID_CHARS1 + 1);
+	  getNodeIdHexNumberFromOlsr(
+	      &nodeId[PUD_NODEIDTYPE_UUID_BYTES1],
+	      nodeIdSize - PUD_NODEIDTYPE_UUID_BYTES1,
+	      &nodeIdStrBuffer[PUD_NODEIDTYPE_UUID_CHARS1],
+	      nodeIdStrBufferSize - PUD_NODEIDTYPE_UUID_CHARS1);
 		break;
 
 	case PUD_NODEIDTYPE_MIP: /* a MIP OID number */

@@ -13,10 +13,6 @@ bool isValidNodeIdType(unsigned long long nodeIdType) {
 			(/* (nodeIdType >= PUD_NODEIDTYPE_GLOBAL_FIRST) && */ (nodeIdType <= PUD_NODEIDTYPE_GLOBAL_LAST)) ||
 			(   (nodeIdType >= PUD_NODEIDTYPE_LOCAL_FIRST ) &&    (nodeIdType <= PUD_NODEIDTYPE_LOCAL_LAST ))
 		)
-		&&
-		(
-			(nodeIdType != PUD_NODEIDTYPE_GAP1)
-		)
 	);
 }
 
@@ -727,6 +723,10 @@ void getPositionUpdateNodeId(int ipVersion, union olsr_message * olsrMessage,
 	  }
 		break;
 
+	case PUD_NODEIDTYPE_UUID: /* a UUID number */
+		*nodeIdSize = PUD_NODEIDTYPE_UUID_BYTES;
+		break;
+
 	case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
 		*nodeIdSize = PUD_NODEIDTYPE_MMSI_BYTES;
 		break;
@@ -820,6 +820,7 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 	case PUD_NODEIDTYPE_MAC: /* hardware address */
 	case PUD_NODEIDTYPE_MSISDN: /* an MSISDN number */
 	case PUD_NODEIDTYPE_TETRA: /* a Tetra number */
+	case PUD_NODEIDTYPE_UUID: /* a UUID number */
 	case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
 	case PUD_NODEIDTYPE_URN: /* a URN number */
 	case PUD_NODEIDTYPE_MIP: /* a MIP OID number */

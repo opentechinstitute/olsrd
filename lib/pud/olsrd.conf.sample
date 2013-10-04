@@ -19,6 +19,7 @@ LoadPlugin "<olsrd plugin library path>/olsrd_pud.so.1.1.0"
     #                used)
     #           4 : IPv4 address (OLSR main address) of the sending node
     #               (identification is not relevant)
+    #           5 : an UUID number with 32 hexadecimal digits
     #           6 : IPv6 address (OLSR main address) of the sending node
     #               (identification is not relevant)
     #           7 : an AIS MMSI number with 9 digits

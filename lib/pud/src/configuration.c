@@ -402,6 +402,16 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 		case PUD_NODEIDTYPE_IPV6: /* IPv6 address */
 			return intSetupNodeIdBinaryIp();
 
+		case PUD_NODEIDTYPE_UUID: /* a UUID number */
+			return intSetupNodeIdBinaryDoubleLongLong(
+			    &nodeIdBinary.buffer.uuid[0],
+			    PUD_NODEIDTYPE_UUID_CHARS1,
+			    PUD_NODEIDTYPE_UUID_MIN1, PUD_NODEIDTYPE_UUID_MAX1,
+			    PUD_NODEIDTYPE_UUID_BYTES1,
+			    PUD_NODEIDTYPE_UUID_MIN2, PUD_NODEIDTYPE_UUID_MAX2,
+			    PUD_NODEIDTYPE_UUID_BYTES - PUD_NODEIDTYPE_UUID_BYTES1,
+			    16);
+
 		case PUD_NODEIDTYPE_MMSI: /* an AIS MMSI number */
 			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_MMSI_MIN,
 				PUD_NODEIDTYPE_MMSI_MAX, PUD_NODEIDTYPE_MMSI_BYTES);

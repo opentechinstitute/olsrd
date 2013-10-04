@@ -148,8 +148,8 @@ typedef enum _NodeIdType {
 	/** IPv4 address, 32 bits, 4 bytes */
 	PUD_NODEIDTYPE_IPV4 = 4,
 
-	/** gap 1 */
-	PUD_NODEIDTYPE_GAP1 = 5,
+	/** UUID, 32 hexadecimal digits, 128 bits, 16 bytes */
+	PUD_NODEIDTYPE_UUID = 5,
 
 	/** IPv6 address, 128 bits, 16 bytes */
 	PUD_NODEIDTYPE_IPV6 = 6,
@@ -194,6 +194,18 @@ typedef enum _NodeIdType {
 #define PUD_NODEIDTYPE_TETRA_BYTES		8
 #define PUD_NODEIDTYPE_TETRA_MIN		0LLU
 #define PUD_NODEIDTYPE_TETRA_MAX		99999999999999999LLU
+
+/** the number of nodeId bytes for PUD_NODEIDTYPE_UUID */
+#define PUD_NODEIDTYPE_UUID_BYTES   16
+#define PUD_NODEIDTYPE_UUID_BYTES1  8
+#define PUD_NODEIDTYPE_UUID_BYTES2  (PUD_NODEIDTYPE_UUID_BYTES - PUD_NODEIDTYPE_UUID_BYTES1)
+#define PUD_NODEIDTYPE_UUID_CHARS   32
+#define PUD_NODEIDTYPE_UUID_CHARS1  16
+#define PUD_NODEIDTYPE_UUID_CHARS2  (PUD_NODEIDTYPE_UUID_CHARS - PUD_NODEIDTYPE_UUID_CHARS1)
+#define PUD_NODEIDTYPE_UUID_MIN1    0LLU
+#define PUD_NODEIDTYPE_UUID_MAX1    0xFFFFFFFFFFFFFFFFLLU
+#define PUD_NODEIDTYPE_UUID_MIN2    0LLU
+#define PUD_NODEIDTYPE_UUID_MAX2    0xFFFFFFFFFFFFFFFFLLU
 
 /** the number of nodeId bytes for PUD_NODEIDTYPE_MMSI */
 #define PUD_NODEIDTYPE_MMSI_BYTES		4
@@ -260,6 +272,7 @@ typedef struct _nodeIdBinaryType {
 				union olsr_ip_addr ip;
 				unsigned long long longValue;
 				unsigned char stringValue[PUD_TX_NODEID_BUFFERSIZE];
+				unsigned char uuid[PUD_NODEIDTYPE_UUID_BYTES];
 				unsigned char mip[PUD_NODEIDTYPE_MIP_BYTES];
 		} buffer;
 } nodeIdBinaryType;
