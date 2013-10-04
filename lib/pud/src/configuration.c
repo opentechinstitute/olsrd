@@ -285,9 +285,10 @@ static bool intSetupNodeIdBinaryDoubleLongLong(
   /* part 1 */
 	if (node_id_len > 0) {
     unsigned char first[chars1 + 1];
+    int cpylen = node_id_len < chars1 ? node_id_len : chars1;
 
-    memcpy(first, node_id, chars1);
-    first[chars1] = '\0';
+    memcpy(first, node_id, cpylen);
+    first[cpylen] = '\0';
 
     if (!readULL(PUD_NODE_ID_NAME, (char *)first, &longValue1, base)) {
       return false;
@@ -295,7 +296,7 @@ static bool intSetupNodeIdBinaryDoubleLongLong(
 
     if ((longValue1 < min1) || (longValue1 > max1)) {
       pudError(false, "First %u character(s) of %s value %llu are out of range [%llu,%llu]",
-          chars1, PUD_NODE_ID_NAME, longValue1, min1, max1);
+          cpylen, PUD_NODE_ID_NAME, longValue1, min1, max1);
       return false;
     }
 	}
