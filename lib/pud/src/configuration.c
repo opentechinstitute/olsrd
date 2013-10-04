@@ -43,7 +43,7 @@ NodeIdType getNodeIdTypeNumber(void) {
 static int setNodeIdType(const char *value, const char * valueName) {
 	unsigned long long nodeIdTypeNew;
 
-	if (!readULL(valueName, value, &nodeIdTypeNew)) {
+	if (!readULL(valueName, value, &nodeIdTypeNew, 10)) {
 		return true;
 	}
 
@@ -226,7 +226,7 @@ static bool intSetupNodeIdBinaryMAC(void) {
 static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
     unsigned long long max, unsigned int bytes) {
   unsigned long long longValue = 0;
-  if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(NULL), &longValue)) {
+  if (!readULL(PUD_NODE_ID_NAME, (char *) getNodeId(NULL), &longValue, 10)) {
     return false;
   }
 
@@ -258,6 +258,8 @@ static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
  the maximum value of the second part
  @param bytes2
  the number of bytes of the second part in the buffer
+ @param base
+ the base of the number conversion: 10 for decimal, 16 for hexadecimal
 
  @return
  - true when ok
@@ -268,7 +270,8 @@ static bool intSetupNodeIdBinaryDoubleLongLong(
     unsigned long long min1, unsigned long long max1,
     unsigned int bytes1,
 		unsigned long long min2, unsigned long long max2,
-		unsigned int bytes2) {
+		unsigned int bytes2,
+		int base) {
 	unsigned long long longValue1 = 0;
 	unsigned long long longValue2 = 0;
 
@@ -286,7 +289,7 @@ static bool intSetupNodeIdBinaryDoubleLongLong(
     memcpy(first, node_id, chars1);
     first[chars1] = '\0';
 
-    if (!readULL(PUD_NODE_ID_NAME, (char *)first, &longValue1)) {
+    if (!readULL(PUD_NODE_ID_NAME, (char *)first, &longValue1, base)) {
       return false;
     }
 
@@ -299,7 +302,7 @@ static bool intSetupNodeIdBinaryDoubleLongLong(
 
   /* part 2 */
 	if (node_id_len > chars1) {
-    if (!readULL(PUD_NODE_ID_NAME, (char *)&node_id[chars1], &longValue2)) {
+    if (!readULL(PUD_NODE_ID_NAME, (char *)&node_id[chars1], &longValue2, base)) {
       return false;
     }
 
@@ -405,7 +408,8 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 			    PUD_NODEIDTYPE_MIP_MIN1, PUD_NODEIDTYPE_MIP_MAX1,
 			    PUD_NODEIDTYPE_MIP_BYTES1,
 			    PUD_NODEIDTYPE_MIP_MIN2, PUD_NODEIDTYPE_MIP_MAX2,
-			    PUD_NODEIDTYPE_MIP_BYTES - PUD_NODEIDTYPE_MIP_BYTES1);
+			    PUD_NODEIDTYPE_MIP_BYTES - PUD_NODEIDTYPE_MIP_BYTES1,
+			    10);
 
 		case PUD_NODEIDTYPE_192:
 			return intSetupNodeIdBinaryLongLong(PUD_NODEIDTYPE_192_MIN,
@@ -734,7 +738,7 @@ int setPositionFilePeriod(const char *value, void *data __attribute__ ((unused))
 
 	assert(value != NULL);
 
-	if (!readULL(valueName, value, &positionFilePeriodNew)) {
+	if (!readULL(valueName, value, &positionFilePeriodNew, 10)) {
 		return true;
 	}
 
@@ -1137,7 +1141,7 @@ int setUpdateIntervalStationary(const char *value, void *data __attribute__ ((un
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPDATE_INTERVAL_STATIONARY_NAME;
 
-	if (!readULL(valueName, value, &updateIntervalStationary)) {
+	if (!readULL(valueName, value, &updateIntervalStationary, 10)) {
 		return true;
 	}
 
@@ -1168,7 +1172,7 @@ int setUpdateIntervalMoving(const char *value, void *data __attribute__ ((unused
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPDATE_INTERVAL_MOVING_NAME;
 
-	if (!readULL(valueName, value, &updateIntervalMoving)) {
+	if (!readULL(valueName, value, &updateIntervalMoving, 10)) {
 		return true;
 	}
 
@@ -1199,7 +1203,7 @@ int setUplinkUpdateIntervalStationary(const char *value, void *data __attribute_
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_UPDATE_INTERVAL_STATIONARY_NAME;
 
-	if (!readULL(valueName, value, &uplinkUpdateIntervalStationary)) {
+	if (!readULL(valueName, value, &uplinkUpdateIntervalStationary, 10)) {
 		return true;
 	}
 
@@ -1230,7 +1234,7 @@ int setUplinkUpdateIntervalMoving(const char *value, void *data __attribute__ ((
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_UPLINK_UPDATE_INTERVAL_MOVING_NAME;
 
-	if (!readULL(valueName, value, &uplinkUpdateIntervalMoving)) {
+	if (!readULL(valueName, value, &uplinkUpdateIntervalMoving, 10)) {
 		return true;
 	}
 
@@ -1261,7 +1265,7 @@ int setGatewayDeterminationInterval(const char *value, void *data __attribute__ 
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_GATEWAY_DETERMINATION_INTERVAL_NAME;
 
-	if (!readULL(valueName, value, &gatewayDeterminationInterval)) {
+	if (!readULL(valueName, value, &gatewayDeterminationInterval, 10)) {
 		return true;
 	}
 
@@ -1290,7 +1294,7 @@ unsigned long long getMovingSpeedThreshold(void) {
 
 int setMovingSpeedThreshold(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_MOVING_SPEED_THRESHOLD_NAME, value, &movingSpeedThreshold);
+	return !readULL(PUD_MOVING_SPEED_THRESHOLD_NAME, value, &movingSpeedThreshold, 10);
 }
 
 /*
@@ -1310,7 +1314,7 @@ unsigned long long getMovingDistanceThreshold(void) {
 
 int setMovingDistanceThreshold(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_MOVING_DISTANCE_THRESHOLD_NAME, value, &movingDistanceThreshold);
+	return !readULL(PUD_MOVING_DISTANCE_THRESHOLD_NAME, value, &movingDistanceThreshold, 10);
 }
 
 /*
@@ -1350,7 +1354,7 @@ unsigned long long getDefaultHdop(void) {
 
 int setDefaultHdop(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_DEFAULT_HDOP_NAME, value, &defaultHdop);
+	return !readULL(PUD_DEFAULT_HDOP_NAME, value, &defaultHdop, 10);
 }
 
 /*
@@ -1370,7 +1374,7 @@ unsigned long long getDefaultVdop(void) {
 
 int setDefaultVdop(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_DEFAULT_VDOP_NAME, value, &defaultVdop);
+	return !readULL(PUD_DEFAULT_VDOP_NAME, value, &defaultVdop, 10);
 }
 
 /*
@@ -1392,7 +1396,7 @@ int setAverageDepth(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
 	static const char * valueName = PUD_AVERAGE_DEPTH_NAME;
 
-	if (!readULL(valueName, value, &averageDepth)) {
+	if (!readULL(valueName, value, &averageDepth, 10)) {
 		return true;
 	}
 
@@ -1421,7 +1425,7 @@ unsigned long long getHysteresisCountToStationary(void) {
 
 int setHysteresisCountToStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_HYSTERESIS_COUNT_2STAT_NAME, value, &hysteresisCountToStationary);
+	return !readULL(PUD_HYSTERESIS_COUNT_2STAT_NAME, value, &hysteresisCountToStationary, 10);
 }
 
 /*
@@ -1441,7 +1445,7 @@ unsigned long long getHysteresisCountToMoving(void) {
 
 int setHysteresisCountToMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_HYSTERESIS_COUNT_2MOV_NAME, value, &hysteresisCountToMoving);
+	return !readULL(PUD_HYSTERESIS_COUNT_2MOV_NAME, value, &hysteresisCountToMoving, 10);
 }
 
 /*
@@ -1461,7 +1465,7 @@ unsigned long long getGatewayHysteresisCountToStationary(void) {
 
 int setGatewayHysteresisCountToStationary(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_GAT_HYSTERESIS_COUNT_2STAT_NAME, value, &gatewayHysteresisCountToStationary);
+	return !readULL(PUD_GAT_HYSTERESIS_COUNT_2STAT_NAME, value, &gatewayHysteresisCountToStationary, 10);
 }
 
 /*
@@ -1481,7 +1485,7 @@ unsigned long long getGatewayHysteresisCountToMoving(void) {
 
 int setGatewayHysteresisCountToMoving(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_GAT_HYSTERESIS_COUNT_2MOV_NAME, value, &gatewayHysteresisCountToMoving);
+	return !readULL(PUD_GAT_HYSTERESIS_COUNT_2MOV_NAME, value, &gatewayHysteresisCountToMoving, 10);
 }
 
 /*
@@ -1521,7 +1525,7 @@ unsigned long long getDeDupDepth(void) {
 
 int setDeDupDepth(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
-	return !readULL(PUD_DEDUP_DEPTH_NAME, value, &deDupDepth);
+	return !readULL(PUD_DEDUP_DEPTH_NAME, value, &deDupDepth, 10);
 }
 
 /*
