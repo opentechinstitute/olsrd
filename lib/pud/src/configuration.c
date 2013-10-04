@@ -313,6 +313,12 @@ static bool intSetupNodeIdBinaryDoubleLongLong(
           (unsigned int)(node_id_len - chars1), PUD_NODE_ID_NAME, longValue2, min2, max2);
       return false;
     }
+  } else {
+    /* longvalue1 is the only value, so it is the least significant value:
+     * exchange the 2 values */
+    unsigned long long tmp = longValue1;
+    longValue1 = longValue2;
+    longValue2 = tmp;
   }
 
 	return setupNodeIdBinaryDoubleLongLong(&nodeIdBinary,
