@@ -266,6 +266,7 @@ static bool intSetupNodeIdBinaryLongLong(unsigned long long min,
  - false on failure
  */
 static bool intSetupNodeIdBinaryDoubleLongLong(
+    unsigned char * dst,
     unsigned int chars1,
     unsigned long long min1, unsigned long long max1,
     unsigned int bytes1,
@@ -315,8 +316,8 @@ static bool intSetupNodeIdBinaryDoubleLongLong(
   }
 
 	return setupNodeIdBinaryDoubleLongLong(&nodeIdBinary,
-	    longValue1, (unsigned char *)&nodeIdBinary.buffer.mip[0], bytes1,
-	    longValue2, (unsigned char *)&nodeIdBinary.buffer.mip[bytes1], bytes2);
+	    longValue1, &dst[0], bytes1,
+	    longValue2, &dst[bytes1], bytes2);
 }
 
 /**
@@ -405,6 +406,7 @@ static bool setupNodeIdBinaryAndValidate(NodeIdType nodeIdTypeNumber) {
 
 		case PUD_NODEIDTYPE_MIP: /* a MIP OID number */
 			return intSetupNodeIdBinaryDoubleLongLong(
+			    &nodeIdBinary.buffer.mip[0],
 			    PUD_NODEIDTYPE_MIP_CHARS1,
 			    PUD_NODEIDTYPE_MIP_MIN1, PUD_NODEIDTYPE_MIP_MAX1,
 			    PUD_NODEIDTYPE_MIP_BYTES1,
