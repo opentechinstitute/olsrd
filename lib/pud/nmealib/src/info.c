@@ -54,7 +54,7 @@ void nmea_time_now(nmeaTIME *utc, uint32_t * present) {
 	utc->sec = tt.tm_sec;
 	utc->hsec = (tp.tv_usec / 10000);
 	if (present) {
-		*present |= (UTCDATE | UTCTIME);
+	  nmea_INFO_set_present(present, UTCDATE | UTCTIME);
 	}
 }
 
