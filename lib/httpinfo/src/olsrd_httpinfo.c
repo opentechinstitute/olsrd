@@ -1191,6 +1191,73 @@ static void build_pud_body(struct autobuf *abuf) {
 	}
 	abuf_puts(abuf, "</td></tr>\n");
 
+	/* present */
+	abuf_puts(abuf, "<tr><td>Input Fields</td><td></td><td></td><td></td><td id=\"present\">");
+	if (txGpsInfo->txPosition.nmeaInfo.present != 0) {
+    const int id[] = {
+        SMASK,
+        UTCDATE,
+        UTCTIME,
+        SIG,
+        FIX,
+        PDOP,
+        HDOP,
+        VDOP,
+        LAT,
+        LON,
+        ELV,
+        SPEED,
+        TRACK,
+        MTRACK,
+        MAGVAR,
+        SATINUSECOUNT,
+        SATINUSE,
+        SATINVIEW,
+        0 };
+		const char * ids[] = {
+        "SMASK",
+        "UTCDATE",
+        "UTCTIME",
+        "SIG",
+        "FIX",
+        "PDOP",
+        "HDOP",
+        "VDOP",
+        "LAT",
+        "LON",
+        "ELV",
+        "SPEED",
+        "TRACK",
+        "MTRACK",
+        "MAGVAR",
+        "SATINUSECOUNT",
+        "SATINUSE",
+        "SATINVIEW" };
+		bool printed = false;
+		int i = 0;
+		int count = 0;
+
+		while (id[i] != 0) {
+			if (txGpsInfo->txPosition.nmeaInfo.present & id[i]) {
+				if (printed) {
+				  if (count >= 8) {
+				    abuf_puts(abuf, "<br/>");
+				    count = 0;
+				  } else {
+				    abuf_puts(abuf, "&nbsp;");
+				  }
+				}
+				abuf_puts(abuf, ids[i]);
+				count++;
+				printed = true;
+			}
+			i++;
+		}
+	} else {
+		abuf_puts(abuf, NA_STRING);
+	}
+	abuf_puts(abuf, "</td></tr>\n");
+
 	/* smask */
 	abuf_puts(abuf, "<tr><td>Input Sentences</td><td></td><td></td><td></td><td id=\"smask\">");
 	if (nmea_INFO_is_present_local(txGpsInfo->txPosition.nmeaInfo.present, SMASK)
