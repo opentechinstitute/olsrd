@@ -678,7 +678,6 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 #ifdef INCLUDE_DEBUG_OUTPUT
       OLSR_PRINTF(1,"%s: NON SOURCE PACKET\n", PLUGIN_NAME_SHORT);
 #endif
-      olsr_p2pd_gen(encapsulationUdpData, nBytes, NULL);
       return;
     }
 
@@ -699,8 +698,12 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
       return;
     }
 
-    if (check_and_mark_recent_packet(encapsulationUdpData, nBytes))
+    if (check_and_mark_recent_packet(encapsulationUdpData, nBytes)) {
+#ifdef INCLUDE_DEBUG_OUTPUT
+      OLSR_PRINTF(1, "%s: Recent packet\n", PLUGIN_NAME_SHORT);
+#endif 
       return;
+    }
 
     udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData +
                                   GetIpHeaderLength(encapsulationUdpData)));
@@ -722,7 +725,6 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
       OLSR_PRINTF(1, "%s: Error getting ipv4 dns packet\n", PLUGIN_NAME_SHORT);
 #endif
       ldns_pkt_free(p);
-      olsr_p2pd_gen(encapsulationUdpData, nBytes, NULL);
       return;
     }
     
@@ -745,7 +747,6 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 #ifdef INCLUDE_DEBUG_OUTPUT
       OLSR_PRINTF(1,"%s: NON SOURCE PACKET\n", PLUGIN_NAME_SHORT);
 #endif
-      olsr_p2pd_gen(encapsulationUdpData, nBytes, NULL);
       return;
     }
 
@@ -753,11 +754,16 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     {
       //Continue
     } else {
+#ifdef INCLUDE_DEBUG_OUTPUT
+      OLSR_PRINTF(1, "%s: IPv4 non-multicast\n", PLUGIN_NAME_SHORT);
+#endif
       return;                   //not multicast
     }
     if (ipHeader6->ip6_nxt != SOL_UDP) {
       /* Not UDP */
-      //OLSR_PRINTF(1,"%s: NON UDP PACKET\n", PLUGIN_NAME_SHORT);
+#ifdef INCLUDE_DEBUG_OUTPUT
+      OLSR_PRINTF(1,"%s: NON UDP PACKET\n", PLUGIN_NAME_SHORT);
+#endif
       return;                   /* for */
     }
 
@@ -769,8 +775,12 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
       return;
     }
 
-    if (check_and_mark_recent_packet(encapsulationUdpData, nBytes))
+    if (check_and_mark_recent_packet(encapsulationUdpData, nBytes)) {
+#ifdef INCLUDE_DEBUG_OUTPUT
+      OLSR_PRINTF(1, "%s: Recent packet\n", PLUGIN_NAME_SHORT);
+#endif 
       return;
+    }
 
     udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData + IPV6_HEADER_LENGTH));
     destPort = ntohs(udpHeader->dest);
@@ -791,15 +801,17 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
       OLSR_PRINTF(1, "%s: Error getting ipv6 dns packet\n", PLUGIN_NAME_SHORT);
 #endif
       ldns_pkt_free(p);
-      olsr_p2pd_gen(encapsulationUdpData, nBytes, NULL);
       return;
     }
     
   }                             //END IPV6
   else {
+#ifdef INCLUDE_DEBUG_OUTPUT
+      OLSR_PRINTF(1, "%s: Not IPv4 or IPv6\n", PLUGIN_NAME_SHORT);
+#endif 
     return;                     //Is not IP packet
   }
-
+  
   // do the magic here:
   
   // go through RR sections of mDNS packets, and yank out ones that represent local services
@@ -1148,7 +1160,6 @@ DoP2pd(int skfd,
 #endif
 
     if (nBytes < 0) {
-
       return;                   /* for */
     }
 
@@ -1165,16 +1176,12 @@ DoP2pd(int skfd,
       //              "%s: captured frame too short (%d bytes) on \"%s\"\n",
       //              PLUGIN_NAME_SHORT,
       //              nBytes,
-      //              walker->ifName);
-
       return;                   /* for */
     }
 
-    if (pktAddr.sll_pkttype == PACKET_OUTGOING ||
-        pktAddr.sll_pkttype == PACKET_MULTICAST ||
-        pktAddr.sll_pkttype == PACKET_BROADCAST) {
+    if (pktAddr.sll_pkttype == PACKET_MULTICAST) {
 #ifdef INCLUDE_DEBUG_OUTPUT
-      OLSR_PRINTF(1, "%s: Multicast or broadcast packet was captured.\n",
+      OLSR_PRINTF(1, "%s: Multicast packet was captured.\n",
                   PLUGIN_NAME_SHORT);
       dump_packet(ipPacket, nBytes);
 #endif
