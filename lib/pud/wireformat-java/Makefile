@@ -43,7 +43,7 @@ SHAREJAVADIR ?= $(SHAREDIR)/java/$(EXENAME)
 
 MACHINE=$(shell uname -m)
 ARCH=
-ARCH2=
+ARCH2=-i386
 ifeq ($(strip $(MACHINE)),x86_64)
   ARCH=.$(MACHINE)
   ARCH2=-amd64
