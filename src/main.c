@@ -336,7 +336,7 @@ int main(int argc, char *argv[]) {
       olsrd_version, build_date, build_host);
 
   if (argc == 2) {
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "/?") == 0) {
+    if ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "/?") == 0)) {
       print_usage(false);
       exit(0);
     }
