@@ -179,7 +179,7 @@ static int olsr_create_lock_file(bool noExitOnFail) {
 
   /* create file for lock */
   lock_fd = open(lock_file_name, O_WRONLY | O_CREAT, S_IRWXU);
-  if (lock_fd == 0) {
+  if (lock_fd < 0) {
     if (noExitOnFail) {
       return -1;
     }
