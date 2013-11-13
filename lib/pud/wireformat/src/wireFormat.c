@@ -257,55 +257,29 @@ void setPositionUpdateVersion(
 }
 
 /**
- Get the smask of the position update message
+ Get the presence field of the position update message
 
  @param olsrGpsMessage
  A pointer to the position update message
  @return
- The smask of the position update message
+ The presence field of the position update message
  */
-uint8_t getPositionUpdateSmask(
+uint32_t getPositionUpdatePresent(
 		PudOlsrPositionUpdate * olsrGpsMessage) {
-	return olsrGpsMessage->smask;
+	return ntohl(olsrGpsMessage->present);
 }
 
 /**
- Set the smask of the position update message
+ Set the presence field of the position update message
 
  @param olsrGpsMessage
  A pointer to the position update message
- @param smask
- The smask of the position update message
+ @param present
+ The presence field of the position update message
  */
-void setPositionUpdateSmask(
-		PudOlsrPositionUpdate * olsrGpsMessage, uint8_t smask) {
-	olsrGpsMessage->smask = smask;
-}
-
-/**
- Get the flags of the position update message
-
- @param olsrGpsMessage
- A pointer to the position update message
- @return
- The flags of the position update message
- */
-uint8_t getPositionUpdateFlags(
-		PudOlsrPositionUpdate * olsrGpsMessage) {
-	return olsrGpsMessage->flags;
-}
-
-/**
- Set the flags of the position update message
-
- @param olsrGpsMessage
- A pointer to the position update message
- @param flags
- The flags of the position update message
- */
-void setPositionUpdateFlags(
-		PudOlsrPositionUpdate * olsrGpsMessage, uint8_t flags) {
-	olsrGpsMessage->flags = flags;
+void setPositionUpdatePresent(
+		PudOlsrPositionUpdate * olsrGpsMessage, uint32_t present) {
+	olsrGpsMessage->present = htonl(present);
 }
 
 /*
@@ -656,7 +630,7 @@ void setPositionUpdateHdop(PudOlsrPositionUpdate * olsrGpsMessage,
  */
 NodeIdType getPositionUpdateNodeIdType(int ipVersion,
 		PudOlsrPositionUpdate * olsrGpsMessage) {
-	if (getPositionUpdateFlags(olsrGpsMessage) & PUD_FLAGS_ID) {
+	if (getPositionUpdatePresent(olsrGpsMessage) & PUD_PRESENT_ID) {
 		return olsrGpsMessage->nodeInfo.nodeIdType;
 	}
 
@@ -791,7 +765,7 @@ void setPositionUpdateNodeId(
 /**
  Convert the node information to the node information for an OLSR message and
  put it in the PUD message in the OLSR message. Also updates the PUD message
- smask to signal whether or not an ID is in the message.
+ presence field to signal whether or not an ID is in the message.
 
  @param ipVersion
  The IP version (AF_INET or AF_INET6)
@@ -862,8 +836,8 @@ size_t setPositionUpdateNodeInfo(int ipVersion,
 		return 0;
 	}
 
-	setPositionUpdateFlags(olsrGpsMessage,
-			getPositionUpdateFlags(olsrGpsMessage) | PUD_FLAGS_ID);
+	setPositionUpdatePresent(olsrGpsMessage,
+			getPositionUpdatePresent(olsrGpsMessage) | PUD_PRESENT_ID);
 	return ((sizeof(NodeInfo)
 			- (sizeof(olsrGpsMessage->nodeInfo.nodeId) /* nodeId placeholder */))
 			+ length);
