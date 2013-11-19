@@ -5,7 +5,9 @@
 # Required-Stop:     $network $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: /etc/init.d/olsrd: start olsrd
+# Short-Description: Start the OLSR mesh daemon
+# Description:       System mode startup script for
+#                    the olsr.org OLSR mesh daemon.
 ### END INIT INFO
 
 #		Based on skeleton script written by Miquel van Smoorenburg <miquels@cistron.nl>.
@@ -18,6 +20,7 @@
 # modified:     01-Aug-2007
 # 	        31-Jun-2008
 #		30-May-2009
+#       02-Oct-2012
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/olsrd
@@ -38,7 +41,7 @@ set -e
 case "$1" in
   debug)
 	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --exec $DAEMON --pidfile $PID_FILE -- $DAEMON_OPTS &
+	start-stop-daemon --start --quiet --exec $DAEMON --pidfile $PID_FILE -- $DAEMON_OPTS
 	# sleep til olsrd has been started
 	while ! pidof $NAME > /dev/null ; do 
 	  sleep 1
@@ -47,13 +50,20 @@ case "$1" in
 	echo $(pidof $NAME) > $PID_FILE
 	;;
   start)
-	if [ "$START_OLSRD" != "YES" ] ; then exit 0 ; fi
-	if [ $(pidof $NAME) -eq 0 ] ; then 
+	if [ "$START_OLSRD" != "YES" ] ; then 
+		echo "START_OLSRD not set in /etc/default/olsrd; exiting..."
+		exit 0
+	fi
+	if [ "$SETUP_ADHOC" = "YES" ] ; then
+		test -x /usr/sbin/olsrd-adhoc-setup && \
+			/usr/sbin/olsrd-adhoc-setup $MESH_IF $channel $ssid $bssid
+	fi
+	if [ "$(pidof $NAME)" != "" ] ; then 
 		echo "$NAME already running, doing nothing."
 		exit 0
 	fi
 	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --exec $DAEMON --pidfile $PID_FILE -- $DAEMON_OPTS &
+	start-stop-daemon --start --quiet --exec $DAEMON --pidfile $PID_FILE -- $DAEMON_OPTS
 	# sleep til olsrd has been started
 	while ! pidof $NAME > /dev/null ; do 
 	  sleep 1
