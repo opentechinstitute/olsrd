@@ -1,0 +1,5 @@
+110-build_fix.patch
+111-build-mips-and-armhf.patch
+260-quagga-plugin-detect-protocol-version.patch
+290-hardcode-etc-olsrd-olsrd-conf.patch
+310-hardening-fixes.patch

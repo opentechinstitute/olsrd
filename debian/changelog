@@ -1,23 +1,133 @@
-olsrd (0.6.1-1) UNRELEASED; urgency=low
+olsrd (0.6.5.4-1) experimental; urgency=low
 
+  * Added Commotion plugins: dnssd, mdp
+
+ -- Dan Staples <danstaples@opentechinstitute.org>  Fri, 06 Sep 2013 09:58:00 -0400
+
+olsrd (0.6.5.2-1~) experimental; urgency=low
+
+  * New upstream release
+  * remove patches that have been included or obsoleted upstream
+  * update build process based on upstream changes
+
+ -- Hans-Christoph Steiner <hans@eds.org>  Mon, 01 Apr 2013 22:39:25 -0700
+
+olsrd (0.6.3-6) unstable; urgency=low
+
+  * include upstream fix for brokenness on amd64 (Closes: #704025)
+
+ -- Hans-Christoph Steiner <hans@eds.org>  Wed, 27 Mar 2013 14:46:23 -0700
+
+olsrd (0.6.3-5) unstable; urgency=low
+
+  * fixed build system so all hardening flags are applied
+  * fixed some lintian warnings
+  * make tas plugin build against Debian's lua rather than the lua sources
+    that are included in the olsrd orig tarball
+
+ -- Hans-Christoph Steiner <hans@eds.org>  Fri, 05 Oct 2012 17:38:02 -0400
+
+olsrd (0.6.3-4) unstable; urgency=low
+
+  * debian/rules: Drop OS=linux from the make call, fixing FTBFS on !linux,
+    thanks to Evgeni Golov (Closes: #679761)
+
+ -- Roland Stigge <stigge@antcom.de>  Fri, 06 Jul 2012 18:58:27 +0200
+
+olsrd (0.6.3-3) unstable; urgency=low
+
+  * update broken jsoninfo plugin with patches from upstream git
+  * updated default config based on settings from funkfeuer and
+    commotionwireless.net
+
+ -- Hans-Christoph Steiner <hans@eds.org>  Sat, 30 Jun 2012 09:57:55 -0400
+
+olsrd (0.6.3-2) unstable; urgency=low
+
+  * Re-upload to unstable
+
+ -- Roland Stigge <stigge@antcom.de>  Sun, 24 Jun 2012 18:00:24 +0200
+
+olsrd (0.6.3-1) experimental; urgency=low
+
+  * New upstream release
+  * debian/control: Standards-Version: 3.9.3
+
+ -- Roland Stigge <stigge@antcom.de>  Fri, 08 Jun 2012 12:30:36 +0200
+
+olsrd (0.6.2-2) unstable; urgency=low
+
+  * debian/control: Build-Depends: debhelper (>= 9) (Closes: #658330)
+  * Integrated patches by Hans-Christoph Steiner:
+    - Added olsrd-gui (Closes: #658329)
+    - debian/control: Recommends: olsrd-plugins (Closes: #658557)
+    - Fix *.d clean problem (Closes: #658559)
+    - Added olsr_switch (Closes: #658560)
+    - Fix conffile location to /etc/olsrd/olsrd.conf (Closes: #658561)
+
+    Thanks Hans-Christoph!
+
+ -- Roland Stigge <stigge@antcom.de>  Sun, 19 Feb 2012 16:14:34 +0100
+
+olsrd (0.6.2-1) unstable; urgency=low
+
+  * New upstream release (repackaged and cleaned from debian/ dir)
+  * Adjusted patches to upstream tarball
+  * Removing obsolete options LinkQualityDijkstraLimit and LinkQualityWinSize
+    from default configuration file (Closes: #652690)
+
+ -- Roland Stigge <stigge@antcom.de>  Sun, 01 Jan 2012 23:20:20 +0100
+
+olsrd (0.6.1-5) unstable; urgency=low
+
+  * dh style debian/rules
+  * debian/compat: 9, exports dpkg-buildflags (Closes: #643472)
+
+ -- Roland Stigge <stigge@antcom.de>  Sun, 02 Oct 2011 14:59:17 +0200
+
+olsrd (0.6.1-4) unstable; urgency=low
+
+  * Added debian/watch
+
+ -- Roland Stigge <stigge@antcom.de>  Mon, 01 Aug 2011 21:54:18 +0200
+
+olsrd (0.6.1-3) unstable; urgency=low
+
+  * Added armv7l to arch list for -fPIC in make/Makefile.linux
+    (Closes: #636205)
+
+ -- Roland Stigge <stigge@antcom.de>  Mon, 01 Aug 2011 21:23:31 +0200
+
+olsrd (0.6.1-2) unstable; urgency=low
+
+  * Add patch to upstream to add mips and mips64 to -fPIC arch list
+    (fixes FTBFS on mips*)
+
+ -- Roland Stigge <stigge@antcom.de>  Sat, 07 May 2011 13:11:27 +0200
+
+olsrd (0.6.1-1) unstable; urgency=low
+
+  [ Holger Levsen ]
   * New upstream version with quite some fixes and new features, see upstream
     changelog for details. Quoting from there:
      Change in version number system. No more -rcX for release candidates and
      -rX for bugfix releases. In future bugfix releases or updates of plugins
      will increase the third digit of the version string while feature 
      releases will increase the first and/or the second one.
-   Removed the following patches from series trying to make it build again:
-   - 100-debug_level.patch
-   - 240-plugin-install-targets.patch
-   - 260-quagga-plugin-detect-protocol-version.patch
-   - 270-make-kfbsd.patch
-   
-  THIS IS WORK IN PROGRESS and needs checking whether those patches are still
-  needed. Also 0.6.1 is out.
+  * Update package description, OLSR is no experimental protocol anymore.
 
-  * Update package description, OLSR is no experimental protocol anymore. 
+  [ Roland Stigge ]
+  * New maintainer (Closes: #612277)
+  * Adjusted debian patches to work with 0.6.1
+  * debian/control:
+    - Standards-Version: 3.9.2
+    - Build-Depends: debhelper (>=8)
+  * Debian source format: 3.0 (quilt)
+  * Included remaining plugins
+  * New upstream version works with newer kernels (Closes: #605296)
+  * New upstream version fixes memory leak (Closes: #605295)
 
- -- Holger Levsen <holger@debian.org>  Fri, 21 May 2010 23:47:52 +0200
+ -- Roland Stigge <stigge@antcom.de>  Tue, 03 May 2011 15:30:56 +0200
 
 olsrd (0.5.6-r8-1) unstable; urgency=low
 
