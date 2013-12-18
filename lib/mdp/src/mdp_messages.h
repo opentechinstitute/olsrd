@@ -53,7 +53,7 @@
 
 #define HAVE_ARPA_INET_H
 #include <serval.h>
-#include <crypto.h>
+#include <serval/crypto.h>
 
 #include "olsr_types.h"
 #include "interfaces.h"

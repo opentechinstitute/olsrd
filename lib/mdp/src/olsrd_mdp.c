@@ -61,6 +61,9 @@
 #include "parser.h"
 #include "scheduler.h"
 #include "net_olsr.h"
+
+#include <commotion.h>
+
 #define CHECKSUM mdp_checksum
 #define SCHEME   MDP_INCLUDING_KEY
 
@@ -85,7 +88,17 @@
 #define OS "Undefined"
 #endif /* OS */
 
+#define CLEAN_ERRNO() (errno == 0 ? "None" : strerror(errno))
+#define ERROR(M, ...) olsr_printf(1, "(%s:%d: errno: %s) " M "\n", __FILE__, __LINE__, CLEAN_ERRNO(), ##__VA_ARGS__)
+#define CHECK(A, M, ...) if(!(A)) { ERROR(M, ##__VA_ARGS__); errno=0; goto error; }
+#define CHECKF(A, M, ...) if(!(A)) { ERROR(M, ##__VA_ARGS__); exit(1); }
+#define CHECK_MEM(A) CHECK((A), "Out of memory.")
+#define CHECKF_MEM(A) CHECKF((A), "Out of memory.")
+#define CO_APPEND_STR(R,S) CHECKF(co_request_append_str(co_req,S,strlen(S)+1),"Failed to append to request")
+#define CO_APPEND_BIN(R,S,L) CHECK(co_request_append_bin(co_req,(char*)S,L),"Failed to append to request")
+
 static struct timeval now;
+co_obj_t *co_conn = NULL, *co_req = NULL, *co_resp = NULL;
 
 /* Timestamp node */
 struct stamp {
@@ -127,7 +140,7 @@ static char *secure_preprocessor(char *packet, struct interface *olsr_if, union 
 static void timeout_timestamps(void *);
 static int check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *, TIME_TYPE);
 static struct stamp *lookup_timestamp_entry(const union olsr_ip_addr *);
-static int read_key_from_servald(const char *);
+static int read_key_from_servald(const char *, const char *);
 
 static void
 print_data(const char *label, const uint8_t *data, size_t len)
@@ -146,20 +159,26 @@ print_data(const char *label, const uint8_t *data, size_t len)
 }
 
 static void
-mdp_checksum(uint8_t *data, const uint16_t data_len, uint8_t *hashbuf)
+mdp_checksum(uint8_t *data, const uint16_t data_len, uint8_t *sigbuf)
 {
-  int signature_bytes = SIGNATURE_BYTES;
-  print_data("Key", servald_key, servald_key_len);
-  print_data("Data", data, data_len);
-
-  if (!crypto_create_signature(servald_key, data, data_len, hashbuf, &signature_bytes)) 
-  {
-    print_data("signature", hashbuf, signature_bytes);
-  }
-  else
-  {
-    olsr_printf(1, "[MDP] Error creating checksum!\n");
-  }
+  unsigned char *sig = NULL;
+  size_t sig_len = 0;
+  
+  assert(co_conn);
+  CHECK_MEM((co_req = co_request_create()));
+  CO_APPEND_BIN(co_req,servald_key,servald_key_len);
+  CO_APPEND_BIN(co_req,data,data_len);
+  CHECK(co_call(co_conn,&co_resp,"mdp-sign",sizeof("mdp-sign"),co_req) && 
+  (sig_len = co_response_get_bin(co_resp,(char**)&sig,"sig",sizeof("sig"))),"Failed to receive signature from commotiond");
+  
+  CHECK_MEM(memcpy(sigbuf,sig,sig_len));
+  
+  co_free(co_req);
+  co_free(co_resp);
+  
+  print_data("signature", sigbuf, sig_len);
+  
+error:
   return;
 }
 
@@ -182,21 +201,15 @@ mdp_plugin_init(void)
   }
   olsr_printf(3, "Timestamp database initialized\n");
 
-  if (!strlen(config_sid)) {
-    olsr_printf(1, "[MDP] Must set a SID (sid) for this plugin to work.\n\n");
-    exit(1);
-  }
+  CHECKF(strlen(config_sid),"[MDP] Must set a SID (sid) for this plugin to work.\n\n");
 
-  if (!strlen(config_instancepath)) {
-    olsr_printf(1, "[MDP] Must set a Serval instance path (servalpath) for this plugin to work.\n\n");
-    exit(1);
-  }
+  CHECKF(strlen(config_instancepath),"[MDP] Must set a Serval instance path (servalpath) for this plugin to work.\n\n");
+  
+  CHECKF(co_init() == 1,"Failed to initialize Commotion client\n\n");
+  
+  CHECKF((co_conn = co_connect(CO_SOCK,sizeof(CO_SOCK))),"Failed to connect to Commotion socket\n\n");
 
-  serval_setinstancepath(config_instancepath);
-  if (read_key_from_servald(config_sid)) {
-    olsr_printf(1, "[MDP] Could not read key from servald sid!\nExiting!\n\n");
-    exit(1);
-  }
+  CHECKF(read_key_from_servald(config_instancepath, config_sid) == 0,"[MDP] Could not read key from servald sid!\nExiting!\n\n");
 
   /* Register the packet transform function */
   add_ptf(&add_signature);
@@ -221,6 +234,7 @@ plugin_ipc_init(void)
 void
 mdp_plugin_exit(void)
 {
+  co_shutdown();
   olsr_preprocessor_remove_function(&secure_preprocessor);
 }
 
@@ -1077,49 +1091,24 @@ timeout_timestamps(void *foo __attribute__ ((unused)))
 }
 
 static int 
-read_key_from_servald(const char *sid)
+read_key_from_servald(const char *instance_path, const char *sid)
 {
-  unsigned char stowedSid[SID_SIZE];
-  unsigned char *found_private_key = NULL;
-  int found_private_key_len = 0;
-  int cn = 0, in = 0, kp = 0;
- 
-  keyring = keyring_open_instance();
-  keyring_enter_pin(keyring, NULL);
-  stowSid(stowedSid, 0, sid);
+  char *output = NULL;
   
-  if (!keyring_find_sid(keyring, &cn, &in, &kp, stowedSid))
-  {
-    olsr_printf(1, "[MDP] sid not found\n");
-    return -1;
-  }
-
-  for (kp = 0; kp < keyring->contexts[cn]->identities[in]->keypair_count; kp++)
-  {
-    if (keyring->contexts[cn]->identities[in]->keypairs[kp]->type==KEYTYPE_CRYPTOSIGN)
-    {
-      found_private_key = 
-        keyring->contexts[cn]->identities[in]->keypairs[kp]->private_key;
-      found_private_key_len = 
-        keyring->contexts[cn]->identities[in]->keypairs[kp]->private_key_len;
-    }
-  }
-
-  if (!found_private_key)
-  {
-    olsr_printf(1, "[MDP] Key for sid not found!\n");
-    keyring_free(keyring);
-    return -1;
-  }
-
-  servald_key = (unsigned char *)calloc(found_private_key_len, sizeof(unsigned char));
-  memcpy(servald_key, found_private_key, found_private_key_len);
-  servald_key_len = found_private_key_len;
-
+  assert(co_conn);
+  CHECKF_MEM((co_req = co_request_create()));
+  CO_APPEND_STR(co_req,instance_path);
+  CO_APPEND_STR(co_req,sid);
+  CHECKF(co_call(co_conn,&co_resp,"mdp-init",sizeof("mdp-init"),co_req) && 
+  (servald_key_len = co_response_get_bin(co_resp,&output,"key",sizeof("key"))),"Failed to receive signing key from commotiond");
+  servald_key = (unsigned char *)calloc(servald_key_len, sizeof(unsigned char));
+  memcpy(servald_key, output, servald_key_len);
+  co_free(co_req);
+  co_free(co_resp);
+  
   olsr_printf(3, "[MDP] servald_key_len: %d\n", servald_key_len);
   print_data("servald_key", servald_key, servald_key_len);
 
-  keyring_free(keyring);
   return 0;
 }
 

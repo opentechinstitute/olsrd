@@ -52,12 +52,14 @@
 
 #define HAVE_ARPA_INET_H
 #include <serval.h>
-#include <crypto.h>
-#include <str.h>
+#include <serval/crypto.h>
+#include <serval/str.h>
 
 #include "mdp_messages.h"
 
 #include "hashing.h"
+
+#define CO_SOCK "/var/commotion/commotiond.sock"
 
 /* Schemes */
 #define ONE_CHECKSUM          1

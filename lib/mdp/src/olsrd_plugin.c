@@ -47,9 +47,10 @@
 
 #define HAVE_ARPA_INET_H
 
+#include <commotion.h>
 #include <serval.h>
-#include <str.h>
-#include <crypto.h>
+#include <serval/str.h>
+#include <serval/crypto.h>
 
 #define PLUGIN_NAME    "OLSRD MDP signature plugin"
 #define PLUGIN_VERSION "0.1"

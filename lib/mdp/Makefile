@@ -47,7 +47,7 @@ SERVALD_ROOT?=/usr/include/serval
 SERVALD_LIB_ROOT?=/usr/lib
 
 CPPFLAGS+=-I$(SERVALD_ROOT)/ -I$(SERVALD_ROOT)/nacl/include -DHAVE_BCOPY
-LIBS+=-L$(SERVALD_LIB_ROOT) -lservald
+LIBS+= -lcommotion
 
 default_target: $(PLUGIN_FULLNAME)
 
