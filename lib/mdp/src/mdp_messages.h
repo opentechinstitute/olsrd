@@ -52,8 +52,6 @@
 #include <stdio.h>
 
 #define HAVE_ARPA_INET_H
-#include <serval.h>
-#include <serval/crypto.h>
 
 #include "olsr_types.h"
 #include "interfaces.h"
@@ -67,6 +65,11 @@
 #define TYPE_CHALLENGE 11
 #define TYPE_CRESPONSE 12
 #define TYPE_RRESPONSE 13
+
+#define SID_STRLEN (SID_SIZE*2)
+#define SID_SIZE 32
+#define SAS_SIZE 32
+#define SIGNATURE_BYTES 64
 
 extern char config_sid[SID_STRLEN + 1];
 extern char config_instancepath[FILENAME_MAX + 1];

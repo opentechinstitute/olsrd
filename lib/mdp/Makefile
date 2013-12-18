@@ -43,10 +43,6 @@ PLUGIN_VER =	0.1
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-SERVALD_ROOT?=/usr/include/serval
-SERVALD_LIB_ROOT?=/usr/lib
-
-CPPFLAGS+=-I$(SERVALD_ROOT)/ -I$(SERVALD_ROOT)/nacl/include -DHAVE_BCOPY
 LIBS+= -lcommotion
 
 default_target: $(PLUGIN_FULLNAME)

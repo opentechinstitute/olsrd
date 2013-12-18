@@ -51,9 +51,6 @@
 #include <sys/socket.h>
 
 #define HAVE_ARPA_INET_H
-#include <serval.h>
-#include <serval/crypto.h>
-#include <serval/str.h>
 
 #include "mdp_messages.h"
 

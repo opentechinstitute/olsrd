@@ -19,8 +19,6 @@ NOTES
 
 COMPILING
 
-  To compile edit the SERVALD_ROOT variable to point 
-  to the serval-dna directory. Then, simply run make.
   # make
 
 INSTALLING
@@ -42,6 +40,6 @@ LoadPlugin "olsrd_mdp.so.0.1"
     PlParam     "servalpath"   "<Serval Instance Path>"
 }
 
-  The plugin uses this public key of sid for signature
+  The plugin uses this public key of SID for signature
   generation and verification. For nodes to participate 
   in the OLSR routing domain they need to use the same SID.
