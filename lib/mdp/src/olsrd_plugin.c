@@ -103,7 +103,7 @@ static int
 store_filename(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   char *str = data;
-  snprintf(str, FILENAME_MAX + 1, "%s", value);
+  snprintf(str, PATH_MAX + 1, "%s", value);
   return 0;
 }
 

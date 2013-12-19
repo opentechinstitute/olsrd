@@ -47,6 +47,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <limits.h>
 #include <time.h>
 #include <math.h>
 #include <stdio.h>
@@ -72,8 +73,8 @@
 #define SIGNATURE_BYTES 64
 
 extern char config_sid[SID_STRLEN + 1];
-extern char config_instancepath[FILENAME_MAX + 1];
-extern char config_commotionsock[FILENAME_MAX + 1];
+extern char config_instancepath[PATH_MAX + 1];
+extern char config_commotionsock[PATH_MAX + 1];
 
 #define SIGSIZE SIGNATURE_BYTES
 

@@ -121,9 +121,9 @@ struct stamp {
 
 static struct stamp timestamps[HASHSIZE];
 
-char config_instancepath[FILENAME_MAX + 1] = {0};
+char config_instancepath[PATH_MAX + 1] = {0};
 char config_sid[SID_STRLEN + 1] = {0};
-char config_commotionsock[FILENAME_MAX + 1] = {0};
+char config_commotionsock[PATH_MAX + 1] = {0};
 unsigned char *servald_key;
 int servald_key_len;
 
