@@ -121,8 +121,9 @@ struct stamp {
 
 static struct stamp timestamps[HASHSIZE];
 
-char config_instancepath[FILENAME_MAX + 1];
-char config_sid[SID_STRLEN + 1];
+char config_instancepath[FILENAME_MAX + 1] = {0};
+char config_sid[SID_STRLEN + 1] = {0};
+char config_commotionsock[FILENAME_MAX + 1] = {0};
 unsigned char *servald_key;
 int servald_key_len;
 
@@ -207,7 +208,10 @@ mdp_plugin_init(void)
   
   CHECKF(co_init() == 1,"Failed to initialize Commotion client\n\n");
   
-  CHECKF((co_conn = co_connect(CO_SOCK,sizeof(CO_SOCK))),"Failed to connect to Commotion socket\n\n");
+  if (!strlen(config_commotionsock))
+    strcpy(config_commotionsock,DEFAULT_CO_SOCK);
+  
+  CHECKF((co_conn = co_connect(config_commotionsock,strlen(config_commotionsock)+1)),"Failed to connect to Commotion socket\n\n");
 
   CHECKF(read_key_from_servald(config_instancepath, config_sid) == 0,"[MDP] Could not read key from servald sid!\nExiting!\n\n");
 

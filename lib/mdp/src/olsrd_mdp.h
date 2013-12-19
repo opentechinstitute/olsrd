@@ -56,7 +56,7 @@
 
 #include "hashing.h"
 
-#define CO_SOCK "/var/commotion/commotiond.sock"
+#define DEFAULT_CO_SOCK "/var/run/commotiond.sock"
 
 /* Schemes */
 #define ONE_CHECKSUM          1

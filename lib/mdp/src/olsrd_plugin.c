@@ -78,8 +78,9 @@ my_init(void)
   /* Print plugin info to stdout */
   /* We cannot use olsr_printf yet! */
   printf("%s\n", MOD_DESC);
-  printf("[MDP] Accepted parameter pairs: (\"sid\",<SID>)" 
-         " and (\"servalpath\",<Serval Instance Path>\n");
+  printf("[MDP] Accepted parameter pairs: (\"sid\",<SID>)," 
+         " (\"servalpath\",<Serval Instance Path>),"
+	 " and (\"commotion_sock\",<commotiond socket>)");
 }
 
 /**
@@ -99,7 +100,7 @@ my_fini(void)
 }
 
 static int
-store_instancepath(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
+store_filename(const char *value, void *data, set_plugin_parameter_addon addon __attribute__ ((unused)))
 {
   char *str = data;
   snprintf(str, FILENAME_MAX + 1, "%s", value);
@@ -116,7 +117,8 @@ store_sid(const char *value, void *data, set_plugin_parameter_addon addon __attr
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "sid",.set_plugin_parameter = &store_sid,.data = config_sid},
-  {.name = "servalpath",.set_plugin_parameter = &store_instancepath,.data = config_instancepath},
+  {.name = "servalpath",.set_plugin_parameter = &store_filename,.data = config_instancepath},
+  {.name = "commotion_sock",.set_plugin_parameter = &store_filename,.data = config_commotionsock},
 };
 
 void

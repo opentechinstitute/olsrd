@@ -38,8 +38,13 @@ LoadPlugin "olsrd_mdp.so.0.1"
 {
     PlParam     "sid"   "<Serval SID>"
     PlParam     "servalpath"   "<Serval Instance Path>"
+    PlParam     "commotion_sock"   "<commotiond socket>"
 }
 
   The plugin uses this public key of SID for signature
   generation and verification. For nodes to participate 
   in the OLSR routing domain they need to use the same SID.
+  
+  The commotion_sock parameter specifies the management 
+  socket used to communicate with the commotion daemon 
+  for packet signing.
