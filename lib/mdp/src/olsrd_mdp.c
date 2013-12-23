@@ -160,7 +160,8 @@ print_data(const char *label, const uint8_t *data, size_t len)
 }
 
 static void
-mdp_checksum(uint8_t *data, const uint16_t data_len, uint8_t *sigbuf)
+mdp_checksum(uint8_t *data, const uint16_t data_len, 
+             uint8_t *sigbuf, const uint16_t sigbuf_len)
 {
   unsigned char *sig = NULL;
   size_t sig_len = 0;
@@ -171,9 +172,13 @@ mdp_checksum(uint8_t *data, const uint16_t data_len, uint8_t *sigbuf)
   CO_APPEND_BIN(co_req,data,data_len);
   CHECK(co_call(co_conn,&co_resp,"mdp-sign",sizeof("mdp-sign"),co_req) && 
   (sig_len = co_response_get_bin(co_resp,(char**)&sig,"sig",sizeof("sig"))),"Failed to receive signature from commotiond");
-  
-  CHECK_MEM(memcpy(sigbuf,sig,sig_len));
-  
+
+  if (sig_len <= sigbuf_len) {
+    CHECK_MEM(memcpy(sigbuf,sig,sig_len));
+  } else {
+    olsr_printf(1, "Signature too big for signature buffer!\n");
+  }
+
   co_free(co_req);
   co_free(co_resp);
   
@@ -353,7 +358,7 @@ add_signature(uint8_t * pck, int *size)
     memcpy(&checksum_cache[*size - SIGNATURE_SIZE], servald_key, servald_key_len);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (*size - SIGNATURE_SIZE) + servald_key_len, &pck[*size - SIGNATURE_SIZE]);
+    CHECKSUM(checksum_cache, (*size - SIGNATURE_SIZE) + servald_key_len, &pck[*size - SIGNATURE_SIZE], SIGNATURE_SIZE);
     free(checksum_cache);
   }
 
@@ -424,7 +429,7 @@ one_checksum_SHA:
     memcpy(&checksum_cache[*size - SIGNATURE_SIZE], servald_key, servald_key_len);
 
     /* generate SHA-1 */
-    CHECKSUM(checksum_cache, (*size - SIGNATURE_SIZE) + servald_key_len, sha1_hash);
+    CHECKSUM(checksum_cache, (*size - SIGNATURE_SIZE) + servald_key_len, sha1_hash, SIGNATURE_SIZE);
     free(checksum_cache);
   }
 
@@ -548,7 +553,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
     memcpy(&checksum_cache[sizeof(cmsg) - sizeof(cmsg.signature)], servald_key, servald_key_len);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (sizeof(cmsg) - sizeof(cmsg.signature)) + servald_key_len, cmsg.signature);
+    CHECKSUM(checksum_cache, (sizeof(cmsg) - sizeof(cmsg.signature)) + servald_key_len, cmsg.signature, SIGNATURE_SIZE);
     free(checksum_cache);
   }
   olsr_printf(3, "[MDP] Sending timestamp request to %s challenge 0x%x\n",
@@ -616,7 +621,7 @@ parse_cres(struct interface *olsr_if, char *in_msg)
     memcpy(&checksum_cache[sizeof(struct c_respmsg) - SIGNATURE_SIZE], servald_key, servald_key_len);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + servald_key_len, sha1_hash);
+    CHECKSUM(checksum_cache, (sizeof(struct c_respmsg) - SIGNATURE_SIZE) + servald_key_len, sha1_hash, SIGNATURE_SIZE);
     free(checksum_cache);
   }
 
@@ -653,7 +658,7 @@ parse_cres(struct interface *olsr_if, char *in_msg)
     memcpy(&checksum_cache[sizeof(uint32_t)], &msg->originator, olsr_cnf->ipsize);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, sizeof(uint32_t) + olsr_cnf->ipsize, sha1_hash);
+    CHECKSUM(checksum_cache, sizeof(uint32_t) + olsr_cnf->ipsize, sha1_hash, SIGNATURE_SIZE);
     free(checksum_cache);
   }
 
@@ -721,7 +726,7 @@ parse_rres(char *in_msg)
     memcpy(&checksum_cache[sizeof(struct r_respmsg) - SIGNATURE_SIZE], servald_key, servald_key_len);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + servald_key_len, sha1_hash);
+    CHECKSUM(checksum_cache, (sizeof(struct r_respmsg) - SIGNATURE_SIZE) + servald_key_len, sha1_hash, SIGNATURE_SIZE);
     free(checksum_cache);
   }
 
@@ -757,7 +762,7 @@ parse_rres(char *in_msg)
     memcpy(&checksum_cache[sizeof(uint32_t)], &msg->originator, olsr_cnf->ipsize);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, sizeof(uint32_t) + olsr_cnf->ipsize, sha1_hash);
+    CHECKSUM(checksum_cache, sizeof(uint32_t) + olsr_cnf->ipsize, sha1_hash, SIGNATURE_SIZE);
     free(checksum_cache);
   }
 
@@ -843,7 +848,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
     memcpy(&checksum_cache[sizeof(struct challengemsg) - SIGNATURE_SIZE], servald_key, servald_key_len);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (sizeof(struct challengemsg) - SIGNATURE_SIZE) + servald_key_len, sha1_hash);
+    CHECKSUM(checksum_cache, (sizeof(struct challengemsg) - SIGNATURE_SIZE) + servald_key_len, sha1_hash, SIGNATURE_SIZE);
     free(checksum_cache);
   }
   if (memcmp(sha1_hash, &msg->signature, SIGNATURE_SIZE) != 0) {
@@ -926,7 +931,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
     memcpy(&checksum_cache[sizeof(chal_in)], from, olsr_cnf->ipsize);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, sizeof(chal_in) + olsr_cnf->ipsize, crmsg.res_sig);
+    CHECKSUM(checksum_cache, sizeof(chal_in) + olsr_cnf->ipsize, crmsg.res_sig, SIGNATURE_SIZE);
   }
 
   /* Now create the digest of the message and the key */
@@ -941,7 +946,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
     memcpy(&checksum_cache[sizeof(crmsg) - sizeof(crmsg.signature)], servald_key, servald_key_len);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (sizeof(crmsg) - sizeof(crmsg.signature)) + servald_key_len, crmsg.signature);
+    CHECKSUM(checksum_cache, (sizeof(crmsg) - sizeof(crmsg.signature)) + servald_key_len, crmsg.signature, SIGNATURE_SIZE);
     free(checksum_cache);
   }
 
@@ -1002,7 +1007,7 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
     memcpy(&checksum_cache[sizeof(chal_in)], from, olsr_cnf->ipsize);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, sizeof(chal_in) + olsr_cnf->ipsize, rrmsg.res_sig);
+    CHECKSUM(checksum_cache, sizeof(chal_in) + olsr_cnf->ipsize, rrmsg.res_sig, SIGNATURE_SIZE);
   }
 
   /* Now create the digest of the message and the key */
@@ -1017,7 +1022,7 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
     memcpy(&checksum_cache[sizeof(rrmsg) - sizeof(rrmsg.signature)], servald_key, servald_key_len);
 
     /* Create the hash */
-    CHECKSUM(checksum_cache, (sizeof(rrmsg) - sizeof(rrmsg.signature)) + servald_key_len, rrmsg.signature);
+    CHECKSUM(checksum_cache, (sizeof(rrmsg) - sizeof(rrmsg.signature)) + servald_key_len, rrmsg.signature, SIGNATURE_SIZE);
     free(checksum_cache);
   }
 
