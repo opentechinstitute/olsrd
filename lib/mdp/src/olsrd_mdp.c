@@ -98,7 +98,7 @@
 #define CO_APPEND_BIN(R,S,L) CHECK(co_request_append_bin(co_req,(char*)S,L),"Failed to append to request")
 
 static struct timeval now;
-co_obj_t *co_conn = NULL, *co_req = NULL, *co_resp = NULL;
+co_obj_t *co_req = NULL, *co_resp = NULL;
 
 /* Timestamp node */
 struct stamp {
@@ -141,7 +141,7 @@ static char *secure_preprocessor(char *packet, struct interface *olsr_if, union 
 static void timeout_timestamps(void *);
 static int check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *, TIME_TYPE);
 static struct stamp *lookup_timestamp_entry(const union olsr_ip_addr *);
-static int read_key_from_servald(const char *, const char *);
+static int read_key_from_servald(co_obj_t *, const char *, const char *);
 
 static void
 print_data(const char *label, const uint8_t *data, size_t len)
@@ -165,8 +165,10 @@ mdp_checksum(uint8_t *data, const uint16_t data_len,
 {
   unsigned char *sig = NULL;
   size_t sig_len = 0;
-  
-  assert(co_conn);
+  co_obj_t *co_conn = NULL;
+
+  CHECKF((co_conn = co_connect(config_commotionsock,strlen(config_commotionsock)+1)),"Failed to connect to Commotion socket\n\n");
+
   CHECK_MEM((co_req = co_request_create()));
   CO_APPEND_BIN(co_req,servald_key,servald_key_len);
   CO_APPEND_BIN(co_req,data,data_len);
@@ -183,8 +185,17 @@ mdp_checksum(uint8_t *data, const uint16_t data_len,
   co_free(co_resp);
   
   print_data("signature", sigbuf, sig_len);
-  
+
 error:
+  /*
+   * We can't be sure that we need to disconnect. But 
+   * we need to if there is a connection.
+   */
+  if (co_conn) {
+    if (!co_disconnect(co_conn)) {
+      olsr_printf(1,"Failed to disconnect from commotiond.");
+    }
+  }
   return;
 }
 
@@ -199,6 +210,7 @@ int
 mdp_plugin_init(void)
 {
   int i;
+  co_obj_t *co_conn = NULL;
 
   /* Initialize the timestamp database */
   for (i = 0; i < HASHSIZE; i++) {
@@ -218,7 +230,7 @@ mdp_plugin_init(void)
   
   CHECKF((co_conn = co_connect(config_commotionsock,strlen(config_commotionsock)+1)),"Failed to connect to Commotion socket\n\n");
 
-  CHECKF(read_key_from_servald(config_instancepath, config_sid) == 0,"[MDP] Could not read key from servald sid!\nExiting!\n\n");
+  CHECKF(read_key_from_servald(co_conn, config_instancepath, config_sid) == 0,"[MDP] Could not read key from servald sid!\nExiting!\n\n");
 
   /* Register the packet transform function */
   add_ptf(&add_signature);
@@ -228,6 +240,8 @@ mdp_plugin_init(void)
   /* Register timeout - poll every 2 seconds */
   olsr_start_timer(2 * MSEC_PER_SEC, 0, OLSR_TIMER_PERIODIC, &timeout_timestamps, NULL, 0);
 
+  CHECK(co_disconnect(co_conn),"Failed to disconnect from commotiond.");
+error:
   return 1;
 }
 
@@ -1100,7 +1114,7 @@ timeout_timestamps(void *foo __attribute__ ((unused)))
 }
 
 static int 
-read_key_from_servald(const char *instance_path, const char *sid)
+read_key_from_servald(co_obj_t *co_conn, const char *instance_path, const char *sid)
 {
   char *output = NULL;
   
