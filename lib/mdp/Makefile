@@ -46,7 +46,7 @@ include $(TOPDIR)/Makefile.inc
 SERVALD_ROOT?=/usr/include/serval
 SERVALD_LIB_ROOT?=/usr/lib
 
-CPPFLAGS+=-I$(SERVALD_ROOT)/ -I$(SERVALD_ROOT)/nacl/include -DHAVE_BCOPY
+CPPFLAGS+=-I$(SERVALD_ROOT)/ -I$(SERVALD_ROOT)/nacl/include -DHAVE_BCOPY -DHAVE_BZERO -DHAVE_BCMP -DHAVE_ARPA_INET_H -DHAVE_POLL_H
 LIBS+=-L$(SERVALD_LIB_ROOT) -lservald
 
 default_target: $(PLUGIN_FULLNAME)
