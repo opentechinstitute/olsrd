@@ -98,7 +98,9 @@ WARNINGS +=	-Wendif-labels
 WARNINGS +=	-Wwrite-strings
 WARNINGS +=	-Wbad-function-cast
 WARNINGS +=	-Wpointer-arith
+ifneq ($(OS),win32)
 WARNINGS +=	-Wcast-qual
+endif
 WARNINGS +=	-Wshadow
 WARNINGS +=	-Wformat
 WARNINGS +=	-Wsequence-point
