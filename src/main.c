@@ -38,6 +38,7 @@
  *
  */
 
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/stat.h>
@@ -1022,7 +1023,7 @@ static int olsr_process_arguments(int argc, char *argv[],
       NEXT_ARG;
       CHECK_ARGC;
 
-      if (inet_aton(*argv, &in) == 0) {
+      if (inet_pton(AF_INET, *argv, &in) == 0) {
         printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
         continue;
       }

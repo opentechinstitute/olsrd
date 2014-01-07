@@ -481,7 +481,7 @@ ipchost: TOK_HOSTLABEL TOK_IPV4_ADDR
   union olsr_ip_addr ipaddr;
   PARSER_DEBUG_PRINTF("\tIPC host: %s\n", $2->string);
   
-  if (inet_aton($2->string, &ipaddr.v4) == 0) {
+  if (inet_pton(AF_INET, $2->string, &ipaddr.v4) == 0) {
     fprintf(stderr, "Failed converting IP address IPC %s\n", $2->string);
     YYABORT;
   }
@@ -585,7 +585,7 @@ isetipv4mc: TOK_IPV4_ADDR
 
   PARSER_DEBUG_PRINTF("\tIPv4 broadcast: %s\n", $1->string);
 
-  if (inet_aton($1->string, &in) == 0) {
+  if (inet_pton(AF_INET, $1->string, &in) == 0) {
     fprintf(stderr, "isetipv4br: Failed converting IP address %s\n", $1->string);
     YYABORT;
   }
@@ -625,7 +625,7 @@ isetipv4src: TOK_IPV4SRC TOK_IPV4_ADDR
 
   PARSER_DEBUG_PRINTF("\tIPv4 src: %s\n", $2->string);
 
-  if (inet_aton($2->string, &in) == 0) {
+  if (inet_pton(AF_INET, $2->string, &in) == 0) {
     fprintf(stderr, "isetipv4src: Failed converting IP address %s\n", $2->string);
     YYABORT;
   }
