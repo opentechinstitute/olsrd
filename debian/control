@@ -31,6 +31,20 @@ Description: optimized link-state routing daemon (unik-olsrd)
  developed to work independently from other protocols. Likewise, OLSR makes no
  assumptions about the underlying link-layer.
 
+Package: olsrd-dbg
+Architecture: any
+Section: debug
+Depends: olsrd (= ${binary:Version}), ${misc:Depends}
+Description: Debugging symbols for olsrd
+ unik-olsrd is an implementation of the Optimized Link State Routing protocol 
+ for Mobile Ad-Hoc networks(MANET). The protocol is described in RFC3626. It 
+ is designed to be run as a standalone server process.
+ .
+ OLSR operates as a table driven, proactive protocol, i.e., it exchanges 
+ topology information with other nodes of the network regularly. It is 
+ developed to work independently from other protocols. Likewise, OLSR makes no
+ assumptions about the underlying link-layer.
+
 Package: olsrd-plugins
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, olsrd (= ${binary:Version})

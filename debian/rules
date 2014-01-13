@@ -47,3 +47,6 @@ override_dh_auto_install:
 override_dh_compress:
 	# compress, but don't compress README_NAMESERVICE, for consistency reasons
 	dh_compress -XREADME_NAMESERVICE -XREADME_BMF
+
+override_dh_strip:
+	dh_strip --dbg-package=olsrd-dbg
