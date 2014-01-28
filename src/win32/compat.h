@@ -41,30 +41,37 @@
 
 #ifdef _WIN32
 
-#if !defined TL_ARPA_INET_H_INCLUDED
+#if defined(MINGW_VERSION) && MINGW_VERSION >= 40600
 
-#define TL_ARPA_INET_H_INCLUDED
+#ifndef COMPAT_H_
+#define COMPAT_H_
 
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#undef interface
+#include <sys/time.h>
 
-#if !defined(MINGW_VERSION) || MINGW_VERSION < 40600
-#ifndef InetNtopA
-int inet_aton(const char *cp, struct in_addr *addr);
-int inet_pton(int af, const char *src, void *dst);
-char *inet_ntop(int af, const void *src, char *dst, int size);
-#endif /* InetNtopA */
-#endif /* !defined(MINGW_VERSION) || MINGW_VERSION < 40600 */
+#define inet_ntop(af, src, dst, size) inet_ntop(af, (void *)(src), dst, size)
 
-#endif /* !defined TL_ARPA_INET_H_INCLUDED */
+# define timeradd(a, b, result)                 \
+  do {                        \
+    (result)->tv_sec = (a)->tv_sec + (b)->tv_sec;           \
+    (result)->tv_usec = (a)->tv_usec + (b)->tv_usec;            \
+    if ((result)->tv_usec >= 1000000)               \
+      {                       \
+  ++(result)->tv_sec;                 \
+  (result)->tv_usec -= 1000000;               \
+      }                       \
+  } while (0)
+# define timersub(a, b, result)                 \
+  do {                        \
+    (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;           \
+    (result)->tv_usec = (a)->tv_usec - (b)->tv_usec;            \
+    if ((result)->tv_usec < 0) {                \
+      --(result)->tv_sec;                 \
+      (result)->tv_usec += 1000000;               \
+    }                       \
+  } while (0)
+
+#endif /* COMPAT_H_ */
+
+#endif /* defined(MINGW_VERSION) && MINGW_VERSION >= 40600 */
 
 #endif /* _WIN32 */
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
