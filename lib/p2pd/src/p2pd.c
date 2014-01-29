@@ -85,6 +85,7 @@
 
 int P2pdTtl                        = 0;
 int P2pdUseHash                    = 0;  /* Switch off hash filter by default */
+int P2pdUseTtlDecrement            = 0;  /* No TTL decrement by default */
 int P2pdDuplicateTimeout           = P2PD_VALID_TIME;
 
 /* List of UDP destination address and port information */
@@ -622,6 +623,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   struct ip *ipHeader;         /* The IP header inside the captured IP packet */
   struct ip6_hdr *ipHeader6;   /* The IP header inside the captured IP packet */
   struct udphdr *udpHeader;
+  uint8_t * ttl = NULL;
   u_int16_t destPort;
 
   if ((encapsulationUdpData[0] & 0xf0) == 0x40) {       //IPV4
@@ -662,6 +664,8 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 #endif /* INCLUDE_DEBUG_OUTPUT */
        return;
     }
+
+    ttl = &ipHeader->ip_ttl;
   }                            //END IPV4
   else if ((encapsulationUdpData[0] & 0xf0) == 0x60) {  //IPv6
 
@@ -703,9 +707,22 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 #endif /* INCLUDE_DEBUG_OUTPUT */
       return;
     }
+
+    ttl = &ipHeader6->ip6_ctlun.ip6_un1.ip6_un1_hlim;
   }                             //END IPV6
   else {
     return;                     //Is not IP packet
+  }
+
+  if (P2pdUseTtlDecrement) {
+    assert(ttl);
+    if (!*ttl) {
+      return;
+    }
+    *ttl -= 1;
+    if (!*ttl) {
+      return;
+    }
   }
 
   // send the packet to OLSR forward mechanism
@@ -858,6 +875,27 @@ SetP2pdUseHashFilter(const char *value,
   assert(value != NULL);
   P2pdUseHash = atoi(value);
   
+  return 0;
+}
+
+/* -------------------------------------------------------------------------
+ * Function   : SetP2pdUseTtlDecrement
+ * Description: Set the TTL decrement lag for this plug-in
+ * Input      : value - parameter value to evaluate
+ *              data  - data associated with this parameter (unused in this app)
+ *              addon - additional parameter data
+ * Output     : none
+ * Return     : Always 0
+ * Data Used  : P2pdUseTtlDecrement
+ * ------------------------------------------------------------------------- */
+int
+SetP2pdUseTtlDecrement(const char *value,
+                     void *data __attribute__ ((unused)),
+                     set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  assert(value != NULL);
+  P2pdUseTtlDecrement = atoi(value);
+
   return 0;
 }
 
