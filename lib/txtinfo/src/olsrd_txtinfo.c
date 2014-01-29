@@ -534,6 +534,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
     char prefix[(INET6_ADDRSTRLEN * 2) + 1];
     uint32_t uplink = 0;
     uint32_t downlink = 0;
+    olsr_linkcost pc = 0;
     char sipv4[2] = { 0, 0 };
     char sipv4nat[2] = { 0, 0 };
     char sipv6[2] = { 0, 0 };
@@ -545,7 +546,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
     memset(if_name, 0, sizeof(if_name));
     memset(destination, 0, sizeof(destination));
 
-    abuf_appendf(abuf, fmth, " ", "Originator", "Prefix", "Uplink", "Downlink", "IPv4", "IPv4-NAT", "IPv6", "Tunnel-Name", "Destination", "Cost");
+    abuf_appendf(abuf, fmth, " ", "Originator", "Prefix", "Uplink", "Downlink", "PathCost", "IPv4", "IPv4-NAT", "IPv6", "Tunnel-Name", "Destination", "Cost");
 
     current_gw = olsr_get_inet_gateway(false);
     OLSR_FOR_ALL_GWS(&list->head, gw) {
@@ -553,10 +554,13 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
         current[0] = (current_gw && (gw->gw == current_gw)) ? '*' : ' ';
 
         if (gw->gw) {
+          struct tc_entry* tc = olsr_lookup_tc_entry(&gw->gw->originator);
+
           inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->gw->originator, originator, sizeof(originator));
           strncpy(prefix, olsr_ip_prefix_to_string(&gw->gw->external_prefix), sizeof(prefix));
           uplink = gw->gw->uplink;
           downlink = gw->gw->downlink;
+          pc = tc ?tc->path_cost : ROUTE_COST_BROKEN;
           sipv4[0] = gw->gw->ipv4 ? 'Y' : 'N';
           sipv4nat[0] = gw->gw->ipv4nat ? 'Y' : 'N';
           sipv6[0] = gw->gw->ipv6 ? 'Y' : 'N';
@@ -568,7 +572,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
         if (gw->gw) {
           cost = (long long unsigned int)gw->path_cost;
         }
-        abuf_appendf(abuf, fmtv, current, originator, prefix, uplink, downlink, sipv4, sipv4nat, sipv6, if_name, destination, cost);
+        abuf_appendf(abuf, fmtv, current, originator, prefix, uplink, downlink, pc, sipv4, sipv4nat, sipv6, if_name, destination, cost);
       }
     } OLSR_FOR_ALL_GWS_END(gw);
   }
@@ -582,10 +586,10 @@ ipc_print_sgw(struct autobuf *abuf)
   abuf_puts(abuf, "Gateway mode is only supported in linux\n");
 #else
 
-  static const char * fmth4 = "%s%-16s %-33s %-8s %-8s %-4s %-8s %-4s %-16s %-16s %s\n";
-  static const char * fmtv4 = "%s%-16s %-33s %-8u %-8u %-4s %-8s %-4s %-16s %-16s %llu\n";
-  static const char * fmth6 = "%s%-46s %-93s %-8s %-8s %-4s %-8s %-4s %-16s %-46s %s\n";
-  static const char * fmtv6 = "%s%-46s %-93s %-8u %-8u %-4s %-8s %-4s %-16s %-46s %llu\n";
+  static const char * fmth4 = "%s%-16s %-33s %-8s %-8s %-8s %-4s %-8s %-4s %-16s %-16s %s\n";
+  static const char * fmtv4 = "%s%-16s %-33s %-8u %-8u %-8u %-4s %-8s %-4s %-16s %-16s %llu\n";
+  static const char * fmth6 = "%s%-46s %-93s %-8s %-8s %-8s %-4s %-8s %-4s %-16s %-46s %s\n";
+  static const char * fmtv6 = "%s%-46s %-93s %-8u %-8u %-8u %-4s %-8s %-4s %-16s %-46s %llu\n";
 
   sgw_ipvx(abuf, false, fmth4, fmtv4);
   abuf_puts(abuf, "\n");
