@@ -326,7 +326,7 @@ struct olsrd_config {
   uint8_t smart_gw_weight_exitlink_up;
   uint8_t smart_gw_weight_exitlink_down;
   uint8_t smart_gw_weight_etx;
-  uint8_t smart_gw_divider_etx;
+  uint32_t smart_gw_divider_etx;
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;
   struct olsr_ip_prefix smart_gw_prefix;

@@ -338,10 +338,12 @@ All other parameters will be ignored if SmartGateway is set to "no"
 
      ** Recommended Configuration Parameter Settings
      ===============================================
-     SmartGatewayWeightExitLinkUp   = 1 (default is 1)
-     SmartGatewayWeightExitLinkDown = 1 (default is 1)
-     SmartGatewayWeightEtx          = 1 (default is 1)
-     SmartGatewayDividerEtx         = 4 (default is 0)
+     (assuming LinkQualityAlgorithm "etx_ffeth")
+
+     SmartGatewayWeightExitLinkUp   = 1    (default is 1)
+     SmartGatewayWeightExitLinkDown = 1    (default is 1)
+     SmartGatewayWeightEtx          = 1    (default is 1)
+     SmartGatewayDividerEtx         = 4096 (default is 0)
 
 
     5.3) Uplink Side
