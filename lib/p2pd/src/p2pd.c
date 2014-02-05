@@ -604,6 +604,46 @@ InUdpDestPortList(int ip_version, union olsr_ip_addr *addr, uint16_t port)
   return false;
 }
 
+/*
+ * Function for checksum calculation.
+ * From the RFC, the checksum algorithm is:
+ *   "The checksum field is the 16 bit one's complement of the one's
+ *   complement sum of all 16 bit words in the header. For purposes of
+ *   computing the checksum, the value of the checksum field is zero."
+ *
+ * For example, consider Hex 4500003044224000800600008c7c19acae241e2b (20 bytes IP header):
+ * - Step 1) 4500 + 0030 + 4422 + 4000 + 8006 + 0000 + 8c7c + 19ac + ae24 + 1e2b = 0002`BBCF (16-bit sum)
+ * - Step 2) 0002 + BBCF = BBD1 = 1011101111010001 (1's complement 16-bit sum)
+ * - Step 3) ~BBD1 = 0100010000101110 = 442E (1's complement of 1's complement 16-bit sum)
+ */
+static void recomputeIPv4HeaderChecksum(struct ip *header) {
+  uint32_t sum;
+  uint32_t nwords;
+  u_short *headerWords;
+
+  if (!header) {
+    return;
+  }
+
+  header->ip_sum = 0;
+  nwords = header->ip_hl << 1;
+  headerWords = (u_short *) header;
+
+  /* step 1 */
+  for (sum = 0; nwords > 0; nwords--) {
+    sum += ntohs(*headerWords);
+    headerWords++;
+  }
+
+  /* step 2 */
+  sum = (sum >> 16) + (sum & 0xffff);
+
+  /* step 3 */
+  sum = ~sum & 0xffff;
+
+  header->ip_sum = (u_short) (sum);
+}
+
 /* -------------------------------------------------------------------------
  * Function   : P2pdPacketCaptured
  * Description: Handle a captured IP packet
@@ -624,6 +664,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   struct ip6_hdr *ipHeader6;   /* The IP header inside the captured IP packet */
   struct udphdr *udpHeader;
   uint8_t * ttl = NULL;
+  int recomputeChecksum = 0;
   u_int16_t destPort;
 
   if ((encapsulationUdpData[0] & 0xf0) == 0x40) {       //IPV4
@@ -666,6 +707,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     }
 
     ttl = &ipHeader->ip_ttl;
+    recomputeChecksum = 1;
   }                            //END IPV4
   else if ((encapsulationUdpData[0] & 0xf0) == 0x60) {  //IPv6
 
@@ -709,6 +751,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     }
 
     ttl = &ipHeader6->ip6_ctlun.ip6_un1.ip6_un1_hlim;
+    recomputeChecksum = 0;
   }                             //END IPV6
   else {
     return;                     //Is not IP packet
@@ -722,6 +765,10 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     *ttl -= 1;
     if (!*ttl) {
       return;
+    }
+
+    if (recomputeChecksum) {
+      recomputeIPv4HeaderChecksum(ipHeader);
     }
   }
 
