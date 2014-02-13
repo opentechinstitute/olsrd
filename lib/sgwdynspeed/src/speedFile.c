@@ -225,9 +225,8 @@ void readSpeedFile(char * fileName) {
 			}
 			downlinkSet = true;
 		} else {
-			sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d uses an invalid option \"%s\","
-					" valid options are [%s|%s]", fileName, lineNumber, name, SPEED_UPLINK_NAME, SPEED_DOWNLINK_NAME);
-			goto out;
+			sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d specifies an unknown option \"%s\": ignored",
+					fileName, lineNumber, name);
 		}
 	}
 
