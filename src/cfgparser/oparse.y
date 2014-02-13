@@ -1359,7 +1359,7 @@ sgw_egress_ifs:   | sgw_egress_ifs sgw_egress_if
 
 sgw_egress_if: TOK_STRING
 {
-  struct sgw_egress_if *in, *previous;
+  struct sgw_egress_if *in, *previous, *last;
   char * str = $1->string;
   char *end;
 
@@ -1394,15 +1394,17 @@ sgw_egress_if: TOK_STRING
     }
 
     if (in != NULL) {
-      /* remove old interface from list to add it later at the beginning */
+      /* remove old interface from list to add it later at the end */
       if (previous) {
         previous->next = in->next;
       }
       else {
         olsr_cnf->smart_gw_egress_interfaces = in->next;
       }
+      in->next = NULL;
     }
     else {
+      /* interface in not in the list: create a new entry to add it later at the end */
       in = malloc(sizeof(*in));
       if (in == NULL) {
         fprintf(stderr, "Out of memory(ADD IF)\n");
@@ -1412,9 +1414,18 @@ sgw_egress_if: TOK_STRING
 
       in->name = str;
     }
-    /* Queue */
-    in->next = olsr_cnf->smart_gw_egress_interfaces;
-    olsr_cnf->smart_gw_egress_interfaces = in;
+
+    last = olsr_cnf->smart_gw_egress_interfaces;
+    while (last && last->next) {
+      last = last->next;
+    }
+
+    /* Add to the end of the list */
+    if (!last) {
+      olsr_cnf->smart_gw_egress_interfaces = in;
+    } else {
+      last->next = in;
+    }
     free($1);
   }
 }
