@@ -63,15 +63,16 @@ function error() {
 ###############################################################################
 
 function generic() {
-  "${IPTABLES}" ${IPTABLES_ARGS} -t mangle "${ADDMODE_IPTABLES}" OUTPUT -j CONNMARK --restore-mark
+  "${IPTABLES}" ${IPTABLES_ARGS} -t mangle "${ADDMODE_IPTABLES}" PREROUTING  -m conntrack ! --ctstate NEW -j CONNMARK --restore-mark
+  "${IPTABLES}" ${IPTABLES_ARGS} -t mangle "${ADDMODE_IPTABLES}" OUTPUT      -m conntrack ! --ctstate NEW -j CONNMARK --restore-mark
 }
 
 function olsrif() {
-  "${IPTABLES}" ${IPTABLES_ARGS} -t mangle "${ADDMODE_IPTABLES}" PREROUTING -i "${1}" -j CONNMARK --restore-mark
+  # do nothing
 }
 
 function sgwsrvtun() {
-  "${IPTABLES}" ${IPTABLES_ARGS} -t mangle "${ADDMODE_IPTABLES}" PREROUTING -i "${1}" -j CONNMARK --restore-mark
+  # do nothing
 }
 
 function egressif() {
