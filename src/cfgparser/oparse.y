@@ -1359,7 +1359,7 @@ sgw_egress_ifs:   | sgw_egress_ifs sgw_egress_if
 
 sgw_egress_if: TOK_STRING
 {
-  struct sgw_egress_if *in, *last;
+  struct sgw_egress_if *in, *previous;
   char * str = $1->string;
   char *end;
 
@@ -1383,20 +1383,20 @@ sgw_egress_if: TOK_STRING
     PARSER_DEBUG_PRINTF("Smart gateway egress interface: %s\n", str);
 
     in = olsr_cnf->smart_gw_egress_interfaces;
-    last = NULL;
+    previous = NULL;
     while (in != NULL) {
       if (strcmp(in->name, str) == 0) {
         free ($1->string);
         break;
       }
-      last = in;
+      previous = in;
       in = in->next;
     }
 
     if (in != NULL) {
       /* remove old interface from list to add it later at the beginning */
-      if (last) {
-        last->next = in->next;
+      if (previous) {
+        previous->next = in->next;
       }
       else {
         olsr_cnf->smart_gw_egress_interfaces = in->next;
