@@ -154,6 +154,8 @@ static bool regexMatch(regex_t * regex, char * line, size_t nmatch, regmatch_t p
 /** the buffer in which to store a line read from the file */
 static char line[LINE_LENGTH];
 
+static bool unknownOptionsReported = false;
+
 /**
  * Read the speed file
  * @param fileName the filename
@@ -169,6 +171,7 @@ void readSpeedFile(char * fileName) {
 	unsigned long downlink = DEF_DOWNLINK_SPEED;
 	bool uplinkSet = false;
 	bool downlinkSet = false;
+	bool reportedUnknownOptions = false;
 
 	fd = open(fileName, O_RDONLY);
 	if (fd < 0) {
@@ -225,10 +228,15 @@ void readSpeedFile(char * fileName) {
 			}
 			downlinkSet = true;
 		} else {
-			sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d specifies an unknown option \"%s\": ignored",
-					fileName, lineNumber, name);
+		  if (!unknownOptionsReported) {
+		    sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d specifies an unknown option \"%s\": ignored",
+		        fileName, lineNumber, name);
+		    reportedUnknownOptions = true;
+		  }
 		}
 	}
+
+	unknownOptionsReported = reportedUnknownOptions;
 
 	fclose(fp);
 	fp = NULL;
