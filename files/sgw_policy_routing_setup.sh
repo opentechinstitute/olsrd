@@ -69,10 +69,12 @@ function generic() {
 
 function olsrif() {
   # do nothing
+  echo -n "" > /dev/null
 }
 
 function sgwsrvtun() {
   # do nothing
+  echo -n "" > /dev/null
 }
 
 function egressif() {
