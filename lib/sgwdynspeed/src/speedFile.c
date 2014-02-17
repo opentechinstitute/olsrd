@@ -29,7 +29,7 @@ static const char * regexCommentString = "^([[:space:]]*|[[:space:]#]+.*)$";
 
 /** regular expression describing a key/value pair */
 static const char * regexNameValueString =
-		"^[[:space:]]*([^[:space:]]+)[[:space:]]*=[[:space:]]*([[:digit:]]+)[[:space:]]*$";
+		"^[[:space:]]*([^[:space:]]+)[[:space:]]*=[[:space:]]*(.*?)[[:space:]]*$";
 
 /** the number of matches in regexNameValueString */
 static const size_t regexNameValuematchCount = 3;
