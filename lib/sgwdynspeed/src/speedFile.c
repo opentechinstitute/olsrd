@@ -94,7 +94,7 @@ static bool readUL(const char * valueName, const char * value, unsigned long * v
  */
 static void stripEols(char * str) {
   size_t len = strlen(str);
-  while ((str[len - 1] == '\n') || (str[len - 1] == '\r')) {
+  while (len && ((str[len - 1] == '\n') || (str[len - 1] == '\r'))) {
     len--;
   }
   str[len] = '\0';
