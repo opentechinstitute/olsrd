@@ -88,6 +88,19 @@ static bool readUL(const char * valueName, const char * value, unsigned long * v
 }
 
 /**
+ * Strip EOL characters from a string
+ *
+ * @param str the string to strip
+ */
+static void stripEols(char * str) {
+  size_t len = strlen(str);
+  while ((str[len - 1] == '\n') || (str[len - 1] == '\r')) {
+    len--;
+  }
+  str[len] = '\0';
+}
+
+/**
  * Initialises the speedFile reader.
  * @return true upon success, false otherwise
  */
@@ -210,6 +223,8 @@ void readSpeedFile(char * fileName) {
 					line);
 			goto out;
 		}
+
+		stripEols(line);
 
 		/* determine name/value */
 		name = &line[pmatch[1].rm_so];
