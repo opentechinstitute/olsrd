@@ -91,10 +91,11 @@ static bool readUL(const char * valueName, const char * value, unsigned long * v
  * Strip EOL characters from a string
  *
  * @param str the string to strip
+ * @param index the index of the \0 string terminator (end-of-string/strlen)
  */
-static void stripEols(char * str) {
-  size_t len = strlen(str);
-  while (len && ((str[len - 1] == '\n') || (str[len - 1] == '\r'))) {
+static void stripEols(char * str, regoff_t index) {
+  regoff_t len = index;
+  while ((len > 0) && ((str[len - 1] == '\n') || (str[len - 1] == '\r'))) {
     len--;
   }
   str[len] = '\0';
@@ -224,7 +225,7 @@ void readSpeedFile(char * fileName) {
 			continue;
 		}
 
-		stripEols(line);
+		stripEols(line, pmatch[2].rm_eo);
 
 		/* determine name/value */
 		name = &line[pmatch[1].rm_so];
