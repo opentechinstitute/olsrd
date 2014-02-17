@@ -219,9 +219,9 @@ void readSpeedFile(char * fileName) {
 		}
 
 		if (!regexMatch(&regexNameValue, line, regexNameValuematchCount, pmatch)) {
-			sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d uses invalid syntax: %s", fileName, lineNumber,
+			sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d uses invalid syntax: ignored (%s)", fileName, lineNumber,
 					line);
-			goto out;
+			continue;
 		}
 
 		stripEols(line);
@@ -234,14 +234,20 @@ void readSpeedFile(char * fileName) {
 
 		if (!strncasecmp(SPEED_UPLINK_NAME, name, sizeof(line))) {
 			if (!readUL(SPEED_UPLINK_NAME, value, &uplink)) {
-				goto out;
+				sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d: %s value \"%s\" is not a valid number: ignored",
+					fileName, lineNumber, SPEED_UPLINK_NAME, value);
+				reportedErrors = true;
+			} else {
+				uplinkSet = true;
 			}
-			uplinkSet = true;
 		} else if (!strncasecmp(SPEED_DOWNLINK_NAME, name, sizeof(line))) {
 			if (!readUL(SPEED_DOWNLINK_NAME, value, &downlink)) {
-				goto out;
+				sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d: %s value \"%s\" is not a valid number: ignored",
+					fileName, lineNumber, SPEED_DOWNLINK_NAME, value);
+				reportedErrors = true;
+			} else {
+				downlinkSet = true;
 			}
-			downlinkSet = true;
 		} else {
 		  if (!reportedErrorsPrevious) {
 		    sgwDynSpeedError(false, "Gateway speed file \"%s\", line %d specifies an unknown option \"%s\": ignored",
