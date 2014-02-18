@@ -655,11 +655,14 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
         return -1;
       }
 
+#define valueInRange(value, low, high) ((low <= value) && (value <= high))
+
+#define rangesOverlap(low1, high1, low2, high2) ( \
+		      valueInRange(low1 , low2, high2) || valueInRange(high1, low2, high2) || \
+		      valueInRange(low2,  low1, high1) || valueInRange(high2, low1, high1))
+
       /* check that the egress and tunnel marks ranges do not overlap */
-      overlap =            ((tunnelsLow <= egressLow)   && (egressLow   <= tunnelsHigh));
-      overlap = overlap || ((tunnelsLow <= egressHigh)  && (egressHigh  <= tunnelsHigh));
-      overlap = overlap || ((egressLow  <= tunnelsLow)  && (tunnelsLow  <= egressHigh));
-      overlap = overlap || ((egressLow  <= tunnelsHigh) && (tunnelsHigh <= egressHigh));
+      overlap = rangesOverlap(egressLow, egressHigh, tunnelsLow, tunnelsHigh);
       if (overlap) {
         fprintf(stderr, "Error, egress interface mark range [%u, %u] overlaps with tunnel interface mark range [%u, %u]\n",
             egressLow, egressHigh, tunnelsLow, tunnelsHigh);
