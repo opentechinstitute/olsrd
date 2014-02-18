@@ -165,7 +165,7 @@ fi
 
 # process addMode argument
 declare ADDMODE_IPTABLES="-D"
-declare ADDMODE_IP="del"
+declare ADDMODE_IP="delete"
 if [ "${addMode}" == "${ADDMODE_ADD}" ]; then
   # first call the delete mode to remove any left-over rules
   set +e
