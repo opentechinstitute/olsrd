@@ -273,11 +273,7 @@ void readSpeedFile(char * fileName) {
 	  refresh_smartgw_netmask();
 	}
 
-	out: if (fp) {
-		fclose(fp);
-	}
-	if (fd >= 0) {
+	out: if (fd >= 0) {
 		close(fd);
 	}
-	return;
 }
