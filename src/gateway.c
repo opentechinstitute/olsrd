@@ -305,9 +305,6 @@ static bool multiGwRunScript(const char * mode, bool add, const char * ifname, u
 /**
  * Setup generic multi-gateway iptables and ip rules
  *
- * - generic (on olsrd start/stop)
- * iptablesExecutable -t mangle -A OUTPUT -j CONNMARK --restore-mark
- *
  * @param add true to add policy routing, false to remove it
  * @return true when successful
  */
@@ -317,9 +314,6 @@ static bool multiGwRulesGeneric(bool add) {
 
 /**
  * Setup multi-gateway iptables and ip rules for all OLSR interfaces.
- *
- * - olsr interfaces (on olsrd start/stop)
- * iptablesExecutable -t mangle -A PREROUTING -i ${olsrInterface} -j CONNMARK --restore-mark
  *
  * @param add true to add policy routing, false to remove it
  * @return true when successful
@@ -343,9 +337,6 @@ static bool multiGwRulesOlsrInterfaces(bool add) {
 /**
  * Setup multi-gateway iptables and ip rules for the smart gateway server tunnel.
  *
- * - sgw server tunnel interface (on olsrd start/stop)
- * iptablesExecutable -t mangle -A PREROUTING  -i tunl0 -j CONNMARK --restore-mark
- *
  * @param add true to add policy routing, false to remove it
  * @return true when successful
  */
@@ -355,15 +346,6 @@ static bool multiGwRulesSgwServerTunnel(bool add) {
 
 /**
  * Setup multi-gateway iptables and ip rules for all egress interfaces.
- *
- * - egress interfaces (on interface start/stop)
- * iptablesExecutable -t mangle -A POSTROUTING -m conntrack --ctstate NEW -o ${egressInterface} -j CONNMARK --set-mark ${egressInterfaceMark}
- * iptablesExecutable -t mangle -A INPUT       -m conntrack --ctstate NEW -i ${egressInterface} -j CONNMARK --set-mark ${egressInterfaceMark}
- * ip rule add fwmark ${egressInterfaceMark} table ${egressInterfaceMark} pref ${egressInterfaceMark}
- *
- * like table:
- * ppp0 91
- * eth0 92
  *
  * @param add true to add policy routing, false to remove it
  * @return true when successful
@@ -388,19 +370,8 @@ static bool multiGwRulesEgressInterfaces(bool add) {
 /**
  * Setup multi-gateway iptables and ip rules for the smart gateway client tunnels.
  *
- * - sgw tunnels (on sgw tunnel start/stop)
- * iptablesExecutable -t mangle -A POSTROUTING -m conntrack --ctstate NEW -o ${sgwTunnelInterface} -j CONNMARK --set-mark ${sgwTunnelInterfaceMark}
- * ip rule add fwmark ${sgwTunnelInterfaceMark} table ${sgwTunnelInterfaceMark} pref ${sgwTunnelInterfaceMark}
- *
- * like table:
- * tnl_101 101
- * tnl_102 102
- * tnl_103 103
- * tnl_104 104
- * tnl_105 105
- * tnl_106 106
- * tnl_107 107
- * tnl_108 108
+ * @param add true to add policy routing, false to remove it
+ * @return true when successful
  */
 static bool multiGwRulesSgwTunnels(bool add) {
   bool ok = true;
