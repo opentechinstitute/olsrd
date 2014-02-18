@@ -635,6 +635,7 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
     {
+      uint8_t srvtun = cnf->smart_gw_mark_offset_srvtun;
       uint8_t egressLow = cnf->smart_gw_mark_offset_egress;
       uint8_t egressHigh = egressLow + cnf->smart_gw_egress_interfaces_count - 1;
       uint8_t tunnelsLow = cnf->smart_gw_mark_offset_tunnels;
@@ -660,6 +661,22 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
 #define rangesOverlap(low1, high1, low2, high2) ( \
 		      valueInRange(low1 , low2, high2) || valueInRange(high1, low2, high2) || \
 		      valueInRange(low2,  low1, high1) || valueInRange(high2, low1, high1))
+
+      /* check that the server tunnel mark is not in the egress interface mark ranges */
+      overlap = valueInRange(srvtun, egressLow, egressHigh);
+      if (overlap) {
+        fprintf(stderr, "Error, server tunnel mark %u is in the egress interface mark range [%u, %u]\n",
+            srvtun, egressLow, egressHigh);
+        return -1;
+      }
+
+      /* check that the server tunnel mark is not in the tunnel interface mark ranges */
+      overlap = valueInRange(srvtun, tunnelsLow, tunnelsHigh);
+      if (overlap) {
+        fprintf(stderr, "Error, server tunnel mark %u is in the tunnel interface mark range [%u, %u]\n",
+            srvtun, tunnelsLow, tunnelsHigh);
+        return -1;
+      }
 
       /* check that the egress and tunnel marks ranges do not overlap */
       overlap = rangesOverlap(egressLow, egressHigh, tunnelsLow, tunnelsHigh);
@@ -911,6 +928,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->smart_gw_policyrouting_script = NULL;
   cnf->smart_gw_egress_interfaces = NULL;
   cnf->smart_gw_egress_interfaces_count = 0;
+  cnf->smart_gw_mark_offset_srvtun = DEF_GW_MARK_OFFSET_SRVTUN;
   cnf->smart_gw_mark_offset_egress = DEF_GW_MARK_OFFSET_EGRESS;
   cnf->smart_gw_mark_offset_tunnels = DEF_GW_MARK_OFFSET_TUNNELS;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
@@ -1058,6 +1076,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
     }
   }
   printf("\n");
+
+  printf("SmGw. Mark SrvTun: %u\n", cnf->smart_gw_mark_offset_srvtun);
 
   printf("SmGw. Mark Egress: %u\n", cnf->smart_gw_mark_offset_egress);
 

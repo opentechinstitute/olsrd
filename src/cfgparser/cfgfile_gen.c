@@ -569,6 +569,16 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   }
   abuf_appendf(out,
     "\n"
+    "# Determines the offset of the smart gateway server tunnel interface mark that\n"
+    "# is used in the policy routing rules in a multi-gateway setup. Only relevant\n"
+    "# when a multi-gateway setup is used.\n"
+    "# (default is %u)\n"
+    "\n", DEF_GW_MARK_OFFSET_SRVTUN);
+  abuf_appendf(out, "%sSmartGatewayMarkOffsetServerTunnel %u\n",
+      cnf->smart_gw_mark_offset_srvtun == DEF_GW_MARK_OFFSET_SRVTUN ? "# " : "",
+      cnf->smart_gw_mark_offset_srvtun);
+  abuf_appendf(out,
+    "\n"
     "# Determines the offset of the smart gateway egress interfaces mark that are\n"
     "# used in the policy routing rules in a multi-gateway setup. Only relevant\n"
     "# when a multi-gateway setup is used.\n"

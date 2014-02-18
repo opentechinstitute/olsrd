@@ -182,6 +182,13 @@
 
 # SmartGatewayEgressInterfaces ""
 
+# Determines the offset of the smart gateway server tunnel interface mark that
+# is used in the policy routing rules in a multi-gateway setup. Only relevant
+# when a multi-gateway setup is used.
+# (default is 90)
+
+# SmartGatewayMarkOffsetServerTunnel 90
+
 # Determines the offset of the smart gateway egress interfaces mark that are
 # used in the policy routing rules in a multi-gateway setup. Only relevant
 # when a multi-gateway setup is used.

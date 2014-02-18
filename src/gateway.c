@@ -287,12 +287,11 @@ static bool multiGwRunScript(const char * mode, bool add, const char * ifname, u
     assert(!strcmp(mode, SCRIPT_MODE_GENERIC));
   }
   if (ifmark) {
-    assert(!strcmp(mode, SCRIPT_MODE_EGRESSIF) || !strcmp(mode, SCRIPT_MODE_SGWTUN));
+    assert(!strcmp(mode, SCRIPT_MODE_SGWSRVTUN) || !strcmp(mode, SCRIPT_MODE_EGRESSIF) || !strcmp(mode, SCRIPT_MODE_SGWTUN));
     assert(ifname);
     abuf_appendf(&buf, " \"%u\"", *ifmark);
   } else {
-    assert(!strcmp(mode, SCRIPT_MODE_GENERIC) || !strcmp(mode, SCRIPT_MODE_OLSRIF) ||
-      !strcmp(mode, SCRIPT_MODE_SGWSRVTUN));
+    assert(!strcmp(mode, SCRIPT_MODE_GENERIC) || !strcmp(mode, SCRIPT_MODE_OLSRIF));
   }
 
   r = system(buf.buf);
@@ -341,7 +340,7 @@ static bool multiGwRulesOlsrInterfaces(bool add) {
  * @return true when successful
  */
 static bool multiGwRulesSgwServerTunnel(bool add) {
-  return multiGwRunScript(SCRIPT_MODE_SGWSRVTUN, add, server_tunnel_name(), NULL);
+  return multiGwRunScript(SCRIPT_MODE_SGWSRVTUN, add, server_tunnel_name(), &olsr_cnf->smart_gw_mark_offset_srvtun);
 }
 
 /**

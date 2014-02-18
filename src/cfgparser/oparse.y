@@ -221,6 +221,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_SMART_GW_TAKEDOWN_PERCENTAGE
 %token TOK_SMART_GW_POLICYROUTING_SCRIPT
 %token TOK_SMART_GW_EGRESS_IFS
+%token TOK_SMART_GW_MARK_OFFSET_SRVTUN
 %token TOK_SMART_GW_MARK_OFFSET_EGRESS
 %token TOK_SMART_GW_MARK_OFFSET_TUNNELS
 %token TOK_SMART_GW_ALLOW_NAT
@@ -314,6 +315,7 @@ stmt:       idebug
           | ismart_gw_use_count
           | ismart_gw_takedown_percentage
           | ssmart_gw_policyrouting_script
+          | ismart_gw_mark_offset_srvtun
           | ismart_gw_mark_offset_egress
           | ismart_gw_mark_offset_tunnels
           | bsmart_gw_allow_nat
@@ -1428,6 +1430,14 @@ sgw_egress_if: TOK_STRING
     }
     free($1);
   }
+}
+;
+
+ismart_gw_mark_offset_srvtun: TOK_SMART_GW_MARK_OFFSET_SRVTUN TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("Smart gateway mark offset server tunnel interface: %d\n", $2->integer);
+  olsr_cnf->smart_gw_mark_offset_srvtun = $2->integer;
+  free($2);
 }
 ;
 

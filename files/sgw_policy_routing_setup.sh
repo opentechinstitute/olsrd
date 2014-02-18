@@ -39,7 +39,7 @@ function usage() {
   echo "    - mode     : ${MODE_GENERIC}, ${MODE_OLSRIF}, ${MODE_SGWSRVTUN}, ${MODE_EGRESSIF} or ${MODE_SGWTUN}"
   echo "    - addMode  : ${ADDMODE_ADD} or ${ADDMODE_DEL}"
   echo "    - ifname   : an interface name, not relevant for generic mode"
-  echo "    - ifmark   : an interface marking (number), only relevant for ${MODE_EGRESSIF} and ${MODE_SGWTUN} modes"
+  echo "    - ifmark   : an interface marking (number), only relevant for modes ${MODE_SGWSRVTUN}, ${MODE_EGRESSIF} and ${MODE_SGWTUN}"
 }
 
 function error() {
@@ -73,8 +73,8 @@ function olsrif() {
 }
 
 function sgwsrvtun() {
-  # do nothing
-  echo -n "" > /dev/null
+  "${IPTABLES}" ${IPTABLES_ARGS} -t mangle "${ADDMODE_IPTABLES}" PREROUTING  -m conntrack --ctstate NEW -i "${1}" -j CONNMARK --set-mark "${2}"
+  "${IP}" ${IP_ARGS} rule "${ADDMODE_IP}" fwmark "${2}" table "${2}" pref "${2}"
 }
 
 function egressif() {
@@ -143,7 +143,7 @@ fi
 # check argument count for all modes
 if ([ "${mode}" == "${MODE_GENERIC}" ]   && [ ${argc} -ne 0 ]) || \
    ([ "${mode}" == "${MODE_OLSRIF}" ]    && [ ${argc} -ne 1 ]) || \
-   ([ "${mode}" == "${MODE_SGWSRVTUN}" ] && [ ${argc} -ne 1 ]) || \
+   ([ "${mode}" == "${MODE_SGWSRVTUN}" ] && [ ${argc} -ne 2 ]) || \
    ([ "${mode}" == "${MODE_EGRESSIF}"  ] && [ ${argc} -ne 2 ]) || \
    ([ "${mode}" == "${MODE_SGWTUN}"  ]   && [ ${argc} -ne 2 ]); then
   error "Not enough arguments or too many arguments"

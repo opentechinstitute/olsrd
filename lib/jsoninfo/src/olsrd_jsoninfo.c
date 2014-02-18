@@ -1006,6 +1006,7 @@ ipc_print_config(struct autobuf *abuf)
       abuf_json_string(abuf, "smartGatewayEgressInterfaces", egressbuf.buf);
       abuf_free(&egressbuf);
     }
+    abuf_json_int(abuf, "smartGatewayMarkOffsetServerTunnel", olsr_cnf->smart_gw_mark_offset_srvtun);
     abuf_json_int(abuf, "smartGatewayMarkOffsetEgress", olsr_cnf->smart_gw_mark_offset_egress);
     abuf_json_int(abuf, "smartGatewayMarkOffsetTunnels", olsr_cnf->smart_gw_mark_offset_tunnels);
     abuf_json_boolean(abuf, "smartGatewayAllowNat", olsr_cnf->smart_gw_allow_nat);
