@@ -37,7 +37,7 @@ USAGE
 LoadPlugin "olsrd_mdp.so.0.1"
 {
     PlParam     "sid"   "<Serval SID>"
-    PlParam     "servalpath"   "<Serval Instance Path>"
+    PlParam     "keyringpath"   "<Serval Keyring Path>"
     PlParam     "commotion_sock"   "<commotiond socket>"
 }
 

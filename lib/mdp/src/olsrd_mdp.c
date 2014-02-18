@@ -121,7 +121,7 @@ struct stamp {
 
 static struct stamp timestamps[HASHSIZE];
 
-char config_instancepath[PATH_MAX + 1] = {0};
+char config_keyringpath[PATH_MAX + 1] = {0};
 char config_sid[SID_STRLEN + 1] = {0};
 char config_commotionsock[PATH_MAX + 1] = {0};
 unsigned char *servald_key;
@@ -221,7 +221,7 @@ mdp_plugin_init(void)
 
   CHECKF(strlen(config_sid),"[MDP] Must set a SID (sid) for this plugin to work.\n\n");
 
-  CHECKF(strlen(config_instancepath),"[MDP] Must set a Serval instance path (servalpath) for this plugin to work.\n\n");
+  CHECKF(strlen(config_keyringpath),"[MDP] Must set a Serval keyring path (keyringpath) for this plugin to work.\n\n");
   
   CHECKF(co_init() == 1,"Failed to initialize Commotion client\n\n");
   
@@ -230,7 +230,7 @@ mdp_plugin_init(void)
   
   CHECKF((co_conn = co_connect(config_commotionsock,strlen(config_commotionsock)+1)),"Failed to connect to Commotion socket\n\n");
 
-  CHECKF(read_key_from_servald(co_conn, config_instancepath, config_sid) == 0,"[MDP] Could not read key from servald sid!\nExiting!\n\n");
+  CHECKF(read_key_from_servald(co_conn, config_keyringpath, config_sid) == 0,"[MDP] Could not read key from servald sid!\nExiting!\n\n");
 
   /* Register the packet transform function */
   add_ptf(&add_signature);
@@ -1114,13 +1114,13 @@ timeout_timestamps(void *foo __attribute__ ((unused)))
 }
 
 static int 
-read_key_from_servald(co_obj_t *co_conn, const char *instance_path, const char *sid)
+read_key_from_servald(co_obj_t *co_conn, const char *keyring_path, const char *sid)
 {
   char *output = NULL;
   
   assert(co_conn);
   CHECKF_MEM((co_req = co_request_create()));
-  CO_APPEND_STR(co_req,instance_path);
+  CO_APPEND_STR(co_req,keyring_path);
   CO_APPEND_STR(co_req,sid);
   CHECKF(co_call(co_conn,&co_resp,"mdp-init",sizeof("mdp-init"),co_req) && 
   (servald_key_len = co_response_get_bin(co_resp,&output,"key",sizeof("key"))),"Failed to receive signing key from commotiond");
