@@ -73,7 +73,7 @@
 #define SIGNATURE_BYTES 64
 
 extern char config_sid[SID_STRLEN + 1];
-extern char config_instancepath[PATH_MAX + 1];
+extern char config_keyringpath[PATH_MAX + 1];
 extern char config_commotionsock[PATH_MAX + 1];
 
 #define SIGSIZE SIGNATURE_BYTES

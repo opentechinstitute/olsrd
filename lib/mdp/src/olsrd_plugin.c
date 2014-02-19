@@ -79,7 +79,7 @@ my_init(void)
   /* We cannot use olsr_printf yet! */
   printf("%s\n", MOD_DESC);
   printf("[MDP] Accepted parameter pairs: (\"sid\",<SID>)," 
-         " (\"servalpath\",<Serval Instance Path>),"
+         " (\"keyringpath\",<Serval Keyring Path>),"
 	 " and (\"commotion_sock\",<commotiond socket>)");
 }
 
@@ -117,7 +117,7 @@ store_sid(const char *value, void *data, set_plugin_parameter_addon addon __attr
 
 static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "sid",.set_plugin_parameter = &store_sid,.data = config_sid},
-  {.name = "servalpath",.set_plugin_parameter = &store_filename,.data = config_instancepath},
+  {.name = "keyringpath",.set_plugin_parameter = &store_filename,.data = config_keyringpath},
   {.name = "commotion_sock",.set_plugin_parameter = &store_filename,.data = config_commotionsock},
 };
 
