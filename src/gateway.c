@@ -468,7 +468,7 @@ static void takeDownExpensiveGateways(struct gw_list * gw_list, bool ipv4, struc
   }
 
   /* get the cost boundary */
-  current_gw_cost_boundary = current_gw->path_cost;
+  current_gw_cost_boundary = current_gw->gw->path_cost;
   if (olsr_cnf->smart_gw_takedown_percentage < 100) {
     if (current_gw_cost_boundary <= (UINT64_MAX / 100)) {
       current_gw_cost_boundary =  ((current_gw_cost_boundary * 100) / olsr_cnf->smart_gw_takedown_percentage);
@@ -492,7 +492,7 @@ static void takeDownExpensiveGateways(struct gw_list * gw_list, bool ipv4, struc
      * exit when it (and further ones; the list is sorted on costs) has lower
      * costs than the boundary costs
      */
-    if (worst_gw->path_cost < current_gw_cost_boundary) {
+    if (worst_gw->gw->path_cost < current_gw_cost_boundary) {
       return;
     }
 
@@ -847,6 +847,7 @@ bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *ma
 void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
   struct gw_container_entry * new_gw_in_list;
   uint8_t *ptr;
+  uint64_t prev_path_cost = 0;
   struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
 
   if (!gw) {
@@ -897,19 +898,23 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
     gw->cleanup_timer = NULL;
   }
 
-  /* update the costs of the gateway when it is an active gateway */
-  new_gw_in_list = olsr_gw_list_find(&gw_list_ipv4, gw);
-  if (new_gw_in_list) {
-    assert(gw_handler);
-    new_gw_in_list = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list, gw_handler->getcosts(new_gw_in_list->gw));
-    assert(new_gw_in_list);
-  }
+  assert(gw_handler);
+  prev_path_cost = gw->path_cost;
+  gw->path_cost = gw_handler->getcosts(gw);
 
-  new_gw_in_list = olsr_gw_list_find(&gw_list_ipv6, gw);
-  if (new_gw_in_list) {
-    assert(gw_handler);
-    new_gw_in_list = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list, gw_handler->getcosts(new_gw_in_list->gw));
-    assert(new_gw_in_list);
+  if (prev_path_cost != gw->path_cost) {
+    /* re-sort the gateway list when costs have changed and when it is an active gateway */
+    new_gw_in_list = olsr_gw_list_find(&gw_list_ipv4, gw);
+    if (new_gw_in_list) {
+      new_gw_in_list = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list);
+      assert(new_gw_in_list);
+    }
+
+    new_gw_in_list = olsr_gw_list_find(&gw_list_ipv6, gw);
+    if (new_gw_in_list) {
+      new_gw_in_list = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list);
+      assert(new_gw_in_list);
+    }
   }
 
   /* call update handler */
@@ -1075,13 +1080,12 @@ void olsr_trigger_gatewayloss_check(void) {
 /**
  * Sets a new internet gateway.
  *
- * @param originator ip address of the node with the new gateway
- * @param path_cost the path cost
+ * @param the chosen gateway
  * @param ipv4 set ipv4 gateway
  * @param ipv6 set ipv6 gateway
  * @return true if an error happened, false otherwise
  */
-bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, bool ipv4, bool ipv6) {
+bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv6) {
   struct gateway_entry *new_gw;
 
   ipv4 = ipv4 && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit);
@@ -1090,7 +1094,7 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
     return true;
   }
 
-  new_gw = node2gateway(avl_find(&gateway_tree, originator));
+  new_gw = node2gateway(avl_find(&gateway_tree, &chosen_gw->originator));
   if (!new_gw) {
     /* the originator is not in the gateway tree, we can't set it as gateway */
     return true;
@@ -1100,15 +1104,15 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
   if (ipv4 &&
       new_gw->ipv4 &&
       (!new_gw->ipv4nat || olsr_cnf->smart_gw_allow_nat) &&
-      (!current_ipv4_gw || current_ipv4_gw->gw != new_gw || current_ipv4_gw->path_cost != path_cost)) {
-    /* new gw is different than the current gw, or costs have changed */
+      (!current_ipv4_gw || current_ipv4_gw->gw != new_gw)) {
+    /* new gw is different than the current gw */
 
     struct gw_container_entry * new_gw_in_list = olsr_gw_list_find(&gw_list_ipv4, new_gw);
     if (new_gw_in_list) {
       /* new gw is already in the gw list */
       assert(new_gw_in_list->tunnel);
       olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, olsr_cnf->rt_table_tunnel);
-      current_ipv4_gw = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list, path_cost);
+      current_ipv4_gw = new_gw_in_list;
     } else {
       /* new gw is not yet in the gw list */
       char name[IFNAMSIZ];
@@ -1134,7 +1138,6 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
         new_gw_in_list = olsr_cookie_malloc(gw_container_entry_mem_cookie);
         new_gw_in_list->gw = new_gw;
         new_gw_in_list->tunnel = new_v4gw_tunnel;
-        new_gw_in_list->path_cost = path_cost;
         current_ipv4_gw = olsr_gw_list_add(&gw_list_ipv4, new_gw_in_list);
       } else {
         /* adding the tunnel failed, we try again in the next cycle */
@@ -1147,15 +1150,15 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
   /* handle IPv6 */
   if (ipv6 &&
       new_gw->ipv6 &&
-      (!current_ipv6_gw || current_ipv6_gw->gw != new_gw || current_ipv6_gw->path_cost != path_cost)) {
-    /* new gw is different than the current gw, or costs have changed */
+      (!current_ipv6_gw || current_ipv6_gw->gw != new_gw)) {
+    /* new gw is different than the current gw */
 
   	struct gw_container_entry * new_gw_in_list = olsr_gw_list_find(&gw_list_ipv6, new_gw);
     if (new_gw_in_list) {
       /* new gw is already in the gw list */
       assert(new_gw_in_list->tunnel);
       olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, olsr_cnf->rt_table_tunnel);
-      current_ipv6_gw = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list, path_cost);
+      current_ipv6_gw = new_gw_in_list;
     } else {
       /* new gw is not yet in the gw list */
       char name[IFNAMSIZ];
@@ -1181,7 +1184,6 @@ bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, b
         new_gw_in_list = olsr_cookie_malloc(gw_container_entry_mem_cookie);
         new_gw_in_list->gw = new_gw;
         new_gw_in_list->tunnel = new_v6gw_tunnel;
-        new_gw_in_list->path_cost = path_cost;
         current_ipv6_gw = olsr_gw_list_add(&gw_list_ipv6, new_gw_in_list);
       } else {
         /* adding the tunnel failed, we try again in the next cycle */

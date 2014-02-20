@@ -570,7 +570,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
           inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->tunnel->target, destination, sizeof(destination));
         }
         if (gw->gw) {
-          cost = (long long unsigned int)gw->path_cost;
+          cost = (long long unsigned int)gw->gw->path_cost;
         }
         abuf_appendf(abuf, fmtv, current, originator, prefix, uplink, downlink, pc, sipv4, sipv4nat, sipv6, if_name, destination, cost);
       }

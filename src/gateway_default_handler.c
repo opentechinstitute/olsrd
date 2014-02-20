@@ -62,7 +62,7 @@ static inline uint64_t gw_default_calc_threshold(uint64_t path_cost) {
 
 /**
  * Look through the gateway list and select the best gateway
- * depending on the distance to this router
+ * depending on the costs
  */
 static void gw_default_choose_gateway(void) {
   uint64_t cost_ipv4_threshold = UINT64_MAX;
@@ -71,29 +71,27 @@ static void gw_default_choose_gateway(void) {
   bool cost_ipv6_threshold_valid = false;
   struct gateway_entry *chosen_gw_ipv4 = NULL;
   struct gateway_entry *chosen_gw_ipv6 = NULL;
-  uint64_t chosen_gw_ipv4_costs = UINT64_MAX;
-  uint64_t chosen_gw_ipv6_costs = UINT64_MAX;
   struct gateway_entry *gw;
   bool dual = false;
 
   if (olsr_cnf->smart_gw_thresh) {
     /* determine the path cost thresholds */
 
-    uint64_t cost = gw_default_getcosts(olsr_get_inet_gateway(false));
-    if (cost != UINT64_MAX) {
-      cost_ipv4_threshold = gw_default_calc_threshold(cost);
+    struct gateway_entry * current_gw = olsr_get_inet_gateway(false);
+    if (current_gw) {
+      cost_ipv4_threshold = gw_default_calc_threshold(current_gw->path_cost);
       cost_ipv4_threshold_valid = true;
     }
 
-    cost = gw_default_getcosts(olsr_get_inet_gateway(true));
-    if (cost != UINT64_MAX) {
-      cost_ipv6_threshold = gw_default_calc_threshold(cost);
+    current_gw = olsr_get_inet_gateway(true);
+    if (current_gw) {
+      cost_ipv6_threshold = gw_default_calc_threshold(current_gw->path_cost);
       cost_ipv6_threshold_valid = true;
     }
   }
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    uint64_t gw_cost = gw_default_getcosts(gw);
+    uint64_t gw_cost = gw->path_cost;
 
     if (gw_cost == UINT64_MAX) {
       /* never select a node with infinite costs */
@@ -104,20 +102,18 @@ static void gw_default_choose_gateway(void) {
       bool gw_eligible_v4 = gw->ipv4
           /* && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit) *//* contained in gw_def_choose_new_ipv4_gw */
           && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat);
-      if (gw_eligible_v4 && gw_cost < chosen_gw_ipv4_costs
+      if (gw_eligible_v4 && gw_cost < chosen_gw_ipv4->path_cost
           && (!cost_ipv4_threshold_valid || (gw_cost < cost_ipv4_threshold))) {
         chosen_gw_ipv4 = gw;
-        chosen_gw_ipv4_costs = gw_cost;
       }
     }
 
     if (gw_def_choose_new_ipv6_gw) {
       bool gw_eligible_v6 = gw->ipv6
           /* && olsr_cnf->ip_version == AF_INET6 *//* contained in gw_def_choose_new_ipv6_gw */;
-      if (gw_eligible_v6 && gw_cost < chosen_gw_ipv6_costs
+      if (gw_eligible_v6 && gw_cost < chosen_gw_ipv6->path_cost
           && (!cost_ipv6_threshold_valid || (gw_cost < cost_ipv6_threshold))) {
         chosen_gw_ipv6 = gw;
-        chosen_gw_ipv6_costs = gw_cost;
       }
     }
   } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
@@ -131,11 +127,11 @@ static void gw_default_choose_gateway(void) {
 
   if (chosen_gw_ipv4) {
     /* we are dealing with an IPv4 or dual stack gateway */
-    olsr_set_inet_gateway(&chosen_gw_ipv4->originator, chosen_gw_ipv4_costs, true, dual);
+    olsr_set_inet_gateway(chosen_gw_ipv4, true, dual);
   }
   if (chosen_gw_ipv6 && !dual) {
     /* we are dealing with an IPv6-only gateway */
-    olsr_set_inet_gateway(&chosen_gw_ipv6->originator, chosen_gw_ipv6_costs, false, true);
+    olsr_set_inet_gateway(chosen_gw_ipv6, false, true);
   }
 
   if ((olsr_cnf->smart_gw_thresh == 0) && !gw_def_choose_new_ipv4_gw && !gw_def_choose_new_ipv6_gw) {
