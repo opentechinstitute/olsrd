@@ -468,12 +468,14 @@ static void takeDownExpensiveGateways(struct gw_list * gw_list, bool ipv4, struc
   }
 
   /* get the cost boundary */
-
-  /* scale down because otherwise the percentage calculation can overflow */
-  current_gw_cost_boundary = (current_gw->path_cost >> 2);
-
+  current_gw_cost_boundary = current_gw->path_cost;
   if (olsr_cnf->smart_gw_takedown_percentage < 100) {
-    current_gw_cost_boundary = (current_gw_cost_boundary * 100) / olsr_cnf->smart_gw_takedown_percentage;
+    if (current_gw_cost_boundary <= (UINT64_MAX / 100)) {
+      current_gw_cost_boundary =  ((current_gw_cost_boundary * 100) / olsr_cnf->smart_gw_takedown_percentage);
+    } else {
+      /* perform scaling because otherwise the percentage calculation can overflow */
+      current_gw_cost_boundary = (((current_gw_cost_boundary      ) / olsr_cnf->smart_gw_takedown_percentage) * 100) + 99;
+    }
   }
 
   /* loop while we still have gateways */
@@ -490,11 +492,11 @@ static void takeDownExpensiveGateways(struct gw_list * gw_list, bool ipv4, struc
      * exit when it (and further ones; the list is sorted on costs) has lower
      * costs than the boundary costs
      */
-    if ((worst_gw->path_cost >> 2) < current_gw_cost_boundary) {
+    if (worst_gw->path_cost < current_gw_cost_boundary) {
       return;
     }
 
-    /* it's is too expensive: take it down */
+    /* it's too expensive: take it down */
     removeGatewayFromList(gw_list, ipv4, worst_gw);
   }
 }
