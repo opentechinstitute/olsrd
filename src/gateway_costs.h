@@ -55,7 +55,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
   /**
    * Structure to keep weighing factors for the gw_costs_weigh function
@@ -83,6 +83,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif /* GATEWAY_COSTS_H_ */

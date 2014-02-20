@@ -2,7 +2,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 #define SCALING_SHIFT_CLASSIC 32
 #define SCALING_SHIFT 24
@@ -31,4 +31,4 @@ uint64_t gw_costs_weigh(const struct costs_weights weights, uint32_t path_cost, 
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
