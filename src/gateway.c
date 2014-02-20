@@ -671,7 +671,7 @@ void olsr_cleanup_gateways(void) {
     if ((tree_gw != olsr_get_inet_gateway(false)) && (tree_gw != olsr_get_inet_gateway(true))) {
       olsr_delete_gateway_tree_entry(tree_gw, FORCE_DELETE_GW_ENTRY, true);
     }
-  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
+  } OLSR_FOR_ALL_GATEWAY_ENTRIES_END(tree_gw)
 
   /* remove all active IPv4 gateways (should be at most 1 now) */
   OLSR_FOR_ALL_GWS(&gw_list_ipv4.head, gw) {
