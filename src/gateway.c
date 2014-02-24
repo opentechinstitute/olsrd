@@ -548,7 +548,7 @@ int olsr_init_gateways(void) {
       ifn->gw = NULL;
       ifn->mark = i + olsr_cnf->smart_gw_mark_offset_egress;
       egressif->mark = ifn->mark;
-      snprintf(&ifn->name[0], sizeof(ifn->name), egressif->name, egressif->mark);
+      snprintf(&ifn->name[0], sizeof(ifn->name), "%s", egressif->name);
 
       egressif = egressif->next;
       i++;
