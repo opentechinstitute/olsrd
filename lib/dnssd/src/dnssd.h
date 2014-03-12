@@ -44,9 +44,6 @@
 
 #define REMOVE_LOG_DEBUG
 
-// Either #define or #undef the following line to include extra debugging
-#undef INCLUDE_DEBUG_OUTPUT
-
 #include "olsrd_plugin.h"             /* union set_plugin_parameter_addon */
 #include "duplicate_set.h"
 //#include "socket_parser.h"
