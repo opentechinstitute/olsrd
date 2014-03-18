@@ -264,17 +264,17 @@ All other parameters will be ignored if SmartGateway is set to "no"
    This setting is only relevant when SmartGatewayUseCount is larger than 1;
    a value of 0 will result in the tunnels not being taken down proactively.
    The default setting is 0.
-3- SmartGatewayPolicyRoutingScript controles the policy routing script that is
+3- SmartGatewayPolicyRoutingScript controls the policy routing script that is
    executed during startup and shutdown of olsrd. The script is only executed
    when SmartGatewayUseCount is set to a value larger than 1. The script must
-   setup policy routing rules such that multi-gateway mode works. A sample
+   setup policy routing rules such that multi-gateway mode works. A reference
    script is included.
-   The default setting is 'not set'.
+   The default setting is <not set>.
 4- SmartGatewayEgressInterfaces determines the egress interfaces that are part
    of the multi-gateway setup and therefore only relevant when
    SmartGatewayUseCount is larger than 1 (in which case it must be explicitly
    set).
-   The default setting is 'not set'.
+   The default setting is <not set>.
 5- SmartGatewayMarkOffsetServerTunnel, SmartGatewayMarkOffsetEgress and
    SmartGatewayMarkOffsetTunnels determine the ranges of policy routing rule
    markings that are used in a multi-gateway setup. The ranges are not allowed
