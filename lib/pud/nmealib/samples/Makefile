@@ -8,7 +8,7 @@ SAMPLES = generate generator math parse parse_file
 SMPLS = $(SAMPLES:%=../build/samples/%)
 SMPLOBJ = $(SAMPLES:%=%/main.o)
 
-LIBRARIES = -lm -L../lib -lnmea
+LIBRARIES = ../lib/libnmea.a -lm
 INCLUDES = -I ../include
 
 
@@ -22,7 +22,7 @@ remake: clean all
 
 samples: $(SMPLS)
 
-../build/samples/%: %/main.o
+../build/samples/%: %/main.o ../lib/libnmea.a
 ifeq ($(VERBOSE),0)
 	@echo "[LD] $@"
 endif
