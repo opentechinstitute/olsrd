@@ -65,6 +65,12 @@
 extern FILE *yyin;
 extern int yyparse(void);
 
+#define valueInRange(value, low, high) ((low <= value) && (value <= high))
+
+#define rangesOverlap(low1, high1, low2, high2) ( \
+            valueInRange(low1 , low2, high2) || valueInRange(high1, low2, high2) || \
+            valueInRange(low2,  low1, high1) || valueInRange(high2, low1, high1))
+
 static char interface_defaults_name[] = "[InterfaceDefaults]";
 
 const char *FIB_METRIC_TXT[] = {
@@ -635,54 +641,76 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
     }
 
     {
-      uint8_t srvtun = cnf->smart_gw_mark_offset_srvtun;
-      uint8_t egressLow = cnf->smart_gw_mark_offset_egress;
-      uint8_t egressHigh = egressLow + cnf->smart_gw_egress_interfaces_count - 1;
-      uint8_t tunnelsLow = cnf->smart_gw_mark_offset_tunnels;
-      uint8_t tunnelsHigh = tunnelsLow + cnf->smart_gw_use_count - 1;
-      bool overlap = false;
+      uint32_t nrOfTables = 1 + cnf->smart_gw_egress_interfaces_count + cnf->smart_gw_use_count;
 
-      /* check that the egress interface marks range does not overflow */
-      if (egressLow > (UINT8_MAX - cnf->smart_gw_egress_interfaces_count)) {
-        fprintf(stderr, "Error, egress interface mark offset %u together with egress interface count %u overflows range [0, %u]\n",
-            egressLow, cnf->smart_gw_egress_interfaces_count, UINT8_MAX);
+      uint32_t nrOfBypassRules = cnf->smart_gw_egress_interfaces_count + getNrOfOlsrInterfaces(olsr_cnf);
+      uint32_t nrOfTableRules = nrOfTables;
+      uint32_t nrOfRules = nrOfBypassRules + nrOfTableRules;
+
+      uint32_t tablesLow;
+      uint32_t tablesHigh;
+      uint32_t tablesLowMax = ((1 << 31) - nrOfTables + 1);
+
+      uint32_t rulesLow;
+      uint32_t rulesHigh;
+      uint32_t rulesLowMax = UINT32_MAX - nrOfRules;
+
+      /* setup tables low/high */
+      tablesLow = cnf->smart_gw_offset_tables;
+      tablesHigh = cnf->smart_gw_offset_tables + nrOfTables;
+
+      /*
+       * tablesLow  >  0
+       * tablesLow  >  0
+       * tablesHigh <= 2^31
+       * [tablesLow, tablesHigh] no overlap with [253, 255]
+       */
+      if (!tablesLow) {
+        fprintf(stderr, "Error, smart gateway tables offset can't be zero.\n");
         return -1;
       }
 
-      /* check that the tunnel interface marks range does not overflow */
-      if (tunnelsLow > (UINT8_MAX - cnf->smart_gw_use_count)) {
-        fprintf(stderr, "Error, tunnel interface mark offset %u together with use count %u overflows range [0, %u]\n",
-            tunnelsLow, cnf->smart_gw_use_count, UINT8_MAX);
+      if (tablesLow > tablesLowMax) {
+        fprintf(stderr, "Error, smart gateway tables offset too large, maximum is %ul.\n", tablesLowMax);
         return -1;
       }
 
-#define valueInRange(value, low, high) ((low <= value) && (value <= high))
-
-#define rangesOverlap(low1, high1, low2, high2) ( \
-		      valueInRange(low1 , low2, high2) || valueInRange(high1, low2, high2) || \
-		      valueInRange(low2,  low1, high1) || valueInRange(high2, low1, high1))
-
-      /* check that the server tunnel mark is not in the egress interface mark ranges */
-      overlap = valueInRange(srvtun, egressLow, egressHigh);
-      if (overlap) {
-        fprintf(stderr, "Error, server tunnel mark %u is in the egress interface mark range [%u, %u]\n",
-            srvtun, egressLow, egressHigh);
+      if (rangesOverlap(tablesLow, tablesHigh, 253, 255)) {
+        fprintf(stderr, "Error, smart gateway tables range [%u, %u] overlaps with routing tables [253, 255].\n", tablesLow, tablesHigh);
         return -1;
       }
 
-      /* check that the server tunnel mark is not in the tunnel interface mark ranges */
-      overlap = valueInRange(srvtun, tunnelsLow, tunnelsHigh);
-      if (overlap) {
-        fprintf(stderr, "Error, server tunnel mark %u is in the tunnel interface mark range [%u, %u]\n",
-            srvtun, tunnelsLow, tunnelsHigh);
+      /* set default for rules offset if needed */
+      if (cnf->smart_gw_offset_rules == 0) {
+        if (valueInRange(tablesLow, 1, nrOfBypassRules)) {
+          fprintf(stderr, "Error, smart gateway table offset is too low: %u bypass rules won't fit between it and zero.\n", nrOfBypassRules);
+          return -1;
+        }
+
+        cnf->smart_gw_offset_rules = tablesLow - nrOfBypassRules;
+      }
+
+      /* setup rules low/high */
+      rulesLow = cnf->smart_gw_offset_rules;
+      rulesHigh = cnf->smart_gw_offset_rules + nrOfRules;
+
+      /*
+       * rulesLow  > 0
+       * rulesHigh < 2^32
+       * [rulesLow, rulesHigh] no overlap with [32766, 32767]
+       */
+      if (!rulesLow) {
+        fprintf(stderr, "Error, smart gateway rules offset can't be zero.\n");
         return -1;
       }
 
-      /* check that the egress and tunnel marks ranges do not overlap */
-      overlap = rangesOverlap(egressLow, egressHigh, tunnelsLow, tunnelsHigh);
-      if (overlap) {
-        fprintf(stderr, "Error, egress interface mark range [%u, %u] overlaps with tunnel interface mark range [%u, %u]\n",
-            egressLow, egressHigh, tunnelsLow, tunnelsHigh);
+      if (rulesLow > rulesLowMax) {
+        fprintf(stderr, "Error, smart gateway rules offset too large, maximum is %ul.\n", rulesLowMax);
+        return -1;
+      }
+
+      if (rangesOverlap(rulesLow, rulesHigh, 32766, 32767)) {
+        fprintf(stderr, "Error, smart gateway rules range [%u, %u] overlaps with rules [32766, 32767].\n", rulesLow, rulesHigh);
         return -1;
       }
     }
@@ -928,9 +956,8 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->smart_gw_policyrouting_script = NULL;
   cnf->smart_gw_egress_interfaces = NULL;
   cnf->smart_gw_egress_interfaces_count = 0;
-  cnf->smart_gw_mark_offset_srvtun = DEF_GW_MARK_OFFSET_SRVTUN;
-  cnf->smart_gw_mark_offset_egress = DEF_GW_MARK_OFFSET_EGRESS;
-  cnf->smart_gw_mark_offset_tunnels = DEF_GW_MARK_OFFSET_TUNNELS;
+  cnf->smart_gw_offset_tables = DEF_GW_OFFSET_TABLES;
+  cnf->smart_gw_offset_rules = DEF_GW_OFFSET_RULES;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
   cnf->smart_gw_period = DEF_GW_PERIOD;
   cnf->smart_gw_stablecount = DEF_GW_STABLE_COUNT;
@@ -1077,11 +1104,9 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   }
   printf("\n");
 
-  printf("SmGw. Mark SrvTun: %u\n", cnf->smart_gw_mark_offset_srvtun);
+  printf("SmGw. Offst Tabls: %u\n", cnf->smart_gw_offset_tables);
 
-  printf("SmGw. Mark Egress: %u\n", cnf->smart_gw_mark_offset_egress);
-
-  printf("SmGw. Mark Tunnel: %u\n", cnf->smart_gw_mark_offset_tunnels);
+  printf("SmGw. Offst Rules: %u\n", cnf->smart_gw_offset_rules);
 
   printf("SmGw. Allow NAT  : %s\n", cnf->smart_gw_allow_nat ? "yes" : "no");
 

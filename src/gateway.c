@@ -39,7 +39,9 @@
 /** structure that holds an interface name, mark and a pointer to the gateway that uses it */
 struct interfaceName {
   char name[IFNAMSIZ]; /**< interface name */
-  uint8_t mark; /**< marking */
+  uint8_t tableNr; /**< routing table number */
+  uint8_t ruleNr; /**< IP rule number */
+  uint8_t bypassRuleNr; /**< bypass IP rule number */
   struct gateway_entry *gw; /**< gateway that uses this interface name */
 };
 
@@ -262,14 +264,38 @@ static void set_unused_iptunnel_name(struct gateway_entry *gw) {
  * Run the multi-gateway script/
  *
  * @param mode the mode (see SCRIPT_MODE_* defines)
- * @param add true to add policy routing, false to remove it
+ * @param addMode true to add policy routing, false to remove it
  * @param ifname the interface name (optional)
- * @param ifmark the interface mark (optional
+ * @param tableNr the routing table number (optional)
+ * @param ruleNr the IP rule number/priority (optional)
+ * @param bypassRuleNr the bypass IP rule number/priority (optional)
  * @return true when successful
  */
-static bool multiGwRunScript(const char * mode, bool add, const char * ifname, uint8_t * ifmark) {
+static bool multiGwRunScript(const char * mode, bool addMode, const char * ifName, uint32_t tableNr, uint32_t ruleNr, uint32_t bypassRuleNr) {
   struct autobuf buf;
   int r;
+
+  assert(!strcmp(mode, SCRIPT_MODE_GENERIC) //
+      || !strcmp(mode, SCRIPT_MODE_OLSRIF)//
+      || !strcmp(mode, SCRIPT_MODE_SGWSRVTUN)//
+      || !strcmp(mode, SCRIPT_MODE_EGRESSIF)//
+      || !strcmp(mode, SCRIPT_MODE_SGWTUN)//
+      );
+
+  assert(strcmp(mode, SCRIPT_MODE_GENERIC) //
+      || (!strcmp(mode, SCRIPT_MODE_GENERIC) && !ifName && !tableNr && !ruleNr && !bypassRuleNr));
+
+  assert(strcmp(mode, SCRIPT_MODE_OLSRIF) //
+      || (!strcmp(mode, SCRIPT_MODE_OLSRIF) && ifName && !tableNr && !ruleNr && bypassRuleNr));
+
+  assert(strcmp(mode, SCRIPT_MODE_SGWSRVTUN) //
+      || (!strcmp(mode, SCRIPT_MODE_SGWSRVTUN) && ifName && tableNr&& ruleNr && !bypassRuleNr));
+
+  assert(strcmp(mode, SCRIPT_MODE_EGRESSIF) //
+      || (!strcmp(mode, SCRIPT_MODE_EGRESSIF) && ifName && tableNr && ruleNr && bypassRuleNr));
+
+  assert(strcmp(mode, SCRIPT_MODE_SGWTUN) //
+      || (!strcmp(mode, SCRIPT_MODE_SGWTUN) && ifName && tableNr && ruleNr && !bypassRuleNr));
 
   abuf_init(&buf, 1024);
 
@@ -277,26 +303,24 @@ static bool multiGwRunScript(const char * mode, bool add, const char * ifname, u
 
   abuf_appendf(&buf, " \"%s\"", (olsr_cnf->ip_version == AF_INET) ? "ipv4" : "ipv6");
 
-  assert(!strcmp(mode, SCRIPT_MODE_GENERIC) || !strcmp(mode, SCRIPT_MODE_OLSRIF) ||
-      !strcmp(mode, SCRIPT_MODE_SGWSRVTUN) || !strcmp(mode, SCRIPT_MODE_EGRESSIF) ||
-      !strcmp(mode, SCRIPT_MODE_SGWTUN));
   abuf_appendf(&buf, " \"%s\"", mode);
 
-  abuf_appendf(&buf, " \"%s\"", add ? "add" : "del");
+  abuf_appendf(&buf, " \"%s\"", addMode ? "add" : "del");
 
-  if (ifname) {
-    assert(!strcmp(mode, SCRIPT_MODE_OLSRIF) || !strcmp(mode, SCRIPT_MODE_SGWSRVTUN) ||
-        !strcmp(mode, SCRIPT_MODE_EGRESSIF) || !strcmp(mode, SCRIPT_MODE_SGWTUN));
-    abuf_appendf(&buf, " \"%s\"", ifname);
-  } else {
-    assert(!strcmp(mode, SCRIPT_MODE_GENERIC));
+  if (ifName) {
+    abuf_appendf(&buf, " \"%s\"", ifName);
   }
-  if (ifmark) {
-    assert(!strcmp(mode, SCRIPT_MODE_SGWSRVTUN) || !strcmp(mode, SCRIPT_MODE_EGRESSIF) || !strcmp(mode, SCRIPT_MODE_SGWTUN));
-    assert(ifname);
-    abuf_appendf(&buf, " \"%u\"", *ifmark);
-  } else {
-    assert(!strcmp(mode, SCRIPT_MODE_GENERIC) || !strcmp(mode, SCRIPT_MODE_OLSRIF));
+
+  if (tableNr) {
+    abuf_appendf(&buf, " \"%u\"", tableNr);
+  }
+
+  if (ruleNr) {
+    abuf_appendf(&buf, " \"%u\"", ruleNr);
+  }
+
+  if (bypassRuleNr) {
+    abuf_appendf(&buf, " \"%u\"", bypassRuleNr);
   }
 
   r = system(buf.buf);
@@ -313,7 +337,7 @@ static bool multiGwRunScript(const char * mode, bool add, const char * ifname, u
  * @return true when successful
  */
 static bool multiGwRulesGeneric(bool add) {
-  return multiGwRunScript(SCRIPT_MODE_GENERIC, add, NULL, NULL);
+  return multiGwRunScript(SCRIPT_MODE_GENERIC, add, NULL, 0, 0, 0);
 }
 
 /**
@@ -324,10 +348,18 @@ static bool multiGwRulesGeneric(bool add) {
  */
 static bool multiGwRulesOlsrInterfaces(bool add) {
   bool ok = true;
-  struct interface * ifn;
+  struct olsr_if * ifn;
+  unsigned int i = 0;
 
-  for (ifn = ifnet; ifn; ifn = ifn->int_next) {
-    if (!multiGwRunScript(SCRIPT_MODE_OLSRIF, add, ifn->int_name, NULL)) {
+  for (ifn = olsr_cnf->interfaces; ifn; ifn = ifn->next, i++) {
+    if (!multiGwRunScript( //
+        SCRIPT_MODE_OLSRIF,//
+        add, //
+        ifn->name, //
+        0, //
+        0, //
+        olsr_cnf->smart_gw_offset_rules + olsr_cnf->smart_gw_egress_interfaces_count + i //
+            )) {
       ok = false;
       if (add) {
         return ok;
@@ -345,7 +377,14 @@ static bool multiGwRulesOlsrInterfaces(bool add) {
  * @return true when successful
  */
 static bool multiGwRulesSgwServerTunnel(bool add) {
-  return multiGwRunScript(SCRIPT_MODE_SGWSRVTUN, add, server_tunnel_name(), &olsr_cnf->smart_gw_mark_offset_srvtun);
+  return multiGwRunScript( //
+      SCRIPT_MODE_SGWSRVTUN,//
+      add, //
+      server_tunnel_name(), //
+      olsr_cnf->smart_gw_offset_tables, //
+      olsr_cnf->smart_gw_offset_rules + olsr_cnf->smart_gw_egress_interfaces_count + getNrOfOlsrInterfaces(olsr_cnf), //
+      0 //
+      );
 }
 
 /**
@@ -360,7 +399,7 @@ static bool multiGwRulesEgressInterfaces(bool add) {
 
   for (i = 0; i < olsr_cnf->smart_gw_egress_interfaces_count; i++) {
     struct interfaceName * ifn = &sgwEgressInterfaceNames[i];
-    if (!multiGwRunScript(SCRIPT_MODE_EGRESSIF, add, ifn->name, &ifn->mark)) {
+    if (!multiGwRunScript(SCRIPT_MODE_EGRESSIF, add, ifn->name, ifn->tableNr, ifn->ruleNr, ifn->bypassRuleNr)) {
       ok = false;
       if (add) {
         return ok;
@@ -383,7 +422,7 @@ static bool multiGwRulesSgwTunnels(bool add) {
 
   while (i < olsr_cnf->smart_gw_use_count) {
     struct interfaceName * ifn = (olsr_cnf->ip_version == AF_INET) ? &sgwTunnel4InterfaceNames[i] : &sgwTunnel6InterfaceNames[i];
-    if (!multiGwRunScript(SCRIPT_MODE_SGWTUN, add, ifn->name, &ifn->mark)) {
+    if (!multiGwRunScript(SCRIPT_MODE_SGWTUN, add, ifn->name, ifn->tableNr, ifn->ruleNr, ifn->bypassRuleNr)) {
       ok = false;
       if (add) {
         return ok;
@@ -442,7 +481,7 @@ static void removeGatewayFromList(struct gw_list * gw_list, bool ipv4, struct gw
   if (gw->tunnel) {
     struct interfaceName * ifn = find_interfaceName(gw->gw);
     if (ifn) {
-      olsr_os_inetgw_tunnel_route(gw->tunnel->if_index, ipv4, false, ifn->mark);
+      olsr_os_inetgw_tunnel_route(gw->tunnel->if_index, ipv4, false, ifn->tableNr);
     }
     olsr_os_del_ipip_tunnel(gw->tunnel);
     set_unused_iptunnel_name(gw->gw);
@@ -543,6 +582,7 @@ int olsr_init_gateways(void) {
   } else {
     uint8_t i;
     struct sgw_egress_if * egressif;
+    unsigned int nrOlsrIfs = getNrOfOlsrInterfaces(olsr_cnf);
 
     /* setup the egress interface name/mark pairs */
     sgwEgressInterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_egress_interfaces_count, "sgwEgressInterfaceNames");
@@ -551,8 +591,9 @@ int olsr_init_gateways(void) {
     while (egressif) {
       struct interfaceName * ifn = &sgwEgressInterfaceNames[i];
       ifn->gw = NULL;
-      ifn->mark = i + olsr_cnf->smart_gw_mark_offset_egress;
-      egressif->mark = ifn->mark;
+      ifn->tableNr = olsr_cnf->smart_gw_offset_tables + 1 + i;
+      ifn->ruleNr = olsr_cnf->smart_gw_offset_rules + olsr_cnf->smart_gw_egress_interfaces_count + nrOlsrIfs + 1 + i;
+      ifn->bypassRuleNr = olsr_cnf->smart_gw_offset_rules + i;
       snprintf(&ifn->name[0], sizeof(ifn->name), "%s", egressif->name);
 
       egressif = egressif->next;
@@ -565,14 +606,21 @@ int olsr_init_gateways(void) {
     sgwTunnel6InterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_use_count, "sgwTunnel6InterfaceNames");
     for (i = 0; i < olsr_cnf->smart_gw_use_count; i++) {
       struct interfaceName * ifn = &sgwTunnel4InterfaceNames[i];
+      uint32_t tableNr = olsr_cnf->smart_gw_offset_tables + 1 + olsr_cnf->smart_gw_egress_interfaces_count + i;
+      uint32_t ruleNr = olsr_cnf->smart_gw_offset_rules + olsr_cnf->smart_gw_egress_interfaces_count + nrOlsrIfs + 1 + olsr_cnf->smart_gw_egress_interfaces_count + i;
+
       ifn->gw = NULL;
-      ifn->mark = i + olsr_cnf->smart_gw_mark_offset_tunnels;
-      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl_4%03u", ifn->mark);
+      ifn->tableNr = tableNr;
+      ifn->ruleNr = ruleNr;
+      ifn->bypassRuleNr = 0;
+      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl_4%03u", ifn->tableNr);
 
       ifn = &sgwTunnel6InterfaceNames[i];
       ifn->gw = NULL;
-      ifn->mark = i + olsr_cnf->smart_gw_mark_offset_tunnels;
-      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl_6%03u", ifn->mark);
+      ifn->tableNr = tableNr;
+      ifn->ruleNr = ruleNr;
+      ifn->bypassRuleNr = 0;
+      snprintf(&ifn->name[0], sizeof(ifn->name), "tnl_6%03u", ifn->tableNr);
     }
   }
 
@@ -1000,7 +1048,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
         if (gw_in_list->tunnel) {
           struct interfaceName * ifn = find_interfaceName(gw_in_list->gw);
           if (ifn) {
-            olsr_os_inetgw_tunnel_route(gw_in_list->tunnel->if_index, true, false, ifn->mark);
+            olsr_os_inetgw_tunnel_route(gw_in_list->tunnel->if_index, true, false, ifn->tableNr);
           }
           olsr_os_del_ipip_tunnel(gw_in_list->tunnel);
           set_unused_iptunnel_name(gw_in_list->gw);
@@ -1022,7 +1070,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
         if (gw_in_list->tunnel) {
           struct interfaceName * ifn = find_interfaceName(gw_in_list->gw);
           if (ifn) {
-            olsr_os_inetgw_tunnel_route(gw_in_list->tunnel->if_index, false, false, ifn->mark);
+            olsr_os_inetgw_tunnel_route(gw_in_list->tunnel->if_index, false, false, ifn->tableNr);
           }
           olsr_os_del_ipip_tunnel(gw_in_list->tunnel);
           set_unused_iptunnel_name(gw_in_list->gw);
@@ -1135,7 +1183,7 @@ bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv
       new_v4gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, true, name);
       if (new_v4gw_tunnel) {
         if (interfaceName) {
-          olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, interfaceName->mark);
+          olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, interfaceName->tableNr);
         }
         olsr_os_inetgw_tunnel_route(new_v4gw_tunnel->if_index, true, true, olsr_cnf->rt_table_tunnel);
 
@@ -1181,7 +1229,7 @@ bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv
       new_v6gw_tunnel = olsr_os_add_ipip_tunnel(&new_gw->originator, false, name);
       if (new_v6gw_tunnel) {
         if (interfaceName) {
-          olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, interfaceName->mark);
+          olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, interfaceName->tableNr);
         }
         olsr_os_inetgw_tunnel_route(new_v6gw_tunnel->if_index, false, true, olsr_cnf->rt_table_tunnel);
 

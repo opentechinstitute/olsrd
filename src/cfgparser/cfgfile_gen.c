@@ -569,36 +569,24 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   }
   abuf_appendf(out,
     "\n"
-    "# Determines the offset of the smart gateway server tunnel interface mark that\n"
-    "# is used in the policy routing rules in a multi-gateway setup. Only relevant\n"
-    "# when a multi-gateway setup is used.\n"
+    "# Determines the routing tables offset for multi-gateway policy routing tables\n"
+    "# See the policy routing script for an explanation.\n"
     "# (default is %u)\n"
-    "\n", DEF_GW_MARK_OFFSET_SRVTUN);
-  abuf_appendf(out, "%sSmartGatewayMarkOffsetServerTunnel %u\n",
-      cnf->smart_gw_mark_offset_srvtun == DEF_GW_MARK_OFFSET_SRVTUN ? "# " : "",
-      cnf->smart_gw_mark_offset_srvtun);
+    "\n", DEF_GW_OFFSET_TABLES);
+  abuf_appendf(out, "%sSmartGatewayTablesOffset %u\n",
+      cnf->smart_gw_offset_tables == DEF_GW_OFFSET_TABLES ? "# " : "",
+      cnf->smart_gw_offset_tables);
   abuf_appendf(out,
     "\n"
-    "# Determines the offset of the smart gateway egress interfaces mark that are\n"
-    "# used in the policy routing rules in a multi-gateway setup. Only relevant\n"
-    "# when a multi-gateway setup is used.\n"
-    "# (default is %u)\n"
-    "\n", DEF_GW_MARK_OFFSET_EGRESS);
-  abuf_appendf(out, "%sSmartGatewayMarkOffsetEgress %u\n",
-      cnf->smart_gw_mark_offset_egress == DEF_GW_MARK_OFFSET_EGRESS ? "# " : "",
-      cnf->smart_gw_mark_offset_egress);
-  abuf_appendf(out,
-    "\n"
-    "# Determines the offset of the smart gateway tunnel interfaces mark that are\n"
-    "# used in the policy routing rules in a multi-gateway setup. Only relevant\n"
-    "# when a multi-gateway setup is used.\n"
-    "# The ranges [egress offset, egress offset + egress count] and\n"
-    "# [tunnel offset, tunnel offset + use count] are not allowed to overlap.\n"
-    "# (default is %u)\n"
-    "\n", DEF_GW_MARK_OFFSET_TUNNELS);
-  abuf_appendf(out, "%sSmartGatewayMarkOffsetTunnels %u\n",
-      cnf->smart_gw_mark_offset_tunnels == DEF_GW_MARK_OFFSET_TUNNELS ? "# " : "",
-      cnf->smart_gw_mark_offset_tunnels);
+    "# Determines the policy routing rules offset for multi-gateway policy routing\n"
+    "# rules. See the policy routing script for an explanation.\n"
+    "# (default is %u, which indicates that the rules and tables should be aligned and\n"
+    "# puts this value at SmartGatewayTablesOffset - # egress interfaces -\n"
+    "# # olsr interfaces)\n"
+    "\n", DEF_GW_OFFSET_RULES);
+  abuf_appendf(out, "%sSmartGatewayRulesOffset %u\n",
+      cnf->smart_gw_offset_rules == DEF_GW_OFFSET_RULES ? "# " : "",
+      cnf->smart_gw_offset_rules);
   abuf_appendf(out,
     "\n"
     "# Allows the selection of a smartgateway with NAT (only for IPv4)\n"

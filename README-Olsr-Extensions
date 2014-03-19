@@ -275,12 +275,12 @@ All other parameters will be ignored if SmartGateway is set to "no"
    SmartGatewayUseCount is larger than 1 (in which case it must be explicitly
    set).
    The default setting is <not set>.
-5- SmartGatewayMarkOffsetServerTunnel, SmartGatewayMarkOffsetEgress and
-   SmartGatewayMarkOffsetTunnels determine the ranges of policy routing rule
-   markings that are used in a multi-gateway setup. The ranges are not allowed
-   to overlap. These settings are only relevant when a multi-gateway setup is
-   used.
-   The default settings are 90, 91 and 101 respectively.
+5- SmartGatewayTablesOffset and SmartGatewayRulesOffset determine the ranges of
+   policy routing rule markings that are used in a multi-gateway setup (see the
+   policy routing script for an explanation).
+   The default settings are 90 and 0 respectively. The value of 0 for
+   SmartGatewayRulesOffset will automatically align the table and rule numbers
+   for the server tunnel, egress interfaces and gateway tunnel interfaces.
 6- SmartGatewayAllowNAT controls whether you want to allow the selection
    of an outgoing ipv4 gateway with NAT (Network Address Translation).
    The default setting is "yes".

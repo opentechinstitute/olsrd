@@ -221,9 +221,8 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_SMART_GW_TAKEDOWN_PERCENTAGE
 %token TOK_SMART_GW_POLICYROUTING_SCRIPT
 %token TOK_SMART_GW_EGRESS_IFS
-%token TOK_SMART_GW_MARK_OFFSET_SRVTUN
-%token TOK_SMART_GW_MARK_OFFSET_EGRESS
-%token TOK_SMART_GW_MARK_OFFSET_TUNNELS
+%token TOK_SMART_GW_OFFSET_TABLES
+%token TOK_SMART_GW_OFFSET_RULES
 %token TOK_SMART_GW_ALLOW_NAT
 %token TOK_SMART_GW_PERIOD
 %token TOK_SMART_GW_STABLECOUNT
@@ -315,9 +314,8 @@ stmt:       idebug
           | ismart_gw_use_count
           | ismart_gw_takedown_percentage
           | ssmart_gw_policyrouting_script
-          | ismart_gw_mark_offset_srvtun
-          | ismart_gw_mark_offset_egress
-          | ismart_gw_mark_offset_tunnels
+          | ismart_gw_offset_tables
+          | ismart_gw_offset_rules
           | bsmart_gw_allow_nat
           | ismart_gw_period
           | asmart_gw_stablecount
@@ -1433,26 +1431,18 @@ sgw_egress_if: TOK_STRING
 }
 ;
 
-ismart_gw_mark_offset_srvtun: TOK_SMART_GW_MARK_OFFSET_SRVTUN TOK_INTEGER
+ismart_gw_offset_tables: TOK_SMART_GW_OFFSET_TABLES TOK_INTEGER
 {
-  PARSER_DEBUG_PRINTF("Smart gateway mark offset server tunnel interface: %d\n", $2->integer);
-  olsr_cnf->smart_gw_mark_offset_srvtun = $2->integer;
+  PARSER_DEBUG_PRINTF("Smart gateway tables offset: %d\n", $2->integer);
+  olsr_cnf->smart_gw_offset_tables = $2->integer;
   free($2);
 }
 ;
 
-ismart_gw_mark_offset_egress: TOK_SMART_GW_MARK_OFFSET_EGRESS TOK_INTEGER
+ismart_gw_offset_rules: TOK_SMART_GW_OFFSET_RULES TOK_INTEGER
 {
-  PARSER_DEBUG_PRINTF("Smart gateway mark offset egress interfaces: %d\n", $2->integer);
-  olsr_cnf->smart_gw_mark_offset_egress = $2->integer;
-  free($2);
-}
-;
-
-ismart_gw_mark_offset_tunnels: TOK_SMART_GW_MARK_OFFSET_TUNNELS TOK_INTEGER
-{
-  PARSER_DEBUG_PRINTF("Smart gateway mark offset tunnel interfaces: %d\n", $2->integer);
-  olsr_cnf->smart_gw_mark_offset_tunnels = $2->integer;
+  PARSER_DEBUG_PRINTF("Smart gateway rules offset: %d\n", $2->integer);
+  olsr_cnf->smart_gw_offset_rules = $2->integer;
   free($2);
 }
 ;
