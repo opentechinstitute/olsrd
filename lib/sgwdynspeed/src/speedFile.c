@@ -91,10 +91,10 @@ static bool readUL(const char * valueName, const char * value, unsigned long * v
  * Strip EOL characters from a string
  *
  * @param str the string to strip
- * @param index the index of the \0 string terminator (end-of-string/strlen)
+ * @param endindex the index of the \0 string terminator (end-of-string/strlen)
  */
-static void stripEols(char * str, regoff_t index) {
-  regoff_t len = index;
+static void stripEols(char * str, regoff_t endindex) {
+  regoff_t len = endindex;
   while ((len > 0) && ((str[len - 1] == '\n') || (str[len - 1] == '\r'))) {
     len--;
   }
