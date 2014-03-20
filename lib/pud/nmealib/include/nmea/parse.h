@@ -32,11 +32,11 @@ const char * nmea_parse_sentence_has_invalid_chars(const char * s, const size_t 
 
 enum nmeaPACKTYPE nmea_parse_get_sentence_type(const char *s, const int len);
 
-int nmea_parse_GPGGA(const char *s, const int len, nmeaGPGGA *pack);
-int nmea_parse_GPGSA(const char *s, const int len, nmeaGPGSA *pack);
-int nmea_parse_GPGSV(const char *s, const int len, nmeaGPGSV *pack);
-int nmea_parse_GPRMC(const char *s, const int len, nmeaGPRMC *pack);
-int nmea_parse_GPVTG(const char *s, const int len, nmeaGPVTG *pack);
+int nmea_parse_GPGGA(const char *s, const int len, bool has_checksum, nmeaGPGGA *pack);
+int nmea_parse_GPGSA(const char *s, const int len, bool has_checksum, nmeaGPGSA *pack);
+int nmea_parse_GPGSV(const char *s, const int len, bool has_checksum, nmeaGPGSV *pack);
+int nmea_parse_GPRMC(const char *s, const int len, bool has_checksum, nmeaGPRMC *pack);
+int nmea_parse_GPVTG(const char *s, const int len, bool has_checksum, nmeaGPVTG *pack);
 
 #ifdef  __cplusplus
 }

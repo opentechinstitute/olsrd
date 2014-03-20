@@ -36,6 +36,7 @@ static void reset_sentence_parser(nmeaPARSER * parser, sentence_parser_state new
   memset(&parser->sentence_parser, 0, sizeof(parser->sentence_parser));
   parser->buffer.buffer[0] = '\0';
   parser->buffer.length = 0;
+  parser->sentence_parser.has_checksum = false;
   parser->sentence_parser.state = new_state;
 }
 
@@ -112,7 +113,7 @@ static bool nmea_parse_sentence_character(nmeaPARSER *parser, const char * c) {
         parser->sentence_parser.sentence_checksum_chars_count = 0;
       } else if (*c == first_eol_char) {
         parser->sentence_parser.state = READ_EOL;
-        parser->sentence_parser.sentence_eol_chars_count = 0;
+        parser->sentence_parser.sentence_eol_chars_count = 1;
       } else if (isInvalidNMEACharacter(c)) {
         reset_sentence_parser(parser, SKIP_UNTIL_START);
       } else {
@@ -135,6 +136,7 @@ static bool nmea_parse_sentence_character(nmeaPARSER *parser, const char * c) {
             parser->sentence_parser.sentence_checksum_chars[1] = *c;
             parser->sentence_parser.sentence_checksum_chars_count = 2;
             parser->sentence_parser.sentence_checksum = nmea_atoi(parser->sentence_parser.sentence_checksum_chars, 2, 16);
+            parser->sentence_parser.has_checksum = true;
             parser->sentence_parser.state = READ_EOL;
             break;
 
@@ -206,35 +208,35 @@ int nmea_parse(nmeaPARSER * parser, const char * s, int len, nmeaINFO * info) {
       enum nmeaPACKTYPE sentence_type = nmea_parse_get_sentence_type(&parser->buffer.buffer[1], parser->buffer.length - 1);
       switch (sentence_type) {
         case GPGGA:
-          if (nmea_parse_GPGGA(parser->buffer.buffer, parser->buffer.length, &parser->sentence.gpgga)) {
+          if (nmea_parse_GPGGA(parser->buffer.buffer, parser->buffer.length, parser->sentence_parser.has_checksum, &parser->sentence.gpgga)) {
             sentences_count++;
             nmea_GPGGA2info(&parser->sentence.gpgga, info);
           }
           break;
 
         case GPGSA:
-          if (nmea_parse_GPGSA(parser->buffer.buffer, parser->buffer.length, &parser->sentence.gpgsa)) {
+          if (nmea_parse_GPGSA(parser->buffer.buffer, parser->buffer.length, parser->sentence_parser.has_checksum, &parser->sentence.gpgsa)) {
             sentences_count++;
             nmea_GPGSA2info(&parser->sentence.gpgsa, info);
           }
           break;
 
         case GPGSV:
-          if (nmea_parse_GPGSV(parser->buffer.buffer, parser->buffer.length, &parser->sentence.gpgsv)) {
+          if (nmea_parse_GPGSV(parser->buffer.buffer, parser->buffer.length, parser->sentence_parser.has_checksum, &parser->sentence.gpgsv)) {
             sentences_count++;
             nmea_GPGSV2info(&parser->sentence.gpgsv, info);
           }
           break;
 
         case GPRMC:
-          if (nmea_parse_GPRMC(parser->buffer.buffer, parser->buffer.length, &parser->sentence.gprmc)) {
+          if (nmea_parse_GPRMC(parser->buffer.buffer, parser->buffer.length, parser->sentence_parser.has_checksum, &parser->sentence.gprmc)) {
             sentences_count++;
             nmea_GPRMC2info(&parser->sentence.gprmc, info);
           }
           break;
 
         case GPVTG:
-          if (nmea_parse_GPVTG(parser->buffer.buffer, parser->buffer.length, &parser->sentence.gpvtg)) {
+          if (nmea_parse_GPVTG(parser->buffer.buffer, parser->buffer.length, parser->sentence_parser.has_checksum, &parser->sentence.gpvtg)) {
             sentences_count++;
             nmea_GPVTG2info(&parser->sentence.gpvtg, info);
           }

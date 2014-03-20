@@ -320,13 +320,18 @@ enum nmeaPACKTYPE nmea_parse_get_sentence_type(const char *s, const int len) {
  *
  * @param s the string
  * @param len the length of the string
+ * @param has_checksum true when the string contains a checksum
  * @param pack a pointer to the result structure
  * @return 1 (true) - if parsed successfully or 0 (false) otherwise.
  */
-int nmea_parse_GPGGA(const char *s, const int len, nmeaGPGGA *pack) {
+int nmea_parse_GPGGA(const char *s, const int len, bool has_checksum, nmeaGPGGA *pack) {
 	int token_count;
 	char time_buff[NMEA_TIMEPARSE_BUF];
 	size_t time_buff_len = 0;
+
+	if (!has_checksum) {
+	  return 0;
+	}
 
 	assert(s);
 	assert(pack);
@@ -430,12 +435,17 @@ int nmea_parse_GPGGA(const char *s, const int len, nmeaGPGGA *pack) {
  *
  * @param s the string
  * @param len the length of the string
+ * @param has_checksum true when the string contains a checksum
  * @param pack a pointer to the result structure
  * @return 1 (true) - if parsed successfully or 0 (false) otherwise.
  */
-int nmea_parse_GPGSA(const char *s, const int len, nmeaGPGSA *pack) {
+int nmea_parse_GPGSA(const char *s, const int len, bool has_checksum, nmeaGPGSA *pack) {
 	int token_count;
 	int i;
+
+	if (!has_checksum) {
+	  return 0;
+	}
 
 	assert(s);
 	assert(pack);
@@ -506,14 +516,19 @@ int nmea_parse_GPGSA(const char *s, const int len, nmeaGPGSA *pack) {
  *
  * @param s the string
  * @param len the length of the string
+ * @param has_checksum true when the string contains a checksum
  * @param pack a pointer to the result structure
  * @return 1 (true) - if parsed successfully or 0 (false) otherwise.
  */
-int nmea_parse_GPGSV(const char *s, const int len, nmeaGPGSV *pack) {
+int nmea_parse_GPGSV(const char *s, const int len, bool has_checksum, nmeaGPGSV *pack) {
 	int token_count;
 	int token_count_expected;
 	int sat_count;
 	int sat_counted = 0;
+
+	if (!has_checksum) {
+	  return 0;
+	}
 
 	assert(s);
 	assert(pack);
@@ -588,14 +603,19 @@ int nmea_parse_GPGSV(const char *s, const int len, nmeaGPGSV *pack) {
  *
  * @param s the string
  * @param len the length of the string
+ * @param has_checksum true when the string contains a checksum
  * @param pack a pointer to the result structure
  * @return 1 (true) - if parsed successfully or 0 (false) otherwise.
  */
-int nmea_parse_GPRMC(const char *s, const int len, nmeaGPRMC *pack) {
+int nmea_parse_GPRMC(const char *s, const int len, bool has_checksum, nmeaGPRMC *pack) {
 	int token_count;
 	char time_buff[NMEA_TIMEPARSE_BUF];
 	int date;
 	size_t time_buff_len = 0;
+
+	if (!has_checksum) {
+	  return 0;
+	}
 
 	assert(s);
 	assert(pack);
@@ -721,11 +741,16 @@ int nmea_parse_GPRMC(const char *s, const int len, nmeaGPRMC *pack) {
  *
  * @param s the string
  * @param len the length of the string
+ * @param has_checksum true when the string contains a checksum
  * @param pack a pointer to the result structure
  * @return 1 (true) - if parsed successfully or 0 (false) otherwise.
  */
-int nmea_parse_GPVTG(const char *s, const int len, nmeaGPVTG *pack) {
+int nmea_parse_GPVTG(const char *s, const int len, bool has_checksum, nmeaGPVTG *pack) {
 	int token_count;
+
+	if (!has_checksum) {
+	  return 0;
+	}
 
 	assert(s);
 	assert(pack);
