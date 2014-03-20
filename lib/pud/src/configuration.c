@@ -335,21 +335,25 @@ static bool intSetupNodeIdBinaryDoubleLongLong(
  - false on failure
  */
 static bool intSetupNodeIdBinaryString(void) {
-	char report[256];
-	size_t nodeidlength;
-	char * nodeid = (char *)getNodeId(&nodeidlength);
+  const char * invalidCharName;
+  size_t nodeidlength;
+  char * nodeid = (char *) getNodeId(&nodeidlength);
 
-	if (nmea_parse_sentence_has_invalid_chars(nodeid, nodeidlength, PUD_NODE_ID_NAME, &report[0], sizeof(report))) {
-		pudError(false, "%s", &report[0]);
-		return false;
-	}
+  invalidCharName = nmea_parse_sentence_has_invalid_chars(nodeid, nodeidlength);
+  if (invalidCharName) {
+    char report[256];
+    snprintf(report, sizeof(report), "Configured %s (%s),"
+        " contains invalid NMEA characters (%s)", PUD_NODE_ID_NAME, nodeid, invalidCharName);
+    pudError(false, "%s", &report[0]);
+    return false;
+  }
 
-	if (nodeidlength > (PUD_TX_NODEID_BUFFERSIZE - 1)) {
-		pudError(false, "Length of parameter %s (%s) is too great", PUD_NODE_ID_NAME, &nodeid[0]);
-		return false;
-	}
+  if (nodeidlength > (PUD_TX_NODEID_BUFFERSIZE - 1)) {
+    pudError(false, "Length of parameter %s (%s) is too great", PUD_NODE_ID_NAME, &nodeid[0]);
+    return false;
+  }
 
-	return setupNodeIdBinaryString(&nodeIdBinary, nodeid, nodeidlength);
+  return setupNodeIdBinaryString(&nodeIdBinary, nodeid, nodeidlength);
 }
 
 /**
@@ -976,9 +980,9 @@ unsigned char * getTxNmeaMessagePrefix(void) {
 
 int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)),
 		set_plugin_parameter_addon addon __attribute__ ((unused))) {
+	const char * invalidCharName;
 	static const char * valueName = PUD_TX_NMEAMESSAGEPREFIX_NAME;
 	size_t valueLength;
-	char report[256];
 
 	assert (value != NULL);
 
@@ -989,10 +993,14 @@ int setTxNmeaMessagePrefix(const char *value, void *data __attribute__ ((unused)
 		return true;
 	}
 
-	if (nmea_parse_sentence_has_invalid_chars(value, valueLength, valueName, &report[0], sizeof(report))) {
-		pudError(false, "%s", &report[0]);
-		return true;
-	}
+  invalidCharName = nmea_parse_sentence_has_invalid_chars(value, valueLength);
+  if (invalidCharName) {
+    char report[256];
+    snprintf(report, sizeof(report), "Configured %s (%s),"
+        " contains invalid NMEA characters (%s)", valueName, value, invalidCharName);
+    pudError(false, "%s", report);
+    return true;
+  }
 
 	if ((strchr(value, ' ') != NULL) || (strchr(value, '\t') != NULL)) {
 		pudError(false, "Value of parameter %s (%s) can not contain whitespace",
