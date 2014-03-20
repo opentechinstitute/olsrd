@@ -525,8 +525,6 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
   struct gw_list * list;
   struct gw_container_entry * gw;
 
-  abuf_appendf(abuf, "Table: Smart Gateway IPv%s\n", ipv6 ? "6" : "4");
-
   list = ipv6 ? &gw_list_ipv6 : &gw_list_ipv4;
   if (list->count) {
     char current[2] = { 0, 0 };
@@ -541,12 +539,14 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
     char if_name[IF_NAMESIZE];
     char destination[INET6_ADDRSTRLEN];
     long long unsigned int cost = 0;
+
     memset(originator, 0, sizeof(originator));
     memset(prefix, 0, sizeof(prefix));
     memset(if_name, 0, sizeof(if_name));
     memset(destination, 0, sizeof(destination));
 
-    abuf_appendf(abuf, fmth, " ", "Originator", "Prefix", "Uplink", "Downlink", "PathCost", "IPv4", "IPv4-NAT", "IPv6", "Tunnel-Name", "Destination", "Cost");
+    abuf_appendf(abuf, "# Table: Smart Gateway IPv%s\n", ipv6 ? "6" : "4");
+    abuf_appendf(abuf, fmth, "#", "Originator", "Prefix", "Uplink", "Downlink", "PathCost", "IPv4", "IPv4-NAT", "IPv6", "Tunnel-Name", "Destination", "Cost");
 
     current_gw = olsr_get_inet_gateway(false);
     OLSR_FOR_ALL_GWS(&list->head, gw) {
