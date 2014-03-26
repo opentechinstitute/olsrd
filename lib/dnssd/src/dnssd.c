@@ -862,7 +862,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
  * Return     : none
  * Data Used  :
  * ------------------------------------------------------------------------- */
-void DnssdSendPacket(ldns_pkt *pkt, PKT_TYPE pkt_type, unsigned char *encapsulationUdpData, int nBytes, int ttl) {
+void DnssdSendPacket(ldns_pkt *pkt, PKT_TYPE pkt_type, unsigned char *encapsulationUdpData, int nBytes __attribute__((unused)), int ttl) {
   uint8_t *buf_ptr = NULL;
   size_t buf_size;
   int packet_size, full_header_len, ip_header_len;
@@ -1157,6 +1157,15 @@ DoP2pd(int skfd,
   }                             /* if (skfd >= 0 && (FD_ISSET...)) */
 }                               /* DoP2pd */
 
+static void
+DnssdSigHandler(int sig)
+{
+  if (sig == SIGUSR1) {
+    OLSR_PRINTF(1, "%s: Received USR1 signal, updating services\n", PLUGIN_NAME_SHORT);
+    UpdateServices(NULL);
+  }
+}
+
 /* -------------------------------------------------------------------------
  * Function   : InitP2pd
  * Description: Initialize the P2pd plugin
@@ -1168,6 +1177,8 @@ DoP2pd(int skfd,
 int
 InitP2pd(struct interface *skipThisIntf)
 {
+  struct sigaction sa;
+  
   if (P2pdUseHash) {
     // Initialize hash table for hash based duplicate IP packet check
     InitPacketHistory();
@@ -1180,6 +1191,11 @@ InitP2pd(struct interface *skipThisIntf)
   //Creates captures sockets and register them to the OLSR scheduler
   CreateNonOlsrNetworkInterfaces(skipThisIntf);
 
+  memset(&sa, 0, sizeof(struct sigaction));
+  sa.sa_handler = DnssdSigHandler;
+  if (sigaction(SIGUSR1,&sa,NULL) == -1)
+    P2pdPError("Failed to set signal handler");
+  
   return 0;
 }                               /* InitP2pd */
 
@@ -1500,12 +1516,11 @@ int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set
   strncpy(ServiceFileDir, value, value_len);
   ServiceFileDir[value_len] = '\0';
   
-  // do initial ServiceList population, and return -1 if it fails
-  if (UpdateServices() == -1)
-    return -1;
+  // do initial ServiceList population
+  UpdateServices(NULL);
   
   // set timer for period ServiceList updating
-  service_update_timer = olsr_start_timer(ServiceUpdateInterval * MSEC_PER_SEC, EMISSION_JITTER, OLSR_TIMER_PERIODIC, (timer_cb_func)&UpdateServices, NULL, 0);
+  service_update_timer = olsr_start_timer(ServiceUpdateInterval * MSEC_PER_SEC, EMISSION_JITTER, OLSR_TIMER_PERIODIC, UpdateServices, NULL, 0);
     
   return 0;
 }
@@ -1514,12 +1529,12 @@ int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set
  * Function   : UpdateServices
  * Description: Fetches local Avahi service files with a TTL txt-record and
  *              the target domain, and adds them to a list of local services
- * Input      : none
+ * Input      : context (currently unused)
  * Output     : none
- * Return     : 0 on success, -1 on error
+ * Return     : none
  * Data Used  : ServiceFileDir
  * ------------------------------------------------------------------------- */
-int UpdateServices(void) {
+void UpdateServices(void *context __attribute__((unused))) {
   char file_suffix[9], line[BUFFER_LENGTH + 1], *ttl_string, *service_name, *service_type, *dirpath, *fullpath, hostname[HOSTNAME_LEN + 1];
   DIR *dp = NULL;
   FILE *fp = NULL;
@@ -1540,7 +1555,7 @@ int UpdateServices(void) {
   dp = opendir(ServiceFileDir);
   if (dp == NULL) {
     OLSR_PRINTF(1, "%s: Unable to open directory given by \"ServiceFileDir\"", PLUGIN_NAME_SHORT);
-    return -1;
+    return;
   }
   
   // check for trailing backslash
@@ -1572,7 +1587,7 @@ int UpdateServices(void) {
 #ifdef INCLUDE_DEBUG_OUTPUT
     OLSR_PRINTF(1, "%s: Unable to compile regex", PLUGIN_NAME_SHORT);
 #endif
-    return -1;
+    return;
   }
   
   // set uptodate = 0 for all Services
@@ -1598,7 +1613,7 @@ int UpdateServices(void) {
 #ifdef INCLUDE_DEBUG_OUTPUT
 	  OLSR_PRINTF(1, "%s: Error opening file %s: %s\n", PLUGIN_NAME_SHORT, fullpath, strerror(errno));
 #endif
-	  return -1;
+	  return;
 	}
 	free(fullpath);
         while (fgets(line, BUFFER_LENGTH, fp)) {
@@ -1629,12 +1644,12 @@ int UpdateServices(void) {
 #ifdef INCLUDE_DEBUG_OUTPUT
 		  OLSR_PRINTF(1, "%s: Error fetching hostname\n", PLUGIN_NAME_SHORT);
 #endif
-		  return -1;
+		  return;
 		}
 		hostname[HOSTNAME_LEN] = '\0';
 		if ((service_name = ReplaceHostname(service_name, service_name_len, hostname, strlen(hostname))) == NULL) {
 		  OLSR_PRINTF(1, "%s: Error replacing hostname in servicename\n", PLUGIN_NAME_SHORT);
-		  return -1;
+		  return;
 		}
 		service_name_len = strlen(service_name);
 	      }
@@ -1676,8 +1691,6 @@ int UpdateServices(void) {
   regfree(&type_regex);
   free(domain_pattern);
   free(dirpath);
-  
-  return 0;
 }
 
 /* -------------------------------------------------------------------------

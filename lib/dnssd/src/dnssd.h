@@ -158,7 +158,7 @@ bool olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *)
 
 int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
 int SetDomain(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
-int UpdateServices(void);
+void UpdateServices(void *context);
 
 void AddToRrBuffer(struct RrListByTtl **buf, int ttl, ldns_rr *entry, int section);
 struct RrListByTtl *GetRrListByTtl(const struct RrListByTtl **buf, int ttl);
