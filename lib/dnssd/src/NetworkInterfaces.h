@@ -147,6 +147,7 @@ int IsNonOlsrIf(const char *ifName);
 void CheckAndUpdateLocalBroadcast(unsigned char *ipPacket, union olsr_ip_addr *broadAddr);
 void AddMulticastRoute(void);
 void DeleteMulticastRoute(void);
+int CreateEncapsulationSocket(const char *ifName);
 int CreateCaptureSocket(const char *ifName);
 
 #endif /* _BMF_NETWORKINTERFACES_H */

@@ -81,6 +81,51 @@ struct NonOlsrInterface *nonOlsrInterfaces = NULL;
 struct NonOlsrInterface *lastNonOlsrInterface = NULL;
 
 /* -------------------------------------------------------------------------
+ * Function   : CreateEncapsulationSocket
+ * Description: Create socket for forwarding captured multicast IP traffic
+ * Input      : ifname - network interface (e.g. "eth0")
+ * Output     : none
+ * Return     : the socket descriptor ( >= 0), or -1 if an error occurred
+ * Data Used  : none
+ * Notes      : The socket is a RAW IP packet socket, bound to the specified
+ *              network interface
+ * ------------------------------------------------------------------------- */
+int
+CreateEncapsulationSocket(const char *ifName)
+{
+  struct ifreq ifr;
+  const int on = 1;
+  int skfd;
+  
+  memset(&ifr, 0, sizeof(struct ifreq));
+  memcpy(ifr.ifr_name,ifName,IFNAMSIZ);
+  ifr.ifr_name[IFNAMSIZ] = '\0';
+  ifr.ifr_ifindex = if_nametoindex(ifName);
+  
+  skfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+  if (skfd < 0) {
+    P2pdPError("socket error");
+    return -1;
+  }
+  
+  // We are including IP headers in forwarded packets, so set relevant flag
+  if (setsockopt (skfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof (on)) < 0) {
+    P2pdPError("setsockopt(IP_HDRINCL) error");
+    close(skfd);
+    return -1;
+  }
+  
+  // Bind socket to interface index
+  if (setsockopt (skfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof (ifr)) < 0) {
+    P2pdPError("setsockopt() failed to bind to interface ");
+    close(skfd);
+    return -1;
+  }
+  
+  return skfd;
+}
+
+/* -------------------------------------------------------------------------
  * Function   : CreateCaptureSocket
  * Description: Create socket for promiscuously capturing multicast IP traffic
  * Input      : ifname - network interface (e.g. "eth0")
@@ -193,6 +238,16 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
 //TODO: assert interface is not talking OLSR
 
 
+  /* Create socket for forwarding received packets onto non-OLSR
+   * interfaces */
+  if ((olsrIntf == NULL)) {
+    encapsulatingSkfd = CreateEncapsulationSocket(ifName);
+    if (encapsulatingSkfd < 0) {
+      return 0;
+    }
+    nOpened++;
+  }
+  
   /* Create socket for capturing and sending of multicast packets on
    * non-OLSR interfaces, and on OLSR-interfaces if configured. */
   if ((olsrIntf == NULL)) {
@@ -201,7 +256,6 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
       close(encapsulatingSkfd);
       return 0;
     }
-
     nOpened++;
   }
 
@@ -296,14 +350,14 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   
   free(ifaddrs);
 
-  //OLSR_PRINTF(
-  //  8,
-  //  "%s: opened %d socket%s on %s interface \"%s\"\n",
-  //  PLUGIN_NAME_SHORT,
-  //  nOpened,
-  //  nOpened == 1 ? "" : "s",
-  //  olsrIntf != NULL ? "OLSR" : "non-OLSR",
-  //  ifName);
+  OLSR_PRINTF(
+   8,
+   "%s: opened %d socket%s on %s interface \"%s\"\n",
+   PLUGIN_NAME_SHORT,
+   nOpened,
+   nOpened == 1 ? "" : "s",
+   olsrIntf != NULL ? "OLSR" : "non-OLSR",
+   ifName);
 
   return nOpened;
 }                               /* CreateInterface */
@@ -399,9 +453,9 @@ CreateNonOlsrNetworkInterfaces(struct interface *skipThisIntf)
   free(ifc.ifc_buf);
 
   if (nonOlsrInterfaces == NULL) {
-    //OLSR_PRINTF(1, "%s: could not initialize any network interface\n", PLUGIN_NAME);
+    OLSR_PRINTF(1, "%s: could not initialize any network interface\n", PLUGIN_NAME);
   } else {
-    //OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpenedSockets);
+    OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpenedSockets);
   }
   return 0;
 }                               /* CreateNonOlsrNetworkInterfaces */

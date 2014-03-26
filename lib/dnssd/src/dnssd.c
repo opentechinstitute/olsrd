@@ -139,8 +139,6 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
   int stripped_len = 0;
   union olsr_ip_addr destAddr;
   int destPort;
-  int skfd;
-  const int on = 1;
   bool isInList = false;
 
   ipHeader = (struct ip *) ARM_NOWARN_ALIGN(encapsulationUdpData);
@@ -228,32 +226,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
     if (walker->olsrIntf == NULL) {
       int nBytesWritten;
       
-      struct ifreq ifr;
-      memset(&ifr, 0, sizeof(struct ifreq));
-      memcpy(ifr.ifr_name,walker->ifName,IFNAMSIZ);
-      ifr.ifr_name[IFNAMSIZ] = '\0';
-      ifr.ifr_ifindex = if_nametoindex(walker->ifName);
-      
-      skfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-      if (skfd < 0) {
-	P2pdPError("socket error");
-	return;
-      }
-      
-      if (setsockopt (skfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof (on)) < 0) {
-	P2pdPError("setsockopt(IP_HDRINCL) error");
-	close(skfd);
-	return;
-      }
-      
-      // Bind socket to interface index.
-      if (setsockopt (skfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof (ifr)) < 0) {
-	P2pdPError("setsockopt() failed to bind to interface ");
-	close(skfd);
-	return;
-      }
-      
-      nBytesWritten = sendto(skfd,
+      nBytesWritten = sendto(walker->encapsulatingSkfd,
 			     encapsulationUdpData,
 			     stripped_len,
 			     0,
@@ -272,8 +245,6 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
          walker->ifName);
 #endif
       }
-      
-      close(skfd);
     }                           /* if (walker->olsrIntf == NULL) */
   }
 }                               /* PacketReceivedFromOLSR */
