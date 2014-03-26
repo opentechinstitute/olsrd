@@ -115,6 +115,13 @@ CreateEncapsulationSocket(const char *ifName)
     return -1;
   }
   
+  // Set IP_MULTICAST_LOOP flag, so local programs can capture the forwarded packets
+  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_LOOP, &on, sizeof (on)) < 0) {
+    P2pdPError("setsockopt(IP_MULTICAST_LOOP) error");
+    close(skfd);
+    return -1;
+  }
+  
   // Bind socket to interface index
   if (setsockopt (skfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof (ifr)) < 0) {
     P2pdPError("setsockopt() failed to bind to interface ");
