@@ -135,9 +135,12 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
                                      * IP6 packet */
   struct udphdr *udpHeader = NULL;
   struct NonOlsrInterface *walker = NULL;
+  struct sockaddr_in addr;
   int stripped_len = 0;
   union olsr_ip_addr destAddr;
   int destPort;
+  int skfd;
+  const int on = 1;
   bool isInList = false;
 
   ipHeader = (struct ip *) ARM_NOWARN_ALIGN(encapsulationUdpData);
@@ -146,140 +149,131 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
 
   if (check_and_mark_recent_packet(encapsulationUdpData, len))
     return;
-
+  
+  if ((encapsulationUdpData[0] & 0xf0) == 0x40)
+    stripped_len = ntohs(ipHeader->ip_len);
+  
+  if ((encapsulationUdpData[0] & 0xf0) == 0x60) {
+    stripped_len = 40 + ntohs(ip6Header->ip6_plen); // IPv6 Header size (40)
+    // + payload_len
+  }
+  
+  // Sven-Ola: Don't know how to handle the "stripped_len is uninitialized"
+  // condition, maybe exit(1) is better...?
+  if (0 == stripped_len)
+    return;
+  
+  //TODO: if packet is not IP die here
+  
+  if (stripped_len > len) {
+  }
+  
+  if (olsr_cnf->ip_version == AF_INET) {
+    // Determine the IP address and the port from the header information
+    if (ipHeader->ip_p == SOL_UDP && !IsIpv4Fragment(ipHeader)) {
+      udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData +
+                                   GetIpHeaderLength(encapsulationUdpData)));
+      destAddr.v4.s_addr = ipHeader->ip_dst.s_addr;
+      destPort = htons(udpHeader->dest);
+      isInList = InUdpDestPortList(AF_INET, &destAddr, destPort);
+#ifdef INCLUDE_DEBUG_OUTPUT
+      if (!isInList) {
+	char tmp[32];
+	OLSR_PRINTF(1,
+		    "%s: Not in dest/port list: %s:%d\n",
+	            PLUGIN_NAME_SHORT,
+	            get_ipv4_str(destAddr.v4.s_addr,
+		    tmp,
+		    sizeof(tmp)),
+		    destPort);
+      }
+#endif
+    }
+  } else /* (olsr_cnf->ip_version == AF_INET6) */ {
+    if (ip6Header->ip6_nxt == SOL_UDP && !IsIpv6Fragment(ip6Header)) {
+      udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
+      memcpy(&destAddr.v6, &ip6Header->ip6_dst, sizeof(struct in6_addr));
+      destPort = htons(udpHeader->dest);
+      isInList = InUdpDestPortList(AF_INET6, &destAddr, destPort);
+#ifdef INCLUDE_DEBUG_OUTPUT
+      if (!isInList) {
+	char tmp[64];
+	OLSR_PRINTF(1,
+		    "%s: Not in dest/port list: %s:%d\n",
+	            PLUGIN_NAME_SHORT,
+	            get_ipv6_str(destAddr.v6.s6_addr,
+	            tmp,
+		    sizeof(tmp)),
+		    destPort);
+      }
+#endif
+    }
+  }
+  
+  if (!isInList) {
+    /* Address/port combination of this packet is not in the UDP dest/port
+     * list and will therefore be suppressed. I.e. just continue with the
+     * next interface to emit on.
+     */
+    return;
+  }
+  
+  memset(&addr, 0, sizeof(struct sockaddr_in));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = destAddr.v4.s_addr;
+  
   /* Check with each network interface what needs to be done on it */
   for (walker = nonOlsrInterfaces; walker != NULL; walker = walker->next) {
     /* To a non-OLSR interface: unpack encapsulated IP packet and forward it */
     if (walker->olsrIntf == NULL) {
       int nBytesWritten;
-      struct sockaddr_ll dest;
-
-      memset(&dest, 0, sizeof(dest));
-      dest.sll_family = AF_PACKET;
-      if ((encapsulationUdpData[0] & 0xf0) == 0x40) {
-        dest.sll_protocol = htons(ETH_P_IP);
-        stripped_len = ntohs(ipHeader->ip_len);
-      }
-
-      if ((encapsulationUdpData[0] & 0xf0) == 0x60) {
-        dest.sll_protocol = htons(ETH_P_IPV6);
-        stripped_len = 40 + ntohs(ip6Header->ip6_plen); // IPv6 Header size (40)
-                                                        // + payload_len
-      }
-
-      // Sven-Ola: Don't know how to handle the "stripped_len is uninitialized"
-      // condition, maybe exit(1) is better...?
-      if (0 == stripped_len)
-        return;
-
-      //TODO: if packet is not IP die here
-
-      if (stripped_len > len) {
-      }
-
-      dest.sll_ifindex = if_nametoindex(walker->ifName);
-      dest.sll_halen = IFHWADDRLEN;
-
-      if (olsr_cnf->ip_version == AF_INET) {
-        /* Use all-ones as destination MAC address. When the IP destination is
-         * a multicast address, the destination MAC address should normally also
-         * be a multicast address. E.g., when the destination IP is 224.0.0.1,
-         * the destination MAC should be 01:00:5e:00:00:01. However, it does not
-         * seem to matter when the destination MAC address is set to all-ones
-         * in that case.
-         */
-
-        if (IsMulticastv4(ipHeader)) {
-          in_addr_t addr = ntohl(ipHeader->ip_dst.s_addr);
-
-          dest.sll_addr[0] = 0x01;
-          dest.sll_addr[1] = 0x00;
-          dest.sll_addr[2] = 0x5E;
-          dest.sll_addr[3] = (addr >> 16) & 0x7F;
-          dest.sll_addr[4] = (addr >>  8) & 0xFF;
-          dest.sll_addr[5] = addr & 0xFF;
-        } else {
-          /* broadcast or whatever */
-          memset(dest.sll_addr, 0xFF, IFHWADDRLEN);
-        }
-      } else /*(olsr_cnf->ip_version == AF_INET6) */ {
-        if (IsMulticastv6(ip6Header)) {
-          dest.sll_addr[0] = 0x33;
-          dest.sll_addr[1] = 0x33;
-          dest.sll_addr[2] = ip6Header->ip6_dst.s6_addr[12];
-          dest.sll_addr[3] = ip6Header->ip6_dst.s6_addr[13];
-          dest.sll_addr[4] = ip6Header->ip6_dst.s6_addr[14];
-          dest.sll_addr[5] = ip6Header->ip6_dst.s6_addr[15];
-        }
-      }
-
-      if (olsr_cnf->ip_version == AF_INET) {
-        // Determine the IP address and the port from the header information
-        if (ipHeader->ip_p == SOL_UDP && !IsIpv4Fragment(ipHeader)) {
-          udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData +
-                                       GetIpHeaderLength(encapsulationUdpData)));
-          destAddr.v4.s_addr = ipHeader->ip_dst.s_addr;
-          destPort = htons(udpHeader->dest);
-          isInList = InUdpDestPortList(AF_INET, &destAddr, destPort);
-#ifdef INCLUDE_DEBUG_OUTPUT
-          if (!isInList) {
-            char tmp[32];
-            OLSR_PRINTF(1,
-                        "%s: Not in dest/port list: %s:%d\n",
-                        PLUGIN_NAME_SHORT,
-                        get_ipv4_str(destAddr.v4.s_addr,
-                                     tmp,
-                                     sizeof(tmp)),
-                        destPort);
-          }
-#endif
-        }
-      } else /* (olsr_cnf->ip_version == AF_INET6) */ {
-        if (ip6Header->ip6_nxt == SOL_UDP && !IsIpv6Fragment(ip6Header)) {
-          udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
-          memcpy(&destAddr.v6, &ip6Header->ip6_dst, sizeof(struct in6_addr));
-          destPort = htons(udpHeader->dest);
-          isInList = InUdpDestPortList(AF_INET6, &destAddr, destPort);
-#ifdef INCLUDE_DEBUG_OUTPUT
-          if (!isInList) {
-            char tmp[64];
-            OLSR_PRINTF(1,
-                        "%s: Not in dest/port list: %s:%d\n",
-                        PLUGIN_NAME_SHORT,
-                        get_ipv6_str(destAddr.v6.s6_addr,
-                                     tmp,
-                                     sizeof(tmp)),
-                        destPort);
-          }
-#endif
-        }
-      }
-
-      if (!isInList) {
-        /* Address/port combination of this packet is not in the UDP dest/port
-         * list and will therefore be suppressed. I.e. just continue with the
-         * next interface to emit on.
-         */
-        continue;
+      
+      struct ifreq ifr;
+      memset(&ifr, 0, sizeof(struct ifreq));
+      memcpy(ifr.ifr_name,walker->ifName,IFNAMSIZ);
+      ifr.ifr_name[IFNAMSIZ] = '\0';
+      ifr.ifr_ifindex = if_nametoindex(walker->ifName);
+      
+      skfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+      if (skfd < 0) {
+	P2pdPError("socket error");
+	return;
       }
       
-      nBytesWritten = sendto(walker->capturingSkfd,
-                             encapsulationUdpData,
-                             stripped_len,
-                             0,
-                             (struct sockaddr *)&dest,
-                             sizeof(dest));
+      if (setsockopt (skfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof (on)) < 0) {
+	P2pdPError("setsockopt(IP_HDRINCL) error");
+	close(skfd);
+	return;
+      }
+      
+      // Bind socket to interface index.
+      if (setsockopt (skfd, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof (ifr)) < 0) {
+	P2pdPError("setsockopt() failed to bind to interface ");
+	close(skfd);
+	return;
+      }
+      
+      nBytesWritten = sendto(skfd,
+			     encapsulationUdpData,
+			     stripped_len,
+			     0,
+			     (struct sockaddr *) &addr,
+			     sizeof(struct sockaddr));
+      
       if (nBytesWritten != stripped_len) {
         P2pdPError("sendto() error forwarding unpacked encapsulated pkt on \"%s\"",
                    walker->ifName);
       } else {
-
-        //OLSR_PRINTF(
-        //  2,
-        //  "%s: --> unpacked and forwarded on \"%s\"\n",
-        //  PLUGIN_NAME_SHORT,
-        //  walker->ifName);
+#ifdef INCLUDE_DEBUG_OUTPUT
+        OLSR_PRINTF(
+         2,
+         "%s: --> unpacked and forwarded on \"%s\"\n",
+         PLUGIN_NAME_SHORT,
+         walker->ifName);
+#endif
       }
+      
+      close(skfd);
     }                           /* if (walker->olsrIntf == NULL) */
   }
 }                               /* PacketReceivedFromOLSR */
