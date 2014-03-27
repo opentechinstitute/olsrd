@@ -1527,7 +1527,8 @@ int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set
 
 void PromptAnnouncements(void *context __attribute__((unused))) {
   int ret;
-  const char dnssd_type[] = "_services._dns-sd._udp";
+  const char dnssd_type[] = "_services._dns-sd._udp.mesh.local";
+  char srv_type[256];
   uint8_t *pkt_buf = NULL;
   size_t buf_size = 0;
   struct MdnsService *service = NULL;
@@ -1539,15 +1540,17 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
   struct UdpDestPort *walker = NULL;
   union olsr_sockaddr addr;
   
-  ret = ldns_pkt_query_new_frm_str(&pkt, dnssd_type, LDNS_RR_TYPE_ANY, LDNS_RR_CLASS_IN, 0);
+  ret = ldns_pkt_query_new_frm_str(&pkt, dnssd_type, LDNS_RR_TYPE_PTR, LDNS_RR_CLASS_IN, 0);
   if (ret != LDNS_STATUS_OK) {
     P2pdPError("Failed to create ldns packet: %s\n", ldns_get_errorstr_by_id(ret));
     return;
   }
   
   for (service = ServiceList; service != NULL; service=service->hh.next) {
-    
-    ret = ldns_str2rdf_dname(&rdf, service->service_type);
+    memset(srv_type, 0, 256);
+    strcpy(srv_type, service->service_type);
+    strcat(srv_type, ".mesh.local");
+    ret = ldns_str2rdf_dname(&rdf, srv_type);
     if (ret != LDNS_STATUS_OK) {
       P2pdPError("Failed to create rdf: %s\n", ldns_get_errorstr_by_id(ret));
       ldns_pkt_free(pkt);
@@ -1568,7 +1571,7 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
       return;
     }
     ldns_rr_set_owner(question_rr, rdf);
-    ldns_rr_set_type(question_rr, LDNS_RR_TYPE_ANY);
+    ldns_rr_set_type(question_rr, LDNS_RR_TYPE_PTR);
     ldns_rr_set_class(question_rr, LDNS_RR_CLASS_IN);
     ldns_rr_set_question(question_rr, 1);
     ldns_pkt_push_rr(pkt, LDNS_SECTION_QUESTION, question_rr);
