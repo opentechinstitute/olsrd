@@ -85,7 +85,7 @@ int CreateIPSocket(const char *ifName)
   int skfd;
   const int on = 1;
   struct sockaddr_in addr;
-  int ifIndex = if_nametoindex(ifName);
+  struct ifreq ifr;
   
   skfd = socket(AF_INET, SOCK_DGRAM, 0);
   if (skfd < 0) {
@@ -100,11 +100,22 @@ int CreateIPSocket(const char *ifName)
     return -1;
   }
   
-//   if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_IF, &ifIndex, sizeof(ifIndex)) < 0) {
-//     P2pdPError("setsockopt(IP_MULTICAST_IF) error");
-//     close(skfd);
-//     return -1;
-//   }
+  // Get IP address of interface
+  memset(&ifr, 0, sizeof(struct ifreq));
+  memcpy(ifr.ifr_name,ifName,IFNAMSIZ);
+  ifr.ifr_name[IFNAMSIZ] = '\0';
+  if (ioctl(skfd, SIOCGIFADDR, &ifr) < 0) {
+    P2pdPError("ioctl(SIOCGIFADDR) error");
+    close(skfd);
+    return -1;
+  }
+  
+  // Bind socket to interface
+  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_IF, &((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr.s_addr, sizeof(struct in_addr)) < 0) {
+    P2pdPError("setsockopt(IP_MULTICAST_IF) error");
+    close(skfd);
+    return -1;
+  }
   
   memset(&addr, 0, sizeof(struct sockaddr_in));
   addr.sin_family = AF_INET;

@@ -1591,8 +1591,7 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
 	
 	memset(&addr, 0, sizeof(union olsr_sockaddr));
 	
-	
-	if (walker->ip_version == AF_INET) {
+// 	if (walker->ip_version == AF_INET) {
 	  addr.in4.sin_family = AF_INET;
 	  addr.in4.sin_port = walker->port;
 	  addr.in4.sin_addr.s_addr = walker->address.v4.s_addr;
@@ -1616,7 +1615,7 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
 // 			       (struct sockaddr *) &addr.in6,
 // 			       sizeof(struct sockaddr));
 	  
-	}
+// 	}
 	
 	if (nBytesWritten != buf_size) {
 	  P2pdPError("sendto() error forwarding unpacked encapsulated pkt on \"%s\"",
@@ -1625,9 +1624,11 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
 #ifdef INCLUDE_DEBUG_OUTPUT
 	  OLSR_PRINTF(
 	    2,
-	    "%s: Sent mDNS queries on \"%s\"\n",
+	    "%s: Sent mDNS queries on \"%s\" to %s:%d\n",
 	    PLUGIN_NAME_SHORT,
-	    ifwalker->ifName);
+	    ifwalker->ifName,
+	    inet_ntoa(addr.in4.sin_addr),
+	    addr.in4.sin_port);
 #endif
 	}
       }
