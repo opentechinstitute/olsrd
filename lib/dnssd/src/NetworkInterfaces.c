@@ -80,6 +80,45 @@
 struct NonOlsrInterface *nonOlsrInterfaces = NULL;
 struct NonOlsrInterface *lastNonOlsrInterface = NULL;
 
+int CreateIPSocket(const char *ifName)
+{
+  int skfd;
+  const int on = 1;
+  struct sockaddr_in addr;
+  int ifIndex = if_nametoindex(ifName);
+  
+  skfd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (skfd < 0) {
+    P2pdPError("socket error");
+    return -1;
+  }
+  
+  // Set IP_MULTICAST_LOOP flag, so local programs can capture the forwarded packets
+  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_LOOP, &on, sizeof (on)) < 0) {
+    P2pdPError("setsockopt(IP_MULTICAST_LOOP) error");
+    close(skfd);
+    return -1;
+  }
+  
+  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_IF, &ifIndex, sizeof(ifIndex)) < 0) {
+    P2pdPError("setsockopt(IP_MULTICAST_IF) error");
+    close(skfd);
+    return -1;
+  }
+  
+  memset(&addr, 0, sizeof(struct sockaddr_in));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  
+  if (bind(skfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+    P2pdPError("bind() error");
+    close(skfd);
+    return -1;
+  }
+  
+return skfd;
+}
+
 /* -------------------------------------------------------------------------
  * Function   : CreateEncapsulationSocket
  * Description: Create socket for forwarding captured multicast IP traffic
@@ -233,6 +272,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   int capturingSkfd = -1;
   int encapsulatingSkfd = -1;
   int listeningSkfd = -1;
+  int ipSkfd = -1;
   int ioctlSkfd;
   struct ifreq ifr;
   struct in_addr *ifaddrs = NULL;
@@ -265,6 +305,18 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
     }
     nOpened++;
   }
+  
+  /* Create IP socket for sending mDNS queries, in order to prompt Avahi
+   * to periodically send out announcements */
+  if ((olsrIntf == NULL)) {
+    ipSkfd = CreateIPSocket(ifName);
+    if (ipSkfd < 0) {
+      close(encapsulatingSkfd);
+      close(capturingSkfd);
+      return 0;
+    }
+    nOpened++;
+  }
 
   /* For ioctl operations on the network interface, use either capturingSkfd
    * or encapsulatingSkfd, whichever is available */
@@ -284,6 +336,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   /* Copy data into NonOlsrInterface object */
   newIf.capturingSkfd = capturingSkfd;
   newIf.encapsulatingSkfd = encapsulatingSkfd;
+  newIf.ipSkfd = ipSkfd;
   newIf.listeningSkfd = listeningSkfd;
   memcpy(newIf.macAddr, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN);
   memcpy(newIf.ifName, ifName, IFNAMSIZ);

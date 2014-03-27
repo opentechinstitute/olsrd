@@ -91,6 +91,7 @@
 #include "dllist.h"
 
 struct timer_entry *service_update_timer = NULL;
+struct timer_entry *service_query_timer = NULL;
 struct MdnsService *ServiceList    = NULL;
 char ServiceDomain[MAX_DOMAIN_LEN];
 size_t ServiceDomainLength;
@@ -879,7 +880,6 @@ void DnssdSendPacket(ldns_pkt *pkt, PKT_TYPE pkt_type, unsigned char *encapsulat
   // convert packet to wire format buffer
   if (ldns_pkt2wire(&buf_ptr, pkt, &buf_size) != LDNS_STATUS_OK) {
     OLSR_PRINTF(1, "%s: Error converting dns packet to wire format\n", PLUGIN_NAME_SHORT);
-    free(buf_ptr);
     return;
   }
   
@@ -1212,6 +1212,7 @@ CloseP2pd(void)
 {
   CloseNonOlsrNetworkInterfaces();
   olsr_stop_timer(service_update_timer);
+  olsr_stop_timer(service_query_timer);
   free(ServiceFileDir);
   DeleteAllServices();
 }
@@ -1521,8 +1522,123 @@ int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set
   
   // set timer for period ServiceList updating
   service_update_timer = olsr_start_timer(ServiceUpdateInterval * MSEC_PER_SEC, EMISSION_JITTER, OLSR_TIMER_PERIODIC, UpdateServices, NULL, 0);
+  
+  // set timer for periodically prompting service announcements
+  service_query_timer = olsr_start_timer(SERVICE_QUERY_INTERVAL * MSEC_PER_SEC, EMISSION_JITTER, OLSR_TIMER_PERIODIC, PromptAnnouncements, NULL, 0);
     
   return 0;
+}
+
+void PromptAnnouncements(void *context __attribute__((unused))) {
+  int ret;
+  const char dnssd_type[] = "_services._dns-sd._udp";
+  uint8_t *pkt_buf = NULL;
+  size_t buf_size = 0;
+  struct MdnsService *service = NULL;
+  ldns_rdf *rdf = NULL;
+  ldns_rr *question_rr = NULL;
+  ldns_rr_list *rr_list = NULL;
+  ldns_pkt *pkt = NULL;
+  struct NonOlsrInterface *ifwalker = NULL;
+  struct UdpDestPort *walker = NULL;
+  union olsr_sockaddr addr;
+  
+  ret = ldns_pkt_query_new_frm_str(&pkt, dnssd_type, LDNS_RR_TYPE_ANY, LDNS_RR_CLASS_IN, 0);
+  if (ret != LDNS_STATUS_OK) {
+    P2pdPError("Failed to create ldns packet: %s\n", ldns_get_errorstr_by_id(ret));
+    return;
+  }
+  
+  for (service = ServiceList; service != NULL; service=service->hh.next) {
+    
+    ret = ldns_str2rdf_dname(&rdf, service->service_type);
+    if (ret != LDNS_STATUS_OK) {
+      P2pdPError("Failed to create rdf: %s\n", ldns_get_errorstr_by_id(ret));
+      ldns_pkt_free(pkt);
+      return;
+    }
+    
+    // Don't add duplicate RRs
+    if ((rr_list = ldns_pkt_rr_list_by_name(pkt, rdf, LDNS_SECTION_QUESTION))) {
+      ldns_rr_list_free(rr_list);
+      break;
+    }
+    
+    question_rr = ldns_rr_new();
+    if (!question_rr) {
+      P2pdPError("Failed to create rr");
+      ldns_rdf_free(rdf);
+      ldns_pkt_free(pkt);
+      return;
+    }
+    ldns_rr_set_owner(question_rr, rdf);
+    ldns_rr_set_type(question_rr, LDNS_RR_TYPE_ANY);
+    ldns_rr_set_class(question_rr, LDNS_RR_CLASS_IN);
+    ldns_rr_set_question(question_rr, 1);
+    ldns_pkt_push_rr(pkt, LDNS_SECTION_QUESTION, question_rr);
+  }
+  
+  // Convert packet to wire format
+  ret = ldns_pkt2wire(&pkt_buf, pkt, &buf_size);
+  if (ret != LDNS_STATUS_OK) {
+    P2pdPError("Error converting dns packet to wire format: %s\n", ldns_get_errorstr_by_id(ret));
+    ldns_pkt_free(pkt);
+    return;
+  }
+  
+  // Send packet to local interface(s) and UDP destination addresses
+  for (ifwalker = nonOlsrInterfaces; ifwalker != NULL; ifwalker = ifwalker->next) {
+    if (ifwalker->olsrIntf == NULL) {
+      
+      for (walker = UdpDestPortList; walker; walker = walker->next) {
+	int nBytesWritten;
+	
+	memset(&addr, 0, sizeof(union olsr_sockaddr));
+	
+	
+	if (walker->ip_version == AF_INET) {
+	  addr.in4.sin_family = AF_INET;
+	  addr.in4.sin_port = walker->port;
+	  addr.in4.sin_addr.s_addr = walker->address.v4.s_addr;
+	  
+	  nBytesWritten = sendto(ifwalker->ipSkfd,
+			       pkt_buf,
+			       buf_size,
+			       0,
+			       (struct sockaddr *) &addr.in4,
+			       sizeof(struct sockaddr));
+	  
+// 	} else /* ip_version == AF_INET6 */ {
+// 	  addr.in6.sin6_family = AF_INET;
+// 	  addr.in6.sin6_port = walker->port;
+// 	  memcpy(&addr.in6.sin6_addr.s6_addr, walker->address.v6.s6_addr, 16);
+// 	  
+// 	  nBytesWritten = sendto(ifwalker->ipSkfd,
+// 			       pkt_buf,
+// 			       buf_size,
+// 			       0,
+// 			       (struct sockaddr *) &addr.in6,
+// 			       sizeof(struct sockaddr));
+	  
+	}
+	
+	if (nBytesWritten != buf_size) {
+	  P2pdPError("sendto() error forwarding unpacked encapsulated pkt on \"%s\"",
+		     ifwalker->ifName);
+	} else {
+#ifdef INCLUDE_DEBUG_OUTPUT
+	  OLSR_PRINTF(
+	    2,
+	    "%s: Sent mDNS queries on \"%s\"\n",
+	    PLUGIN_NAME_SHORT,
+	    ifwalker->ifName);
+#endif
+	}
+      }
+    }
+  }
+  
+  ldns_pkt_free(pkt);
 }
 
 /* -------------------------------------------------------------------------

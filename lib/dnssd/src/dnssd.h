@@ -74,6 +74,7 @@
 #define UDP_HEADER_LENGTH         8
 #define HOSTNAME_LEN              64
 #define SERVICE_UPDATE_INTERVAL   300
+#define SERVICE_QUERY_INTERVAL    30
 #define EMISSION_JITTER           25      /* percent */
 
 /* Forward declaration of OLSR interface type */
@@ -157,6 +158,7 @@ void olsr_p2pd_gen(unsigned char *packet, int len, int ttl);
 bool olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
+void PromptAnnouncements(void *context __attribute__((unused)));
 int SetDomain(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
 void UpdateServices(void *context);
 
