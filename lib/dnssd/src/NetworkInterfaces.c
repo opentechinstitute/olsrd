@@ -100,11 +100,11 @@ int CreateIPSocket(const char *ifName)
     return -1;
   }
   
-  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_IF, &ifIndex, sizeof(ifIndex)) < 0) {
-    P2pdPError("setsockopt(IP_MULTICAST_IF) error");
-    close(skfd);
-    return -1;
-  }
+//   if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_IF, &ifIndex, sizeof(ifIndex)) < 0) {
+//     P2pdPError("setsockopt(IP_MULTICAST_IF) error");
+//     close(skfd);
+//     return -1;
+//   }
   
   memset(&addr, 0, sizeof(struct sockaddr_in));
   addr.sin_family = AF_INET;
@@ -116,7 +116,7 @@ int CreateIPSocket(const char *ifName)
     return -1;
   }
   
-return skfd;
+  return skfd;
 }
 
 /* -------------------------------------------------------------------------

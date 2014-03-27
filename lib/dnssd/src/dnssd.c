@@ -515,9 +515,7 @@ P2pdPError(const char *format, ...)
 #define MAX_STR_DESC 255
   char strDesc[MAX_STR_DESC];
 
-#if !defined REMOVE_LOG_DEBUG
   char *stringErr = strerror(errno);
-#endif
 
   /* Rely on short-circuit boolean evaluation */
   if (format == NULL || *format == '\0') {
@@ -531,9 +529,7 @@ P2pdPError(const char *format, ...)
 
     strDesc[MAX_STR_DESC - 1] = '\0';   /* Ensures null termination */
 
-#if !defined REMOVE_LOG_DEBUG
-    OLSR_DEBUG(LOG_PLUGINS, "%s: %s\n", strDesc, stringErr);
-#endif
+    OLSR_PRINTF(1, "%s: %s: %s\n", PLUGIN_NAME_SHORT, strDesc, stringErr);
   }
 }                               /* P2pdPError */
 
