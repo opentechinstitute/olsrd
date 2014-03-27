@@ -1593,7 +1593,7 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
 	
 // 	if (walker->ip_version == AF_INET) {
 	  addr.in4.sin_family = AF_INET;
-	  addr.in4.sin_port = walker->port;
+	  addr.in4.sin_port = htons(walker->port);
 	  addr.in4.sin_addr.s_addr = walker->address.v4.s_addr;
 	  
 	  nBytesWritten = sendto(ifwalker->ipSkfd,
