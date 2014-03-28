@@ -58,7 +58,6 @@
 #include <netinet/ip.h>         /* struct ip */
 #include <netinet/udp.h>        /* SOL_UDP */
 #include <stdlib.h>             /* atoi, malloc */
-#include <ifaddrs.h>		/* getifaddrs */
 
 /* OLSRD includes */
 #include "olsr.h"               /* OLSR_PRINTF() */
@@ -278,7 +277,7 @@ CreateCaptureSocket(const char *ifName)
 //FOR MDNS IS ALWAYS CALLED WITH NULL AS SECOND ARG
 
 static int
-CreateInterface(const char *ifName, struct interface *olsrIntf)
+CreateInterface(const char *ifName, struct in_addr *addr, struct interface *olsrIntf)
 {
   int capturingSkfd = -1;
   int encapsulatingSkfd = -1;
@@ -286,13 +285,14 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
   int ipSkfd = -1;
   int ioctlSkfd;
   struct ifreq ifr;
-  struct in_addr *ifaddrs = NULL;
-  size_t i, nif = 0;
   int nOpened = 0;
-  struct NonOlsrInterface newIf = {0};
+  struct NonOlsrInterface *newIf = malloc(sizeof(struct NonOlsrInterface));
 
   assert(ifName != NULL);
 
+  if (newIf == NULL) {
+    return 0;
+  }
 //TODO: assert interface is not talking OLSR
 
 
@@ -312,6 +312,7 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
     capturingSkfd = CreateCaptureSocket(ifName);
     if (capturingSkfd < 0) {
       close(encapsulatingSkfd);
+      free(newIf);
       return 0;
     }
     nOpened++;
@@ -341,37 +342,28 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
     P2pdPError("ioctl(SIOCGIFHWADDR) error for interface \"%s\"", ifName);
     close(capturingSkfd);
     close(encapsulatingSkfd);
+    free(newIf);
     return 0;
   }
 
   /* Copy data into NonOlsrInterface object */
-  newIf.capturingSkfd = capturingSkfd;
-  newIf.encapsulatingSkfd = encapsulatingSkfd;
-  newIf.ipSkfd = ipSkfd;
-  newIf.listeningSkfd = listeningSkfd;
-  memcpy(newIf.macAddr, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN);
-  memcpy(newIf.ifName, ifName, IFNAMSIZ);
-  newIf.olsrIntf = olsrIntf;
+  newIf->capturingSkfd = capturingSkfd;
+  newIf->encapsulatingSkfd = encapsulatingSkfd;
+  newIf->listeningSkfd = listeningSkfd;
+  memcpy(newIf->macAddr, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN);
+  memcpy(newIf->ifName, ifName, IFNAMSIZ);
+  newIf->olsrIntf = olsrIntf;
   if (olsrIntf != NULL) {
     /* For an OLSR-interface, copy the interface address and broadcast
      * address from the OLSR interface object. Downcast to correct sockaddr
      * subtype. */
-    ifaddrs = realloc(ifaddrs, sizeof(struct in_addr) * nif + 1);
-    ifaddrs[nif++] = olsrIntf->int_addr.sin_addr;
-    olsr_printf(1,"%s: Adding OLSR Interface: %s\tAddress: %s\n", PLUGIN_NAME_SHORT, ifName, inet_ntoa(ifaddrs[nif - 1]));
-    newIf.broadAddr.v4 = olsrIntf->int_broadaddr.sin_addr;
+    newIf->intAddr.v4 = olsrIntf->int_addr.sin_addr;
+    newIf->broadAddr.v4 = olsrIntf->int_broadaddr.sin_addr;
+    olsr_printf(1,"%s: Adding OLSR Interface: %s\tAddress: %s\n", PLUGIN_NAME_SHORT, ifName, inet_ntoa(newIf->intAddr.v4));
   } else {
-    /* For a non-OLSR interface, retrieve the IP address ourselves */
-    struct ifaddrs *ifap = NULL, *ifa = NULL;
-    getifaddrs (&ifap);
-    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-      if (ifa->ifa_addr->sa_family==AF_INET && strcmp(ifName, ifa->ifa_name) == 0) {
-	ifaddrs = realloc(ifaddrs, sizeof(struct in_addr) * nif + 1);
-	ifaddrs[nif++] = ((struct sockaddr_in *) ARM_NOWARN_ALIGN(ifa->ifa_addr))->sin_addr;
-	olsr_printf(1,"%s: Adding Non-OLSR Interface: %s\tAddress: %s\n", PLUGIN_NAME_SHORT, ifa->ifa_name, inet_ntoa(ifaddrs[nif - 1]));
-      }
-    }
-    freeifaddrs(ifap);
+    /* For a non-OLSR interface, use the passed IP address */
+    newIf->intAddr.v4.s_addr = addr->s_addr;
+    olsr_printf(1,"%s: Adding Non-OLSR Interface: %s\tAddress: %s\n", PLUGIN_NAME_SHORT, ifName, inet_ntoa(newIf->intAddr.v4));
 
     /* For a non-OLSR interface, retrieve the IP broadcast address ourselves */
     memset(&ifr, 0, sizeof(struct ifreq));
@@ -380,46 +372,39 @@ CreateInterface(const char *ifName, struct interface *olsrIntf)
     if (ioctl(ioctlSkfd, SIOCGIFBRDADDR, &ifr) < 0) {
       P2pdPError("ioctl(SIOCGIFBRDADDR) error for interface \"%s\"", ifName);
 
-      newIf.broadAddr.v4.s_addr = inet_addr("0.0.0.0");
+      newIf->broadAddr.v4.s_addr = inet_addr("0.0.0.0");
     } else {
       /* Downcast to correct sockaddr subtype */
-      newIf.broadAddr.v4 = ((struct sockaddr_in *) ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr))->sin_addr;
+      newIf->broadAddr.v4 = ((struct sockaddr_in *) ARM_NOWARN_ALIGN(&ifr.ifr_broadaddr))->sin_addr;
     }
   }
 
   /* Initialize fragment history table */
-  //memset(&newIf.fragmentHistory, 0, sizeof(newIf.fragmentHistory));
-  //newIf.nextFragmentHistoryEntry = 0;
+  //memset(&newIf->fragmentHistory, 0, sizeof(newIf->fragmentHistory));
+  //newIf->nextFragmentHistoryEntry = 0;
 
   /* Reset counters */
-  //newIf.nNonOlsrPacketsRx = 0;
-  //newIf.nNonOlsrPacketsRxDup = 0;
-  //newIf.nNonOlsrPacketsTx = 0;
+  //newIf->nNonOlsrPacketsRx = 0;
+  //newIf->nNonOlsrPacketsRxDup = 0;
+  //newIf->nNonOlsrPacketsTx = 0;
 
   /* Add new NonOlsrInterface object to global list. OLSR interfaces are
    * added at the front of the list, non-OLSR interfaces at the back. */
-  for (i = 0; i < nif; i++) {
-    struct NonOlsrInterface *newIfCpy = malloc(sizeof(struct NonOlsrInterface));
-    memcpy(newIfCpy,&newIf,sizeof(struct NonOlsrInterface));
-    newIfCpy->intAddr.v4 = ifaddrs[i];
-    if (nonOlsrInterfaces == NULL) {
-      /* First NonOlsrInterface object in list */
-      newIfCpy->next = NULL;
-      nonOlsrInterfaces = newIfCpy;
-      lastNonOlsrInterface = newIfCpy;
-    } else if (olsrIntf != NULL) {
-      /* Add new NonOlsrInterface object at front of list */
-      newIfCpy->next = nonOlsrInterfaces;
-      nonOlsrInterfaces = newIfCpy;
-    } else {
-      /* Add new NonOlsrInterface object at back of list */
-      newIfCpy->next = NULL;
-      lastNonOlsrInterface->next = newIfCpy;
-      lastNonOlsrInterface = newIfCpy;
-    }
+  if (nonOlsrInterfaces == NULL) {
+    /* First NonOlsrInterface object in list */
+    newIf->next = NULL;
+    nonOlsrInterfaces = newIf;
+    lastNonOlsrInterface = newIf;
+  } else if (olsrIntf != NULL) {
+    /* Add new NonOlsrInterface object at front of list */
+    newIf->next = nonOlsrInterfaces;
+    nonOlsrInterfaces = newIf;
+  } else {
+    /* Add new NonOlsrInterface object at back of list */
+    newIf->next = NULL;
+    lastNonOlsrInterface->next = newIf;
+    lastNonOlsrInterface = newIf;
   }
-  
-  free(ifaddrs);
 
   OLSR_PRINTF(
    8,
@@ -517,7 +502,7 @@ CreateNonOlsrNetworkInterfaces(struct interface *skipThisIntf)
     }
     //TODO: asser if->ifr_name is not talking OLSR
     //nOpenedSockets += CreateInterface(ifr->ifr_name, olsrIntf);
-    nOpenedSockets += CreateInterface(ifr->ifr_name, NULL);
+    nOpenedSockets += CreateInterface(ifr->ifr_name, &ipAddr.v4, NULL);
 
   }                             /* for (n = ...) */
 
@@ -547,7 +532,7 @@ AddInterface(struct interface *newIntf)
 
   assert(newIntf != NULL);
 
-  /* nOpened = */ (void)CreateInterface(newIntf->int_name, newIntf);
+  /* nOpened = */ (void)CreateInterface(newIntf->int_name, NULL, newIntf);
 
   //OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpened);
 }                               /* AddInterface */
