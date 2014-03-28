@@ -83,7 +83,7 @@ struct DnssdInterface *lastNonOlsrInterface = NULL;
 int CreateIPSocket(const char *ifName)
 {
   int skfd;
-  const int on = 1;
+  const int on = 1, ttl = 255;
   struct sockaddr_in addr;
   struct ifreq ifr;
   
@@ -96,6 +96,12 @@ int CreateIPSocket(const char *ifName)
   // Set IP_MULTICAST_LOOP flag, so local programs can capture the forwarded packets
   if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_LOOP, &on, sizeof (on)) < 0) {
     P2pdPError("setsockopt(IP_MULTICAST_LOOP) error");
+    close(skfd);
+    return -1;
+  }
+  
+  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof (ttl)) < 0) {
+    P2pdPError("setsockopt(IP_MULTICAST_TTL) error");
     close(skfd);
     return -1;
   }
