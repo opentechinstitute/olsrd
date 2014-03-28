@@ -80,7 +80,7 @@
 #include "parser.h"
 
 /* plugin includes */
-#include "NetworkInterfaces.h"  /* NonOlsrInterface,
+#include "NetworkInterfaces.h"  /* DnssdInterface,
                                    CreateBmfNetworkInterfaces(),
                                    CloseBmfNetworkInterfaces() */
 //#include "Address.h"          /* IsMulticast() */
@@ -135,7 +135,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
   struct ip6_hdr *ip6Header = NULL; /* IP header inside the encapsulated 
                                      * IP6 packet */
   struct udphdr *udpHeader = NULL;
-  struct NonOlsrInterface *walker = NULL;
+  struct DnssdInterface *walker = NULL;
   struct sockaddr_in addr;
   int stripped_len = 0;
   union olsr_ip_addr destAddr;
@@ -611,7 +611,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   struct ip *ipHeader = NULL;         /* The IP header inside the captured IP packet */
   struct ip6_hdr *ipHeader6 = NULL;   /* The IP header inside the captured IP packet */
   struct udphdr *udpHeader = NULL;
-  struct NonOlsrInterface *walker;
+  struct DnssdInterface *walker;
   u_int16_t destPort;
   ldns_pkt *p = NULL, *p2 = NULL;
   int p_size, ttl, nonlocal_list_count[3] = {0, 0, 0};
@@ -1186,6 +1186,8 @@ InitP2pd(struct interface *skipThisIntf)
 
   //Creates captures sockets and register them to the OLSR scheduler
   CreateNonOlsrNetworkInterfaces(skipThisIntf);
+  
+  AddInterface(olsr_cnf->interfaces->interf);
 
   memset(&sa, 0, sizeof(struct sigaction));
   sa.sa_handler = DnssdSigHandler;
@@ -1536,7 +1538,7 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
   ldns_rr *question_rr = NULL;
   ldns_rr_list *rr_list = NULL;
   ldns_pkt *pkt = NULL;
-  struct NonOlsrInterface *ifwalker = NULL;
+  struct DnssdInterface *ifwalker = NULL;
   struct UdpDestPort *walker = NULL;
   union olsr_sockaddr addr;
   
@@ -1586,8 +1588,7 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
   }
   
   // Send packet to local interface(s) and UDP destination addresses
-  for (ifwalker = nonOlsrInterfaces; ifwalker != NULL; ifwalker = ifwalker->next) {
-    if (ifwalker->olsrIntf == NULL) {
+  for (ifwalker = OlsrInterfaces; ifwalker != NULL; ifwalker = ifwalker->next) {
       
       for (walker = UdpDestPortList; walker; walker = walker->next) {
 	int nBytesWritten;
@@ -1635,7 +1636,6 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
 #endif
 	}
       }
-    }
   }
   
   ldns_pkt_free(pkt);

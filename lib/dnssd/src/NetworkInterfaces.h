@@ -56,7 +56,7 @@
 /* Size of buffer in which packets are received */
 #define P2PD_BUFFER_SIZE 2048
 
-struct NonOlsrInterface {
+struct DnssdInterface {
   /* File descriptor of raw packet socket, used for capturing multicast packets */
   int capturingSkfd;
 
@@ -102,10 +102,11 @@ struct NonOlsrInterface {
   u_int32_t nPacketsTx;
 
   /* Next element in list */
-  struct NonOlsrInterface *next;
+  struct DnssdInterface *next;
 };
 
-extern struct NonOlsrInterface *nonOlsrInterfaces;
+extern struct DnssdInterface *nonOlsrInterfaces;
+extern struct DnssdInterface *OlsrInterfaces;
 
 extern int HighestSkfd;
 extern fd_set InputSet;
@@ -139,7 +140,7 @@ struct TBestNeighbors {
 
 void FindNeighbors(struct TBestNeighbors *neighbors,
                    struct link_entry **bestNeighbor,
-                   struct NonOlsrInterface *intf,
+                   struct DnssdInterface *intf,
                    union olsr_ip_addr *source,
                    union olsr_ip_addr *forwardedBy, union olsr_ip_addr *forwardedTo, int *nPossibleNeighbors);
 
