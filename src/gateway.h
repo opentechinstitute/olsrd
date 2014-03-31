@@ -54,6 +54,7 @@ struct gateway_entry {
     struct olsr_ip_prefix external_prefix;
     uint32_t uplink;
     uint32_t downlink;
+    uint64_t path_cost; /**< the gateway path costs */
     bool ipv4;
     bool ipv4nat;
     bool ipv6;
@@ -180,7 +181,7 @@ void olsr_trigger_gatewayloss_check(void);
  * Gateway Plugin Functions
  */
 
-bool olsr_set_inet_gateway(union olsr_ip_addr *originator, uint64_t path_cost, bool ipv4, bool ipv6);
+bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv6);
 struct gateway_entry *olsr_get_inet_gateway(bool ipv6);
 
 #endif /* GATEWAY_H_ */

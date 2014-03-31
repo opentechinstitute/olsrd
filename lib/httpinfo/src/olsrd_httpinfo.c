@@ -1553,6 +1553,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6) {
     abuf_puts(abuf, "      <th><center>Prefix</center></th>\n");
     abuf_puts(abuf, "      <th><center>Uplink (kbps)</center></th>\n");
     abuf_puts(abuf, "      <th><center>Downlink (kbps)</center></th>\n");
+    abuf_puts(abuf, "      <th><center>Path Cost</center></th>\n");
     abuf_puts(abuf, "      <th><center>IPv4</center></th>\n");
     abuf_puts(abuf, "      <th><center>IPv4 NAT</center></th>\n");
     abuf_puts(abuf, "      <th><center>IPv6</center></th>\n");
@@ -1574,14 +1575,27 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6) {
 
         if (!gw->gw) {
           int i;
-          for (i = 0; i < 7; i++) {
+          for (i = 0; i < 8; i++) {
             abuf_puts(abuf, "      <td></td>\n");
           }
         } else {
+          struct tc_entry* tc = olsr_lookup_tc_entry(&gw->gw->originator);
+          olsr_linkcost etx = ROUTE_COST_BROKEN;
+          if (tc) {
+            etx = tc->path_cost;
+          }
+
           abuf_appendf(abuf, "      <td>%s</td>\n", inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->gw->originator, buf, sizeof(buf)));
           abuf_appendf(abuf, "      <td>%s</td>\n", olsr_ip_prefix_to_string(&gw->gw->external_prefix));
           abuf_appendf(abuf, "      <td>%u</td>\n", gw->gw->uplink);
           abuf_appendf(abuf, "      <td>%u</td>\n", gw->gw->downlink);
+
+          if (tc->path_cost == ROUTE_COST_BROKEN) {
+            abuf_appendf(abuf, "      <td>Unreachable</td>\n");
+          } else {
+            abuf_appendf(abuf, "      <td>%u</td>\n", etx);
+          }
+
           abuf_appendf(abuf, "      <td>%s</td>\n", gw->gw->ipv4 ? "yes" : "no");
           abuf_appendf(abuf, "      <td>%s</td>\n", gw->gw->ipv4nat ? "yes" : "no");
           abuf_appendf(abuf, "      <td>%s</td>\n", gw->gw->ipv6 ? "yes" : "no");
@@ -1598,7 +1612,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6) {
         if (!gw->gw) {
           abuf_puts(abuf, "      <td></td>\n");
         } else {
-          abuf_appendf(abuf, "      <td>%llu</td>\n", (long long unsigned int)gw->path_cost);
+          abuf_appendf(abuf, "      <td>%llu</td>\n", (long long unsigned int)gw->gw->path_cost);
         }
         abuf_puts(abuf, "    </tr>\n");
       }

@@ -2,7 +2,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 #define SCALING_SHIFT_CLASSIC 32
 #define SCALING_SHIFT 24
@@ -22,6 +22,11 @@ uint64_t gw_costs_weigh(const struct costs_weights weights, uint32_t path_cost, 
     return UINT64_MAX;
   }
 
+  if ((exitUk == UINT32_MAX) && (exitDk == UINT32_MAX)) {
+    /* maximum bandwidth: only consider path costs */
+    return path_cost;
+  }
+
   costU = (((uint64_t) (1000 * weights.WexitU))    << SCALING_SHIFT) / exitUk;
   costD = (((uint64_t) (1000 * weights.WexitD))    << SCALING_SHIFT) / exitDk;
   costE = (((uint64_t) (weights.Wetx * path_cost)) << SCALING_SHIFT) / weights.Detx;
@@ -31,4 +36,4 @@ uint64_t gw_costs_weigh(const struct costs_weights weights, uint32_t path_cost, 
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */

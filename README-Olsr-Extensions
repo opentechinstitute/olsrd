@@ -264,22 +264,23 @@ All other parameters will be ignored if SmartGateway is set to "no"
    This setting is only relevant when SmartGatewayUseCount is larger than 1;
    a value of 0 will result in the tunnels not being taken down proactively.
    The default setting is 0.
-3- SmartGatewayPolicyRoutingScript controles the policy routing script that is
+3- SmartGatewayPolicyRoutingScript controls the policy routing script that is
    executed during startup and shutdown of olsrd. The script is only executed
    when SmartGatewayUseCount is set to a value larger than 1. The script must
-   setup policy routing rules such that multi-gateway mode works. A sample
+   setup policy routing rules such that multi-gateway mode works. A reference
    script is included.
-   The default setting is 'not set'.
+   The default setting is <not set>.
 4- SmartGatewayEgressInterfaces determines the egress interfaces that are part
    of the multi-gateway setup and therefore only relevant when
    SmartGatewayUseCount is larger than 1 (in which case it must be explicitly
    set).
-   The default setting is 'not set'.
-5- SmartGatewayMarkOffsetEgress and SmartGatewayMarkOffsetTunnels determine
-   the ranges of policy routing rule markings that are used in a multi-gateway
-   setup. The ranges are not allowed to overlap. Both settings are only
-   relevant when a multi-gateway setup is used.
-   The default settings are 91 and 101 respectively.
+   The default setting is <not set>.
+5- SmartGatewayTablesOffset and SmartGatewayRulesOffset determine the ranges of
+   policy routing rule markings that are used in a multi-gateway setup (see the
+   policy routing script for an explanation).
+   The default settings are 90 and 0 respectively. The value of 0 for
+   SmartGatewayRulesOffset will automatically align the table and rule numbers
+   for the server tunnel, egress interfaces and gateway tunnel interfaces.
 6- SmartGatewayAllowNAT controls whether you want to allow the selection
    of an outgoing ipv4 gateway with NAT (Network Address Translation).
    The default setting is "yes".
@@ -338,10 +339,12 @@ All other parameters will be ignored if SmartGateway is set to "no"
 
      ** Recommended Configuration Parameter Settings
      ===============================================
-     SmartGatewayWeightExitLinkUp   = 1 (default is 1)
-     SmartGatewayWeightExitLinkDown = 1 (default is 1)
-     SmartGatewayWeightEtx          = 1 (default is 1)
-     SmartGatewayDividerEtx         = 4 (default is 0)
+     (assuming LinkQualityAlgorithm "etx_ffeth")
+
+     SmartGatewayWeightExitLinkUp   = 1    (default is 1)
+     SmartGatewayWeightExitLinkDown = 1    (default is 1)
+     SmartGatewayWeightEtx          = 1    (default is 1)
+     SmartGatewayDividerEtx         = 4096 (default is 0)
 
 
     5.3) Uplink Side

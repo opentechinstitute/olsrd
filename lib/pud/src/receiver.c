@@ -842,6 +842,4 @@ void stopReceiver(void) {
 	nmea_zero_INFO(&transmitGpsInformation.txPosition.nmeaInfo);
 	transmitGpsInformation.txGateway = olsr_cnf->main_addr;
 	transmitGpsInformation.positionUpdated = false;
-
-	nmea_parser_destroy(&nmeaParser);
 }

@@ -104,8 +104,8 @@
 #define DEF_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL  false
 #define DEF_GW_USE_COUNT     1
 #define DEF_GW_TAKEDOWN_PERCENTAGE 25
-#define DEF_GW_MARK_OFFSET_EGRESS   91
-#define DEF_GW_MARK_OFFSET_TUNNELS 101
+#define DEF_GW_OFFSET_TABLES 90
+#define DEF_GW_OFFSET_RULES  0
 #define DEF_GW_PERIOD        10*1000
 #define DEF_GW_STABLE_COUNT  6
 #define DEF_GW_ALLOW_NAT     true
@@ -263,7 +263,6 @@ struct plugin_entry {
 
 struct sgw_egress_if {
   char *name;
-  uint8_t mark;
   struct sgw_egress_if *next;
 };
 
@@ -318,15 +317,15 @@ struct olsrd_config {
   char *smart_gw_policyrouting_script;
   struct sgw_egress_if * smart_gw_egress_interfaces;
   uint8_t smart_gw_egress_interfaces_count;
-  uint8_t smart_gw_mark_offset_egress;
-  uint8_t smart_gw_mark_offset_tunnels;
+  uint32_t smart_gw_offset_tables;
+  uint32_t smart_gw_offset_rules;
   uint32_t smart_gw_period;
   uint8_t smart_gw_stablecount;
   uint8_t smart_gw_thresh;
   uint8_t smart_gw_weight_exitlink_up;
   uint8_t smart_gw_weight_exitlink_down;
   uint8_t smart_gw_weight_etx;
-  uint8_t smart_gw_divider_etx;
+  uint32_t smart_gw_divider_etx;
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;
   struct olsr_ip_prefix smart_gw_prefix;
@@ -376,6 +375,20 @@ extern "C" {
 /*
  * List functions
  */
+
+  /**
+   * Count the number of olsr interfaces
+   *
+   * @return the number of olsr interfaces
+   */
+  static inline unsigned int getNrOfOlsrInterfaces(struct olsrd_config * cfg) {
+    struct olsr_if * ifn;
+    unsigned int i = 0;
+
+      for (ifn = cfg->interfaces; ifn; ifn = ifn->next, i++) {}
+      return i;
+  }
+
 
   void ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
 

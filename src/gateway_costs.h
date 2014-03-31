@@ -37,7 +37,7 @@
  * WexitU    = [1,           255] =  8 bits
  * WexitD    = [1,           255] =  8 bits
  * Wetx      = [1,           255] =  8 bits
- * Detx      = [1,           255] =  8 bits
+ * Detx      = [1, 4,294,967,295] = 32 bits
  * path_cost = [1, 4,294,967,295] = 32 bits
  *
  *                         1000 * 255   1000 * 255   255
@@ -55,7 +55,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
   /**
    * Structure to keep weighing factors for the gw_costs_weigh function
@@ -64,7 +64,7 @@ extern "C" {
       uint8_t WexitU;
       uint8_t WexitD;
       uint8_t Wetx;
-      uint8_t Detx;
+      uint32_t Detx;
   };
 
   /**
@@ -83,6 +83,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif /* GATEWAY_COSTS_H_ */
