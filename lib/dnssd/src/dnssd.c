@@ -622,6 +622,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
   ldns_rr *rr = NULL;
   struct RrListByTtl *ttl_bucket = NULL, *rr_buf = NULL;
   PKT_TYPE pkt_type;
+  in_addr_t netmask;
 
   if ((encapsulationUdpData[0] & 0xf0) == 0x40) {       //IPV4
     pkt_type = IPv4;
@@ -631,8 +632,11 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     src.v4 = ipHeader->ip_src;
     dst.v4 = ipHeader->ip_dst;
     
+    netmask = inet_addr("255.255.255.0");
+    
+    // check if source address is in subnet
     for (walker = nonOlsrInterfaces; walker != NULL; walker = walker->next) {
-      if (walker->intAddr.v4.s_addr == src.v4.s_addr) {
+      if ((walker->intAddr.v4.s_addr & netmask) == (src.v4.s_addr & netmask)) {
 	found = 1;
       }
     }
@@ -700,6 +704,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
     memcpy(&src.v6, &ipHeader6->ip6_src, sizeof(struct in6_addr));
     memcpy(&dst.v6, &ipHeader6->ip6_dst, sizeof(struct in6_addr));
     
+    // TODO use netmask to check if source address is in subnet
     for (walker = nonOlsrInterfaces; walker != NULL; walker = walker->next) {
       if (walker->intAddr.v6.s6_addr == src.v6.s6_addr) {
 	found = 1;
