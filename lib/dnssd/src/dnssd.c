@@ -1145,7 +1145,8 @@ DoP2pd(int skfd,
       return;                   /* for */
     }
 
-    if (pktAddr.sll_pkttype == PACKET_OUTGOING) {
+    if (pktAddr.sll_pkttype == PACKET_OUTGOING
+        || pktAddr.sll_pkttype == PACKET_MULTICAST) {
 #ifdef INCLUDE_DEBUG_OUTPUT
       OLSR_PRINTF(1, "%s: Multicast packet was captured.\n",
                   PLUGIN_NAME_SHORT);
