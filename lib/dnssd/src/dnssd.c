@@ -1558,6 +1558,8 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
   ret = ldns_pkt_query_new_frm_str(&pkt, dnssd_type, LDNS_RR_TYPE_PTR, LDNS_RR_CLASS_IN, 0);
   if (ret != LDNS_STATUS_OK) {
     P2pdPError("Failed to create ldns packet: %s\n", ldns_get_errorstr_by_id(ret));
+    if (pkt)
+      ldns_pkt_free(pkt);
     return;
   }
   
@@ -1568,6 +1570,8 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
     ret = ldns_str2rdf_dname(&rdf, srv_type);
     if (ret != LDNS_STATUS_OK) {
       P2pdPError("Failed to create rdf: %s\n", ldns_get_errorstr_by_id(ret));
+      if (rdf)
+	ldns_rdf_free(rdf);
       ldns_pkt_free(pkt);
       return;
     }
@@ -1575,7 +1579,8 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
     // Don't add duplicate RRs
     if ((rr_list = ldns_pkt_rr_list_by_name(pkt, rdf, LDNS_SECTION_QUESTION))) {
       ldns_rr_list_free(rr_list);
-      break;
+      ldns_rdf_free(rdf);
+      continue;
     }
     
     question_rr = ldns_rr_new();
@@ -1597,8 +1602,11 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
   if (ret != LDNS_STATUS_OK) {
     P2pdPError("Error converting dns packet to wire format: %s\n", ldns_get_errorstr_by_id(ret));
     ldns_pkt_free(pkt);
+    if (pkt_buf)
+      free(pkt_buf);
     return;
   }
+  ldns_pkt_free(pkt);
   
   // Send packet to local interface(s) and UDP destination addresses
   for (ifwalker = OlsrInterfaces; ifwalker != NULL; ifwalker = ifwalker->next) {
@@ -1650,8 +1658,7 @@ void PromptAnnouncements(void *context __attribute__((unused))) {
 	}
       }
   }
-  
-  ldns_pkt_free(pkt);
+  free(pkt_buf);
 }
 
 /* -------------------------------------------------------------------------
