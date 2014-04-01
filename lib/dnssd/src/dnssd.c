@@ -1162,6 +1162,18 @@ DnssdSigHandler(int sig)
   }
 }
 
+static void
+SetSignalHandler(void *context __attribute__((unused))) {
+  struct sigaction sa;
+  
+  memset(&sa, 0, sizeof(struct sigaction));
+  sa.sa_handler = DnssdSigHandler;
+  if (sigaction(SIGUSR1,&sa,NULL) == -1) {
+    P2pdPError("Failed to set signal handler");
+    exit(1);
+  }
+}
+
 /* -------------------------------------------------------------------------
  * Function   : InitP2pd
  * Description: Initialize the P2pd plugin
@@ -1173,8 +1185,6 @@ DnssdSigHandler(int sig)
 int
 InitP2pd(struct interface *skipThisIntf)
 {
-  struct sigaction sa;
-  
   if (P2pdUseHash) {
     // Initialize hash table for hash based duplicate IP packet check
     InitPacketHistory();
@@ -1189,10 +1199,7 @@ InitP2pd(struct interface *skipThisIntf)
   
   AddInterface(olsr_cnf->interfaces->interf);
 
-  memset(&sa, 0, sizeof(struct sigaction));
-  sa.sa_handler = DnssdSigHandler;
-  if (sigaction(SIGUSR1,&sa,NULL) == -1)
-    P2pdPError("Failed to set signal handler");
+  olsr_start_timer(0, 0, OLSR_TIMER_ONESHOT, SetSignalHandler, NULL, 0);
   
   return 0;
 }                               /* InitP2pd */
