@@ -1445,13 +1445,13 @@ dump_packet(unsigned char* packet, int length)
 {
   int idx;
 
-  OLSR_PRINTF(1, "%s: ", PLUGIN_NAME_SHORT);
+  OLSR_PRINTF(9, "%s: ", PLUGIN_NAME_SHORT);
   for (idx = 0; idx < length; idx++) {
     if (idx > 0 && ((idx % 16) == 0))
-      OLSR_PRINTF(1, "\n%s: ", PLUGIN_NAME_SHORT);
-    OLSR_PRINTF(1, "%2.2X ", packet[idx]);
+      OLSR_PRINTF(9, "\n%s: ", PLUGIN_NAME_SHORT);
+    OLSR_PRINTF(9, "%2.2X ", packet[idx]);
   }
-  OLSR_PRINTF(1, "\n");
+  OLSR_PRINTF(9, "\n");
 }
 #endif
 
