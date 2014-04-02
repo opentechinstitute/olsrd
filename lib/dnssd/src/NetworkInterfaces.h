@@ -63,10 +63,6 @@ struct DnssdInterface {
   /* File descriptor of UDP (datagram) socket for encapsulated multicast packets.
    * Only used for OLSR-enabled interfaces; set to -1 if interface is not OLSR-enabled. */
   int encapsulatingSkfd;
-  
-  /* IP socket for sending mDNS queries, in order to prompt Avahi
-   * to periodically send out announcements */
-  int ipSkfd;
 
   /* File descriptor of UDP packet socket, used for listening to encapsulation packets.
    * Used only when PlParam "P2pdMechanism" is set to "UnicastPromiscuous". */
@@ -154,7 +150,6 @@ void AddMulticastRoute(void);
 void DeleteMulticastRoute(void);
 int CreateEncapsulationSocket(const char *ifName);
 int CreateCaptureSocket(const char *ifName);
-int CreateIPSocket(const char *ifName);
 
 #endif /* _BMF_NETWORKINTERFACES_H */
 

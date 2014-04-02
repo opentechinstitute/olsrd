@@ -76,65 +76,8 @@
 
 
 /* List of network interface objects used by BMF plugin */
-struct DnssdInterface *OlsrInterfaces = NULL;
 struct DnssdInterface *nonOlsrInterfaces = NULL;
 struct DnssdInterface *lastNonOlsrInterface = NULL;
-
-int CreateIPSocket(const char *ifName)
-{
-  int skfd;
-  const int off = 0, ttl = 255;
-  struct sockaddr_in addr;
-  struct ifreq ifr;
-  
-  skfd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (skfd < 0) {
-    P2pdPError("socket error");
-    return -1;
-  }
-  
-  // Turn off IP_MULTICAST_LOOP, so packet isn't captured and sent over olsr
-  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_LOOP, &off, sizeof (off)) < 0) {
-    P2pdPError("setsockopt(IP_MULTICAST_LOOP) error");
-    close(skfd);
-    return -1;
-  }
-  
-  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof (ttl)) < 0) {
-    P2pdPError("setsockopt(IP_MULTICAST_TTL) error");
-    close(skfd);
-    return -1;
-  }
-  
-  // Get IP address of interface
-  memset(&ifr, 0, sizeof(struct ifreq));
-  memcpy(ifr.ifr_name,ifName,IFNAMSIZ);
-  ifr.ifr_name[IFNAMSIZ] = '\0';
-  if (ioctl(skfd, SIOCGIFADDR, &ifr) < 0) {
-    P2pdPError("ioctl(SIOCGIFADDR) error");
-    close(skfd);
-    return -1;
-  }
-  
-  // Bind socket to interface
-  if (setsockopt (skfd, IPPROTO_IP, IP_MULTICAST_IF, &((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr.s_addr, sizeof(struct in_addr)) < 0) {
-    P2pdPError("setsockopt(IP_MULTICAST_IF) error");
-    close(skfd);
-    return -1;
-  }
-  
-  memset(&addr, 0, sizeof(struct sockaddr_in));
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  
-  if (bind(skfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-    P2pdPError("bind() error");
-    close(skfd);
-    return -1;
-  }
-  
-  return skfd;
-}
 
 /* -------------------------------------------------------------------------
  * Function   : CreateEncapsulationSocket
@@ -289,7 +232,6 @@ CreateInterface(const char *ifName, struct in_addr *addr, struct interface *olsr
   int capturingSkfd = -1;
   int encapsulatingSkfd = -1;
   int listeningSkfd = -1;
-  int ipSkfd = -1;
   int ioctlSkfd;
   struct ifreq ifr;
   int nOpened = 0;
@@ -324,26 +266,10 @@ CreateInterface(const char *ifName, struct in_addr *addr, struct interface *olsr
     }
     nOpened++;
   }
-  
-  /* Create IP socket for sending mDNS queries, in order to prompt Avahi
-   * to periodically send out announcements */
-  if (olsrIntf) {
-    ipSkfd = CreateIPSocket(ifName);
-    if (ipSkfd < 0) {
-      close(encapsulatingSkfd);
-      close(capturingSkfd);
-      return 0;
-    }
-    nOpened++;
-  }
 
   /* For ioctl operations on the network interface, use either capturingSkfd
    * or encapsulatingSkfd, whichever is available */
-  if (olsrIntf) {
-    ioctlSkfd = ipSkfd;
-  } else {
-    ioctlSkfd = (capturingSkfd >= 0) ? capturingSkfd : encapsulatingSkfd;
-  }
+  ioctlSkfd = (capturingSkfd >= 0) ? capturingSkfd : encapsulatingSkfd;
 
   /* Retrieve the MAC address of the interface. */
   memset(&ifr, 0, sizeof(struct ifreq));
@@ -361,7 +287,6 @@ CreateInterface(const char *ifName, struct in_addr *addr, struct interface *olsr
   newIf->capturingSkfd = capturingSkfd;
   newIf->encapsulatingSkfd = encapsulatingSkfd;
   newIf->listeningSkfd = listeningSkfd;
-  newIf->ipSkfd = ipSkfd;
   memcpy(newIf->macAddr, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN);
   memcpy(newIf->ifName, ifName, IFNAMSIZ);
   newIf->olsrIntf = olsrIntf;
@@ -402,28 +327,16 @@ CreateInterface(const char *ifName, struct in_addr *addr, struct interface *olsr
 
   /* Add new DnssdInterface object to global list. OLSR interfaces are
    * added at the front of the list, non-OLSR interfaces at the back. */
-  if (olsrIntf == NULL) {
-    if (nonOlsrInterfaces == NULL) {
-      /* First DnssdInterface object in list */
-      newIf->next = NULL;
-      nonOlsrInterfaces = newIf;
-      lastNonOlsrInterface = newIf;
-    } else {
-      /* Add new DnssdInterface object at back of list */
-      newIf->next = NULL;
-      lastNonOlsrInterface->next = newIf;
-      lastNonOlsrInterface = newIf;
-    }
+  if (nonOlsrInterfaces == NULL) {
+    /* First DnssdInterface object in list */
+    newIf->next = NULL;
+    nonOlsrInterfaces = newIf;
+    lastNonOlsrInterface = newIf;
   } else {
-    if (OlsrInterfaces == NULL) {
-      /* First DnssdInterface object in list */
-      newIf->next = NULL;
-      OlsrInterfaces = newIf;
-    } else {
-      /* Add new DnssdInterface object at front of list */
-      newIf->next = OlsrInterfaces;
-      OlsrInterfaces = newIf;
-    }
+    /* Add new DnssdInterface object at back of list */
+    newIf->next = NULL;
+    lastNonOlsrInterface->next = newIf;
+    lastNonOlsrInterface = newIf;
   }
 
   OLSR_PRINTF(

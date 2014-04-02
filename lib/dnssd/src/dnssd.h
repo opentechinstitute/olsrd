@@ -74,7 +74,6 @@
 #define UDP_HEADER_LENGTH         8
 #define HOSTNAME_LEN              64
 #define SERVICE_UPDATE_INTERVAL   300
-#define SERVICE_QUERY_INTERVAL    30
 #define EMISSION_JITTER           25      /* percent */
 
 /* Forward declaration of OLSR interface type */
