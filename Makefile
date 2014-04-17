@@ -90,7 +90,7 @@ builddata.txt:
 
 # only overwrite it when it doesn't exists or when it has changed
 src/builddata.c: builddata.txt
-	$(MAKECMDPREFIX)if [ ! -f "$@" ] || [ -n "$$(diff "$<" "$@")" ]; then cp -a -v "$<" "$@"; fi
+	$(MAKECMDPREFIX)if [ ! -f "$@" ] || [ -n "$$(diff "$<" "$@")" ]; then cp -p "$<" "$@"; fi
 
 .PHONY: help libs clean_libs libs_clean clean distclean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all gui clean_gui cfgparser_install cfgparser_clean
 

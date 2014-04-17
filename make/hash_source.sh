@@ -10,10 +10,11 @@ buildDataTxt="$1"
 version="$2"
 verbose="$3"
 
-
 md5Command="md5sum"
 osName="$(uname)"
 if [ "x$osName" = "xDarwin" ] ; then
+  md5Command="md5"
+elif [ "x$osName" = "xOpenBSD" ] ; then
   md5Command="md5"
 fi
 
@@ -26,7 +27,6 @@ sourceHash="$(cat $(find . -name *.[ch] | grep -v -E '[/\\]?builddata.c$') | "$m
 hostName="$(hostname)"
 buildDate="$(date +"%Y-%m-%d %H:%M:%S")"
 
-
 tmpBuildDataTxt="$(mktemp -t olsrd.hash_source.XXXXXXXXXX)"
 cat > "$tmpBuildDataTxt" << EOF
 const char olsrd_version[] = "olsr.org - $version-git_$gitSha-hash_$sourceHash";
@@ -38,16 +38,16 @@ EOF
 if [ ! -e "$buildDataTxt" ]; then
   echo "[CREATE] $buildDataTxt"
   if [ "$verbose" = "0" ]; then
-    cp -a "$tmpBuildDataTxt" "$buildDataTxt"
+    cp -p "$tmpBuildDataTxt" "$buildDataTxt"
   else
-    cp -a -v "$tmpBuildDataTxt" "$buildDataTxt"
+    cp -p -v "$tmpBuildDataTxt" "$buildDataTxt"
   fi
 elif [ -n "$(diff -I "^const char build_date\[\].*\$" "$tmpBuildDataTxt" "$buildDataTxt" | sed 's/"/\\"/g')" ]; then
   echo "[UPDATE] $buildDataTxt"
   if [ "$verbose" = "0" ]; then
-    cp -a "$tmpBuildDataTxt" "$buildDataTxt"
+    cp -p "$tmpBuildDataTxt" "$buildDataTxt"
   else
-    cp -a -v "$tmpBuildDataTxt" "$buildDataTxt"
+    cp -p -v "$tmpBuildDataTxt" "$buildDataTxt"
   fi
 fi
 rm -f "$tmpBuildDataTxt"
