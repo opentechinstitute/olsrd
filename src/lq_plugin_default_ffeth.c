@@ -246,11 +246,11 @@ default_lq_ffeth_timer(void __attribute__ ((unused)) * context)
         uint32_t interval;
 
         interval = tlq->missed_hellos * link->loss_helloint / 1000;
-        if (interval > LQ_FF_WINDOW) {
+        if (interval > LQ_FFETH_WINDOW) {
           received = 0;
         }
         else {
-          received = (received * (LQ_FF_WINDOW - interval)) / LQ_FF_WINDOW;
+          received = (received * (LQ_FFETH_WINDOW - interval)) / LQ_FFETH_WINDOW;
         }
       }
 
