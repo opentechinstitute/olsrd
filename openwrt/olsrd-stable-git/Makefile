@@ -138,6 +138,8 @@ MAKE_FLAGS+= \
 	SUBDIRS="arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mdns nameservice quagga secure txtinfo watchdog"
 
 define Build/Compile
+	$(call Build/Compile/Default,clean)
+	$(call Build/Compile/Default,clean_libs)
 	$(call Build/Compile/Default,all)
 	$(call Build/Compile/Default,libs)
 endef
