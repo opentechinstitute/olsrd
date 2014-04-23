@@ -641,7 +641,7 @@ static void recomputeIPv4HeaderChecksum(struct ip *header) {
   /* step 3 */
   sum = ~sum & 0xffff;
 
-  header->ip_sum = (u_short) (sum);
+  header->ip_sum = htons((u_short)sum);
 }
 
 /* -------------------------------------------------------------------------
