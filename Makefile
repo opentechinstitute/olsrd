@@ -205,7 +205,7 @@ ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo jsoninfo mini pgraph secure txtinfo
 else
 ifeq ($(OS),android)
-SUBDIRS := arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mdns mini nameservice p2pd pgraph pud secure sgwdynspeed txtinfo watchdog
+SUBDIRS := arprefresh bmf dot_draw dyn_gw_plain httpinfo jsoninfo mdp mini nameservice pgraph pud secure sgwdynspeed txtinfo watchdog
 else
 SUBDIRS := dot_draw httpinfo jsoninfo mini nameservice pgraph secure txtinfo watchdog
 endif
@@ -268,6 +268,18 @@ bmf_install:
 
 bmf_uninstall:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) uninstall
+
+dnssd:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dnssd
+
+dnssd_clean:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dnssd DESTDIR=$(DESTDIR) clean
+
+dnssd_install:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dnssd DESTDIR=$(DESTDIR) install
+
+dnssd_uninstall:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dnssd DESTDIR=$(DESTDIR) uninstall
 
 dot_draw:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dot_draw
@@ -348,6 +360,19 @@ mdns_uninstall:
 # nameserver uses regex, which was only recently added to Android.  On
 # Android, $(REGEX_OBJS) will have all of the files needed, on all
 # other platforms, it'll be empty and therefore ignored.
+
+mdp:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp
+
+mdp_clean:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp DESTDIR=$(DESTDIR) clean
+
+mdp_install:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp DESTDIR=$(DESTDIR) install
+
+mdp_uninstall:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp DESTDIR=$(DESTDIR) uninstall
+
 nameservice:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/nameservice clean
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/nameservice
