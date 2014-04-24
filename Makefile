@@ -39,7 +39,7 @@
 # Please also write a new version to:
 # gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
 # gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
-VERS =		0.6.5.4
+VERS =		pre-0.6.6.2
 
 TOPDIR = .
 INSTALLOVERWRITE ?=
@@ -58,6 +58,15 @@ SWITCHDIR =	src/olsr_switch
 CFGDIR =	src/cfgparser
 include $(CFGDIR)/local.mk
 TAG_SRCS =	$(SRCS) $(HDRS) $(wildcard $(CFGDIR)/*.[ch] $(SWITCHDIR)/*.[ch])
+
+SGW_SUPPORT = 0
+ifeq ($(OS),linux)
+  SGW_SUPPORT = 1
+endif
+ifeq ($(OS),android)
+  SGW_SUPPORT = 1
+endif
+
 
 .PHONY: default_target switch
 default_target: $(EXENAME)
@@ -79,7 +88,7 @@ switch:
 src/builddata.c:
 	$(MAKECMDPREFIX)$(RM) "$@"
 	$(MAKECMDPREFIX)echo "#include \"defs.h\"" >> "$@" 
-	$(MAKECMDPREFIX)echo "const char olsrd_version[] = \"olsr.org -  $(VERS)-git_`git log -1 --pretty=%h`-hash_`./make/hash_source.sh`\";"  >> "$@"
+	$(MAKECMDPREFIX)echo "const char olsrd_version[] = \"olsr.org -  $(VERS)`./make/hash_source.sh`\";"  >> "$@"
 	$(MAKECMDPREFIX)date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
 	$(MAKECMDPREFIX)echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
 
@@ -122,6 +131,14 @@ install_bin:
 		mkdir -p $(SBINDIR)
 		install -m 755 $(EXENAME) $(SBINDIR)
 		$(STRIP) $(SBINDIR)/$(EXENAME)
+ifeq ($(SGW_SUPPORT),1)
+		$(MAKECMDPREFIX)if [ -e $(SBINDIR)/$(SGW_POLICY_SCRIPT) ]; then \
+			cp -f files/$(SGW_POLICY_SCRIPT) $(SBINDIR)/$(SGW_POLICY_SCRIPT).new; \
+			echo "Policy routing script was saved as $(SBINDIR)/$(SGW_POLICY_SCRIPT).new"; \
+		else \
+			cp -f files/$(SGW_POLICY_SCRIPT) $(SBINDIR)/$(SGW_POLICY_SCRIPT); \
+		fi
+endif
 
 uninstall_bin:
 		rm -f $(SBINDIR)/$(EXENAME)
@@ -188,9 +205,9 @@ ifeq ($(OS),win32)
 SUBDIRS := dot_draw httpinfo jsoninfo mini pgraph secure txtinfo
 else
 ifeq ($(OS),android)
-SUBDIRS := arprefresh bmf dot_draw dyn_gw_plain httpinfo jsoninfo mdp mini nameservice pgraph pud secure sgwdynspeed txtinfo watchdog
+SUBDIRS := arprefresh bmf dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mdns mini nameservice p2pd pgraph pud secure sgwdynspeed txtinfo watchdog
 else
-SUBDIRS := dot_draw dyn_gw dyn_gw_plain httpinfo jsoninfo mini nameservice pgraph secure txtinfo watchdog
+SUBDIRS := dot_draw httpinfo jsoninfo mini nameservice pgraph secure txtinfo watchdog
 endif
 endif
 endif
@@ -251,18 +268,6 @@ bmf_install:
 
 bmf_uninstall:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/bmf DESTDIR=$(DESTDIR) uninstall
-
-dnssd:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dnssd
-
-dnssd_clean:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dnssd DESTDIR=$(DESTDIR) clean
-
-dnssd_install:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dnssd DESTDIR=$(DESTDIR) install
-
-dnssd_uninstall:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dnssd DESTDIR=$(DESTDIR) uninstall
 
 dot_draw:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/dot_draw
@@ -343,19 +348,6 @@ mdns_uninstall:
 # nameserver uses regex, which was only recently added to Android.  On
 # Android, $(REGEX_OBJS) will have all of the files needed, on all
 # other platforms, it'll be empty and therefore ignored.
-
-mdp:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp
-
-mdp_clean:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp DESTDIR=$(DESTDIR) clean
-
-mdp_install:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp DESTDIR=$(DESTDIR) install
-
-mdp_uninstall:
-		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp DESTDIR=$(DESTDIR) uninstall
-
 nameservice:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/nameservice clean
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/nameservice
