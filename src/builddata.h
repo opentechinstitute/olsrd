@@ -1,4 +1,3 @@
-
 /*
  * The olsr.org Optimized Link-State Routing daemon(olsrd)
  * Copyright (c) 2004, Andreas Tonnesen(andreto@olsr.org)
@@ -39,37 +38,11 @@
  *
  */
 
-#ifndef _OLSR_KERNEL_RT
-#define _OLSR_KERNEL_RT
+#ifndef _OLSR_BUILDDATA_H
+#define _OLSR_BUILDDATA_H
 
-#include "defs.h"
-#include "routing_table.h"
+extern const char olsrd_version[];
+extern const char build_date[];
+extern const char build_host[];
 
-int olsr_ioctl_add_route(const struct rt_entry *rt);
-
-int olsr_ioctl_add_route6(const struct rt_entry *rt);
-
-int olsr_ioctl_del_route(const struct rt_entry *rt);
-
-int olsr_ioctl_del_route6(const struct rt_entry *rt);
-
-#ifdef __linux__
-int rtnetlink_register_socket(int);
-#endif /* __linux__ */
-
-void olsr_os_niit_4to6_route(const struct olsr_ip_prefix *dst_v4, bool set);
-void olsr_os_niit_6to4_route(const struct olsr_ip_prefix *dst_v6, bool set);
-void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set, uint8_t table);
-
-int olsr_os_policy_rule(int family, int rttable, uint32_t priority, const char *if_name, bool set);
-int olsr_os_localhost_if(union olsr_ip_addr *ip, bool create);
-int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create);
-
-#endif /* _OLSR_KERNEL_RT */
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif /* _OLSR_BUILDDATA_H */

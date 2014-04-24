@@ -39,6 +39,7 @@
  */
 
 #include "olsrd_conf.h"
+#include "builddata.h"
 #include "../ipcalc.h"
 #include "../net_olsr.h"
 #include "../common/autobuf.h"
@@ -436,6 +437,88 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_appendf(out, "%sSmartGateway %s\n",
       cnf->smart_gw_active == DEF_SMART_GW ? "# " : "",
       cnf->smart_gw_active ? "yes" : "no");
+  abuf_puts(out,
+    "\n"
+    "# Signals that the server tunnel must always be removed on shutdown,\n"
+    "# irrespective of the interface up/down state during startup.\n"
+    "# (default is \"no\")\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayAlwaysRemoveServerTunnel %s\n",
+      cnf->smart_gw_always_remove_server_tunnel == DEF_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL ? "# " : "",
+      cnf->smart_gw_always_remove_server_tunnel ? "yes" : "no");
+  abuf_puts(out,
+    "\n"
+    "# Determines the maximum number of gateways that can be in use at any given\n"
+    "# time. This setting is used to mitigate the effects of breaking connections\n"
+    "# (due to the selection of a new gateway) on a dynamic network.\n"
+    "# (default is 1)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayUseCount %d\n",
+      cnf->smart_gw_use_count == DEF_GW_USE_COUNT ? "# " : "",
+      cnf->smart_gw_use_count);
+  abuf_puts(out,
+    "\n"
+    "# Determines the take-down percentage for a non-current smart gateway tunnel.\n"
+    "# If the cost of the current smart gateway tunnel is less than this percentage\n"
+    "# of the cost of the non-current smart gateway tunnel, then the non-current smart\n"
+    "# gateway tunnel is taken down because it is then presumed to be 'too expensive'.\n"
+    "# This setting is only relevant when SmartGatewayUseCount is larger than 1;\n"
+    "# a value of 0 will result in the tunnels not being taken down proactively.\n"
+    "# (default is 0)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayTakeDownPercentage %d\n",
+      cnf->smart_gw_takedown_percentage == DEF_GW_TAKEDOWN_PERCENTAGE ? "# " : "",
+      cnf->smart_gw_takedown_percentage);
+  abuf_puts(out,
+    "\n"
+    "# Determines the policy routing script that is executed during startup and\n"
+    "# shutdown of olsrd. The script is only executed when SmartGatewayUseCount\n"
+    "# is set to a value larger than 1. The script must setup policy routing\n"
+    "# rules such that multi-gateway mode works. A sample script is included.\n"
+    "# (default is not set)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayPolicyRoutingScript %s\n",
+      !cnf->smart_gw_policyrouting_script ? "# " : "",
+      !cnf->smart_gw_policyrouting_script ? "" : cnf->smart_gw_policyrouting_script);
+  abuf_puts(out,
+    "\n"
+    "# Determines the egress interfaces that are part of the multi-gateway setup and\n"
+    "# therefore only relevant when SmartGatewayUseCount is larger than 1 (in which\n"
+    "# case it must be explicitly set).\n"
+    "# (default is not set)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayEgressInterfaces",
+      !cnf->smart_gw_egress_interfaces ? "# " : "");
+  {
+    struct sgw_egress_if * sgwegressif = olsr_cnf->smart_gw_egress_interfaces;
+    while (sgwegressif) {
+      abuf_appendf(out, " \"%s\"", sgwegressif->name);
+      sgwegressif = sgwegressif->next;
+    }
+    abuf_puts(out, "\n");
+  }
+  abuf_puts(out,
+    "\n"
+    "# Determines the offset of the smart gateway egress interfaces mark that are\n"
+    "# used in the policy routing rules in a multi-gateway setup. Only relevant\n"
+    "# when a multi-gateway setup is used.\n"
+    "# (default is 91)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayMarkOffsetEgress %u\n",
+      cnf->smart_gw_mark_offset_egress == DEF_GW_MARK_OFFSET_EGRESS ? "# " : "",
+      cnf->smart_gw_mark_offset_egress);
+  abuf_puts(out,
+    "\n"
+    "# Determines the offset of the smart gateway tunnel interfaces mark that are\n"
+    "# used in the policy routing rules in a multi-gateway setup. Only relevant\n"
+    "# when a multi-gateway setup is used.\n"
+    "# The ranges [egress offset, egress offset + egress count] and\n"
+    "# [tunnel offset, tunnel offset + use count] are not allowed to overlap.\n"
+    "# (default is 101)\n"
+    "\n");
+  abuf_appendf(out, "%sSmartGatewayMarkOffsetTunnels %u\n",
+      cnf->smart_gw_mark_offset_tunnels == DEF_GW_MARK_OFFSET_TUNNELS ? "# " : "",
+      cnf->smart_gw_mark_offset_tunnels);
   abuf_puts(out,
     "\n"
     "# Allows the selection of a smartgateway with NAT (only for IPv4)\n"
