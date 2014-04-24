@@ -263,7 +263,6 @@ bool readULL(const char * parameterName, const char * str, unsigned long long * 
 		union olsr_sockaddr * dst, bool * dstSet) {
 	union olsr_sockaddr ip;
 	int conversion;
-	in_port_t port;
 
 	assert(parameterName != NULL);
 	assert(str != NULL);
@@ -289,14 +288,10 @@ bool readULL(const char * parameterName, const char * str, unsigned long long * 
 	}
 
 	if (!*dstSet) {
-	  port = htons(portDefault);
-	} else {
-	  port = getOlsrSockaddrPort(dst, portDefault);
+		setOlsrSockaddrPort(&ip, htons(portDefault));
 	}
 
-	dst->in.sa_family = ip.in.sa_family;
-	setOlsrSockaddrPort(dst, port);
-	setOlsrSockaddrAddr(dst, &ip);
+	*dst = ip;
 	*dstSet = true;
 	return true;
 }

@@ -9,18 +9,6 @@ OLSRD_PLUGIN = false
 TOPDIR = ../../..
 include $(TOPDIR)/Makefile.inc
 
-LDFLAGS = -shared -Wl,--warn-common -fPIC
-
-# 32/64 cross compilation
-ifdef M32
-CFLAGS +=	-m32
-LDFLAGS +=	-m32
-endif
-ifdef M64
-CFLAGS +=	-m64
-LDFLAGS +=	-m64
-endif
-
 ######################
 #
 # Settings
@@ -43,10 +31,8 @@ SHAREJAVADIR ?= $(SHAREDIR)/java/$(EXENAME)
 
 MACHINE=$(shell uname -m)
 ARCH=
-ARCH2=-i386
 ifeq ($(strip $(MACHINE)),x86_64)
   ARCH=.$(MACHINE)
-  ARCH2=-amd64
 endif
 
 
@@ -60,11 +46,11 @@ INC_DIR_WIREFORMAT_FULL = $(INC_DIR_WIREFORMAT)/$(WIREFORMAT_PROJECT)
 ifneq ($(wildcard /usr/lib/jvm/java),)
   INC_DIR_JVM = /usr/lib/jvm/java/include
 else
-  ifneq ($(wildcard /usr/lib/jvm/java-1.7.0-openjdk$(ARCH)),)
-    INC_DIR_JVM = /usr/lib/jvm/java-1.7.0-openjdk$(ARCH)/include
+  ifneq ($(wildcard /usr/lib/jvm/default-java),)
+    INC_DIR_JVM = /usr/lib/jvm/default-java/include
   else
-    ifneq ($(wildcard /usr/lib/jvm/java-1.7.0-openjdk$(ARCH2)),)
-      INC_DIR_JVM = /usr/lib/jvm/java-1.7.0-openjdk$(ARCH2)/include
+    ifneq ($(wildcard /usr/lib/jvm/java-1.7.0-openjdk$(ARCH)),)
+      INC_DIR_JVM = /usr/lib/jvm/java-1.7.0-openjdk$(ARCH)/include
     else
       ifneq ($(wildcard /usr/lib/jvm/java-1.7.0-openjdk),)
         INC_DIR_JVM = /usr/lib/jvm/java-1.7.0-openjdk/include
@@ -72,14 +58,10 @@ else
         ifneq ($(wildcard /usr/lib/jvm/java-1.6.0-openjdk$(ARCH)),)
           INC_DIR_JVM = /usr/lib/jvm/java-1.6.0-openjdk$(ARCH)/include
         else
-          ifneq ($(wildcard /usr/lib/jvm/java-1.6.0-openjdk$(ARCH2)),)
-            INC_DIR_JVM = /usr/lib/jvm/java-1.6.0-openjdk$(ARCH2)/include
+          ifneq ($(wildcard /usr/lib/jvm/java-1.6.0-openjdk),)
+            INC_DIR_JVM = /usr/lib/jvm/java-1.6.0-openjdk/include
           else
-            ifneq ($(wildcard /usr/lib/jvm/java-1.6.0-openjdk),)
-              INC_DIR_JVM = /usr/lib/jvm/java-1.6.0-openjdk/include
-            else
-              $(error No java detected)
-            endif
+            $(error No java detected)
           endif
         endif
       endif
@@ -149,7 +131,7 @@ $(LIBDIR_BUILD)/$(SONAME): $(BUILD_DIR)/$(JAVA_PKG_UNDER)_UplinkMessage.o \
 ifeq ($(VERBOSE),0)
 	@echo "[LD] $@"
 endif
-	$(MAKECMDPREFIX)$(CC) $(LDFLAGS) -Wl,-soname=$(SONAME) $(LIBRARIES) -o "$@" \
+	$(MAKECMDPREFIX)$(CC) -shared -Wl,-soname=$(SONAME) $(LIBRARIES) -o "$@" \
       $(BUILD_DIR)/$(JAVA_PKG_UNDER)_UplinkMessage.o \
       $(BUILD_DIR)/$(JAVA_PKG_UNDER)_ClusterLeader.o \
       $(BUILD_DIR)/$(JAVA_PKG_UNDER)_PositionUpdate.o

@@ -50,6 +50,7 @@
 #include <assert.h>             /* assert() */
 #include <linux/if_ether.h>     /* ETH_P_IP */
 #include <linux/if_packet.h>    /* struct sockaddr_ll, PACKET_MULTICAST */
+//#include <pthread.h> /* pthread_t, pthread_create() */
 #include <signal.h>             /* sigset_t, sigfillset(), sigdelset(), SIGINT */
 #include <netinet/ip.h>         /* struct ip */
 #include <netinet/udp.h>        /* struct udphdr */
@@ -90,8 +91,8 @@ static uint16_t ip_checksum(char* data, int len)
     else
         len = (len >> 1) + 1;
     while (len > 0) {
-        sum += *((unsigned short int*)(void *)data);
-        data += sizeof(unsigned short int);
+        sum += *((ushort*)data);
+        data += sizeof(ushort);
         len--;
     }
     sum = (sum >> 16) + (sum & 0xffff);

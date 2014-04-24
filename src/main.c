@@ -46,7 +46,6 @@
 
 #include "ipcalc.h"
 #include "defs.h"
-#include "builddata.h"
 #include "olsr.h"
 #include "log.h"
 #include "scheduler.h"
@@ -180,7 +179,7 @@ static int olsr_create_lock_file(bool noExitOnFail) {
 
   /* create file for lock */
   lock_fd = open(lock_file_name, O_WRONLY | O_CREAT, S_IRWXU);
-  if (lock_fd < 0) {
+  if (lock_fd == 0) {
     if (noExitOnFail) {
       return -1;
     }
@@ -235,11 +234,11 @@ static void writePidFile(void) {
     /* write the PID */
     {
       pid_t pid = getpid();
-      int chars = snprintf(buf, sizeof(buf), "%d", (int)pid);
+      int chars = snprintf(buf, sizeof(buf), "%d", pid);
       ssize_t chars_written = write(fd, buf, chars);
       if (chars_written != chars) {
         close(fd);
-        snprintf(buf, sizeof(buf), "Could not write the PID %d to the PID file %s", (int)pid, olsr_cnf->pidfile);
+        snprintf(buf, sizeof(buf), "Could not write the PID %d to the PID file %s", pid, olsr_cnf->pidfile);
         perror(buf);
         if (remove(olsr_cnf->pidfile) < 0) {
           snprintf(buf, sizeof(buf), "Could not remove the PID file %s", olsr_cnf->pidfile);
@@ -592,15 +591,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-#ifdef __linux__
-  /* startup gateway system */
-  if (olsr_cnf->smart_gw_active) {
-    if (olsr_startup_gateways()) {
-      olsr_exit("Cannot startup gateway tunnels", 1);
-    }
-  }
-#endif /* __linux__ */
-
   olsr_do_startup_sleep();
 
   /* Print heartbeat to stdout */
@@ -733,9 +723,6 @@ int main(int argc, char *argv[]) {
  *@param signo the signal that triggered this callback
  */
 void olsr_reconfigure(int signo __attribute__ ((unused))) {
-#ifndef _WIN32
-  int errNr = errno;
-#endif
   /* if we are started with -nofork, we do not want to go into the
    * background here. So we can simply stop on -HUP
    */
@@ -761,9 +748,6 @@ void olsr_reconfigure(int signo __attribute__ ((unused))) {
       olsr_syslog(OLSR_LOG_INFO, "RECONFIGURING!\n");
     }
   }
-#ifndef _WIN32
-  errno = errNr;
-#endif
   olsr_shutdown(0);
 }
 #endif /* _WIN32 */
@@ -801,9 +785,6 @@ SignalHandler(unsigned long signo)
 static void olsr_shutdown(int signo __attribute__ ((unused)))
 #endif /* _WIN32 */
 {
-#ifndef _WIN32
-  int errNr = errno;
-#endif
   struct interface *ifn;
   int exit_value;
 
@@ -847,7 +828,6 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #ifdef __linux__
   /* trigger gateway selection */
   if (olsr_cnf->smart_gw_active) {
-    olsr_shutdown_gateways();
     olsr_cleanup_gateways();
   }
 
@@ -926,9 +906,6 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
   exit_value = olsr_cnf->exit_value;
   olsrd_free_cnf(olsr_cnf);
 
-#ifndef _WIN32
-  errno = errNr;
-#endif
   exit(exit_value);
 }
 
