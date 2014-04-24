@@ -35,25 +35,20 @@
 #define NMEA_CONVSTR_BUF    64
 
 /**
- * Calculate crc control sum of a string.
- * If the string starts with a '$' then that character is skipped as per
- * the NMEA spec.
+ * Calculate crc control sum of a string
  *
  * @param s the string
  * @param len the length of the string
  * @return the crc
  */
 int nmea_calc_crc(const char *s, const int len) {
-  int chksum = 0;
-  int it = 0;
+	int chksum = 0;
+	int it;
 
-  if (s[it] == '$')
-    it++;
+	for (it = 0; it < len; it++)
+		chksum ^= (int) s[it];
 
-  for (; it < len; it++)
-    chksum ^= (int) s[it];
-
-  return chksum;
+	return chksum;
 }
 
 /**

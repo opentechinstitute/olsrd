@@ -228,8 +228,7 @@ static void packetReceivedFromDownlink(int skfd, void *data __attribute__ ((unus
 			/* we now have a position update (olsrMessage) of a certain length
 			 * (olsrMessageLength). this needs to be transmitted over OLSR and on the LAN */
 
-			/* send out over OLSR interfaces (only when the smart gateway system is enabled) */
-			if (olsr_cnf->smart_gw_active)
+			/* send out over OLSR interfaces */
 			{
 				int r;
 				struct interface *ifn;

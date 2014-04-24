@@ -39,6 +39,8 @@ PLUGIN_VER =	1.7.0
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
+#LIBS +=	$(OS_LIB_PTHREAD)
+
 ifeq ($(OS),$(filter $(OS),linux android))
 
 default_target: $(PLUGIN_FULLNAME)

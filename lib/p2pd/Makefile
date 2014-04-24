@@ -6,23 +6,15 @@ PLUGIN_VER =	0.1.0
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-SUPPORTED = 0
-ifeq ($(OS),linux)
-SUPPORTED = 1
-endif
-ifeq ($(OS),android)
-SUPPORTED = 1
-endif
+LIBS +=	$(OS_LIB_PTHREAD)
 
+# Must be specified along with -lpthread on linux
+CPPFLAGS += $(OS_CFLAG_PTHREAD)
 
-ifeq ($(SUPPORTED),0)
-
-.PHONY: all default_target install clean
-
-all: default_target
+ifneq ($(OS),linux)
 
 default_target install clean:
-	@echo "*** $(PLUGIN_NAME) plugin not supported on $(OS), sorry!"
+	@echo "*** p2pd Plugin only supported on Linux, sorry!"
 
 else
 
