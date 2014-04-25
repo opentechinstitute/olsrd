@@ -153,7 +153,7 @@ abuf_puts(struct autobuf *autobuf, const char *s)
   if (autobuf_enlarge(autobuf, autobuf->len + len + 1) < 0) {
     return -1;
   }
-  strscpy(autobuf->buf + autobuf->len, s, len);
+  strcpy(autobuf->buf + autobuf->len, s);
   autobuf->len += len;
   return len;
 }
