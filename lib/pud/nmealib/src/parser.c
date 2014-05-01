@@ -78,7 +78,7 @@ int nmea_parser_init(nmeaPARSER *parser) {
   assert(parser);
   memset(&parser->sentence, 0, sizeof(parser->sentence));
   reset_sentence_parser(parser, SKIP_UNTIL_START);
-  return 0;
+  return 1;
 }
 
 static bool nmea_parse_sentence_character(nmeaPARSER *parser, const char * c) {
