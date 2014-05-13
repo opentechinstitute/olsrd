@@ -311,7 +311,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
       /* input was much too long, just skip the rest */
       char dummy[1024];
 
-      while (recv(ipc_connection, (void *)&dummy, sizeof(dummy)) == sizeof(dummy), 0);
+      while (recv(ipc_connection, (void *)&dummy, sizeof(dummy), 0) == sizeof(dummy), 0);
     }
     if (0 < s) {
       requ[s] = 0;
@@ -341,8 +341,6 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
       }
     }
 
-    if (s == sizeof(requ)-1) {
-    }
     if ( send_what == 0 ) send_what = SIW_ALL;
   }
 
