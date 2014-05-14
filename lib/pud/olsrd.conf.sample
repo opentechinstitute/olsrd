@@ -184,7 +184,8 @@ LoadPlugin "<olsrd plugin library path>/olsrd_pud.so.1.1.0"
     #
 
     # olsrTtl is the TTL that is used when sending messages over the OLSR
-    #         networks
+    #         networks. Setting this to 0 (zero) will disable distribution
+    #         of position updates over the OLSR networks.
     #
     # Default: 64
     #

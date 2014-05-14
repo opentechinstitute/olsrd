@@ -158,7 +158,7 @@ static void txToAllOlsrInterfaces(TimedTxInterface interfaces) {
 	/*
 	 * push out to all OLSR interfaces
 	 */
-	if (((interfaces & TX_INTERFACE_OLSR) != 0) && (pu_size > 0)) {
+	if (((interfaces & TX_INTERFACE_OLSR) != 0) && getOlsrTtl() && (pu_size > 0)) {
 		int r;
 		struct interface *ifn;
 		for (ifn = ifnet; ifn; ifn = ifn->int_next) {

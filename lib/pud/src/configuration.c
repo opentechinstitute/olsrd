@@ -1140,12 +1140,6 @@ int setOlsrTtl(const char *value, void *data __attribute__ ((unused)), set_plugi
 		return true;
 	}
 
-	if ((olsrTtl < 1) /* || (olsrTtl > MAX_TTL) */) {
-		pudError(false, "Value of parameter %s (%u) is outside of valid range 1-%u",
-				valueName, olsrTtl, MAX_TTL);
-		return true;
-	}
-
 	return false;
 }
 
