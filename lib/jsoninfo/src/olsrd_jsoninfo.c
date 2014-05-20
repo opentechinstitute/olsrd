@@ -529,7 +529,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
       /* input was too much long, just skip the rest */
       char dummy[1024];
 
-      while (recv(ipc_connection, (void *)&dummy, sizeof(dummy), 0) == sizeof(dummy), 0);
+      while (recv(ipc_connection, (void *)&dummy, sizeof(dummy), 0) == sizeof(dummy));
     }
     if (0 < s) {
       requ[s] = 0;
