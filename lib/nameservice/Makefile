@@ -44,9 +44,9 @@ TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
 ifeq ($(OS),win32)
-default_target install clean:
-	@echo "**** We use the regex library here. Does Win32 has something like this?"
-else
+	LIBS += -lregex
+	LDFLAGS += -Lcontrib/ 
+endif
 ifeq ($(OS),android)
 # On Android Google forgot to include regex engine code for Froyo version (but also there was
 # no support in older versions for it) so we have here this missing code.
@@ -72,4 +72,3 @@ uninstall:
 
 clean:		$(REGEX_CLEAN)
 		rm -f $(OBJS) $(SRCS:%.c=%.d) $(PLUGIN_FULLNAME)
-endif

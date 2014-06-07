@@ -48,7 +48,8 @@
 
 #include <sys/time.h>
 
-#define inet_ntop(af, src, dst, size) inet_ntop(af, (void *)(src), dst, size)
+//src/win32/compat.c:481:1: error: expected declaration specifiers or ‘...’ before ‘(’ token
+//#define inet_ntop(af, src, dst, size) inet_ntop(af, (void *)(src), dst, size)
 
 # define timeradd(a, b, result)                 \
   do {                        \

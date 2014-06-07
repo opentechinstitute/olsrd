@@ -46,7 +46,7 @@
 #ifndef ADMIN_INTERFACE_H
 #define ADMIN_INTERFACE_H
 
-int build_admin_body(char *, uint32_t);
+int build_admin_body(struct autobuf *abuf);
 
 int process_set_values(char *, uint32_t, char *, uint32_t);
 

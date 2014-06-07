@@ -10,3 +10,4 @@ EXPORTS
 	win32_stdio_hack
 	win32_olsrd_malloc
 	win32_olsrd_free
+        olsr_cnf

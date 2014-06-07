@@ -80,9 +80,11 @@ static const char admin_frame_epilog[] =
   "</table>\n<br>\n" "<center><input type=\"submit\" value=\"Delete selected\" class=\"input_button\"></center>\n" "</form>\n";
 
 int
-build_admin_body(char *buf, uint32_t bufsize __attribute__ ((unused)))
+build_admin_body(struct autobuf *abuf)
 {
-  int size = 0;
+  int size = abuf->len;
+  char *buf = abuf->buf;
+  int bufsize = abuf->size;
   size += snprintf(&buf[size], bufsize - size, admin_frame_prolog);
 
   size += snprintf(&buf[size], bufsize - size, "<tr>\n");
@@ -141,6 +143,7 @@ build_admin_body(char *buf, uint32_t bufsize __attribute__ ((unused)))
     }
   }
   size += snprintf(&buf[size], bufsize - size, admin_frame_epilog);
+  abuf->len += size;
   return size;
 }
 
@@ -158,6 +161,15 @@ process_param(char *key, char *value)
       return -1;
 
     olsr_cnf->debug_level = ival;
+    return 1;
+  }
+
+  if (!strcmp(key, "tos")) {
+    int ival = atoi(value);
+    if ((ival < 0) || (ival > 16))
+      return -1;
+
+    olsr_cnf->tos = ival;
     return 1;
   }
 
@@ -202,7 +214,7 @@ process_param(char *key, char *value)
     if ((ival < 0) || (ival > 10))
       return -1;
 
-    olsr_cnf->lq_wsize = ival;
+    //olsr_cnf->lq_wsize = ival; //error: ‘struct olsrd_config’ has no member named ‘lq_wsize’
     return 1;
   }
 

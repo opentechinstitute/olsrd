@@ -418,14 +418,14 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
 
         stats.ok_hits++;
 
-        param_size = recv(client_sockets[curr_clients], header_buf, sizeof(header_buf) - 1, 0);
+        param_size = recv(client_socket, header_buf, sizeof(header_buf) - 1, 0);
 
         header_buf[param_size] = '\0';
         printf("Dynamic read %d bytes\n", param_size);
 
         //memcpy(body, dynamic_files[i].data, static_bin_files[i].data_size);
-        body_length += dynamic_files[i].process_data_cb(header_buf, param_size, &body_buf[body_length], sizeof(body_buf) - body_length);
-        header_length = build_http_header(HTTP_OK, true, body_length, header_buf, sizeof(header_buf));
+        body_abuf.len += dynamic_files[i].process_data_cb(header_buf, param_size, &body_abuf.buf[body_abuf.len], sizeof(body_abuf.buf) - body_abuf.len);
+        header_length = build_http_header(HTTP_OK, true, body_abuf.len, header_buf, sizeof(header_buf));
         goto send_http_data;
       }
       i++;
@@ -479,7 +479,7 @@ parse_http_request(int fd, void *data __attribute__ ((unused)), unsigned int fla
     if (tab_entries[i].filename) {
 #ifdef NETDIRECT
       header_length = build_http_header(HTTP_OK, true, body_length, header_buf, sizeof(header_buf));
-      r = send(client_sockets[curr_clients], header_buf, header_length, 0);
+      r = send(client_socket, header_buf, header_length, 0);
       if (r < 0) {
         olsr_printf(1, "(HTTPINFO) Failed sending data to client!\n");
         goto close_connection;

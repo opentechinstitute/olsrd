@@ -131,7 +131,7 @@ times(struct tms *Dummy __attribute__ ((unused)))
   return (long)GetTickCount();
 }
 
-#if !defined(MINGW_VERSION) || MINGW_VERSION < 40600
+#if !defined(inet_aton) || !defined(MINGW_VERSION) || MINGW_VERSION < 40600
 int
 inet_aton(const char *AddrStr, struct in_addr *Addr)
 {
