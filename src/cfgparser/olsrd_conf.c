@@ -152,11 +152,9 @@ olsrd_parse_cnf(const char *filename)
   }
 
   current_line = 1;
-  if (olsr_cnf==NULL)
-      olsr_cnf = olsrd_get_default_cnf();    
   rc = yyparse();
   fclose(yyin);
-  if (rc != 0 || olsr_cnf==NULL || olsr_cnf->interfaces==NULL) {
+  if (rc != 0) {
     return -1;
   }
 
@@ -1136,11 +1134,6 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   if (in) {
     /*print interface default config*/
     printf(" InterfaceDefaults: \n");
-    
-    if (cnf->interface_defaults == NULL) {                              
-      /* get a default configuration if the user did not specify one */ 
-      cnf->interface_defaults = get_default_if_config();                
-    }                                                                   
     olsrd_print_interface_cnf(cnf->interface_defaults, cnf->interface_defaults, true);
 
     while (in)

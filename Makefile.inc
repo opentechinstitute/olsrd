@@ -171,9 +171,6 @@ else
 # c and ld flags for main
 ifeq ($(OS),win32)
   LDFLAGS +=	-Wl,-export-all-symbols
-  ifndef WINCE
-    LIBS +=		-lwlanapi -lole32 
-  endif
 else 
   LDFLAGS +=	-Wl,-export-dynamic 
 endif

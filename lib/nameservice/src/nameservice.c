@@ -147,8 +147,8 @@ name_constructor(void)
 
   len = strlen(my_hosts_file);
   if (my_hosts_file[len - 1] != '\\')
-    strscat(my_hosts_file, "\\", sizeof(my_hosts_file));
-  strscat(my_hosts_file, "hosts_olsr", sizeof(my_hosts_file));
+    strscat(my_hosts_file, "\\", sizeof(my_host_file));
+  strscat(my_hosts_file, "hosts_olsr", sizeof(my_host_file));
 
   len = strlen(my_services_file);
   if (my_services_file[len - 1] != '\\')
@@ -418,9 +418,7 @@ static void name_lazy_init(void) {
   my_services = remove_nonvalid_names_from_list(my_services, NAME_SERVICE);
   my_macs = remove_nonvalid_names_from_list(my_macs, NAME_MACADDR);
 
-#ifndef _WIN32
   mapwrite_init(my_latlon_file);
-#endif /* _WIN32 */
 
   return;
 }
@@ -499,9 +497,7 @@ name_destructor(void)
 
   regfree(&regex_t_name);
   regfree(&regex_t_service);
-#ifndef _WIN32
   mapwrite_exit();
-#endif /* _WIN32 */
 }
 
 /* free all list entries */

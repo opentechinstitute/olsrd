@@ -29,4 +29,3 @@
 /olsr_switch.exe
 /olsr-setup.exe
 /src/cfgparser/olsrd_cfgparser
-!lib/nameservice/contrib/libregex.a

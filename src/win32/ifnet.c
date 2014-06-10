@@ -62,10 +62,6 @@
 
 #include <arpa/inet.h>
 
-#if !defined WINCE
-#include <wlanapi.h>
-#endif
-
 #define BUFSPACE  (127*1024)    /* max. input buffer size to request */
 
 struct MibIpInterfaceRow {
@@ -353,7 +349,7 @@ GetIntInfo(struct InterfaceInfo *Info, char *Name)
 
   if ((IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED
        && IfTable->table[TabIdx].dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL) || Info->Addr == 0) {
-    OLSR_PRINTF(3, "Interface %s not up! Status = %d\n", Name, IfTable->table[TabIdx].dwOperStatus);
+    OLSR_PRINTF(3, "Interface %s not up!\n", Name);
     return -1;
   }
 
@@ -367,22 +363,6 @@ GetIntInfo(struct InterfaceInfo *Info, char *Name)
 #if !defined IOCTL_NDIS_QUERY_GLOBAL_STATS
 #define IOCTL_NDIS_QUERY_GLOBAL_STATS 0x00170002
 #endif /* !defined IOCTL_NDIS_QUERY_GLOBAL_STATS */
-
-static bool IsVistaOrHigher()
-{
-	OSVERSIONINFO osVersion;
-	ZeroMemory(&osVersion, sizeof(OSVERSIONINFO));
-	osVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		if(!GetVersionEx(&osVersion))
-		{
-			return false;
-		}
-		if(osVersion.dwMajorVersion >= 6)
-		{
-			return true;
-		}
-		return false;
-}
 
 static int
 IsWireless(char *IntName)
@@ -425,34 +405,7 @@ IsWireless(char *IntName)
     CloseHandle(DevHand);
 
     if (ErrNo == ERROR_GEN_FAILURE || ErrNo == ERROR_INVALID_PARAMETER) {
-		if (ErrNo == ERROR_INVALID_PARAMETER && IsVistaOrHigher()) 
-		{
-			DWORD dwClientVersion = 2;
-			DWORD hResult =ERROR_SUCCESS;
-			DWORD pdwNegotiatedVersion	=0;
-			HANDLE phClientHandle		=NULL;
-			PWLAN_INTERFACE_INFO_LIST	pIfList = NULL;
-			WCHAR SGuid[256];
-			char guid[256];
-			unsigned int i;
-
-			hResult=WlanOpenHandle(dwClientVersion,NULL,&pdwNegotiatedVersion,&phClientHandle);
-			if(hResult!=ERROR_SUCCESS) return 0;
-			//Enumerates all the wifi adapters currently enabled on PC.
-			//Returns the list of interface list that are enabled on PC.
-			hResult=WlanEnumInterfaces(phClientHandle,NULL,&pIfList);
-			if(hResult!=ERROR_SUCCESS) return 0;
-
-			for(i=0;(i < pIfList->dwNumberOfItems);i++)
-			{
-				StringFromGUID2(&pIfList->InterfaceInfo[pIfList->dwIndex].InterfaceGuid,SGuid,256);
-				sprintf(guid, "%ws",SGuid);
-				if(!strcmp(Info.Guid, guid))
-					return 1;
-			}
-		}
-      OLSR_PRINTF(5, "OID not supported. Device probably not wireless. ErrNo = %d\n", ErrNo);
-
+      OLSR_PRINTF(5, "OID not supported. Device probably not wireless.\n");
       return 0;
     }
 
@@ -515,7 +468,6 @@ ListInterfaces(void)
     for (Walker2 = &Walker->IpAddressList; Walker2 != NULL; Walker2 = Walker2->Next)
       printf(" %s", Walker2->IpAddress.String);
 
-	OLSR_PRINTF(2, " %s %s", Walker->AdapterName, Walker->Description);
     printf("\n");
   }
 }

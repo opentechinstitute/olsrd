@@ -52,10 +52,6 @@ OBJS += $(TOPDIR)/src/cfgparser/cfgfile_gen.o
 default_target: $(PLUGIN_FULLNAME)
 ifdef ADMIN_INTERFACE
 		@echo 'WARNING - BUILT WITH EXPERIMENTAL ADMIN INTERFACE!'
-ifeq ($(OS), win32)
-                LDFLAGS += -lwsock32
-                OBJS += $(TOPDIR)/src/win32/compat.o
-endif
 endif
 
 $(PLUGIN_FULLNAME): $(OBJS) version-script.txt
