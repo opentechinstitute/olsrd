@@ -196,6 +196,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_WILLINGNESS
 %token TOK_IPCCON
 %token TOK_FIBMETRIC
+%token TOK_FIBMETRICDEFAULT
 %token TOK_USEHYST
 %token TOK_HYSTSCALE
 %token TOK_HYSTUPPER
@@ -279,6 +280,7 @@ conf:
 stmt:       idebug
           | iipversion
           | fibmetric
+          | afibmetricdefault
           | bnoint
           | atos
           | aolsrport
@@ -858,6 +860,14 @@ fibmetric:    TOK_FIBMETRIC TOK_STRING
   }
   free($1);
   free($2->string);
+  free($2);
+}
+;
+
+afibmetricdefault: TOK_FIBMETRICDEFAULT TOK_INTEGER
+{
+  PARSER_DEBUG_PRINTF("FIBMetricDefault: %d\n", $2->integer);
+  olsr_cnf->fib_metric_default = $2->integer;
   free($2);
 }
 ;

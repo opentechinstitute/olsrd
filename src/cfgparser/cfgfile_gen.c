@@ -346,8 +346,9 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_appendf(out,
     "\n"
     "# FIBMetric controls the metric value of the host-routes OLSRd sets.\n"
-    "# - \"flat\" means that the metric value is always 2. This is the preferred value\n"
-    "#   because it helps the linux kernel routing to clean up older routes\n"
+    "# - \"flat\" means that the metric value is always 2(or as configured \n"
+    "#   with FIBMetricDefault). This is the preferred value because it \n"
+    "#   helps the linux kernel routing to clean up older routes\n"
     "# - \"correct\" use the hopcount as the metric value.\n"
     "# - \"approx\" use the hopcount as the metric value too, but does only update the\n"
     "#   hopcount if the nexthop changes too\n"
@@ -356,6 +357,16 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_appendf(out, "%sFIBMetric \"%s\"\n",
       cnf->fib_metric == DEF_FIB_METRIC ? "# " : "",
       FIB_METRIC_TXT[cnf->fib_metric]);
+  abuf_appendf(out,
+    "\n"
+    "# Default FIB metric.\n"
+    "# The kernel FIB does not need to know the metric of a route.\n"
+    "# This saves us from enqueuing/dequeueing hopcount only changes.\n"
+    "# (default is %u)\n"
+    "\n", DEF_FIB_METRIC_DEFAULT);
+  abuf_appendf(out, "%sFIBMetricDefault %u\n",
+      cnf->fib_metric_default == DEF_FIB_METRIC_DEFAULT? "# " : "",
+      cnf->fib_metric_default);
   abuf_appendf(out,
     "\n"
     "#######################################\n"

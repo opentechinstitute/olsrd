@@ -69,14 +69,16 @@
 # TosValue 192
 
 # FIBMetric controls the metric value of the host-routes OLSRd sets.
-# - "flat" means that the metric value is always 2. This is the preferred value
-#   because it helps the linux kernel routing to clean up older routes
+# - "flat" means that the metric value is always 2 (or as configured 
+#   with FIBMetricDefault). This is the preferred value because it helps 
+#   the linux kernel routing to clean up older routes.
 # - "correct" use the hopcount as the metric value.
 # - "approx" use the hopcount as the metric value too, but does only update the
 #   hopcount if the nexthop changes too
 # (Default is "flat")
 
 # FIBMetric "flat"
+# FIBMetricDefault 2
 
 #######################################
 ### Linux specific OLSRd extensions ###

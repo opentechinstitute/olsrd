@@ -921,6 +921,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->willingness = DEF_WILLINGNESS;
   cnf->ipc_connections = DEF_IPC_CONNECTIONS;
   cnf->fib_metric = DEF_FIB_METRIC;
+  cnf->fib_metric_default = DEF_FIB_METRIC_DEFAULT;
 
   cnf->use_hysteresis = DEF_USE_HYST;
   cnf->hysteresis_param.scaling = HYST_SCALING;

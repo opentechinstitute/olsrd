@@ -68,6 +68,7 @@
 #define DEF_IPC_CONNECTIONS  0
 #define DEF_USE_HYST         false
 #define DEF_FIB_METRIC       FIBM_FLAT
+#define DEF_FIB_METRIC_DEFAULT            2
 #define DEF_LQ_LEVEL         2
 #define DEF_LQ_ALGORITHM     "etx_ff"
 #define DEF_LQ_FISH          1
@@ -288,6 +289,7 @@ struct olsrd_config {
   int ipc_connections;
   bool use_hysteresis;
   olsr_fib_metric_options fib_metric;
+  uint32_t fib_metric_default;
   struct hyst_param hysteresis_param;
   struct plugin_entry *plugins;
   struct ip_prefix_list *hna_entries;
