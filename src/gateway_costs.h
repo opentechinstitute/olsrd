@@ -47,8 +47,12 @@
  * path_cost_weight(max) = 0x3E418    + 0x3E418    + 0xFEFFFFFF01
  * path_cost_weight(max) = 0xFF0007C731
  *
- * Because we can multiply 0xFF0007C731 by 2^24 without overflowing a
- * 64 bits number, we do this to increase accuracy.
+ * Because we can multiply 0xFF0007C731 by 2^24 without overflowing an
+ * unsigned 64 bits number, we could do this to increase accuracy.
+ *
+ * However, since we also want to implement this in Java, which doesn't support
+ * unsigned types, we multiply 0xFF0007C731 by 2^23 without overflowing a
+ * signed 64 bits number.
  */
 
 #include "stdint.h"
@@ -77,9 +81,9 @@ extern "C" {
    * @param path_cost the (ETX) path cost to the gateway
    * @param exitUk the gateway exit link uplink bandwidth (in kbps)
    * @param exitDk the gateway exit link downlink bandwidth (in kbps)
-   * @return the weighed path cost, UINT64_MAX when exitUk and/or exitDk are zero
+   * @return the weighed path cost, INT64_MAX when exitUk and/or exitDk are zero
    */
-  uint64_t gw_costs_weigh(const struct costs_weights weights, uint32_t path_cost, uint32_t exitUk, uint32_t exitDk);
+  int64_t gw_costs_weigh(const struct costs_weights weights, uint32_t path_cost, uint32_t exitUk, uint32_t exitDk);
 
 #ifdef __cplusplus
 }

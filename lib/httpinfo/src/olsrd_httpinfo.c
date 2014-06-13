@@ -1612,7 +1612,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6) {
         if (!gw->gw) {
           abuf_puts(abuf, "      <td></td>\n");
         } else {
-          abuf_appendf(abuf, "      <td>%llu</td>\n", (long long unsigned int)gw->gw->path_cost);
+          abuf_appendf(abuf, "      <td>%lld</td>\n", (long long int)gw->gw->path_cost);
         }
         abuf_puts(abuf, "    </tr>\n");
       }

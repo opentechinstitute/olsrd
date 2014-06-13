@@ -546,7 +546,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
     char sipv6[2] = { 0, 0 };
     char if_name[IF_NAMESIZE];
     char destination[INET6_ADDRSTRLEN];
-    long long unsigned int cost = 0;
+    long long int cost = 0;
 
     memset(originator, 0, sizeof(originator));
     memset(prefix, 0, sizeof(prefix));
@@ -578,7 +578,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
           inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->tunnel->target, destination, sizeof(destination));
         }
         if (gw->gw) {
-          cost = (long long unsigned int)gw->gw->path_cost;
+          cost = (long long int)gw->gw->path_cost;
         }
         abuf_appendf(abuf, fmtv, current, originator, prefix, uplink, downlink, pc, sipv4, sipv4nat, sipv6, if_name, destination, cost);
       }
@@ -595,9 +595,9 @@ ipc_print_sgw(struct autobuf *abuf)
 #else
 
   static const char * fmth4 = "%s%-16s %-33s %-8s %-8s %-8s %-4s %-8s %-4s %-16s %-16s %s\n";
-  static const char * fmtv4 = "%s%-16s %-33s %-8u %-8u %-8u %-4s %-8s %-4s %-16s %-16s %llu\n";
+  static const char * fmtv4 = "%s%-16s %-33s %-8u %-8u %-8u %-4s %-8s %-4s %-16s %-16s %lld\n";
   static const char * fmth6 = "%s%-46s %-93s %-8s %-8s %-8s %-4s %-8s %-4s %-16s %-46s %s\n";
-  static const char * fmtv6 = "%s%-46s %-93s %-8u %-8u %-8u %-4s %-8s %-4s %-16s %-46s %llu\n";
+  static const char * fmtv6 = "%s%-46s %-93s %-8u %-8u %-8u %-4s %-8s %-4s %-16s %-46s %lld\n";
 
   sgw_ipvx(abuf, false, fmth4, fmtv4);
   abuf_puts(abuf, "\n");

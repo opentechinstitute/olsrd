@@ -54,7 +54,7 @@ struct gateway_entry {
     struct olsr_ip_prefix external_prefix;
     uint32_t uplink;
     uint32_t downlink;
-    uint64_t path_cost; /**< the gateway path costs */
+    int64_t path_cost; /**< the gateway path costs */
     bool ipv4;
     bool ipv4nat;
     bool ipv6;
@@ -116,7 +116,7 @@ struct olsr_gw_handler {
      * @param gw the gateway
      * @return the costs
      */
-    uint64_t (*getcosts)(struct gateway_entry *gw);
+    int64_t (*getcosts)(struct gateway_entry *gw);
 
     /**
      * Called when a new gateway must be chosen.

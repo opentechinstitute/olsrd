@@ -24,7 +24,7 @@ static struct costs_weights gw_costs_weights;
 static void gw_default_init(void);
 static void gw_default_cleanup(void);
 static void gw_default_startup_handler(void);
-static uint64_t gw_default_getcosts(struct gateway_entry *gw);
+static int64_t gw_default_getcosts(struct gateway_entry *gw);
 static void gw_default_choosegw_handler(bool ipv4, bool ipv6);
 static void gw_default_update_handler(struct gateway_entry *);
 static void gw_default_delete_handler(struct gateway_entry *);
@@ -52,12 +52,12 @@ struct olsr_gw_handler gw_def_handler = {
  * @param path_cost the path cost
  * @return the threshold path cost
  */
-static inline uint64_t gw_default_calc_threshold(uint64_t path_cost) {
+static inline int64_t gw_default_calc_threshold(int64_t path_cost) {
   if (olsr_cnf->smart_gw_thresh == 0) {
     return path_cost;
   }
 
-  return ((path_cost * (uint64_t) olsr_cnf->smart_gw_thresh) + (uint64_t) 50) / (uint64_t) 100;
+  return ((path_cost * olsr_cnf->smart_gw_thresh) + 50) / 100;
 }
 
 /**
@@ -65,8 +65,8 @@ static inline uint64_t gw_default_calc_threshold(uint64_t path_cost) {
  * depending on the costs
  */
 static void gw_default_choose_gateway(void) {
-  uint64_t cost_ipv4_threshold = UINT64_MAX;
-  uint64_t cost_ipv6_threshold = UINT64_MAX;
+  int64_t cost_ipv4_threshold = INT64_MAX;
+  int64_t cost_ipv6_threshold = INT64_MAX;
   bool cost_ipv4_threshold_valid = false;
   bool cost_ipv6_threshold_valid = false;
   struct gateway_entry *chosen_gw_ipv4 = NULL;
@@ -91,9 +91,9 @@ static void gw_default_choose_gateway(void) {
   }
 
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw) {
-    uint64_t gw_cost = gw->path_cost;
+    int64_t gw_cost = gw->path_cost;
 
-    if (gw_cost == UINT64_MAX) {
+    if (gw_cost == INT64_MAX) {
       /* never select a node with infinite costs */
       continue;
     }
@@ -102,7 +102,7 @@ static void gw_default_choose_gateway(void) {
       bool gw_eligible_v4 = gw->ipv4
           /* && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit) *//* contained in gw_def_choose_new_ipv4_gw */
           && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat);
-      if (gw_eligible_v4 && gw_cost < (chosen_gw_ipv4 ? chosen_gw_ipv4->path_cost : UINT64_MAX)
+      if (gw_eligible_v4 && gw_cost < (chosen_gw_ipv4 ? chosen_gw_ipv4->path_cost : INT64_MAX)
           && (!cost_ipv4_threshold_valid || (gw_cost < cost_ipv4_threshold))) {
         chosen_gw_ipv4 = gw;
       }
@@ -111,7 +111,7 @@ static void gw_default_choose_gateway(void) {
     if (gw_def_choose_new_ipv6_gw) {
       bool gw_eligible_v6 = gw->ipv6
           /* && olsr_cnf->ip_version == AF_INET6 *//* contained in gw_def_choose_new_ipv6_gw */;
-      if (gw_eligible_v6 && gw_cost < (chosen_gw_ipv6 ? chosen_gw_ipv6->path_cost : UINT64_MAX)
+      if (gw_eligible_v6 && gw_cost < (chosen_gw_ipv6 ? chosen_gw_ipv6->path_cost : INT64_MAX)
           && (!cost_ipv6_threshold_valid || (gw_cost < cost_ipv6_threshold))) {
         chosen_gw_ipv6 = gw;
       }
@@ -248,13 +248,13 @@ static void gw_default_startup_handler(void) {
  * Called when the costs of a gateway must be determined.
  *
  * @param gw the gateway
- * @return the costs, or UINT64_MAX in case the gateway is null or has inifinite costs
+ * @return the costs, or INT64_MAX in case the gateway is null or has infinite costs
  */
-static uint64_t gw_default_getcosts(struct gateway_entry *gw) {
+static int64_t gw_default_getcosts(struct gateway_entry *gw) {
   struct tc_entry* tc;
 
   if (!gw) {
-    return UINT64_MAX;
+    return INT64_MAX;
   }
 
   tc = olsr_lookup_tc_entry(&gw->originator);
@@ -263,7 +263,7 @@ static uint64_t gw_default_getcosts(struct gateway_entry *gw) {
     /* gateways should not exist without tc entry */
     /* do not consider nodes with an infinite ETX */
     /* do not consider nodes without bandwidth or with a uni-directional link */
-    return UINT64_MAX;
+    return INT64_MAX;
   }
 
   /* determine the path cost */

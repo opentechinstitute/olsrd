@@ -500,7 +500,7 @@ static void removeGatewayFromList(struct gw_list * gw_list, bool ipv4, struct gw
  * @param current_gw the current gateway
  */
 static void takeDownExpensiveGateways(struct gw_list * gw_list, bool ipv4, struct gw_container_entry * current_gw) {
-  uint64_t current_gw_cost_boundary;
+  int64_t current_gw_cost_boundary;
 
   /*
    * exit immediately when takedown is disabled, there is no current gateway, or
@@ -513,7 +513,7 @@ static void takeDownExpensiveGateways(struct gw_list * gw_list, bool ipv4, struc
   /* get the cost boundary */
   current_gw_cost_boundary = current_gw->gw->path_cost;
   if (olsr_cnf->smart_gw_takedown_percentage < 100) {
-    if (current_gw_cost_boundary <= (UINT64_MAX / 100)) {
+    if (current_gw_cost_boundary <= (INT64_MAX / 100)) {
       current_gw_cost_boundary =  ((current_gw_cost_boundary * 100) / olsr_cnf->smart_gw_takedown_percentage);
     } else {
       /* perform scaling because otherwise the percentage calculation can overflow */
@@ -899,7 +899,7 @@ bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *ma
 void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
   struct gw_container_entry * new_gw_in_list;
   uint8_t *ptr;
-  uint64_t prev_path_cost = 0;
+  int64_t prev_path_cost = 0;
   struct gateway_entry *gw = node2gateway(avl_find(&gateway_tree, originator));
 
   if (!gw) {
