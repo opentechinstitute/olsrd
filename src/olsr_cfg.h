@@ -289,7 +289,7 @@ struct olsrd_config {
   int ipc_connections;
   bool use_hysteresis;
   olsr_fib_metric_options fib_metric;
-  uint32_t fib_metric_default;
+  int fib_metric_default;
   struct hyst_param hysteresis_param;
   struct plugin_entry *plugins;
   struct ip_prefix_list *hna_entries;
