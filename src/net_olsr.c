@@ -368,7 +368,7 @@ net_output(struct interface *ifp)
    *Call possible packet transform functions registered by plugins
    */
   for (tmp_ptf_list = ptf_list; tmp_ptf_list != NULL; tmp_ptf_list = tmp_ptf_list->next) {
-    tmp_ptf_list->function(ifp->netbuf.buff, &ifp->netbuf.pending);
+    tmp_ptf_list->function(ifp, ifp->netbuf.buff, &ifp->netbuf.pending);
   }
 
   if (olsr_cnf->ip_version == AF_INET) {

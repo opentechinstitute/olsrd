@@ -135,7 +135,7 @@ static int parse_challenge(struct interface *olsr_if, char *);
 static int parse_cres(struct interface *olsr_if, char *);
 static int parse_rres(char *);
 static int check_auth(struct interface *olsr_if, char *, int *);
-static int add_signature(uint8_t *, int *);
+static int add_signature(struct interface *, uint8_t *, int *);
 static int validate_packet(struct interface *olsr_if, const char *, int *);
 static char *secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr, int *length);
 static void timeout_timestamps(void *);
@@ -330,7 +330,7 @@ check_auth(struct interface *olsr_if, char *pck, int *size __attribute__ ((unuse
  * increase the size
  */
 int
-add_signature(uint8_t * pck, int *size)
+add_signature(struct interface *olsr_if, uint8_t * pck, int *size)
 {
   struct s_olsrmsg *msg;
   olsr_printf(2, "[MDP] Adding signature for packet size %d\n", *size);
@@ -344,7 +344,7 @@ add_signature(uint8_t * pck, int *size)
   msg->olsr_msgtype = MESSAGE_TYPE;
   msg->olsr_vtime = 0;
   msg->olsr_msgsize = htons(sizeof(struct s_olsrmsg));
-  memcpy(&msg->originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  memcpy(&msg->originator, &olsr_if->ip_addr, sizeof(uint32_t));
   msg->ttl = 1;
   msg->hopcnt = 0;
   msg->seqno = htons(get_msg_seqno());
@@ -546,7 +546,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
   /* Fill challengemessage */
   cmsg.olsr_msgtype = TYPE_CHALLENGE;
   cmsg.olsr_msgsize = htons(sizeof(struct challengemsg));
-  memcpy(&cmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  memcpy(&cmsg.originator, &olsr_if->ip_addr, sizeof(uint32_t));
   cmsg.ttl = 1;
   cmsg.seqno = htons(get_msg_seqno());
 
@@ -573,6 +573,8 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
   olsr_printf(3, "[MDP] Sending timestamp request to %s challenge 0x%x\n",
 	      olsr_ip_to_string(&buf, new_host), challenge);
 
+  net_output(olsr_if);
+
   /* Add to buffer */
   net_outbuffer_push(olsr_if, &cmsg, sizeof(struct challengemsg));
 
@@ -581,6 +583,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
 
   /* Create new entry */
   entry = malloc(sizeof(struct stamp));
+  memset(entry, 0, sizeof(struct stamp));
 
   entry->diff = 0;
   entry->validated = 0;
@@ -828,6 +831,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
   /* Create entry if not registered */
   if ((entry = lookup_timestamp_entry((const union olsr_ip_addr *)&msg->originator)) == NULL) {
     entry = malloc(sizeof(struct stamp));
+    memset(entry, 0, sizeof(struct stamp));
     memcpy(&entry->addr, &msg->originator, olsr_cnf->ipsize);
 
     hash = olsr_ip_hashing((union olsr_ip_addr *)&msg->originator);
@@ -916,7 +920,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* Fill challengemessage */
   crmsg.olsr_msgtype = TYPE_CRESPONSE;
   crmsg.olsr_msgsize = htons(sizeof(struct c_respmsg));
-  memcpy(&crmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  memcpy(&crmsg.originator, from, sizeof(uint32_t));
   crmsg.ttl = 1;
   crmsg.seqno = htons(get_msg_seqno());
 
@@ -966,6 +970,8 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
 
   olsr_printf(3, "[MDP] Sending challenge response to %s challenge 0x%x\n", olsr_ip_to_string(&buf, to), challenge);
 
+  net_output(olsr_if);
+
   /* Add to buffer */
   net_outbuffer_push(olsr_if, &crmsg, sizeof(struct c_respmsg));
   /* Send the request */
@@ -993,7 +999,7 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   /* Fill challengemessage */
   rrmsg.olsr_msgtype = TYPE_RRESPONSE;
   rrmsg.olsr_msgsize = htons(sizeof(struct r_respmsg));
-  memcpy(&rrmsg.originator, &olsr_cnf->main_addr, olsr_cnf->ipsize);
+  memcpy(&rrmsg.originator, from, sizeof(uint32_t));
   rrmsg.ttl = 1;
   rrmsg.seqno = htons(get_msg_seqno());
 
@@ -1041,6 +1047,8 @@ send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
   }
 
   olsr_printf(3, "[MDP] Sending response response to %s\n", olsr_ip_to_string(&buf, to));
+
+  net_output(olsr_if);
 
   /* add to buffer */
   net_outbuffer_push(olsr_if, &rrmsg, sizeof(struct r_respmsg));

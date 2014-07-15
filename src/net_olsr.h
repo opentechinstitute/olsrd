@@ -49,7 +49,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 
-typedef int (*packet_transform_function) (uint8_t *, int *);
+typedef int (*packet_transform_function) (struct interface *, uint8_t *, int *);
 
 void init_net(void);
 
