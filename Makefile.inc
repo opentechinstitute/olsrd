@@ -20,6 +20,8 @@ MUDFLAP ?= 0
 # shows full compiler/linker calls if activated
 VERBOSE ?= 0
 
+SANITIZE_ADDRESS ?= 0
+
 ifeq ($(VERBOSE),0)
 MAKECMDPREFIX = @
 else
@@ -184,6 +186,13 @@ LDFLAGS +=	-Wl,--warn-common
 #LDFLAGS +=	$(shell CC="$(CC)" $(TOPDIR)/ld-warnings $(LDOPTS))
 ifneq ($(MUDFLAP),0)
 LIBS +=		-lmudflapth
+endif
+
+ifeq ($(OS),linux)
+  ifneq ($(SANITIZE_ADDRESS),0)
+    CFLAGS  += -fsanitize=address -fno-omit-frame-pointer
+    LDFLAGS += -fsanitize=address -static-libasan
+  endif
 endif
 
 # extra options from the outside

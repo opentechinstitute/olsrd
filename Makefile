@@ -46,7 +46,7 @@ INSTALLOVERWRITE ?=
 include Makefile.inc
 
 # pass generated variables to save time
-MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)" VERBOSE="$(VERBOSE)"
+MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)" VERBOSE="$(VERBOSE)" SANITIZE_ADDRESS="$(SANITIZE_ADDRESS)"
 
 LIBS +=		$(OS_LIB_DYNLOAD)
 ifeq ($(OS), win32)
