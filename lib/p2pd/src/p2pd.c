@@ -660,7 +660,7 @@ static void
 P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 {
   union olsr_ip_addr dst;      /* Destination IP address in captured packet */
-  struct ip *ipHeader;         /* The IP header inside the captured IP packet */
+  struct ip *ipHeader = NULL;  /* The IP header inside the captured IP packet */
   struct ip6_hdr *ipHeader6;   /* The IP header inside the captured IP packet */
   struct udphdr *udpHeader;
   uint8_t * ttl = NULL;
