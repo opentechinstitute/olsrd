@@ -338,7 +338,7 @@ int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create) {
   return olsr_add_ip(ifindex, ip, NULL, create);
 }
 
-static int olsr_new_netlink_route(int family, uint32_t rttable, int if_index, int metric, int protocol,
+static int olsr_new_netlink_route(unsigned char family, uint32_t rttable, int if_index, int metric, int protocol,
     const union olsr_ip_addr *src, const union olsr_ip_addr *gw, const struct olsr_ip_prefix *dst,
     bool set, bool del_similar) {
 
@@ -489,7 +489,7 @@ void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set, uint8_t t
   }
 }
 
-static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bool set) {
+static int olsr_os_process_rt_entry(unsigned char af_family, const struct rt_entry *rt, bool set) {
   int metric;
   uint32_t table;
   const struct rt_nexthop *nexthop;
