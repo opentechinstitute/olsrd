@@ -77,7 +77,7 @@ static void rtnetlink_read(int sock, void *, unsigned int);
 struct olsr_rtreq {
   struct nlmsghdr n;
   struct rtmsg r;
-  char buf[512];
+  char buf[1024];
 };
 
 struct olsr_ipadd_req {
