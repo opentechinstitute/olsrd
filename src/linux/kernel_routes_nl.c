@@ -412,7 +412,7 @@ static int olsr_new_netlink_route(unsigned char family, uint32_t rttable, int if
     olsr_netlink_addreq(&req.n, sizeof(req), RTA_PREFSRC, src, family_size);
   }
 
-  if (metric != -1) {
+  if (metric >= 0) {
     /* add metric */
     olsr_netlink_addreq(&req.n, sizeof(req), RTA_PRIORITY, &metric, sizeof(metric));
   }
