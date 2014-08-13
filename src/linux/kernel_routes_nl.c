@@ -338,7 +338,7 @@ int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create) {
   return olsr_add_ip(ifindex, ip, NULL, create);
 }
 
-static int olsr_new_netlink_route(unsigned char family, uint32_t rttable, unsigned int flags, unsigned char scope, int if_index, int metric, int protocol,
+int olsr_new_netlink_route(unsigned char family, uint32_t rttable, unsigned int flags, unsigned char scope, int if_index, int metric, int protocol,
     const union olsr_ip_addr *src, const union olsr_ip_addr *gw, const struct olsr_ip_prefix *dst,
     bool set, bool del_similar, bool blackhole) {
 
