@@ -176,6 +176,9 @@ ifneq ($(MANDIR),)
 		mkdir -p $(MANDIR)/man5/
 		cp files/olsrd.conf.5.gz $(MANDIR)/man5/$(CFGNAME).5.gz
 endif
+ifneq ($(RCDIR),)
+		cp $(RCFILE) $(RCDIR)/olsrd
+endif
 
 uninstall_olsrd:	uninstall_bin
 ifneq ($(MANDIR),)
@@ -186,6 +189,10 @@ ifneq ($(MANDIR),)
 endif
 		rm -f $(CFGFILE) $(CFGFILE).new
 		rmdir -p $(ETCDIR) || true
+ifneq ($(RCDIR),)
+		rm -f $(RCDIR)/olsrd
+		rmdir -p $(RCDIR) || true
+endif
 
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)

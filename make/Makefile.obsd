@@ -8,6 +8,9 @@ ETCDIR =        /etc/olsrd
 LIBDIR =        $(PREFIX)/lib
 DOCDIR =        $(PREFIX)/share/doc
 MANDIR =        $(PREFIX)/man
+RCDIR =         /etc/rc.d
+
+RCFILE =        openbsd/olsrd.rcd
 
 SRCS +=		$(wildcard src/bsd/*.c src/unix/*.c)
 HDRS +=		$(wildcard src/bsd/*.h src/unix/*.h)
