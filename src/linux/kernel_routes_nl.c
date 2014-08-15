@@ -338,7 +338,7 @@ int olsr_os_ifip(int ifindex, union olsr_ip_addr *ip, bool create) {
   return olsr_add_ip(ifindex, ip, NULL, create);
 }
 
-static int olsr_new_netlink_route(int family, int rttable, int if_index, int metric, int protocol,
+static int olsr_new_netlink_route(int family, uint32_t rttable, int if_index, int metric, int protocol,
     const union olsr_ip_addr *src, const union olsr_ip_addr *gw, const struct olsr_ip_prefix *dst,
     bool set, bool del_similar) {
 
@@ -360,7 +360,16 @@ static int olsr_new_netlink_route(int family, int rttable, int if_index, int met
 
   req.r.rtm_flags = RTNH_F_ONLINK;
   req.r.rtm_family = family;
+#ifndef __ANDROID__
+  if (rttable < 256)
+    req.r.rtm_table = rttable;
+  else {
+    req.r.rtm_table = RT_TABLE_UNSPEC;
+    olsr_netlink_addreq(&req.n, sizeof(req), RTA_TABLE, &rttable, sizeof(rttable));
+  }
+#else
   req.r.rtm_table = rttable;
+#endif
 
   req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtmsg));
   req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
@@ -481,7 +490,8 @@ void olsr_os_inetgw_tunnel_route(uint32_t if_idx, bool ipv4, bool set, uint8_t t
 }
 
 static int olsr_os_process_rt_entry(int af_family, const struct rt_entry *rt, bool set) {
-  int metric, table;
+  int metric;
+  uint32_t table;
   const struct rt_nexthop *nexthop;
   union olsr_ip_addr *src;
   bool hostRoute;
