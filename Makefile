@@ -147,7 +147,7 @@ endif
 
 uninstall_bin:
 		rm -f $(SBINDIR)/$(EXENAME)
-		rmdir -p --ignore-fail-on-non-empty $(SBINDIR)
+		rmdir -p $(SBINDIR) || true
 
 install_olsrd:	install_bin
 		@echo ========= C O N F I G U R A T I O N - F I L E ============
@@ -180,12 +180,12 @@ endif
 uninstall_olsrd:	uninstall_bin
 ifneq ($(MANDIR),)
 		rm -f $(MANDIR)/man5/$(CFGNAME).5.gz
-		rmdir -p --ignore-fail-on-non-empty $(MANDIR)/man5/
+		rmdir -p $(MANDIR)/man5/ || true
 		rm -f $(MANDIR)/man8/$(EXENAME).8.gz
-		rmdir -p --ignore-fail-on-non-empty $(MANDIR)/man8/
+		rmdir -p $(MANDIR)/man8/ || true
 endif
 		rm -f $(CFGFILE) $(CFGFILE).new
-		rmdir -p --ignore-fail-on-non-empty $(ETCDIR)
+		rmdir -p $(ETCDIR) || true
 
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)
@@ -226,7 +226,7 @@ libs_install install_libs:
 
 libs_uninstall uninstall_libs:
 		$(MAKECMDPREFIX)set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) uninstall;done
-		rmdir -p --ignore-fail-on-non-empty $(LIBDIR)
+		rmdir -p $(LIBDIR) || true
 
 #
 # DOCUMENTATION
