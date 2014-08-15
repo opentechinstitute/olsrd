@@ -21,60 +21,20 @@
  *
  */
 
-/*
- * Route entries are registered
- * separatly from the node set
- *
- * This set is not used for anything in particular
- * intended for future use
- */
+#include "common.h"
 
-#include "routes.h"
+/* Our address */
+union olsr_ip_addr main_addr;
+union olsr_ip_addr null_addr;
 
-struct route_entry route_set;
-olsr_u32_t route_count;
+int ipversion;
+int ipsize;
+char ipv6_buf[100];                    /* buffer for IPv6 inet_htop */
 
-int
-init_route_entries(void)
-{
-  route_count = 0;
+int nodes_timeout;
 
-  route_set.next = &route_set;
-  route_set.prev = &route_set;
-
-  return 1;
-}
-
-int
-add_route_entry(struct route_entry *entry __attribute__((unused)))
-{
-  struct route_entry *new_entry;
-
-  if ((new_entry = malloc(sizeof(struct route_entry))) == 0) {
-    fprintf(stderr, "OUT OF MEMORY!\n");
-    exit(1);
-  }
-
-  /* queue */
-  new_entry->next = route_set.next;
-  route_set.next->prev = new_entry;
-  route_set.next = new_entry;
-  new_entry->prev = &route_set;
-
-  route_count++;
-
-  return 1;
-
-}
-
-int
-del_route_entry(struct route_entry *entry __attribute__((unused)))
-{
-
-  route_count--;
-
-  return 1;
-}
+int freeze_packets;
+int display_dec;
 
 /*
  * Local Variables:
