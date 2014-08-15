@@ -620,9 +620,19 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
       return -1;
     }
 
-    /* an egress interface must not be an OLSR interface */
     while (sgwegressif) {
-      struct olsr_if * olsrif = cnf->interfaces;
+      struct olsr_if * olsrif;
+
+      /* an egress interface must have a valid length */
+      size_t len = sgwegressif->name ? strlen(sgwegressif->name) : 0;
+      if ((len < 1) || (len > IFNAMSIZ)) {
+        fprintf(stderr, "Error, egress interface '%s' has an invalid length of %lu, allowed: [1, %u]\n", sgwegressif->name, (long unsigned int) len,
+            (unsigned int) IFNAMSIZ);
+        return -1;
+      }
+
+      /* an egress interface must not be an OLSR interface */
+      olsrif = cnf->interfaces;
       while (olsrif) {
         if (!strcmp(olsrif->name, sgwegressif->name)) {
           fprintf(stderr, "Error, egress interface %s already is an OLSR interface\n", sgwegressif->name);
