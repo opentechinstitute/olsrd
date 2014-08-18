@@ -172,8 +172,10 @@ mdp_checksum(uint8_t *data, const uint16_t data_len,
   CHECK_MEM((co_req = co_request_create()));
   CO_APPEND_BIN(co_req,servald_key,servald_key_len);
   CO_APPEND_BIN(co_req,data,data_len);
-  CHECK(co_call(co_conn,&co_resp,"mdp-sign",sizeof("mdp-sign"),co_req) && 
-  (sig_len = co_response_get_bin(co_resp,(char**)&sig,"sig",sizeof("sig"))),"Failed to receive signature from commotiond");
+  int call_ret = co_call(co_conn,&co_resp,"mdp-sign",sizeof("mdp-sign"),co_req);
+  CHECK(call_ret, "Failed to receive signature from commotiond");
+  sig_len = co_response_get_bin(co_resp,(char**)&sig,"sig",sizeof("sig"));
+  CHECK(sig_len, "Received invalid signature from commotiond");
 
   if (sig_len <= sigbuf_len) {
     CHECK_MEM(memcpy(sigbuf,sig,sig_len));
