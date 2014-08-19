@@ -577,6 +577,12 @@ olsrd_sanity_check_cnf(struct olsrd_config *cnf)
   if (cnf->smart_gw_use_count > 1) {
     struct sgw_egress_if * sgwegressif = cnf->smart_gw_egress_interfaces;
 
+    /* check that we're in IPv4 */
+    if (cnf->ip_version != AF_INET) {
+      fprintf(stderr, "Error, multi smart gateway mode is only supported for IPv4\n");
+      return -1;
+    }
+
 	/* check that the sgw takedown percentage is in the range [0, 100] */
 	if (/*(cnf->smart_gw_takedown_percentage < 0) ||*/ (cnf->smart_gw_takedown_percentage > 100)) {
 	  fprintf(stderr, "Error, smart gateway takedown percentage (%u) is not in the range [0, 100]\n",
