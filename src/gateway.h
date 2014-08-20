@@ -21,6 +21,13 @@
 /** the interval (in milliseconds) on which to run gateway cleanup */
 #define GW_CLEANUP_INTERVAL 30000
 
+/**
+ * @return true if multi-gateway mode is enabled
+ */
+static inline bool multi_gateway_mode(void) {
+  return (olsr_cnf->smart_gw_use_count > 1);
+}
+
 /*
  * hack for Vienna network:
  * set MAXIMUM_GATEWAY_PREFIX_LENGTH to 1 to remove 0.0.0.0/128.0.0.0 and

@@ -114,13 +114,6 @@ static inline uint8_t * hna_mask_to_hna_pointer(union olsr_ip_addr *mask, int pr
 }
 
 /**
- * @return true if multi-gateway mode is enabled
- */
-static inline bool multi_gateway_mode(void) {
-  return (olsr_cnf->smart_gw_use_count > 1);
-}
-
-/**
  * Convert an encoded 1 byte transport value (5 bits mantissa, 3 bits exponent)
  * to an uplink/downlink speed value
  *
