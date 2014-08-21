@@ -4,6 +4,9 @@ Note: In this release the pud plugin was upgraded to version 2.0.0.
       to the new pud plugin at the same time since there is no interoperability
       between the old version and the new version.
 
+Note: In this release the configuration files have been moved from /etc into
+      /etc/olsrd.
+
 0.6.6.2 -------------------------------------------------------------------
 
 Alessio Caiazza (2):
