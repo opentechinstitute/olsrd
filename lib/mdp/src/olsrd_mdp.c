@@ -213,6 +213,7 @@ mdp_plugin_init(void)
 {
   int i;
   co_obj_t *co_conn = NULL;
+  struct interface *ifn = NULL;
 
   /* Initialize the timestamp database */
   for (i = 0; i < HASHSIZE; i++) {
