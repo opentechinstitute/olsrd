@@ -234,6 +234,11 @@ mdp_plugin_init(void)
 
   CHECKF(read_key_from_servald(co_conn, config_keyringpath, config_sid) == 0,"[MDP] Could not read key from servald sid!\nExiting!\n\n");
 
+  /* loop through interfaces, reserving buffer space for signatures */
+  for (ifn = ifnet; ifn; ifn = ifn->int_next) {
+    CHECKF(net_reserve_bufspace(ifn, sizeof(struct s_olsrmsg)) == 0, "Error reserving buffer space for signatures");
+  }
+  
   /* Register the packet transform function */
   add_ptf(&add_signature);
 
