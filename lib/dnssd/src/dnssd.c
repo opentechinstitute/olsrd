@@ -488,12 +488,11 @@ olsr_p2pd_gen(unsigned char *packet, int len, int ttl)
     //OLSR_PRINTF(1, "%s: Generating packet - [%s]\n", PLUGIN_NAME_SHORT, ifn->int_name);
 
     if (net_outbuffer_push(ifn, message, aligned_size) != aligned_size) {
-      /* flush output buffer and try again */
+      /* send data and try again */
       net_output(ifn);
       if (net_outbuffer_push(ifn, message, aligned_size) != aligned_size) {
-        OLSR_PRINTF(1, "%s: could not send on interface: %s\n", PLUGIN_NAME_SHORT, ifn->int_name);
-      } else
-	net_output(ifn);
+        //OLSR_PRINTF(1, "%s: could not send on interface: %s\n", PLUGIN_NAME_SHORT, ifn->int_name);
+      }
     } else
       net_output(ifn);
   }
