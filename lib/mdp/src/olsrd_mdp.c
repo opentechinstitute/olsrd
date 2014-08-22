@@ -98,7 +98,6 @@
 #define CO_APPEND_BIN(R,S,L) CHECK(co_request_append_bin(co_req,(char*)S,L),"Failed to append to request")
 
 static struct timeval now;
-co_obj_t *co_req = NULL, *co_resp = NULL;
 
 /* Timestamp node */
 struct stamp {
@@ -165,11 +164,12 @@ mdp_checksum(uint8_t *data, const uint16_t data_len,
 {
   unsigned char *sig = NULL;
   size_t sig_len = 0;
-  co_obj_t *co_conn = NULL;
+  co_obj_t *co_conn = NULL, *co_req = NULL, *co_resp = NULL;
 
   CHECKF((co_conn = co_connect(config_commotionsock,strlen(config_commotionsock)+1)),"Failed to connect to Commotion socket\n\n");
 
-  CHECK_MEM((co_req = co_request_create()));
+  co_req = co_request_create();
+  CHECK_MEM(co_req);
   CO_APPEND_BIN(co_req,servald_key,servald_key_len);
   CO_APPEND_BIN(co_req,data,data_len);
   int call_ret = co_call(co_conn,&co_resp,"mdp-sign",sizeof("mdp-sign"),co_req);
@@ -182,13 +182,16 @@ mdp_checksum(uint8_t *data, const uint16_t data_len,
   } else {
     olsr_printf(1, "Signature too big for signature buffer!\n");
   }
-
-  co_free(co_req);
-  co_free(co_resp);
   
   print_data("signature", sigbuf, sig_len);
 
-error:
+error:  
+  if (co_req)
+    co_free(co_req);
+  
+  if (co_resp)
+    co_free(co_resp);
+  
   /*
    * We can't be sure that we need to disconnect. But 
    * we need to if there is a connection.
@@ -1133,6 +1136,7 @@ static int
 read_key_from_servald(co_obj_t *co_conn, const char *keyring_path, const char *sid)
 {
   char *output = NULL;
+  co_obj_t *co_req = NULL, *co_resp = NULL;
   
   assert(co_conn);
   CHECKF_MEM((co_req = co_request_create()));
