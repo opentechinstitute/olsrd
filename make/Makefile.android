@@ -96,6 +96,9 @@ UNINSTALL_LIB =	rm -f $(LIBDIR)/$(PLUGIN_FULLNAME); \
 NDK_BASE ?= /opt/android-ndk
 NDK_PLATFORM_LEVEL ?= 4
 NDK_ARCH=$(shell uname -m)
+ifneq ($(NDK_ARCH),x86_64)
+NDK_ARCH=x86
+endif
 NDK_ABI=arm
 NDK_ABIDIR=linux-androideabi
 NDK_SYSROOT=$(NDK_BASE)/platforms/android-$(NDK_PLATFORM_LEVEL)/arch-$(NDK_ABI)
