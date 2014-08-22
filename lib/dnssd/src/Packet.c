@@ -50,28 +50,6 @@
 #include <netinet/ip.h>         /* struct iphdr */
 
 /* -------------------------------------------------------------------------
- * Function   : IsIpFragment
- * Description: Check if an IP packet is an IP fragment
- * Input      : ipPacket - the IP packet
- * Output     : none
- * Return     : true (1) or false (0)
- * Data Used  : none
- * ------------------------------------------------------------------------- */
-int IsIpFragment(unsigned char* ipPacket)
-{
-  struct ip* iph;
-
-  assert(ipPacket != NULL);
-
-  iph = (struct ip*) ARM_NOWARN_ALIGN(ipPacket);
-  if ((ntohs(iph->ip_off) & IP_OFFMASK) != 0)
-  {
-    return 1;
-  }
-  return 0;
-} /* IsIpFragment */
-
-/* -------------------------------------------------------------------------
  * Function   : GetIpTotalLength
  * Description: Retrieve the total length of the IP packet (in bytes) of
  *              an IP packet
@@ -109,16 +87,6 @@ int IsIpv4Fragment(struct ip* hdr)
   return 0;
 } /* IsIpv4Fragment */
 
-int IsMulticastv4(struct ip* hdr)
-{
-  assert(hdr != NULL);
-
-  if (IN_MULTICAST(ntohl(hdr->ip_dst.s_addr)))
-	  return 1;
-  
-  return 0;
-}
-
 
 /* -------------------------------------------------------------------------
  * Function   : IsIpv6Fragment
@@ -136,14 +104,6 @@ int IsIpv6Fragment(struct ip6_hdr* hdr __attribute__ ((unused)))
   if (0)
     return 1;
     
-  return 0;
-}
-
-int IsMulticastv6(struct ip6_hdr* hdr __attribute__ ((unused)))
-{
-  assert(hdr != NULL);
-
-
   return 0;
 }
 
@@ -179,25 +139,6 @@ GetIpPacket(unsigned char *encapsulationUdpData)
 {
   return encapsulationUdpData + ENCAP_HDR_LEN;
 }                               /* GetIpPacket */
-
-/* -------------------------------------------------------------------------
- * Function   : GetTtl
- * Description: Retrieve the TTL (Time To Live) value from the IP header of
- *              an IP packet
- * Input      : ipPacket - the IP packet
- * Output     : none
- * Return     : TTL value
- * Data Used  : none
- * ------------------------------------------------------------------------- */
-u_int8_t GetTtl(unsigned char* ipPacket)
-{
-  struct iphdr* iph;
-
-  assert(ipPacket != NULL);
-
-  iph = (struct iphdr*) ARM_NOWARN_ALIGN(ipPacket);
-  return iph->ttl;
-} /* GetTtl */
 
 /* -------------------------------------------------------------------------
  * Function   : SaveTtlAndChecksum
@@ -239,33 +180,6 @@ void RestoreTtlAndChecksum(unsigned char* ipPacket, struct TSaveTtl* sttl)
   iph->ttl = sttl->ttl;
   iph->check = htons(sttl->check);
 } /* RestoreTtlAndChecksum */
-
-/* -------------------------------------------------------------------------
- * Function   : DecreaseTtlAndUpdateHeaderChecksum
- * Description: For an IP packet, decrement the TTL value and update the IP header
- *              checksum accordingly.
- * Input      : ipPacket - the IP packet
- * Output     : none
- * Return     : none
- * Data Used  : none
- * Notes      : See also RFC1141
- * ------------------------------------------------------------------------- */
-void DecreaseTtlAndUpdateHeaderChecksum(unsigned char* ipPacket)
-{
-  struct iphdr* iph;
-  u_int32_t sum;
-
-  assert(ipPacket != NULL);
-
-  iph = (struct iphdr*) ARM_NOWARN_ALIGN(ipPacket);
-
-  iph->ttl--; /* decrement ttl */
-  sum = ntohs(iph->check) + 0x100; /* increment checksum high byte */
-  iph->check = htons(sum + (sum>>16)); /* add carry */
-} /* DecreaseTtlAndUpdateHeaderChecksum */
-
-
-
 
 /*
  * Local Variables:

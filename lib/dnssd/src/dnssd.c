@@ -488,11 +488,12 @@ olsr_p2pd_gen(unsigned char *packet, int len, int ttl)
     //OLSR_PRINTF(1, "%s: Generating packet - [%s]\n", PLUGIN_NAME_SHORT, ifn->int_name);
 
     if (net_outbuffer_push(ifn, message, aligned_size) != aligned_size) {
-      /* send data and try again */
+      /* flush output buffer and try again */
       net_output(ifn);
       if (net_outbuffer_push(ifn, message, aligned_size) != aligned_size) {
-        //OLSR_PRINTF(1, "%s: could not send on interface: %s\n", PLUGIN_NAME_SHORT, ifn->int_name);
-      }
+        OLSR_PRINTF(1, "%s: could not send on interface: %s\n", PLUGIN_NAME_SHORT, ifn->int_name);
+      } else
+	net_output(ifn);
     } else
       net_output(ifn);
   }
@@ -532,27 +533,6 @@ P2pdPError(const char *format, ...)
     OLSR_PRINTF(1, "%s: %s: %s\n", PLUGIN_NAME_SHORT, strDesc, stringErr);
   }
 }                               /* P2pdPError */
-
-/* -------------------------------------------------------------------------
- * Function   : MainAddressOf
- * Description: Lookup the main address of a node
- * Input      : ip - IP address of the node
- * Output     : none
- * Return     : The main IP address of the node
- * Data Used  : none
- * ------------------------------------------------------------------------- */
-union olsr_ip_addr *
-MainAddressOf(union olsr_ip_addr *ip)
-{
-  union olsr_ip_addr *result = NULL;
-
-  /* TODO: mid_lookup_main_addr() is not thread-safe! */
-  result = mid_lookup_main_addr(ip);
-  if (result == NULL) {
-    result = ip;
-  }
-  return result;
-}                               /* MainAddressOf */
 
 
 /* -------------------------------------------------------------------------
