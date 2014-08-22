@@ -68,16 +68,11 @@ struct TEncapHeader {
 
 #define ENCAP_HDR_LEN ((int)sizeof(struct TEncapHeader))
 
-int IsIpFragment(unsigned char* ipPacket);
 u_int16_t GetIpTotalLength(unsigned char* ipPacket);
 int IsIpv4Fragment(struct ip*);
-int IsMulticastv4(struct ip*);
 int IsIpv6Fragment(struct ip6_hdr*);
-int IsMulticastv6(struct ip6_hdr*);
-u_int8_t GetTtl(unsigned char* ipPacket);
 void SaveTtlAndChecksum(unsigned char* ipPacket, struct TSaveTtl* sttl);
 void RestoreTtlAndChecksum(unsigned char* ipPacket, struct TSaveTtl* sttl);
-void DecreaseTtlAndUpdateHeaderChecksum(unsigned char* ipPacket);
 unsigned int GetIpHeaderLength(unsigned char *ipPacket);
 unsigned char *GetIpPacket(unsigned char *encapsulationUdpData);
 

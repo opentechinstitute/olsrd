@@ -534,27 +534,6 @@ P2pdPError(const char *format, ...)
   }
 }                               /* P2pdPError */
 
-/* -------------------------------------------------------------------------
- * Function   : MainAddressOf
- * Description: Lookup the main address of a node
- * Input      : ip - IP address of the node
- * Output     : none
- * Return     : The main IP address of the node
- * Data Used  : none
- * ------------------------------------------------------------------------- */
-union olsr_ip_addr *
-MainAddressOf(union olsr_ip_addr *ip)
-{
-  union olsr_ip_addr *result = NULL;
-
-  /* TODO: mid_lookup_main_addr() is not thread-safe! */
-  result = mid_lookup_main_addr(ip);
-  if (result == NULL) {
-    result = ip;
-  }
-  return result;
-}                               /* MainAddressOf */
-
 
 /* -------------------------------------------------------------------------
  * Function   : InUdpDestPortList
