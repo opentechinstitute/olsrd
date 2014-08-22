@@ -61,6 +61,7 @@ struct TDupEntry
 void InitPacketHistory(void);
 u_int32_t PacketCrc32(unsigned char* ipPkt, ssize_t len);
 u_int32_t Hash(u_int32_t from32);
+void MarkRecentPacket(u_int32_t crc32);
 int CheckAndMarkRecentPacket(u_int32_t crc32);
 void PrunePacketHistory(void*);
 

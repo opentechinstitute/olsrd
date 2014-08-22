@@ -450,6 +450,27 @@ CreateNonOlsrNetworkInterfaces(struct interface *skipThisIntf)
 }                               /* CreateNonOlsrNetworkInterfaces */
 
 /* -------------------------------------------------------------------------
+ * Function   : AddInterface
+ * Description: Add an OLSR-enabled network interface to the list of BMF-enabled
+ *              network interfaces
+ * Input      : newIntf - network interface to add
+ * Output     : none
+ * Return     : none
+ * Data Used  : none
+ * ------------------------------------------------------------------------- */
+void
+AddInterface(struct interface *newIntf)
+{
+  /* int nOpened; */
+
+  assert(newIntf != NULL);
+
+  /* nOpened = */ (void)CreateInterface(newIntf->int_name, NULL, newIntf);
+
+  //OLSR_PRINTF(1, "%s: opened %d sockets\n", PLUGIN_NAME, nOpened);
+}                               /* AddInterface */
+
+/* -------------------------------------------------------------------------
  * Function   : CloseNonOlsrNetworkInterfaces
  * Description: Closes every socket on each network interface used by BMF
  * Input      : none

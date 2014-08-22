@@ -140,6 +140,7 @@ extern struct DuplicateFilterEntry * FilterList;
 
 void DoP2pd(int sd, void *x, unsigned int y);
 void P2pdPError(const char *format, ...) __attribute__ ((format(printf, 1, 2)));
+union olsr_ip_addr *MainAddressOf(union olsr_ip_addr *ip);
 int InitP2pd(struct interface *skipThisIntf);
 void CloseP2pd(void);
 int AddUdpDestPort(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
@@ -156,6 +157,7 @@ void olsr_p2pd_gen(unsigned char *packet, int len, int ttl);
 bool olsr_parser(union olsr_message *, struct interface *, union olsr_ip_addr *);
 
 int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
+void PromptAnnouncements(void *context __attribute__((unused)));
 int SetDomain(const char *value, void *data __attribute__ ((unused)), set_plugin_parameter_addon addon __attribute__ ((unused)));
 void UpdateServices(void *context);
 
