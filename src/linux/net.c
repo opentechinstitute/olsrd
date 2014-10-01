@@ -713,7 +713,7 @@ bool olsr_if_isup(const char * dev)
   if (ioctl(olsr_cnf->ioctl_s, SIOCGIFFLAGS, &ifr) < 0) {
     OLSR_PRINTF(1, "ioctl SIOCGIFFLAGS (get flags) error on device %s: %s (%d)\n",
         dev, strerror(errno), errno);
-    return 1;
+    return false;
   }
   return (ifr.ifr_flags & IFF_UP) != 0;
 }
