@@ -654,8 +654,6 @@ int olsr_init_gateways(void) {
     return 1;
   }
 
-  olsr_add_ifchange_handler(smartgw_tunnel_monitor);
-
   return 0;
 }
 
@@ -666,6 +664,7 @@ int olsr_startup_gateways(void) {
   bool ok = true;
 
   if (!multi_gateway_mode()) {
+    olsr_add_ifchange_handler(smartgw_tunnel_monitor);
     return 0;
   }
 
@@ -680,6 +679,8 @@ int olsr_startup_gateways(void) {
     return 1;
   }
 
+  olsr_add_ifchange_handler(smartgw_tunnel_monitor);
+
   if (olsr_cnf->smart_gw_takedown_percentage > 0) {
     /* start gateway takedown timer */
     olsr_set_timer(&gw_takedown_timer, olsr_cnf->smart_gw_period, 0, true, &gw_takedown_timer_callback, NULL, 0);
@@ -693,6 +694,7 @@ int olsr_startup_gateways(void) {
  */
 void olsr_shutdown_gateways(void) {
   if (!multi_gateway_mode()) {
+    olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
     return;
   }
 
@@ -701,6 +703,8 @@ void olsr_shutdown_gateways(void) {
     olsr_stop_timer(gw_takedown_timer);
     gw_takedown_timer = NULL;
   }
+
+  olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
   (void)multiGwRulesSgwTunnels(false);
   (void)multiGwRulesEgressInterfaces(false);
@@ -715,8 +719,6 @@ void olsr_shutdown_gateways(void) {
 void olsr_cleanup_gateways(void) {
   struct gateway_entry * tree_gw;
   struct gw_container_entry * gw;
-
-  olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
 
   /* remove all gateways in the gateway tree that are not the active gateway */
   OLSR_FOR_ALL_GATEWAY_ENTRIES(tree_gw) {
