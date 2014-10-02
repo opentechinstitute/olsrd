@@ -60,6 +60,7 @@
 #include <linux/rtnetlink.h>
 #include <linux/version.h>
 #include <sys/stat.h>
+#include <net/if.h>
 #endif /* __linux__ */
 
 extern FILE *yyin;
