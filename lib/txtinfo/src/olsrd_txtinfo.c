@@ -199,7 +199,7 @@ plugin_ipc_init(void)
     }
 #endif /* (defined __FreeBSD__ || defined __FreeBSD_kernel__) && defined SO_NOSIGPIPE */
 #if defined linux
-    if (olsr_cnf->ip_version == AF_INET6) {
+    if (txtinfo_ipv6_only && olsr_cnf->ip_version == AF_INET6) {
       if (setsockopt(ipc_socket, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&yes, sizeof(yes)) < 0) {
         perror("IPV6_V6ONLY failed");
         return 0;

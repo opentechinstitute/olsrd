@@ -63,6 +63,10 @@ LoadPlugin "olsrd_txtinfo.so.0.1"
     # is allowed by default.  txtinfo will only use the first "accept"
     # parameter specified and will ignore the rest.
 
+    # Set this parameter to activate the IPV6_V6ONLY flag for the plugin
+    # to prevent it from receiving IPv4 messages
+    #PlParam     "ipv6only"   "false"
+
     # to allow a specific host:
     #PlParam      "accept" "172.29.44.23"
     # if you set it to 0.0.0.0, it will accept all connections
