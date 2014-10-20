@@ -1379,15 +1379,15 @@ sgw_egress_if: TOK_STRING
   }
 
   /* Trim trailing space */
-  end = str + strlen(str) - 1;
+  end = &str[strlen(str) - 1];
   while((end > str) && isspace(*end)) {
     end--;
   }
 
   /* Write new null terminator */
-  *(end + 1) = '\0';
+  end[1] = '\0';
 
-  if(*str == 0) {
+  if(*str == '\0') {
     PARSER_DEBUG_PRINTF("Smart gateway egress interface: <empty> (skipped)\n");
   } else {
     PARSER_DEBUG_PRINTF("Smart gateway egress interface: %s\n", str);
