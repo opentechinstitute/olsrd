@@ -18,6 +18,15 @@ Nico Geyso (2):
 
 0.6.7 -------------------------------------------------------------------
 
+Note: In this release the configuration files have been moved from /etc into
+      /etc/olsrd.
+
+Note: In this release the pud plugin was upgraded to version 2.0.0.
+      This is because of a breaking change in its wire format. If you have
+      deployed the pud plugin on your mesh then you should update all nodes
+      to the new pud plugin at the same time since there is no interoperability
+      between the old version and the new version.
+
 Alessio Caiazza (4):
       Hotfix for very long http headers also for jsoninfo
       Hotfix for very long http headers also for jsoninfo
@@ -278,15 +287,6 @@ Teco Boot (2):
 
 Yury Popov (1):
       Fix for win32 compiling with i686-w64-mingw32-gcc on ubuntu
-
-Note: In this release the pud plugin was upgraded to version 2.0.0.
-      This is because of a breaking change in its wire format. If you have
-      deployed the pud plugin on your mesh then you should update all nodes
-      to the new pud plugin at the same time since there is no interoperability
-      between the old version and the new version.
-
-Note: In this release the configuration files have been moved from /etc into
-      /etc/olsrd.
 
 0.6.6.2 -------------------------------------------------------------------
 
