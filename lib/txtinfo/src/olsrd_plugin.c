@@ -64,7 +64,7 @@ union olsr_ip_addr txtinfo_accept_ip;
 union olsr_ip_addr txtinfo_listen_ip;
 int ipc_port;
 int nompr;
-bool txtinfo_ipv6_only;
+int txtinfo_ipv6_only;
 
 static void my_init(void) __attribute__ ((constructor));
 static void my_fini(void) __attribute__ ((destructor));

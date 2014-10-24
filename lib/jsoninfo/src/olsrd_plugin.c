@@ -65,7 +65,7 @@ union olsr_ip_addr jsoninfo_listen_ip;
 int ipc_port;
 int nompr;
 bool http_headers;
-bool jsoninfo_ipv6_only;
+int jsoninfo_ipv6_only;
 
 static void my_init(void) __attribute__ ((constructor));
 static void my_fini(void) __attribute__ ((destructor));
