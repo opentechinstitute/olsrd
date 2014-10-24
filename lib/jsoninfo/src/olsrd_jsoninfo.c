@@ -1336,9 +1336,9 @@ send_info(unsigned int send_what, int the_socket)
   if (send_what & SIW_ALL) {
     abuf_json_int(&abuf, "systemTime", time(NULL));
     abuf_json_int(&abuf, "timeSinceStartup", now_times);
-    if(*uuid != 0)
+    if (*uuid != 0)
       abuf_json_string(&abuf, "uuid", uuid);
-      abuf_puts(&abuf, "}\n");
+    abuf_puts(&abuf, "}\n");
   }
 
   /* this outputs the olsrd.conf text directly, not JSON */
