@@ -1,3 +1,21 @@
+0.6.7.1 -------------------------------------------------------------------
+
+Ferry Huberts (6):
+      android: use the machine specific NDK instead of always the 32bit variant
+      android: fix build on 32 bit platform (see 0295e11)
+      plugins: add a comment to clarify strange behaviour
+      txtinfo: duplicate code in branch
+      txtinfo: ensure null termination of string buffer
+      jsoninfo: fix indentation
+
+Henning Rogge (2):
+      Update version after release of v0.6.7
+      Release v0.6.7.1
+
+Nico Geyso (2):
+      jsoninfo: set_plugin_boolean stores into an int
+      txtinfo: set_plugin_boolean stores into an int
+
 0.6.7 -------------------------------------------------------------------
 
 Alessio Caiazza (4):
