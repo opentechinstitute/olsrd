@@ -1,13 +1,31 @@
+0.6.7.1 -------------------------------------------------------------------
+
+Ferry Huberts (6):
+      android: use the machine specific NDK instead of always the 32bit variant
+      android: fix build on 32 bit platform (see 0295e11)
+      plugins: add a comment to clarify strange behaviour
+      txtinfo: duplicate code in branch
+      txtinfo: ensure null termination of string buffer
+      jsoninfo: fix indentation
+
+Henning Rogge (2):
+      Update version after release of v0.6.7
+      Release v0.6.7.1
+
+Nico Geyso (2):
+      jsoninfo: set_plugin_boolean stores into an int
+      txtinfo: set_plugin_boolean stores into an int
+
+0.6.7 -------------------------------------------------------------------
+
+Note: In this release the configuration files have been moved from /etc into
+      /etc/olsrd.
+
 Note: In this release the pud plugin was upgraded to version 2.0.0.
       This is because of a breaking change in its wire format. If you have
       deployed the pud plugin on your mesh then you should update all nodes
       to the new pud plugin at the same time since there is no interoperability
       between the old version and the new version.
-
-Note: In this release the configuration files have been moved from /etc into
-      /etc/olsrd.
-
-0.6.7 -------------------------------------------------------------------
 
 Alessio Caiazza (4):
       Hotfix for very long http headers also for jsoninfo
