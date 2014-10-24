@@ -493,16 +493,9 @@ ipc_print_hna(struct autobuf *abuf)
 #endif /* ACTIVATE_VTIME_TXTINFO */
 
   /* Announced HNA entries */
-  if (olsr_cnf->ip_version == AF_INET) {
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
-                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-    }
-  } else {
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
-                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-    }
+  for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+    abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
+              olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
   }
 
   /* HNA entries */
@@ -574,6 +567,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
 
           inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->gw->originator, originator, sizeof(originator));
           strncpy(prefix, olsr_ip_prefix_to_string(&gw->gw->external_prefix), sizeof(prefix));
+          prefix[sizeof(prefix) - 1] = '\0';
           uplink = gw->gw->uplink;
           downlink = gw->gw->downlink;
           pc = tc ?tc->path_cost : ROUTE_COST_BROKEN;
