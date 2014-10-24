@@ -493,16 +493,9 @@ ipc_print_hna(struct autobuf *abuf)
 #endif /* ACTIVATE_VTIME_TXTINFO */
 
   /* Announced HNA entries */
-  if (olsr_cnf->ip_version == AF_INET) {
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
-                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-    }
-  } else {
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
-                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-    }
+  for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+    abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
+              olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
   }
 
   /* HNA entries */
