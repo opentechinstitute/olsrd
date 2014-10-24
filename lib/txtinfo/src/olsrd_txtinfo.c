@@ -567,6 +567,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
 
           inet_ntop(ipv6 ? AF_INET6 : AF_INET, &gw->gw->originator, originator, sizeof(originator));
           strncpy(prefix, olsr_ip_prefix_to_string(&gw->gw->external_prefix), sizeof(prefix));
+          prefix[sizeof(prefix) - 1] = '\0';
           uplink = gw->gw->uplink;
           downlink = gw->gw->downlink;
           pc = tc ?tc->path_cost : ROUTE_COST_BROKEN;
