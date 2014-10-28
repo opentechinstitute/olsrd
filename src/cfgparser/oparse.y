@@ -47,6 +47,7 @@
 #include "../net_olsr.h"
 #include "../link_set.h"
 #include "../olsr.h"
+#include "../egressTypes.h"
 
 #include <stddef.h>
 #include <stdio.h>

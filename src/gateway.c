@@ -22,6 +22,7 @@
 #include "gateway_default_handler.h"
 #include "gateway_list.h"
 #include "gateway.h"
+#include "egressTypes.h"
 
 #include <assert.h>
 #include <net/if.h>

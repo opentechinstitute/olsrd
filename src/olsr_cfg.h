@@ -262,11 +262,6 @@ struct plugin_entry {
   struct plugin_entry *next;
 };
 
-struct sgw_egress_if {
-  char *name;
-  struct sgw_egress_if *next;
-};
-
 /*
  * The config struct
  */

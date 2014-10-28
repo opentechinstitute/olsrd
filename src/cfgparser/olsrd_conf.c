@@ -45,6 +45,7 @@
 #include "defs.h"
 #include "net_olsr.h"
 #include "olsr.h"
+#include "egressTypes.h"
 
 #include <assert.h>
 #include <stdio.h>
