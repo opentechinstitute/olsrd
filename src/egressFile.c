@@ -635,7 +635,7 @@ static bool readEgressFile(char * fileName) {
     }
 
     if (!uplink || !downlink) {
-      egressBwClear(&egress_if->bwCurrent, false);
+      egressBwClear(&egress_if->bwCurrent, egress_if->upCurrent);
     } else {
       egress_if->bwCurrent.egressUk = uplink;
       egress_if->bwCurrent.egressDk = downlink;
@@ -646,7 +646,7 @@ static bool readEgressFile(char * fileName) {
       egress_if->bwCurrent.networkSet = networkSet;
       egress_if->bwCurrent.gatewaySet = gatewaySet;
 
-      egressBwCalculateCosts(&egress_if->bwCurrent, true);
+      egressBwCalculateCosts(&egress_if->bwCurrent, egress_if->upCurrent);
     }
 
     egress_if->inEgressFile = true;
@@ -664,7 +664,7 @@ static bool readEgressFile(char * fileName) {
     struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
     while (egress_if) {
       if (!egress_if->inEgressFile) {
-        egressBwClear(&egress_if->bwCurrent, false);
+        egressBwClear(&egress_if->bwCurrent, egress_if->upCurrent);
       }
 
       egress_if->bwCostsChanged = egressBwCostsChanged(egress_if);

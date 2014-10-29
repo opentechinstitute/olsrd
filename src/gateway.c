@@ -663,8 +663,11 @@ int olsr_startup_gateways(void) {
     while (egress_if) {
       egress_if->if_index = if_nametoindex(egress_if->name);
 
-      egressBwClear(&egress_if->bwPrevious, false);
-      egressBwClear(&egress_if->bwCurrent, false);
+      egress_if->upPrevious = egress_if->upCurrent = olsr_if_isup(egress_if->name);
+      egress_if->upChanged = (egress_if->upPrevious != egress_if->upCurrent);
+
+      egressBwClear(&egress_if->bwPrevious, egress_if->upPrevious);
+      egressBwClear(&egress_if->bwCurrent, egress_if->upCurrent);
       egress_if->bwCostsChanged = egressBwCostsChanged(egress_if);
       egress_if->bwNetworkChanged = egressBwNetworkChanged(egress_if);
       egress_if->bwGatewayChanged = egressBwGatewayChanged(egress_if);
@@ -721,8 +724,12 @@ void olsr_shutdown_gateways(void) {
   {
     struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
     while (egress_if) {
+      egress_if->upPrevious = egress_if->upCurrent;
+      egress_if->upCurrent = false;
+      egress_if->upChanged = (egress_if->upPrevious != egress_if->upCurrent);
+
       egress_if->bwPrevious = egress_if->bwCurrent;
-      egressBwClear(&egress_if->bwCurrent, false);
+      egressBwClear(&egress_if->bwCurrent, egress_if->upCurrent);
       egress_if->bwCostsChanged = egressBwCostsChanged(egress_if);
       egress_if->bwNetworkChanged = egressBwNetworkChanged(egress_if);
       egress_if->bwGatewayChanged = egressBwGatewayChanged(egress_if);

@@ -41,6 +41,11 @@ struct sgw_egress_if {
   uint8_t ruleNr; /**< IP rule number */
   uint8_t bypassRuleNr; /**< bypass IP rule number */
 
+  /* updated through smartgw_tunnel_monitor */
+  bool upPrevious;
+  bool upCurrent;
+  bool upChanged;
+
   /* configured through the readEgressFile function */
   struct egress_if_bw bwPrevious;
   struct egress_if_bw bwCurrent;
