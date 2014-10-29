@@ -581,6 +581,41 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   }
   abuf_appendf(out,
     "\n"
+    "# SmartGatewayEgressFile declares the file that contains the bandwidth\n"
+    "# parameters of the egress interfaces declared by SmartGatewayEgressInterfaces.\n"
+    "# Every line in the file declares bandwidth parameters of an egress interface,\n"
+    "# with the format:\n"
+    "#   # this is a comment\n"
+    "#   interface=upstream,downstream,pathcost,network/prefix,gateway\n"
+    "# Only the upstream and downstream fields are mandatory, the other fields are\n"
+    "# optional. An empty field signifies that its default should be used.\n"
+    "# The field defaults are:\n"
+    "#   upstream           = 0 (Kbps)\n"
+    "#   downstream         = 0 (Kbps)\n"
+    "#   pathcost           = 0 (dimensionless, 1024 is equivalent to 1 hop)\n"
+    "#   network/prefix     = no default / not set\n"
+    "#                        - network is an IP address\n"
+    "#                        - prefix is a number in the range [0, 24] for IPv4\n"
+    "#                          and in the range [0, 128] for IPv6\n"
+    "#   gateway            = no default / not set (IP address)\n"
+    "# (default is %s)\n"
+    "\n", DEF_GW_EGRESS_FILE);
+  {
+    bool def = !cnf->smart_gw_egress_file || !strcmp(cnf->smart_gw_egress_file, DEF_GW_EGRESS_FILE);
+    abuf_appendf(out, "%sSmartGatewayEgressFile %s\n",
+      def ? "# " : "", def ? DEF_GW_EGRESS_FILE : cnf->smart_gw_egress_file);
+  }
+  abuf_appendf(out,
+    "\n"
+    "# SmartGatewayEgressFilePeriod determines the period (in milliseconds) on which\n"
+    "# the SmartGatewayEgressFile is checked for changes and processed if changed.\n"
+    "# (default is %u)\n"
+    "\n", DEF_GW_EGRESS_FILE_PERIOD);
+  abuf_appendf(out, "%sSmartGatewayEgressFilePeriod %u\n",
+      cnf->smart_gw_egress_file_period == DEF_GW_EGRESS_FILE_PERIOD ? "# " : "",
+      cnf->smart_gw_egress_file_period);
+  abuf_appendf(out,
+    "\n"
     "# Determines the routing tables offset for multi-gateway policy routing tables\n"
     "# See the policy routing script for an explanation.\n"
     "# (default is %u)\n"
