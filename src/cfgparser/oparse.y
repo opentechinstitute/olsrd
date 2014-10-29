@@ -225,6 +225,7 @@ static int add_ipv6_addr(YYSTYPE ipaddr_arg, YYSTYPE prefixlen_arg)
 %token TOK_SMART_GW_EGRESS_IFS
 %token TOK_SMART_GW_EGRESS_FILE
 %token TOK_SMART_GW_EGRESS_FILE_PERIOD
+%token TOK_SMART_GW_STATUS_FILE
 %token TOK_SMART_GW_OFFSET_TABLES
 %token TOK_SMART_GW_OFFSET_RULES
 %token TOK_SMART_GW_ALLOW_NAT
@@ -321,6 +322,7 @@ stmt:       idebug
           | ssmart_gw_policyrouting_script
           | ssmart_gw_egress_file
           | ismart_gw_egress_file_period
+          | ssmart_gw_status_file
           | ismart_gw_offset_tables
           | ismart_gw_offset_rules
           | bsmart_gw_allow_nat
@@ -1458,6 +1460,14 @@ ismart_gw_egress_file_period: TOK_SMART_GW_EGRESS_FILE_PERIOD TOK_INTEGER
 {
   PARSER_DEBUG_PRINTF("Smart gateway egress file period: %d\n", $2->integer);
   olsr_cnf->smart_gw_egress_file_period = $2->integer;
+  free($2);
+}
+;
+
+ssmart_gw_status_file: TOK_SMART_GW_STATUS_FILE TOK_STRING
+{
+  PARSER_DEBUG_PRINTF("Smart gateway status file: %s\n", $2->string);
+  olsr_cnf->smart_gw_status_file = $2->string;
   free($2);
 }
 ;

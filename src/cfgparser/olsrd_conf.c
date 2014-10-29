@@ -982,6 +982,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->smart_gw_egress_interfaces_count = 0;
   cnf->smart_gw_egress_file = NULL;
   cnf->smart_gw_egress_file_period = DEF_GW_EGRESS_FILE_PERIOD;
+  cnf->smart_gw_status_file = NULL;
   cnf->smart_gw_offset_tables = DEF_GW_OFFSET_TABLES;
   cnf->smart_gw_offset_rules = DEF_GW_OFFSET_RULES;
   cnf->smart_gw_allow_nat = DEF_GW_ALLOW_NAT;
@@ -1133,6 +1134,8 @@ olsrd_print_cnf(struct olsrd_config *cnf)
   printf("SmGw. Egress File: %s\n", !cnf->smart_gw_egress_file ? DEF_GW_EGRESS_FILE : cnf->smart_gw_egress_file);
 
   printf("SmGw. Egr Fl Per.: %u\n", cnf->smart_gw_egress_file_period);
+
+  printf("SmGw. Status File: %s\n", cnf->smart_gw_status_file);
 
   printf("SmGw. Offst Tabls: %u\n", cnf->smart_gw_offset_tables);
 

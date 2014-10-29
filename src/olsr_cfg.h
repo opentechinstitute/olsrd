@@ -320,6 +320,7 @@ struct olsrd_config {
   uint8_t smart_gw_egress_interfaces_count;
   char *smart_gw_egress_file;
   uint32_t smart_gw_egress_file_period;
+  char *smart_gw_status_file;
   uint32_t smart_gw_offset_tables;
   uint32_t smart_gw_offset_rules;
   uint32_t smart_gw_period;

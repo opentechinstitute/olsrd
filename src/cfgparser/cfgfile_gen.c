@@ -616,6 +616,17 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       cnf->smart_gw_egress_file_period);
   abuf_appendf(out,
     "\n"
+    "# Declares the file that is written by olsrd to contain the status of the smart\n"
+    "# gateways and is only relevant when SmartGatewayUseCount is larger than 1.\n"
+    "# (default is %s)\n"
+      "\n", "<not set>");
+    {
+      bool def = !cnf->smart_gw_status_file || !strlen(cnf->smart_gw_status_file);
+      abuf_appendf(out, "%sSmartGatewayStatusFile %s\n",
+        def ? "# " : "", def ? "<not set>" : cnf->smart_gw_status_file);
+    }
+  abuf_appendf(out,
+    "\n"
     "# Determines the routing tables offset for multi-gateway policy routing tables\n"
     "# See the policy routing script for an explanation.\n"
     "# (default is %u)\n"
