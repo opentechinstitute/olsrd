@@ -33,11 +33,13 @@ struct sgw_egress_if {
   /* configured through the SmartGatewayEgressInterfaces configuration parameter */
   char *name;
 
+  /* updated through the smartgw_tunnel_monitor function */
+  int if_index;
+
   /* configured through the SmartGatewayTablesOffset and SmartGatewayRulesOffset configuration parameters */
   uint8_t tableNr; /**< routing table number */
   uint8_t ruleNr; /**< IP rule number */
   uint8_t bypassRuleNr; /**< bypass IP rule number */
-
 
   /* configured through the readEgressFile function */
   struct egress_if_bw bwPrevious;

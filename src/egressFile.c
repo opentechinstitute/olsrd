@@ -259,6 +259,26 @@ struct sgw_egress_if * findEgressInterface(char * name) {
 }
 
 /**
+ * Find an egress interface in the configuration by if_index
+ *
+ * @param if_index the index of the egress interface
+ * @return the pointer to the egress interface, NULL when not found
+ */
+struct sgw_egress_if * findEgressInterfaceByIndex(int if_index) {
+  if (if_index > 0) {
+    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+    while (egress_if) {
+      if (egress_if->if_index == if_index) {
+        return egress_if;
+      }
+      egress_if = egress_if->next;
+    }
+  }
+
+  return NULL ;
+}
+
+/**
  * Calculate the costs from the bandwidth parameters
  *
  * @param bw the bandwidth parameters

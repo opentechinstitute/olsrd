@@ -661,6 +661,8 @@ int olsr_startup_gateways(void) {
   {
     struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
     while (egress_if) {
+      egress_if->if_index = if_nametoindex(egress_if->name);
+
       egressBwClear(&egress_if->bwPrevious, false);
       egressBwClear(&egress_if->bwCurrent, false);
       egress_if->bwCostsChanged = egressBwCostsChanged(egress_if);

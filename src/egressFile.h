@@ -20,6 +20,7 @@ bool startEgressFile(void);
 void stopEgressFile(void);
 
 struct sgw_egress_if * findEgressInterface(char * name);
+struct sgw_egress_if * findEgressInterfaceByIndex(int if_index);
 
 bool egressBwCalculateCosts(struct egress_if_bw * bw, bool up);
 void egressBwClear(struct egress_if_bw * egress_if, bool up);
