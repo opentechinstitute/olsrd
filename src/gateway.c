@@ -429,6 +429,83 @@ static bool multiGwRulesSgwTunnels(bool add) {
   return ok;
 }
 
+/**
+ * Process interface up/down events for non-olsr interfaces, which are egress
+ * interfaces
+ *
+ * @param if_index the index of the interface
+ * @param flag the up/down event
+ */
+static void doEgressInterface(int if_index, enum olsr_ifchg_flag flag) {
+  switch (flag) {
+    case IFCHG_IF_ADD: {
+      char ifname[IF_NAMESIZE];
+      struct sgw_egress_if * egress_if;
+
+      /*
+       * we need to get the name of the interface first because the interface
+       * might be hot-plugged _after_ olsrd has started
+       */
+      if (!if_indextoname(if_index, ifname)) {
+        /* not a known OS interface */
+        return;
+      }
+
+      egress_if = findEgressInterface(ifname);
+      if (!egress_if) {
+        /* not a known egress interface */
+        return;
+      }
+
+      egress_if->if_index = if_index;
+
+      if (egress_if->upCurrent) {
+        /* interface is already up: no change */
+        return;
+      }
+
+      egress_if->upPrevious = egress_if->upCurrent;
+      egress_if->upCurrent = true;
+      egress_if->upChanged = true;
+
+      egress_if->bwCostsChanged = egressBwCalculateCosts(&egress_if->bwCurrent, egress_if->upCurrent);
+    }
+      break;
+
+    case IFCHG_IF_REMOVE: {
+      /*
+       * we need to find the egress interface by if_index because we might
+       * be too late; the kernel could already have removed the interface
+       * in which case we'd get a NULL ifname here if we'd try to call
+       * if_indextoname
+       */
+      struct sgw_egress_if * egress_if = findEgressInterfaceByIndex(if_index);
+      if (!egress_if) {
+        /* not a known egress interface */
+        return;
+      }
+
+      if (!egress_if->upCurrent) {
+        /* interface is already down: no change */
+        return;
+      }
+
+      egress_if->upPrevious = egress_if->upCurrent;
+      egress_if->upCurrent = false;
+      egress_if->upChanged = true;
+
+      egress_if->bwCostsChanged = egressBwCalculateCosts(&egress_if->bwCurrent, egress_if->upCurrent);
+    }
+      break;
+
+    case IFCHG_IF_UPDATE:
+    default:
+      return;
+  }
+
+  // FIXME process changes
+}
+
 /*
  * Callback Functions
  */
@@ -438,11 +515,15 @@ static bool multiGwRulesSgwTunnels(bool add) {
  * when the interface comes up again.
  *
  * @param if_index the interface index
- * @param ifh the interface
+ * @param ifh the interface (NULL when not an olsr interface)
  * @param flag interface change flags
  */
-static void smartgw_tunnel_monitor(int if_index __attribute__ ((unused)),
-    struct interface *ifh __attribute__ ((unused)), enum olsr_ifchg_flag flag __attribute__ ((unused))) {
+static void smartgw_tunnel_monitor(int if_index, struct interface *ifh, enum olsr_ifchg_flag flag) {
+  if (!ifh && multi_gateway_mode()) {
+    /* non-olsr interface in multi-sgw mode */
+    doEgressInterface(if_index, flag);
+  }
+
   return;
 }
 
@@ -694,6 +775,24 @@ int olsr_startup_gateways(void) {
   // FIXME process changes (always: initial setup)
 
   olsr_add_ifchange_handler(smartgw_tunnel_monitor);
+
+  /* Check egress interfaces up status to compensate for a race: the interfaces
+   * can change status between initialising their data structures and
+   * registering the tunnel monitor */
+  {
+    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+    while (egress_if) {
+      bool upCurrent = olsr_if_isup(egress_if->name);
+
+      if (upCurrent != egress_if->upCurrent) {
+        int index = upCurrent ? (int) if_nametoindex(egress_if->name) : egress_if->if_index;
+        enum olsr_ifchg_flag flag = upCurrent ? IFCHG_IF_ADD : IFCHG_IF_REMOVE;
+        smartgw_tunnel_monitor(index, NULL, flag);
+      }
+
+      egress_if = egress_if->next;
+    }
+  }
 
   if (olsr_cnf->smart_gw_takedown_percentage > 0) {
     /* start gateway takedown timer */
