@@ -1665,6 +1665,55 @@ static void writeProgramStatusFile(enum sgw_multi_change_phase phase) {
 }
 
 /**
+ * Report a new gateway with its most relevant parameters in the syslog
+ */
+static void reportNewGateway(void) {
+  if (!bestOverallLink.valid) {
+    /* best overall link is invalid (none) */
+    olsr_syslog(OLSR_LOG_INFO, "New gateway selected: none");
+    return;
+  }
+
+  if (!bestOverallLink.isOlsr) {
+    /* best overall link is an egress interface */
+    struct ipaddr_str gwStr;
+    const char * gw = !bestOverallLink.link.egress->bwCurrent.gatewaySet ? //
+        NULL : //
+        olsr_ip_to_string(&gwStr, &bestOverallLink.link.egress->bwCurrent.gateway);
+
+    olsr_syslog(OLSR_LOG_INFO, "New gateway selected: %s %s%s%swith uplink/downlink/pathcost = %u/%u/%u", //
+        bestOverallLink.link.egress->name, //
+        !gw ? "" : "via ", //
+        !gw ? "" : gwStr.buf, //
+        !gw ? "" : " ", //
+        bestOverallLink.link.egress->bwCurrent.egressUk, //
+        bestOverallLink.link.egress->bwCurrent.egressDk, //
+        bestOverallLink.link.egress->bwCurrent.path_cost);
+    return;
+  }
+
+  /* best overall link is an olsr (tunnel) interface */
+  {
+    struct tc_entry* tc = olsr_lookup_tc_entry(&bestOverallLink.link.olsr->originator);
+
+    char ifNameBuf[IFNAMSIZ];
+    const char * ifName = if_indextoname(bestOverallLink.olsrTunnelIfIndex, ifNameBuf);
+
+    struct ipaddr_str gwStr;
+    const char * gw = olsr_ip_to_string(&gwStr, &bestOverallLink.link.olsr->originator);
+
+    olsr_syslog(OLSR_LOG_INFO, "New gateway selected: %s %s%s%swith uplink/downlink/pathcost = %u/%u/%u", //
+        !ifName ? "none" : ifName, //
+        !gw ? "" : "via ", //
+        !gw ? "" : gwStr.buf, //
+        !gw ? "" : " ", //
+        bestOverallLink.link.olsr->uplink, //
+        bestOverallLink.link.olsr->downlink, //
+        !tc ? ROUTE_COST_BROKEN : tc->path_cost);
+  }
+}
+
+/**
  * Process changes that are relevant to egress interface: changes to the
  * egress interfaces themselves and to the smart gateway that is chosen by olsrd
  *
@@ -1701,6 +1750,10 @@ void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change
   }
 
   // FIXME program routes
+
+  if (bestOverallChanged || force) {
+    reportNewGateway();
+  }
 
   writeProgramStatusFile(phase);
 
