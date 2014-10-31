@@ -83,8 +83,21 @@ struct interfaceName * sgwTunnel6InterfaceNames;
 /** the timer for proactive takedown */
 static struct timer_entry *gw_takedown_timer;
 
+struct BestOverallLink {
+  bool valid;
+  bool isOlsr;
+  union {
+    struct sgw_egress_if * egress;
+    struct gateway_entry * olsr;
+  } link;
+  int olsrTunnelIfIndex;
+};
+
 static struct sgw_egress_if * bestEgressLinkPrevious = NULL;
 static struct sgw_egress_if * bestEgressLink = NULL;
+
+static struct BestOverallLink bestOverallLinkPrevious;
+static struct BestOverallLink bestOverallLink;
 
 /*
  * Forward Declarations
@@ -653,10 +666,12 @@ int olsr_init_gateways(void) {
   olsr_gw_list_init(&gw_list_ipv4, olsr_cnf->smart_gw_use_count);
   olsr_gw_list_init(&gw_list_ipv6, olsr_cnf->smart_gw_use_count);
 
-  if (!multi_gateway_mode()) {
-    sgwTunnel4InterfaceNames = NULL;
-    sgwTunnel6InterfaceNames = NULL;
-  } else {
+  sgwTunnel4InterfaceNames = NULL;
+  sgwTunnel6InterfaceNames = NULL;
+  memset(&bestOverallLinkPrevious, 0, sizeof(bestOverallLinkPrevious));
+  memset(&bestOverallLink, 0, sizeof(bestOverallLink));
+
+  if (multi_gateway_mode()) {
     uint8_t i;
     struct sgw_egress_if * egressif;
     unsigned int nrOlsrIfs = getNrOfOlsrInterfaces(olsr_cnf);
@@ -1476,6 +1491,47 @@ static bool determineBestEgressLink(enum sgw_multi_change_phase phase) {
 }
 
 /**
+ * Determine best overall link (choose egress interface over olsrd).
+ *
+ * When there is no best overall link, the best overall link will be set to a
+ * NULL egress interface.
+ *
+ * @param phase the phase of the change (startup/runtime/shutdown)
+ * @return true when the best egress link changed or when any of its relevant
+ * parameters has changed
+ */
+static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
+  struct gw_container_entry * gwContainer = (olsr_cnf->ip_version == AF_INET) ? current_ipv4_gw : current_ipv6_gw;
+  struct gateway_entry * olsrGw = !gwContainer ? NULL : gwContainer->gw;
+
+  int64_t egressCosts = !bestEgressLink ? INT64_MAX : bestEgressLink->bwCurrent.costs;
+  int64_t olsrCosts = !olsrGw ? INT64_MAX : olsrGw->path_cost;
+  int64_t bestOverallCosts = MIN(egressCosts, olsrCosts);
+
+  bestOverallLinkPrevious = bestOverallLink;
+  if ((bestOverallCosts == INT64_MAX) || (phase == GW_MULTI_CHANGE_PHASE_SHUTDOWN)) {
+    bestOverallLink.valid = false;
+    bestOverallLink.isOlsr = false;
+    bestOverallLink.link.egress = NULL;
+    bestOverallLink.olsrTunnelIfIndex = 0;
+  } else if (egressCosts <= olsrCosts) {
+    bestOverallLink.valid = bestEgressLink;
+    bestOverallLink.isOlsr = false;
+    bestOverallLink.link.egress = bestEgressLink;
+    bestOverallLink.olsrTunnelIfIndex = 0;
+  } else {
+    struct olsr_iptunnel_entry * tunnel = !gwContainer ? NULL : gwContainer->tunnel;
+
+    bestOverallLink.valid = olsrGw;
+    bestOverallLink.isOlsr = true;
+    bestOverallLink.link.olsr = olsrGw;
+    bestOverallLink.olsrTunnelIfIndex = !tunnel ? 0 : tunnel->if_index;
+  }
+
+  return memcmp(&bestOverallLink, &bestOverallLinkPrevious, sizeof(bestOverallLink));
+}
+
+/**
  * Process changes that are relevant to egress interface: changes to the
  * egress interfaces themselves and to the smart gateway that is chosen by olsrd
  *
@@ -1503,7 +1559,9 @@ void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change
     bestEgressChanged = determineBestEgressLink(phase);
   }
 
-  // FIXME determine best overall link
+  if (olsrChanged || bestEgressChanged || force) {
+    bestOverallChanged = determineBestOverallLink(phase);
+  }
 
   if (!bestEgressChanged && !bestOverallChanged && !force) {
     goto out;
