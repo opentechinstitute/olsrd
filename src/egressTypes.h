@@ -77,6 +77,10 @@ struct sgw_egress_if {
   bool bwGatewayChanged;
   bool bwChanged; /* covers bwCostsChanged, bwNetworkChanged and bwGatewayChanged */
 
+  /* egress routes */
+  struct sgw_route_info networkRouteCurrent;
+  struct sgw_route_info egressRouteCurrent;
+
   /* state for the readEgressFile function */
   bool inEgressFile;
 

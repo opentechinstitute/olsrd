@@ -1820,6 +1820,93 @@ static void configureBestEgressLinkRoute(enum sgw_multi_change_phase phase) {
   }
 }
 
+/**
+ * Setup network (when relevant) and default routes for the every egress
+ * interface
+ *
+ * @param phase the phase of the change (startup/runtime/shutdown)
+ */
+static void configureEgressLinkRoutes(enum sgw_multi_change_phase phase) {
+  bool force = MSGW_ROUTE_FORCED(phase);
+
+  /* egress interfaces */
+  struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+  while (egress_if) {
+    if (!egress_if->bwNetworkChanged && !egress_if->bwGatewayChanged && !egress_if->upChanged && !force) {
+      /* no relevant change */
+      goto next;
+    }
+
+    /* network route */
+    if (egress_if->bwNetworkChanged || force) {
+      bool routeChanged;
+
+      struct sgw_route_info networkRoutePrevious = egress_if->networkRouteCurrent;
+
+      if (!egress_if->bwCurrent.networkSet || !egress_if->upCurrent || (egress_if->bwCurrent.costs == INT64_MAX)) {
+        memset(&egress_if->networkRouteCurrent, 0, sizeof(egress_if->networkRouteCurrent));
+        egress_if->networkRouteCurrent.active = false;
+      } else {
+        determineEgressLinkRoute( //
+            &egress_if->networkRouteCurrent, // route
+            true,// networkRoute
+            egress_if->if_index, // if_index
+            NULL, // gw
+            &egress_if->bwCurrent.network, // dst
+            egress_if->tableNr // table
+            );
+      }
+
+      routeChanged = //
+          (networkRoutePrevious.active != egress_if->networkRouteCurrent.active) || //
+          memcmp(&networkRoutePrevious.route, &egress_if->networkRouteCurrent.route, sizeof(egress_if->networkRouteCurrent.route));
+
+      if ((routeChanged || MSGW_ROUTE_DEL_FORCED(phase)) && MSGW_ROUTE_DEL_ALLOWED(phase)) {
+        programRoute(false, &networkRoutePrevious, egress_if->name);
+      }
+
+      if ((routeChanged || MSGW_ROUTE_ADD_FORCED(phase)) && MSGW_ROUTE_ADD_ALLOWED(phase)) {
+        programRoute(true, &egress_if->networkRouteCurrent, egress_if->name);
+      }
+    }
+
+    /* default route */
+    if (egress_if->bwGatewayChanged || force) {
+      bool routeChanged;
+
+      struct sgw_route_info egressRoutePrevious = egress_if->egressRouteCurrent;
+
+      if (!egress_if->upCurrent || (egress_if->bwCurrent.costs == INT64_MAX)) {
+        memset(&egress_if->egressRouteCurrent, 0, sizeof(egress_if->egressRouteCurrent));
+        egress_if->egressRouteCurrent.active = false;
+      } else {
+        determineEgressLinkRoute( //
+            &egress_if->egressRouteCurrent, // route
+            false,// networkRoute
+            egress_if->if_index, // if_index
+            !egress_if->bwCurrent.gatewaySet ? NULL : &egress_if->bwCurrent.gateway, // gw
+            &ipv4_slash_0_route, // dst
+            egress_if->tableNr // table
+            );
+      }
+
+      routeChanged = //
+          (egressRoutePrevious.active != egress_if->egressRouteCurrent.active) || //
+          memcmp(&egressRoutePrevious, &egress_if->egressRouteCurrent, sizeof(egress_if->egressRouteCurrent));
+
+       if ((routeChanged || MSGW_ROUTE_DEL_FORCED(phase)) && MSGW_ROUTE_DEL_ALLOWED(phase)) {
+         programRoute(false, &egressRoutePrevious, egress_if->name);
+       }
+
+       if ((routeChanged || MSGW_ROUTE_ADD_FORCED(phase)) && MSGW_ROUTE_ADD_ALLOWED(phase)) {
+         programRoute(true, &egress_if->egressRouteCurrent, egress_if->name);
+       }
+    }
+
+    next: egress_if = egress_if->next;
+  }
+}
+
 /*
  * Multi-Smart-Gateway Status Overview
  */
@@ -2028,6 +2115,7 @@ void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change
 
   if (egressChanged || force) {
     bestEgressChanged = determineBestEgressLink(phase);
+    configureEgressLinkRoutes(phase);
   }
 
   if (olsrChanged || bestEgressChanged || force) {
@@ -2045,8 +2133,6 @@ void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change
   if (bestEgressChanged || force) {
     configureBestEgressLinkRoute(phase);
   }
-
-  // FIXME program egress routes
 
   if (bestOverallChanged || force) {
     reportNewGateway();
