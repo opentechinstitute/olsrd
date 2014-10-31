@@ -1531,6 +1531,139 @@ static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
   return memcmp(&bestOverallLink, &bestOverallLinkPrevious, sizeof(bestOverallLink));
 }
 
+/*
+ * Multi-Smart-Gateway Status Overview
+ */
+
+#define IPNONE    ((olsr_cnf->ip_version == AF_INET) ? "0.0.0.0"     : "::")
+#define MASKNONE  ((olsr_cnf->ip_version == AF_INET) ? "0.0.0.0/0"   : "::/0")
+#define IPLOCAL   ((olsr_cnf->ip_version == AF_INET) ? "127.0.0.1"   : "::1")
+#define MASKLOCAL ((olsr_cnf->ip_version == AF_INET) ? "127.0.0.0/8" : "::1/128")
+
+/**
+ * Print a timestamp to a file
+ *
+ * @param f the file
+ */
+static void printDate(FILE * f) {
+  time_t timer;
+  struct tm* tm_info;
+  char buffer[64];
+
+  time(&timer);
+  tm_info = localtime(&timer);
+
+  strftime(buffer, sizeof(buffer), "%B %d, %Y at %H:%M:%S", tm_info);
+  fprintf(f, "%s", buffer);
+}
+
+/**
+ * Write multi-smart-gateway status file
+ *
+ * <pre>
+ * # multi-smart-gateway status overview, generated on October 10, 2014 at 08:27:15
+ *
+ * #Originator Prefix      Uplink Downlink PathCost   Type   Interface Gateway     Cost
+ *  127.0.0.1  127.0.0.0/8 0      0        4294967295 egress ppp0      0.0.0.0     9223372036854775807
+ *  127.0.0.1  127.0.0.0/8 0      0        4294967295 egress eth1      192.168.0.1 9223372036854775807
+ * *0.0.0.0    0.0.0.0/0   290    1500     1024       olsr   tnl_4094  0.0.0.0     2182002287
+ * </pre>
+ *
+ * @param phase the phase of the change (startup/runtime/shutdown)
+ */
+static void writeProgramStatusFile(enum sgw_multi_change_phase phase) {
+             /*                     #  Orig Prefx Upl   Dwn PathC Type  Intfc Gw    Cost */
+  static const char * fmt_header = "%s%-16s %-33s %-8s %-8s %-10s %-16s %-16s %-16s %s\n";
+  static const char * fmt_values = "%s%-16s %-33s %-8u %-8u %-10u %-16s %-16s %-16s %llu\n";
+
+  char * fileName = olsr_cnf->smart_gw_status_file;
+  FILE * fp = NULL;
+
+  if (!fileName || (fileName[0] == '\0')) {
+    return;
+  }
+
+  if (phase == GW_MULTI_CHANGE_PHASE_SHUTDOWN) {
+    remove(fileName);
+    return;
+  }
+
+  fp = fopen(fileName, "w");
+  if (!fp) {
+    olsr_syslog(OLSR_LOG_ERR, "Could not write to %s", fileName);
+    return;
+  }
+
+  fprintf(fp, "# OLSRd Multi-Smart-Gateway Status Overview\n");
+  fprintf(fp, "# Generated on ");
+  printDate(fp);
+  fprintf(fp, "\n\n");
+
+  /* header */
+  fprintf(fp, fmt_header, "#", "Originator", "Prefix", "Uplink", "Downlink", "PathCost", "Type", "Interface", "Gateway", "Cost");
+
+  /* egress interfaces */
+  {
+    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+    while (egress_if) {
+      struct ipaddr_str gwStr;
+      const char * gw = !egress_if->bwCurrent.gatewaySet ? IPNONE : olsr_ip_to_string(&gwStr, &egress_if->bwCurrent.gateway);
+      bool selected = bestOverallLink.valid && !bestOverallLink.isOlsr && (bestOverallLink.link.egress == egress_if);
+
+      fprintf(fp, fmt_values, //
+          selected ? "*" : " ", //selected
+          IPLOCAL, // Originator
+          MASKLOCAL, // Prefix
+          egress_if->bwCurrent.egressUk, // Uplink
+          egress_if->bwCurrent.egressDk, // Downlink
+          egress_if->bwCurrent.path_cost, // PathCost
+          "egress", // Type
+          egress_if->name, // Interface
+          gw, // Gateway
+          egress_if->bwCurrent.costs // Cost
+          );
+
+      egress_if = egress_if->next;
+    }
+  }
+
+  /* olsr */
+  {
+    struct gw_container_entry * gwContainer = (olsr_cnf->ip_version == AF_INET) ? current_ipv4_gw : current_ipv6_gw;
+    struct gateway_entry * gw = !gwContainer ? NULL : gwContainer->gw;
+    struct olsr_iptunnel_entry * tunnel = !gwContainer ? NULL : gwContainer->tunnel;
+    struct tc_entry* tc = !gw ? NULL : olsr_lookup_tc_entry(&gw->originator);
+
+    struct ipaddr_str originatorStr;
+    const char * originator = !gw ? IPNONE : olsr_ip_to_string(&originatorStr, &gw->originator);
+    struct ipaddr_str prefixIpStr;
+    const char * prefixIPStr = !gw ? IPNONE : olsr_ip_to_string(&prefixIpStr, &gw->external_prefix.prefix);
+    uint8_t prefix_len = !gw ? 0 : gw->external_prefix.prefix_len;
+    struct interfaceName * tunnelName = !gw ? NULL : find_interfaceName(gw);
+    struct ipaddr_str tunnelGwStr;
+    const char * tunnelGw = !tunnel ? IPNONE : olsr_ip_to_string(&tunnelGwStr, &tunnel->target);
+    bool selected = bestOverallLink.valid && bestOverallLink.isOlsr;
+
+    char prefix[strlen(prefixIPStr) + 1 + 3 + 1];
+    snprintf(prefix, sizeof(prefix), "%s/%d", prefixIPStr, prefix_len);
+
+    fprintf(fp, fmt_values, //
+        selected ? "*" : " ", // selected
+        originator, // Originator
+        !gw ? MASKNONE : prefix, // Prefix IP
+        !gw ? 0 : gw->uplink, // Uplink
+        !gw ? 0 : gw->downlink, // Downlink
+        (!gw || !tc) ? ROUTE_COST_BROKEN : tc->path_cost, // PathCost
+        "olsr", // Type
+        !tunnelName ? "none" : tunnelName->name, // Interface
+        tunnelGw, // Gateway
+        !gw ? INT64_MAX : gw->path_cost // Cost
+      );
+  }
+
+  fclose(fp);
+}
+
 /**
  * Process changes that are relevant to egress interface: changes to the
  * egress interfaces themselves and to the smart gateway that is chosen by olsrd
@@ -1568,6 +1701,8 @@ void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change
   }
 
   // FIXME program routes
+
+  writeProgramStatusFile(phase);
 
   out: if (egressChanged) {
     /* clear the 'changed' flags of egress interfaces */
