@@ -83,6 +83,9 @@ struct interfaceName * sgwTunnel6InterfaceNames;
 /** the timer for proactive takedown */
 static struct timer_entry *gw_takedown_timer;
 
+static struct sgw_egress_if * bestEgressLinkPrevious = NULL;
+static struct sgw_egress_if * bestEgressLink = NULL;
+
 /*
  * Forward Declarations
  */
@@ -1424,6 +1427,54 @@ struct gateway_entry *olsr_get_inet_gateway(bool ipv6) {
  * Process Egress Changes
  */
 
+#define MSGW_ROUTE_ADD_ALLOWED(phase)   ((phase == GW_MULTI_CHANGE_PHASE_STARTUP ) || (phase == GW_MULTI_CHANGE_PHASE_RUNTIME ))
+#define MSGW_ROUTE_ADD_FORCED(phase)    ( phase == GW_MULTI_CHANGE_PHASE_STARTUP )
+#define MSGW_ROUTE_DEL_ALLOWED(phase)   ((phase == GW_MULTI_CHANGE_PHASE_RUNTIME ) || (phase == GW_MULTI_CHANGE_PHASE_SHUTDOWN))
+#define MSGW_ROUTE_DEL_FORCED(phase)    ( phase == GW_MULTI_CHANGE_PHASE_SHUTDOWN)
+#define MSGW_ROUTE_FORCED(phase)        ((phase == GW_MULTI_CHANGE_PHASE_STARTUP ) || (phase == GW_MULTI_CHANGE_PHASE_SHUTDOWN))
+
+/**
+ * Determine best egress link.
+ * The list of egress interface is ordered on priority (the declaration order),
+ * so the function will - for multiple egress links with the same costs - set the
+ * best egress interface to the first declared one of those.
+ * When there is no best egress interface (that is up) then the function will
+ * set the best egress interface to NULL.
+ *
+ * @param phase the phase of the change (startup/runtime/shutdown)
+ * @return true when the best egress link changed or when any of its relevant
+ * parameters has changed
+ */
+static bool determineBestEgressLink(enum sgw_multi_change_phase phase) {
+  struct sgw_egress_if * bestEgress = olsr_cnf->smart_gw_egress_interfaces;
+
+  if (phase == GW_MULTI_CHANGE_PHASE_SHUTDOWN) {
+    bestEgress = NULL;
+  } else {
+    struct sgw_egress_if * egress_if = bestEgress;
+    if (egress_if) {
+      egress_if = egress_if->next;
+    }
+    while (egress_if) {
+      if (egress_if->upCurrent && (egress_if->bwCurrent.costs < bestEgress->bwCurrent.costs)) {
+        bestEgress = egress_if;
+      }
+
+      egress_if = egress_if->next;
+    }
+
+    if (bestEgress && (!bestEgress->upCurrent || (bestEgress->bwCurrent.costs == INT64_MAX))) {
+      bestEgress = NULL;
+    }
+  }
+
+  bestEgressLinkPrevious = bestEgressLink;
+  bestEgressLink = bestEgress;
+
+  return ((bestEgressLinkPrevious != bestEgressLink) || //
+      (bestEgressLink && (bestEgressLink->upChanged || bestEgressLink->bwChanged)));
+}
+
 /**
  * Process changes that are relevant to egress interface: changes to the
  * egress interfaces themselves and to the smart gateway that is chosen by olsrd
@@ -1432,8 +1483,35 @@ struct gateway_entry *olsr_get_inet_gateway(bool ipv6) {
  * @param olsrChanged true when the smart gateway changed
  * @param phase the phase of the change (startup/runtime/shutdown)
  */
-void doRoutesMultiGw(bool egressChanged, bool olsrChanged __attribute__((unused)), enum sgw_multi_change_phase phase __attribute__((unused))) {
-  if (egressChanged) {
+void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change_phase phase) {
+  bool bestEgressChanged = false;
+  bool bestOverallChanged = false;
+  bool force = MSGW_ROUTE_FORCED(phase);
+
+  assert( //
+      (phase == GW_MULTI_CHANGE_PHASE_STARTUP) || //
+      (phase == GW_MULTI_CHANGE_PHASE_RUNTIME) || //
+      (phase == GW_MULTI_CHANGE_PHASE_SHUTDOWN));
+
+  if (!egressChanged && !olsrChanged && !force) {
+    goto out;
+  }
+
+  assert(multi_gateway_mode());
+
+  if (egressChanged || force) {
+    bestEgressChanged = determineBestEgressLink(phase);
+  }
+
+  // FIXME determine best overall link
+
+  if (!bestEgressChanged && !bestOverallChanged && !force) {
+    goto out;
+  }
+
+  // FIXME program routes
+
+  out: if (egressChanged) {
     /* clear the 'changed' flags of egress interfaces */
     struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
     while (egress_if) {
