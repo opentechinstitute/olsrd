@@ -39,6 +39,9 @@
 #define SCRIPT_MODE_EGRESSIF  "egressif"
 #define SCRIPT_MODE_SGWTUN    "sgwtun"
 
+/* ipv4 prefix 0.0.0.0/0 */
+static struct olsr_ip_prefix ipv4_slash_0_route;
+
 /* ipv4 prefixes 0.0.0.0/1 and 128.0.0.0/1 */
 static struct olsr_ip_prefix ipv4_slash_1_routes[2];
 
@@ -99,6 +102,9 @@ struct BestOverallLink {
 
 static struct sgw_egress_if * bestEgressLinkPrevious = NULL;
 static struct sgw_egress_if * bestEgressLink = NULL;
+
+struct sgw_route_info bestEgressLinkPreviousRoute = {0};
+struct sgw_route_info bestEgressLinkRoute = {0};
 
 struct sgw_route_info bestOverallLinkPreviousRoutes[2] = {{0}};
 struct sgw_route_info bestOverallLinkRoutes[2] = {{0}};
@@ -661,6 +667,9 @@ static void gw_takedown_timer_callback(void *unused __attribute__ ((unused))) {
  */
 int olsr_init_gateways(void) {
   int retries = 5;
+
+  /* ipv4 prefix 0.0.0.0/0 */
+  memset(&ipv4_slash_0_route, 0, sizeof(ipv4_slash_0_route));
 
   /* ipv4 prefixes 0.0.0.0/1 and 128.0.0.0/1 */
   memset(&ipv4_slash_1_routes, 0, sizeof(ipv4_slash_1_routes));
@@ -1677,6 +1686,140 @@ static void setupDefaultGatewayOverrideRoutes(enum sgw_multi_change_phase phase)
   }
 }
 
+/**
+ * Determine the best egress interface route.
+ *
+ * @param route a pointer to the an route where to store the
+ * newly determined route
+ * @param networkRoute true when the route is a network route (not an internet
+ * route)
+ * @param if_index the index of the interface that the route is for
+ * @param gw the gateway for the route
+ * @param dst the destination for the route
+ * @param table the routing table for the route
+ */
+static void determineEgressLinkRoute( //
+    struct sgw_route_info * route, //
+    bool networkRoute, //
+    int if_index, //
+    union olsr_ip_addr * gw, //
+    struct olsr_ip_prefix * dst, //
+    int table) {
+  // default route
+  // ----: ip route replace|delete blackhole default                          table 90: !egress_if               (1)
+  // ppp0: ip route replace|delete           default                 dev ppp0 table 90:  egress_if && dst && !gw (2)
+  // eth1: ip route replace|delete           default via 192.168.0.1 dev eth1 table 90:  egress_if && dst &&  gw (3)
+
+  // network route
+  // eth1: ip route replace|delete to 192.168.0.0/24                 dev eth1 table 90:  egress_if && dst && !gw (2*)
+
+  memset(route, 0, sizeof(*route));
+  if (if_index <= 0) { /* 1 */
+    route->active = true;
+    route->route.family = AF_INET;
+    route->route.rttable = table;
+    route->route.flags = RTNH_F_ONLINK;
+    route->route.scope = RT_SCOPE_UNIVERSE;
+    route->route.if_index = 0;
+    route->route.metric = 0;
+    route->route.protocol = RTPROT_STATIC;
+    route->route.srcSet = false;
+    route->route.gwSet = false;
+    route->route.dstSet = false;
+    if (dst) {
+      route->route.dstSet = true;
+      route->route.dstStore = *dst;
+    }
+    route->route.del_similar = false;
+    route->route.blackhole = true;
+  } else if (dst && !gw) { /* 2 */
+    route->active = true;
+    route->route.family = AF_INET;
+    route->route.rttable = table;
+    route->route.flags = !networkRoute ? RTNH_F_ONLINK /* 2 */ : 0 /* 2* */;
+    route->route.scope = RT_SCOPE_LINK;
+    route->route.if_index = if_index;
+    route->route.metric = 0;
+    route->route.protocol = RTPROT_STATIC;
+    route->route.srcSet = false;
+    route->route.gwSet = false;
+    route->route.dstSet = true;
+    route->route.dstStore = *dst;
+    route->route.del_similar = false;
+    route->route.blackhole = false;
+  } else if (dst && gw) { /* 3 */
+    route->active = true;
+    route->route.family = AF_INET;
+    route->route.rttable = table;
+    route->route.flags = 0;
+    route->route.scope = RT_SCOPE_UNIVERSE;
+    route->route.if_index = if_index;
+    route->route.metric = 0;
+    route->route.protocol = RTPROT_STATIC;
+    route->route.srcSet = false;
+    route->route.gwSet = true;
+    route->route.gwStore = *gw;
+    route->route.dstSet = true;
+    route->route.dstStore = *dst;
+    route->route.del_similar = false;
+    route->route.blackhole = false;
+  } else {
+    /* no destination set */
+    route->active = false;
+    olsr_syslog(OLSR_LOG_ERR, "No route destination specified in %s", __FUNCTION__);
+    return;
+  }
+}
+
+/**
+ * Setup default route for the best egress interface
+ *
+ * When there is no best egress link, then a blackhole route is setup to prevent
+ * looping smart gateway tunnel traffic.
+ *
+ * @param phase the phase of the change (startup/runtime/shutdown)
+ */
+static void configureBestEgressLinkRoute(enum sgw_multi_change_phase phase) {
+  bool force = MSGW_ROUTE_FORCED(phase);
+
+  /*
+   * bestEgressLinkPrevious  bestEgressLink  Action
+   *                   NULL            NULL  -
+   *                   NULL               x  add new route
+   *                      x            NULL  remove old route
+   *                      x               x  remove old route && add new routes
+   */
+
+  if (!bestEgressLinkPrevious && !bestEgressLink && !force) {
+    return;
+  }
+
+  memcpy(&bestEgressLinkPreviousRoute, &bestEgressLinkRoute, sizeof(bestEgressLinkPreviousRoute));
+
+  determineEgressLinkRoute( //
+      &bestEgressLinkRoute, // route
+      false, // networkRoute
+      !bestEgressLink ? 0 : bestEgressLink->if_index, // if_index
+      (!bestEgressLink || !bestEgressLink->bwCurrent.gatewaySet) ? NULL : &bestEgressLink->bwCurrent.gateway, // gw
+      &ipv4_slash_0_route, // dst
+      olsr_cnf->smart_gw_offset_tables // table
+      );
+
+  {
+    bool routeChanged = //
+        (bestEgressLinkPreviousRoute.active != bestEgressLinkRoute.active) || //
+        memcmp(&bestEgressLinkPreviousRoute.route, &bestEgressLinkRoute.route, sizeof(bestEgressLinkRoute.route));
+
+    if ((routeChanged || MSGW_ROUTE_DEL_FORCED(phase)) && MSGW_ROUTE_DEL_ALLOWED(phase)) {
+      programRoute(false, &bestEgressLinkPreviousRoute, "best egress link");
+    }
+
+    if ((routeChanged || MSGW_ROUTE_ADD_FORCED(phase)) && MSGW_ROUTE_ADD_ALLOWED(phase)) {
+      programRoute(true, &bestEgressLinkRoute, "best egress link");
+    }
+  }
+}
+
 /*
  * Multi-Smart-Gateway Status Overview
  */
@@ -1899,7 +2042,9 @@ void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change
     setupDefaultGatewayOverrideRoutes(phase);
   }
 
-  // FIXME program best egress route
+  if (bestEgressChanged || force) {
+    configureBestEgressLinkRoute(phase);
+  }
 
   // FIXME program egress routes
 
