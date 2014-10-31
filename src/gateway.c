@@ -23,6 +23,7 @@
 #include "gateway_list.h"
 #include "gateway.h"
 #include "egressTypes.h"
+#include "egressFile.h"
 
 #include <assert.h>
 #include <net/if.h>
@@ -656,6 +657,23 @@ int olsr_startup_gateways(void) {
     return 0;
   }
 
+  /* Initialise the egress interfaces */
+  {
+    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+    while (egress_if) {
+      egressBwClear(&egress_if->bwPrevious, false);
+      egressBwClear(&egress_if->bwCurrent, false);
+      egress_if->bwCostsChanged = egressBwCostsChanged(egress_if);
+      egress_if->bwNetworkChanged = egressBwNetworkChanged(egress_if);
+      egress_if->bwGatewayChanged = egressBwGatewayChanged(egress_if);
+      egress_if->bwChanged = egressBwChanged(egress_if);
+
+      egress_if->inEgressFile = false;
+
+      egress_if = egress_if->next;
+    }
+  }
+
   ok = ok && multiGwRulesGeneric(true);
   ok = ok && multiGwRulesSgwServerTunnel(true);
   ok = ok && multiGwRulesOlsrInterfaces(true);
@@ -666,6 +684,9 @@ int olsr_startup_gateways(void) {
     olsr_shutdown_gateways();
     return 1;
   }
+
+  startEgressFile();
+  // FIXME process changes (always: initial setup)
 
   olsr_add_ifchange_handler(smartgw_tunnel_monitor);
 
@@ -693,6 +714,24 @@ void olsr_shutdown_gateways(void) {
   }
 
   olsr_remove_ifchange_handler(smartgw_tunnel_monitor);
+
+  stopEgressFile();
+  {
+    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+    while (egress_if) {
+      egress_if->bwPrevious = egress_if->bwCurrent;
+      egressBwClear(&egress_if->bwCurrent, false);
+      egress_if->bwCostsChanged = egressBwCostsChanged(egress_if);
+      egress_if->bwNetworkChanged = egressBwNetworkChanged(egress_if);
+      egress_if->bwGatewayChanged = egressBwGatewayChanged(egress_if);
+      egress_if->bwChanged = egressBwChanged(egress_if);
+
+      egress_if->inEgressFile = false;
+
+      egress_if = egress_if->next;
+    }
+  }
+  // FIXME process changes (always: shutdown)
 
   (void)multiGwRulesSgwTunnels(false);
   (void)multiGwRulesEgressInterfaces(false);
