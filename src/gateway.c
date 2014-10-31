@@ -73,9 +73,6 @@ static struct gw_container_entry *current_ipv4_gw;
 /** the current IPv6 gateway */
 static struct gw_container_entry *current_ipv6_gw;
 
-/** interface names for smart gateway egress interfaces */
-struct interfaceName * sgwEgressInterfaceNames;
-
 /** interface names for smart gateway tunnel interfaces, IPv4 */
 struct interfaceName * sgwTunnel4InterfaceNames;
 
@@ -391,14 +388,16 @@ static bool multiGwRulesEgressInterfaces(bool add) {
   bool ok = true;
   unsigned int i = 0;
 
-  for (i = 0; i < olsr_cnf->smart_gw_egress_interfaces_count; i++) {
-    struct interfaceName * ifn = &sgwEgressInterfaceNames[i];
-    if (!multiGwRunScript(SCRIPT_MODE_EGRESSIF, add, ifn->name, ifn->tableNr, ifn->ruleNr, ifn->bypassRuleNr)) {
+  struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+  while (egress_if) {
+    if (!multiGwRunScript(SCRIPT_MODE_EGRESSIF, add, egress_if->name, egress_if->tableNr, egress_if->ruleNr, egress_if->bypassRuleNr)) {
       ok = false;
       if (add) {
         return ok;
       }
     }
+
+    egress_if = egress_if->next;
   }
 
   return ok;
@@ -570,7 +569,6 @@ int olsr_init_gateways(void) {
   olsr_gw_list_init(&gw_list_ipv6, olsr_cnf->smart_gw_use_count);
 
   if (!multi_gateway_mode()) {
-    sgwEgressInterfaceNames = NULL;
     sgwTunnel4InterfaceNames = NULL;
     sgwTunnel6InterfaceNames = NULL;
   } else {
@@ -579,16 +577,12 @@ int olsr_init_gateways(void) {
     unsigned int nrOlsrIfs = getNrOfOlsrInterfaces(olsr_cnf);
 
     /* setup the egress interface name/mark pairs */
-    sgwEgressInterfaceNames = olsr_malloc(sizeof(struct interfaceName) * olsr_cnf->smart_gw_egress_interfaces_count, "sgwEgressInterfaceNames");
     i = 0;
     egressif = olsr_cnf->smart_gw_egress_interfaces;
     while (egressif) {
-      struct interfaceName * ifn = &sgwEgressInterfaceNames[i];
-      ifn->gw = NULL;
-      ifn->tableNr = olsr_cnf->smart_gw_offset_tables + 1 + i;
-      ifn->ruleNr = olsr_cnf->smart_gw_offset_rules + olsr_cnf->smart_gw_egress_interfaces_count + nrOlsrIfs + 1 + i;
-      ifn->bypassRuleNr = olsr_cnf->smart_gw_offset_rules + i;
-      snprintf(&ifn->name[0], sizeof(ifn->name), "%s", egressif->name);
+      egressif->tableNr = olsr_cnf->smart_gw_offset_tables + 1 + i;
+      egressif->ruleNr = olsr_cnf->smart_gw_offset_rules + olsr_cnf->smart_gw_egress_interfaces_count + nrOlsrIfs + 1 + i;
+      egressif->bypassRuleNr = olsr_cnf->smart_gw_offset_rules + i;
 
       egressif = egressif->next;
       i++;
@@ -748,10 +742,6 @@ void olsr_cleanup_gateways(void) {
   gw_handler->cleanup();
   gw_handler = NULL;
 
-  if (sgwEgressInterfaceNames) {
-    free(sgwEgressInterfaceNames);
-    sgwEgressInterfaceNames = NULL;
-  }
   if (sgwTunnel4InterfaceNames) {
     free(sgwTunnel4InterfaceNames);
     sgwTunnel4InterfaceNames = NULL;
