@@ -27,6 +27,7 @@
 
 #include <assert.h>
 #include <net/if.h>
+#include <linux/rtnetlink.h>
 
 /*
  * Defines for the multi-gateway script
@@ -37,6 +38,9 @@
 #define SCRIPT_MODE_SGWSRVTUN "sgwsrvtun"
 #define SCRIPT_MODE_EGRESSIF  "egressif"
 #define SCRIPT_MODE_SGWTUN    "sgwtun"
+
+/* ipv4 prefixes 0.0.0.0/1 and 128.0.0.0/1 */
+static struct olsr_ip_prefix ipv4_slash_1_routes[2];
 
 /** structure that holds an interface name, mark and a pointer to the gateway that uses it */
 struct interfaceName {
@@ -95,6 +99,9 @@ struct BestOverallLink {
 
 static struct sgw_egress_if * bestEgressLinkPrevious = NULL;
 static struct sgw_egress_if * bestEgressLink = NULL;
+
+struct sgw_route_info bestOverallLinkPreviousRoutes[2] = {{0}};
+struct sgw_route_info bestOverallLinkRoutes[2] = {{0}};
 
 static struct BestOverallLink bestOverallLinkPrevious;
 static struct BestOverallLink bestOverallLink;
@@ -654,6 +661,13 @@ static void gw_takedown_timer_callback(void *unused __attribute__ ((unused))) {
  */
 int olsr_init_gateways(void) {
   int retries = 5;
+
+  /* ipv4 prefixes 0.0.0.0/1 and 128.0.0.0/1 */
+  memset(&ipv4_slash_1_routes, 0, sizeof(ipv4_slash_1_routes));
+  ipv4_slash_1_routes[0].prefix.v4.s_addr = htonl(0x00000000);
+  ipv4_slash_1_routes[0].prefix_len = 1;
+  ipv4_slash_1_routes[1].prefix.v4.s_addr = htonl(0x80000000);
+  ipv4_slash_1_routes[1].prefix_len = 1;
 
   gateway_entry_mem_cookie = olsr_alloc_cookie("gateway_entry_mem_cookie", OLSR_COOKIE_TYPE_MEMORY);
   olsr_cookie_set_memory_size(gateway_entry_mem_cookie, sizeof(struct gateway_entry));
@@ -1531,6 +1545,138 @@ static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
   return memcmp(&bestOverallLink, &bestOverallLinkPrevious, sizeof(bestOverallLink));
 }
 
+/**
+ * Program a route (add or remove) through netlink
+ *
+ * @param add true to add the route, false to remove it
+ * @param route the route
+ * @param linkName the human readable id of the route, used in error reports in
+ * the syslog
+ */
+static void programRoute(bool add, struct sgw_route_info * route, const char * linkName) {
+  if (!route || !route->active) {
+    return;
+  }
+
+  if (olsr_new_netlink_route( //
+      route->route.family, //
+      route->route.rttable, //
+      route->route.flags, //
+      route->route.scope, //
+      route->route.if_index, //
+      route->route.metric, //
+      route->route.protocol, //
+      !route->route.srcSet ? NULL : &route->route.srcStore, //
+      !route->route.gwSet ? NULL : &route->route.gwStore, //
+      !route->route.dstSet ? NULL : &route->route.dstStore, //
+      add, //
+      route->route.del_similar, //
+      route->route.blackhole //
+      )) {
+    olsr_syslog(OLSR_LOG_ERR, "Could not %s a route for the %s %s", !add ? "remove" : "add", !add ? "previous" : "current", linkName);
+    route->active = false;
+  } else {
+    route->active = add;
+  }
+}
+
+/**
+ * Determine the best overall egress/olsr interface routes.
+ *
+ * These are a set of 2 /1 routes to override any default gateway
+ * routes that are setup through other means such as a DHCP client.
+ *
+ * @param routes a pointer to the array of 2 /1 routes where to store the
+ * newly determined routes
+ */
+static void determineBestOverallLinkRoutes(struct sgw_route_info * routes) {
+  int ifIndex = 0;
+  union olsr_ip_addr * gw = NULL;
+  int i;
+  if (!bestOverallLink.valid) {
+    /* there is no current best overall link */
+  } else if (!bestOverallLink.isOlsr) {
+    /* current best overall link is an egress interface */
+    struct sgw_egress_if * egress = bestOverallLink.link.egress;
+    if (egress) {
+      ifIndex = egress->if_index;
+      if (egress->bwCurrent.gatewaySet) {
+        gw = &egress->bwCurrent.gateway;
+      }
+    }
+  } else {
+    /* current best overall link is an olsr tunnel interface */
+    struct gw_container_entry * gwContainer = current_ipv4_gw;
+    struct olsr_iptunnel_entry * tunnel = !gwContainer ? NULL : gwContainer->tunnel;
+
+    if (tunnel) {
+      ifIndex = tunnel->if_index;
+    }
+  }
+
+  if (!ifIndex) {
+    for (i = 0; i < 2; i++) {
+      routes[i].active = false;
+    }
+    return;
+  }
+
+  for (i = 0; i < 2; i++) {
+    memset(&routes[i], 0, sizeof(routes[i]));
+    routes[i].active = true;
+    routes[i].route.family = AF_INET;
+    routes[i].route.rttable = olsr_cnf->rt_table;
+    routes[i].route.flags = 0;
+    routes[i].route.scope = !gw ? RT_SCOPE_LINK : RT_SCOPE_UNIVERSE;
+    routes[i].route.if_index = ifIndex;
+    routes[i].route.metric = 0;
+    routes[i].route.protocol = RTPROT_STATIC;
+    routes[i].route.srcSet = false;
+    routes[i].route.gwSet = false;
+    if (gw) {
+      routes[i].route.gwSet = true;
+      routes[i].route.gwStore = *gw;
+    }
+    routes[i].route.dstSet = true;
+    routes[i].route.dstStore = ipv4_slash_1_routes[i];
+    routes[i].route.del_similar = false;
+    routes[i].route.blackhole = false;
+  }
+}
+
+/**
+ * Setup default gateway override routes: a set of 2 /1 routes for the best
+ * overall link
+ *
+ * @param phase the phase of the change (startup/runtime/shutdown)
+ */
+static void setupDefaultGatewayOverrideRoutes(enum sgw_multi_change_phase phase) {
+  bool force = MSGW_ROUTE_FORCED(phase);
+  int i;
+
+  if (!bestOverallLinkPrevious.valid && !bestOverallLink.valid && !force) {
+    return;
+  }
+
+  memcpy(&bestOverallLinkPreviousRoutes, &bestOverallLinkRoutes, sizeof(bestOverallLinkPreviousRoutes));
+
+  determineBestOverallLinkRoutes(bestOverallLinkRoutes);
+
+  for (i = 0; i < 2; i++) {
+    bool routeChanged = //
+        (bestOverallLinkPreviousRoutes[i].active != bestOverallLinkRoutes[i].active) || //
+        memcmp(&bestOverallLinkPreviousRoutes[i].route, &bestOverallLinkRoutes[i].route, sizeof(bestOverallLinkRoutes[i].route));
+
+    if ((routeChanged || MSGW_ROUTE_DEL_FORCED(phase)) && MSGW_ROUTE_DEL_ALLOWED(phase)) {
+      programRoute(false, &bestOverallLinkPreviousRoutes[i], "overall best gateway");
+    }
+
+    if ((routeChanged || MSGW_ROUTE_ADD_FORCED(phase)) && MSGW_ROUTE_ADD_ALLOWED(phase)) {
+      programRoute(true, &bestOverallLinkRoutes[i], "overall best gateway");
+    }
+  }
+}
+
 /*
  * Multi-Smart-Gateway Status Overview
  */
@@ -1749,7 +1895,13 @@ void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change
     goto out;
   }
 
-  // FIXME program routes
+  if (bestOverallChanged || force) {
+    setupDefaultGatewayOverrideRoutes(phase);
+  }
+
+  // FIXME program best egress route
+
+  // FIXME program egress routes
 
   if (bestOverallChanged || force) {
     reportNewGateway();

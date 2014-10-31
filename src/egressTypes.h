@@ -13,6 +13,29 @@
 #include <stdbool.h>
 #include <string.h>
 
+struct sgw_route_info {
+  bool active;
+
+  struct {
+    unsigned char family;
+    uint32_t rttable;
+    unsigned int flags;
+    unsigned char scope;
+    int if_index;
+    int metric;
+    int protocol;
+    bool srcSet;
+    bool gwSet;
+    bool dstSet;
+    bool del_similar;
+    bool blackhole;
+
+    union olsr_ip_addr srcStore;
+    union olsr_ip_addr gwStore;
+    struct olsr_ip_prefix dstStore;
+  } route;
+};
+
 struct egress_if_bw {
   /* in the egress file */
   uint32_t egressUk; /**< in Kbps, [0, MAX_SMARTGW_SPEED] */
