@@ -503,7 +503,7 @@ static void doEgressInterface(int if_index, enum olsr_ifchg_flag flag) {
       return;
   }
 
-  // FIXME process changes
+  doRoutesMultiGw(true, false, GW_MULTI_CHANGE_PHASE_RUNTIME);
 }
 
 /*
@@ -772,7 +772,7 @@ int olsr_startup_gateways(void) {
   }
 
   startEgressFile();
-  // FIXME process changes (always: initial setup)
+  doRoutesMultiGw(true, false, GW_MULTI_CHANGE_PHASE_STARTUP);
 
   olsr_add_ifchange_handler(smartgw_tunnel_monitor);
 
@@ -839,7 +839,7 @@ void olsr_shutdown_gateways(void) {
       egress_if = egress_if->next;
     }
   }
-  // FIXME process changes (always: shutdown)
+  doRoutesMultiGw(true, false, GW_MULTI_CHANGE_PHASE_SHUTDOWN);
 
   (void)multiGwRulesSgwTunnels(false);
   (void)multiGwRulesEgressInterfaces(false);
@@ -1101,6 +1101,14 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
       new_gw_in_list = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list);
       assert(new_gw_in_list);
     }
+
+    if (multi_gateway_mode() && //
+        ((!gw->ipv6 && current_ipv4_gw && current_ipv4_gw->gw == gw) || //
+         (gw->ipv6 && current_ipv6_gw && current_ipv6_gw->gw == gw)) //
+        ) {
+      /* the active gw has changed its costs: re-evaluate egress routes */
+      doRoutesMultiGw(false, true, GW_MULTI_CHANGE_PHASE_RUNTIME);
+    }
   }
 
   /* call update handler */
@@ -1299,6 +1307,10 @@ bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv
       assert(new_gw_in_list->tunnel);
       olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, olsr_cnf->rt_table_tunnel);
       current_ipv4_gw = new_gw_in_list;
+
+      if (multi_gateway_mode()) {
+        doRoutesMultiGw(false, true, GW_MULTI_CHANGE_PHASE_RUNTIME);
+      }
     } else {
       /* new gw is not yet in the gw list */
       char name[IFNAMSIZ];
@@ -1325,6 +1337,10 @@ bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv
         new_gw_in_list->gw = new_gw;
         new_gw_in_list->tunnel = new_v4gw_tunnel;
         current_ipv4_gw = olsr_gw_list_add(&gw_list_ipv4, new_gw_in_list);
+
+        if (multi_gateway_mode()) {
+          doRoutesMultiGw(false, true, GW_MULTI_CHANGE_PHASE_RUNTIME);
+        }
       } else {
         /* adding the tunnel failed, we try again in the next cycle */
         set_unused_iptunnel_name(new_gw);
@@ -1345,6 +1361,10 @@ bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv
       assert(new_gw_in_list->tunnel);
       olsr_os_inetgw_tunnel_route(new_gw_in_list->tunnel->if_index, true, true, olsr_cnf->rt_table_tunnel);
       current_ipv6_gw = new_gw_in_list;
+
+      if (multi_gateway_mode()) {
+        doRoutesMultiGw(false, true, GW_MULTI_CHANGE_PHASE_RUNTIME);
+      }
     } else {
       /* new gw is not yet in the gw list */
       char name[IFNAMSIZ];
@@ -1371,6 +1391,10 @@ bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv
         new_gw_in_list->gw = new_gw;
         new_gw_in_list->tunnel = new_v6gw_tunnel;
         current_ipv6_gw = olsr_gw_list_add(&gw_list_ipv6, new_gw_in_list);
+
+        if (multi_gateway_mode()) {
+          doRoutesMultiGw(false, true, GW_MULTI_CHANGE_PHASE_RUNTIME);
+        }
       } else {
         /* adding the tunnel failed, we try again in the next cycle */
         set_unused_iptunnel_name(new_gw);
@@ -1394,6 +1418,35 @@ struct gateway_entry *olsr_get_inet_gateway(bool ipv6) {
 	}
 
 	return current_ipv4_gw ? current_ipv4_gw->gw : NULL;
+}
+
+/*
+ * Process Egress Changes
+ */
+
+/**
+ * Process changes that are relevant to egress interface: changes to the
+ * egress interfaces themselves and to the smart gateway that is chosen by olsrd
+ *
+ * @param egressChanged true when an egress interface changed
+ * @param olsrChanged true when the smart gateway changed
+ * @param phase the phase of the change (startup/runtime/shutdown)
+ */
+void doRoutesMultiGw(bool egressChanged, bool olsrChanged __attribute__((unused)), enum sgw_multi_change_phase phase __attribute__((unused))) {
+  if (egressChanged) {
+    /* clear the 'changed' flags of egress interfaces */
+    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+    while (egress_if) {
+      egress_if->upChanged = false;
+
+      egress_if->bwCostsChanged = false;
+      egress_if->bwNetworkChanged = false;
+      egress_if->bwGatewayChanged = false;
+      egress_if->bwChanged = false;
+
+      egress_if = egress_if->next;
+    }
+  }
 }
 
 #endif /* __linux__ */

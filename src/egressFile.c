@@ -7,6 +7,7 @@
 /* OLSRD includes */
 #include "olsr_cfg.h"
 #include "gateway_costs.h"
+#include "gateway.h"
 #include "scheduler.h"
 #include "ipcalc.h"
 #include "log.h"
@@ -323,7 +324,7 @@ static struct timer_entry *egress_file_timer;
  */
 static void egress_file_timer_callback(void *unused __attribute__ ((unused))) {
   if (readEgressFile(olsr_cnf->smart_gw_egress_file)) {
-    // FIXME process changes
+    doRoutesMultiGw(true, false, GW_MULTI_CHANGE_PHASE_RUNTIME);
   }
 }
 
