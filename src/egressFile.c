@@ -300,7 +300,7 @@ bool egressBwCalculateCosts(struct egress_if_bw * bw, bool up) {
 void egressBwClear(struct egress_if_bw * bw, bool up) {
   bw->egressUk = 0;
   bw->egressDk = 0;
-  bw->path_cost = UINT32_MAX;
+  bw->path_cost = 0;
   memset(&bw->network, 0, sizeof(bw->network));
   memset(&bw->gateway, 0, sizeof(bw->gateway));
 
