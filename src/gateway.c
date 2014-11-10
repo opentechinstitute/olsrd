@@ -132,7 +132,7 @@ static uint32_t deserialize_gw_speed(uint8_t value) {
 
   if (value == UINT8_MAX) {
     /* maximum value: also return maximum value */
-    return UINT32_MAX;
+    return 320000000;
   }
 
   speed = (value >> 3) + 1;
