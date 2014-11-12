@@ -438,11 +438,13 @@ static bool readEgressFile(char * fileName) {
   fd = open(!fileName ? DEF_GW_EGRESS_FILE : fileName, O_RDONLY);
   if (fd < 0) {
     /* could not access the file */
+    memset(&cachedStat, 0, sizeof(cachedStat));
     goto out;
   }
 
   if (fstat(fd, &statBuf)) {
     /* could not stat the file */
+    memset(&cachedStat, 0, sizeof(cachedStat));
     goto out;
   }
 
@@ -454,6 +456,7 @@ static bool readEgressFile(char * fileName) {
   fp = fdopen(fd, "r");
   if (!fp) {
     /* could not open the file */
+    memset(&cachedStat, 0, sizeof(cachedStat));
     goto out;
   }
 
