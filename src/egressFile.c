@@ -21,7 +21,8 @@
 #include <net/if.h>
 
 /** the weights for the cost calculation */
-static struct costs_weights gw_costs_weights;
+static struct costs_weights gw_costs_weights_storage;
+static struct costs_weights * gw_costs_weights = NULL;
 
 /** regular expression describing a comment */
 static const char * regexComment = "^([[:space:]]*|[[:space:]#]+.*)$";
@@ -287,9 +288,19 @@ struct sgw_egress_if * findEgressInterfaceByIndex(int if_index) {
  * @return true when the costs changed
  */
 bool egressBwCalculateCosts(struct egress_if_bw * bw, bool up) {
-  int64_t costsPrevious = bw->costs;
-  bw->costs = gw_costs_weigh(up, gw_costs_weights, bw->path_cost, bw->egressUk, bw->egressDk);
-  return (costsPrevious != bw->costs);
+  if (!gw_costs_weights) {
+    gw_costs_weights_storage.WexitU = olsr_cnf->smart_gw_weight_exitlink_up;
+    gw_costs_weights_storage.WexitD = olsr_cnf->smart_gw_weight_exitlink_down;
+    gw_costs_weights_storage.Wetx = olsr_cnf->smart_gw_weight_etx;
+    gw_costs_weights_storage.Detx = olsr_cnf->smart_gw_divider_etx;
+    gw_costs_weights = &gw_costs_weights_storage;
+  }
+
+  {
+    int64_t costsPrevious = bw->costs;
+    bw->costs = gw_costs_weigh(up, gw_costs_weights_storage, bw->path_cost, bw->egressUk, bw->egressDk);
+    return (costsPrevious != bw->costs);
+  }
 }
 
 /**
@@ -373,11 +384,6 @@ bool startEgressFile(void) {
     line = NULL;
     return false;
   }
-
-  gw_costs_weights.WexitU = olsr_cnf->smart_gw_weight_exitlink_up;
-  gw_costs_weights.WexitD = olsr_cnf->smart_gw_weight_exitlink_down;
-  gw_costs_weights.Wetx = olsr_cnf->smart_gw_weight_etx;
-  gw_costs_weights.Detx = olsr_cnf->smart_gw_divider_etx;
 
   cachedStat.tv_sec = -1;
   cachedStat.tv_nsec = -1;
