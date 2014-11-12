@@ -2119,10 +2119,6 @@ void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change
     bestOverallChanged = determineBestOverallLink(phase);
   }
 
-  if (!bestEgressChanged && !bestOverallChanged && !force) {
-    goto out;
-  }
-
   if (bestOverallChanged || force) {
     setupDefaultGatewayOverrideRoutes(phase);
   }
