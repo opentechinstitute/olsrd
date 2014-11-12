@@ -699,13 +699,28 @@ int olsr_init_gateways(void) {
     struct sgw_egress_if * egressif;
     unsigned int nrOlsrIfs = getNrOfOlsrInterfaces(olsr_cnf);
 
+    /* Initialise the egress interfaces */
     /* setup the egress interface name/mark pairs */
     i = 0;
     egressif = olsr_cnf->smart_gw_egress_interfaces;
     while (egressif) {
+      egressif->if_index = if_nametoindex(egressif->name);
+
       egressif->tableNr = olsr_cnf->smart_gw_offset_tables + 1 + i;
       egressif->ruleNr = olsr_cnf->smart_gw_offset_rules + olsr_cnf->smart_gw_egress_interfaces_count + nrOlsrIfs + 1 + i;
       egressif->bypassRuleNr = olsr_cnf->smart_gw_offset_rules + i;
+
+      egressif->upPrevious = egressif->upCurrent = olsr_if_isup(egressif->name);
+      egressif->upChanged = (egressif->upPrevious != egressif->upCurrent);
+
+      egressBwClear(&egressif->bwPrevious, egressif->upPrevious);
+      egressBwClear(&egressif->bwCurrent, egressif->upCurrent);
+      egressif->bwCostsChanged = egressBwCostsChanged(egressif);
+      egressif->bwNetworkChanged = egressBwNetworkChanged(egressif);
+      egressif->bwGatewayChanged = egressBwGatewayChanged(egressif);
+      egressif->bwChanged = egressBwChanged(egressif);
+
+      egressif->inEgressFile = false;
 
       egressif = egressif->next;
       i++;
@@ -777,28 +792,6 @@ int olsr_startup_gateways(void) {
   if (!multi_gateway_mode()) {
     olsr_add_ifchange_handler(smartgw_tunnel_monitor);
     return 0;
-  }
-
-  /* Initialise the egress interfaces */
-  {
-    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
-    while (egress_if) {
-      egress_if->if_index = if_nametoindex(egress_if->name);
-
-      egress_if->upPrevious = egress_if->upCurrent = olsr_if_isup(egress_if->name);
-      egress_if->upChanged = (egress_if->upPrevious != egress_if->upCurrent);
-
-      egressBwClear(&egress_if->bwPrevious, egress_if->upPrevious);
-      egressBwClear(&egress_if->bwCurrent, egress_if->upCurrent);
-      egress_if->bwCostsChanged = egressBwCostsChanged(egress_if);
-      egress_if->bwNetworkChanged = egressBwNetworkChanged(egress_if);
-      egress_if->bwGatewayChanged = egressBwGatewayChanged(egress_if);
-      egress_if->bwChanged = egressBwChanged(egress_if);
-
-      egress_if->inEgressFile = false;
-
-      egress_if = egress_if->next;
-    }
   }
 
   ok = ok && multiGwRulesGeneric(true);
