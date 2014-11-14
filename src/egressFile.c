@@ -64,8 +64,13 @@ static regex_t compiledRegexEgress;
 /** true when the file reader has been started */
 static bool started = false;
 
+/** type to hold the cached stat result */
+typedef struct _CachedStat {
+  time_t timeStamp; /* Time of last modification (second resolution) */
+} CachedStat;
+
 /** the cached stat result */
-static struct timespec cachedStat;
+static CachedStat cachedStat;
 
 /** the malloc-ed buffer in which to store a line read from the file */
 static char * line = NULL;
@@ -385,8 +390,7 @@ bool startEgressFile(void) {
     return false;
   }
 
-  cachedStat.tv_sec = -1;
-  cachedStat.tv_nsec = -1;
+  cachedStat.timeStamp = 0;
 
   readEgressFile(olsr_cnf->smart_gw_egress_file);
 
@@ -438,17 +442,17 @@ static bool readEgressFile(char * fileName) {
   fd = open(!fileName ? DEF_GW_EGRESS_FILE : fileName, O_RDONLY);
   if (fd < 0) {
     /* could not access the file */
-    memset(&cachedStat, 0, sizeof(cachedStat));
+    cachedStat.timeStamp = 0;
     goto out;
   }
 
   if (fstat(fd, &statBuf)) {
     /* could not stat the file */
-    memset(&cachedStat, 0, sizeof(cachedStat));
+    cachedStat.timeStamp = 0;
     goto out;
   }
 
-  if (!memcmp(&cachedStat, &statBuf.st_mtim, sizeof(cachedStat))) {
+  if (!memcmp(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp))) {
     /* file did not change since last read */
     goto out;
   }
@@ -456,7 +460,7 @@ static bool readEgressFile(char * fileName) {
   fp = fdopen(fd, "r");
   if (!fp) {
     /* could not open the file */
-    memset(&cachedStat, 0, sizeof(cachedStat));
+    cachedStat.timeStamp = 0;
     goto out;
   }
 
@@ -665,7 +669,7 @@ static bool readEgressFile(char * fileName) {
   fclose(fp);
   fp = NULL;
 
-  cachedStat = statBuf.st_mtim;
+  memcpy(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp));
 
   reportedErrors = reportedErrorsLocal;
 
