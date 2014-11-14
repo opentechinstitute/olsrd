@@ -823,9 +823,9 @@ int olsr_startup_gateways(void) {
       bool upCurrent = olsr_if_isup(egress_if->name);
 
       if (upCurrent != egress_if->upCurrent) {
-        int index = upCurrent ? (int) if_nametoindex(egress_if->name) : egress_if->if_index;
+        int idx = upCurrent ? (int) if_nametoindex(egress_if->name) : egress_if->if_index;
         enum olsr_ifchg_flag flag = upCurrent ? IFCHG_IF_ADD : IFCHG_IF_REMOVE;
-        smartgw_tunnel_monitor(index, NULL, flag);
+        smartgw_tunnel_monitor(idx, NULL, flag);
       }
 
       egress_if = egress_if->next;
