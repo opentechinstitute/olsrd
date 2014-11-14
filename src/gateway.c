@@ -416,7 +416,6 @@ static bool multiGwRulesSgwServerTunnel(bool add) {
  */
 static bool multiGwRulesEgressInterfaces(bool add) {
   bool ok = true;
-  unsigned int i = 0;
 
   struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
   while (egress_if) {
