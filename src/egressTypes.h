@@ -1,8 +1,6 @@
 #ifndef EGRESSTYPES_H
 #define EGRESSTYPES_H
 
-#ifdef __linux__
-
 /* Plugin includes */
 
 /* OLSRD includes */
@@ -109,7 +107,5 @@ static inline bool egressBwGatewayChanged(struct sgw_egress_if * egress_if) {
 static inline bool egressBwChanged(struct sgw_egress_if * egress_if) {
   return egress_if->bwCostsChanged || egress_if->bwNetworkChanged || egress_if->bwGatewayChanged;
 }
-
-#endif /* __linux__ */
 
 #endif /* EGRESSTYPES_H */
