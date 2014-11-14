@@ -41,7 +41,7 @@
 # gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
 VERS =		pre-0.6.8
 
-TOPDIR = .
+TOPDIR = $(shell pwd)
 INSTALLOVERWRITE ?=
 include Makefile.inc
 
