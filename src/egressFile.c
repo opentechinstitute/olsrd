@@ -140,6 +140,41 @@ static void egressFileError(bool useErrno, int lineNo, const char *format, ...) 
  * Helpers
  */
 
+#ifdef __ANDROID__
+static ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+{
+    char *ptr;
+    size_t len;
+
+    ptr = fgetln(stream, n);
+
+    if (ptr == NULL) {
+        return -1;
+    }
+
+    /* Free the original ptr */
+    if (*lineptr != NULL) free(*lineptr);
+
+    /* Add one more space for '\0' */
+    len = n[0] + 1;
+
+    /* Update the length */
+    n[0] = len;
+
+    /* Allocate a new buffer */
+    *lineptr = malloc(len);
+
+    /* Copy over the string */
+    memcpy(*lineptr, ptr, len-1);
+
+    /* Write the NULL character */
+    (*lineptr)[len-1] = '\0';
+
+    /* Return the length of the new buffer */
+    return len;
+}
+#endif
+
 /**
  * Read an (olsr_ip_addr) IP address from a string:
  * First tries to parse the value as an IPv4 address, and if not successful
