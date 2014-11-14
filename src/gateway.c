@@ -103,11 +103,11 @@ struct BestOverallLink {
 static struct sgw_egress_if * bestEgressLinkPrevious = NULL;
 static struct sgw_egress_if * bestEgressLink = NULL;
 
-struct sgw_route_info bestEgressLinkPreviousRoute = {0};
-struct sgw_route_info bestEgressLinkRoute = {0};
+struct sgw_route_info bestEgressLinkPreviousRoute;
+struct sgw_route_info bestEgressLinkRoute;
 
-struct sgw_route_info bestOverallLinkPreviousRoutes[2] = {{0}};
-struct sgw_route_info bestOverallLinkRoutes[2] = {{0}};
+struct sgw_route_info bestOverallLinkPreviousRoutes[2];
+struct sgw_route_info bestOverallLinkRoutes[2];
 
 static struct BestOverallLink bestOverallLinkPrevious;
 static struct BestOverallLink bestOverallLink;
@@ -667,6 +667,11 @@ static void gw_takedown_timer_callback(void *unused __attribute__ ((unused))) {
  */
 int olsr_init_gateways(void) {
   int retries = 5;
+
+  memset(&bestEgressLinkPreviousRoute, 0, sizeof(bestEgressLinkPreviousRoute));
+  memset(&bestEgressLinkRoute, 0, sizeof(bestEgressLinkRoute));
+  memset(bestOverallLinkPreviousRoutes, 0, sizeof(bestOverallLinkPreviousRoutes));
+  memset(bestOverallLinkRoutes, 0, sizeof(bestOverallLinkRoutes));
 
   /* ipv4 prefix 0.0.0.0/0 */
   memset(&ipv4_slash_0_route, 0, sizeof(ipv4_slash_0_route));
