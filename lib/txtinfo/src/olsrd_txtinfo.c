@@ -596,10 +596,10 @@ ipc_print_sgw(struct autobuf *abuf)
   abuf_puts(abuf, "Gateway mode is only supported in linux\n");
 #else
 
-  static const char * fmth4 = "%s%-16s %-33s %-8s %-8s %-8s %-4s %-8s %-4s %-16s %-16s %s\n";
-  static const char * fmtv4 = "%s%-16s %-33s %-8u %-8u %-8u %-4s %-8s %-4s %-16s %-16s %lld\n";
-  static const char * fmth6 = "%s%-46s %-93s %-8s %-8s %-8s %-4s %-8s %-4s %-16s %-46s %s\n";
-  static const char * fmtv6 = "%s%-46s %-93s %-8u %-8u %-8u %-4s %-8s %-4s %-16s %-46s %lld\n";
+  static const char * fmth4 = "%s%-16s %-33s %-8s %-8s %-10s %-4s %-8s %-4s %-16s %-16s %s\n";
+  static const char * fmtv4 = "%s%-16s %-33s %-8u %-8u %-10u %-4s %-8s %-4s %-16s %-16s %lld\n";
+  static const char * fmth6 = "%s%-46s %-93s %-8s %-8s %-10s %-4s %-8s %-4s %-16s %-46s %s\n";
+  static const char * fmtv6 = "%s%-46s %-93s %-8u %-8u %-10u %-4s %-8s %-4s %-16s %-46s %lld\n";
 
   sgw_ipvx(abuf, false, fmth4, fmtv4);
   abuf_puts(abuf, "\n");

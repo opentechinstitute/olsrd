@@ -86,6 +86,7 @@
 #include "lq_plugin.h"
 #include "common/autobuf.h"
 #include "gateway.h"
+#include "egressTypes.h"
 
 #include "olsrd_jsoninfo.h"
 #include "olsrd_plugin.h"

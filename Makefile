@@ -41,7 +41,7 @@
 # gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
 VERS =		pre-0.6.8
 
-TOPDIR = .
+TOPDIR = $(shell pwd)
 INSTALLOVERWRITE ?=
 include Makefile.inc
 
@@ -71,7 +71,16 @@ endif
 .PHONY: default_target switch
 default_target: $(EXENAME)
 
-$(EXENAME):	$(OBJS) src/builddata.o
+ANDROIDREGEX=
+ifeq ($(OS),android)
+# On Android Google forgot to include regex engine code for Froyo version (but also there was
+# no support in older versions for it) so we have here this missing code.
+# http://groups.google.com/group/android-ndk/browse_thread/thread/5ea6f0650f0e3fc
+CFLAGS += -D__POSIX_VISIBLE
+ANDROIDREGEX=$(REGEX_LIB)
+endif
+
+$(EXENAME):	$(OBJS) $(ANDROIDREGEX) src/builddata.o
 ifeq ($(VERBOSE),0)
 		@echo "[LD] $@"
 endif
@@ -349,9 +358,6 @@ mdns_uninstall:
 # no targets for mini: it's an example plugin
 #
 
-# nameserver uses regex, which was only recently added to Android.  On
-# Android, $(REGEX_OBJS) will have all of the files needed, on all
-# other platforms, it'll be empty and therefore ignored.
 nameservice:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/nameservice clean
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/nameservice

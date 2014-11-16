@@ -70,6 +70,12 @@ struct gateway_entry {
     uint16_t seqno;
 };
 
+enum sgw_multi_change_phase {
+  GW_MULTI_CHANGE_PHASE_STARTUP = 0,
+  GW_MULTI_CHANGE_PHASE_RUNTIME = 1,
+  GW_MULTI_CHANGE_PHASE_SHUTDOWN = 2
+};
+
 /**
  * static inline struct gateway_entry * node2gateway (struct avl_node *ptr)
  *
@@ -190,5 +196,11 @@ void olsr_trigger_gatewayloss_check(void);
 
 bool olsr_set_inet_gateway(struct gateway_entry * chosen_gw, bool ipv4, bool ipv6);
 struct gateway_entry *olsr_get_inet_gateway(bool ipv6);
+
+/*
+ * Multi Smart Gateway functions
+ */
+
+void doRoutesMultiGw(bool egressChanged, bool olsrChanged, enum sgw_multi_change_phase phase);
 
 #endif /* GATEWAY_H_ */
