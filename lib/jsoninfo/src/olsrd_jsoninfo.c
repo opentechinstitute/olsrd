@@ -385,14 +385,14 @@ plugin_ipc_init(void)
       return 0;
     }
 #endif /* (defined __FreeBSD__ || defined __FreeBSD_kernel__) && defined SO_NOSIGPIPE */
-#if defined linux
+#if defined linux && defined IPV6_V6ONLY
     if (jsoninfo_ipv6_only && olsr_cnf->ip_version == AF_INET6) {
       if (setsockopt(ipc_socket, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&yes, sizeof(yes)) < 0) {
         perror("IPV6_V6ONLY failed");
         return 0;
       }
     }
-#endif /* defined linux */
+#endif /* defined linux && defined IPV6_V6ONLY */
     /* Bind the socket */
 
     /* complete the socket structure */
