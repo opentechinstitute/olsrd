@@ -467,12 +467,35 @@ static regmatch_t pmatch[REGEX_EGRESS_LINE_MATCH_COUNT];
 static bool readEgressFile(char * fileName) {
   bool changed = false;
 
-  int fd;
+  int fd = -1;
   FILE * fp = NULL;
   struct stat statBuf;
   unsigned int lineNumber = 0;
   ssize_t length = -1;
   bool reportedErrorsLocal = false;
+
+  /*
+   * Copy 'current' egress interfaces into 'previous' field and reset
+   * the administration of the 'current' egress interfaces.
+   *
+   * We need to do this first because of the situation in which the file
+   * was first successfully read and then it disappears; in that case all the
+   * settings must be reset.
+   */
+  {
+    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+    while (egress_if) {
+      egress_if->bwPrevious = egress_if->bwCurrent;
+      egress_if->bwCostsChanged = false;
+      egress_if->bwNetworkChanged = false;
+      egress_if->bwGatewayChanged = false;
+      egress_if->bwChanged = false;
+
+      egress_if->inEgressFile = false;
+
+      egress_if = egress_if->next;
+    }
+  }
 
   fd = open(!fileName ? DEF_GW_EGRESS_FILE : fileName, O_RDONLY);
   if (fd < 0) {
@@ -499,21 +522,7 @@ static bool readEgressFile(char * fileName) {
     goto out;
   }
 
-  /* copy 'current' egress interfaces into 'previous' field */
-  {
-    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
-    while (egress_if) {
-      egress_if->bwPrevious = egress_if->bwCurrent;
-      egress_if->bwCostsChanged = false;
-      egress_if->bwNetworkChanged = false;
-      egress_if->bwGatewayChanged = false;
-      egress_if->bwChanged = false;
-
-      egress_if->inEgressFile = false;
-
-      egress_if = egress_if->next;
-    }
-  }
+  /* read the file */
 
   while ((length = getline(&line, &line_length, fp)) != -1) {
     struct sgw_egress_if * egress_if = NULL;
@@ -708,6 +717,11 @@ static bool readEgressFile(char * fileName) {
 
   reportedErrors = reportedErrorsLocal;
 
+  out: if (fd >= 0) {
+    close(fd);
+    fd = -1;
+  }
+
   /* clear absent egress interfaces and setup 'changed' status */
   {
     struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
@@ -726,11 +740,6 @@ static bool readEgressFile(char * fileName) {
 
       egress_if = egress_if->next;
     }
-  }
-
-  out: if (fd >= 0) {
-    close(fd);
-    fd = -1;
   }
 
   return changed;
