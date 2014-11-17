@@ -2,18 +2,18 @@
 
 This README file is the main documentation source for the OLSR DNSSD plugin
 
-Last update Feb 14, 2013
+Last update November 17, 2014
 
 == Description ==
 
-This plugin propagates multicast DNS (mDNS) service discovery advertisements 
-(DNSSD) over an OLSR mesh network. It is built on top of the P2PD OLSR plugin.
-A description of the P2PD plugin is included below.
+This plugin propagates and distance-limits multicast DNS (mDNS) service discovery
+advertisements (DNSSD) over an OLSR mesh network. It is built on top of the P2PD
+OLSR plugin. A description of the P2PD plugin is included below.
 
-Local services are advertised over the mesh according to custom TTL values
-declared in their Avahi service files. For example, a service that has a TTL 
-value of 3 will be advertised a maximum of 3 hops away. TTL values are specified
-as a txt-record. Here is an example service file with a TTL value:
+Local services are advertised over the mesh according to custom TTL values. For
+example, a service that has a TTL value of 3 will be advertised a maximum of 3
+hops away. TTL values are specified as a txt-record. Here is an example mDNS
+service advertisement with a TTL value:
 
 <?xml version="1.0" standalone='no'?><!--*-nxml-*-->
 <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
@@ -33,7 +33,7 @@ as a txt-record. Here is an example service file with a TTL value:
 
 To enable the Plugin use the following syntax:
 
-LoadPlugin "olsrd_dnssd.so.0.1.2
+LoadPlugin "olsrd_dnssd.so.0.1.3
 {
 # Specify interfaces where the hosts running Peer to Peer applications are
 # attached
@@ -47,8 +47,8 @@ PlParam     "P2pdTtl"     "5"
 PlParam     "UdpDestPort" "255.255.255.255 1211"
 #   MDNS multicast (draft-cheshire-dnsext-multicastdns)
 PlParam     "UdpDestPort" "224.0.0.251 5353"
-#   Directory where Avahi service files are located
-PlParam     "ServiceFileDir" "/etc/avahi/services"
+#   Management Socket to talk to Commotion Service Manager
+PlParam     "CSMSocket" "/var/run/commotion-service-manager.sock"
 #   Domain used for advertising services
 PlParam     "Domain"      "mesh.local"
 #   Interval in seconds for updating local service list
@@ -66,10 +66,9 @@ P2pdTtl is the *default* time to live given to the P2PD OLSR messages. This
 value is not applied to local service advertisements that specify their own 
 TTL value in their Avahi service file.
 
-ServiceFileDir is the location where Avahi service files are located. All
-service files in this directory with domains matching the Domain parameter and
-a TTL value specified in a txt-record will have their TTL value applied to
-their OLSR packets.
+CSMSocket is the UNIX domain socket used to talk to the Commotion Service Manger
+(CSM) in order to get a list of local services. CSM is in charge of publishing
+mDNS announcements of local services on the network.
 
 == P2PD Description ==
 
@@ -128,6 +127,8 @@ forwards UDP plugin OLSR packets even if it is not aware of the new application.
 Revision history
 ================
 
+11/17/2014 - Updated plugin to use latest version of Commotion Service Manager
+	     * Version 0.1.3
 02/14/2013 - Fixed bugs relating to capturing outgoing packets, and hostname
              replacement in service names. 
              * Plugin has been tested and verified to be working. 
