@@ -1551,8 +1551,11 @@ static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
 
   changed = memcmp(&bestOverallLink, &bestOverallLinkPrevious, sizeof(bestOverallLink));
 
-  if (changed) {
-    if (!bestOverallLink.isOlsr) {
+  if (changed || MSGW_ROUTE_FORCED(phase)) {
+    if (!bestOverallLink.valid) {
+      olsr_cnf->smart_gw_uplink = 0;
+      olsr_cnf->smart_gw_downlink = 0;
+    } else if (!bestOverallLink.isOlsr) {
       olsr_cnf->smart_gw_uplink = bestOverallLink.link.egress->bwCurrent.egressUk;
       olsr_cnf->smart_gw_downlink = bestOverallLink.link.egress->bwCurrent.egressDk;
     } else {
