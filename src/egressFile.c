@@ -458,6 +458,21 @@ void stopEgressFile(void) {
 /** the buffer with regex matches */
 static regmatch_t pmatch[REGEX_EGRESS_LINE_MATCH_COUNT];
 
+static void readEgressFileClear(void) {
+  struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
+  while (egress_if) {
+    egress_if->bwPrevious = egress_if->bwCurrent;
+    egress_if->bwCostsChanged = false;
+    egress_if->bwNetworkChanged = false;
+    egress_if->bwGatewayChanged = false;
+    egress_if->bwChanged = false;
+
+    egress_if->inEgressFile = false;
+
+    egress_if = egress_if->next;
+  }
+}
+
 /**
  * Read the egress file
  *
@@ -467,7 +482,7 @@ static regmatch_t pmatch[REGEX_EGRESS_LINE_MATCH_COUNT];
 static bool readEgressFile(char * fileName) {
   bool changed = false;
 
-  int fd;
+  int fd = -1;
   FILE * fp = NULL;
   struct stat statBuf;
   unsigned int lineNumber = 0;
@@ -478,13 +493,15 @@ static bool readEgressFile(char * fileName) {
   if (fd < 0) {
     /* could not access the file */
     cachedStat.timeStamp = 0;
-    goto out;
+    readEgressFileClear();
+    goto outerror;
   }
 
   if (fstat(fd, &statBuf)) {
     /* could not stat the file */
     cachedStat.timeStamp = 0;
-    goto out;
+    readEgressFileClear();
+    goto outerror;
   }
 
   if (!memcmp(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp))) {
@@ -496,24 +513,12 @@ static bool readEgressFile(char * fileName) {
   if (!fp) {
     /* could not open the file */
     cachedStat.timeStamp = 0;
-    goto out;
+    readEgressFileClear();
+    goto outerror;
   }
 
   /* copy 'current' egress interfaces into 'previous' field */
-  {
-    struct sgw_egress_if * egress_if = olsr_cnf->smart_gw_egress_interfaces;
-    while (egress_if) {
-      egress_if->bwPrevious = egress_if->bwCurrent;
-      egress_if->bwCostsChanged = false;
-      egress_if->bwNetworkChanged = false;
-      egress_if->bwGatewayChanged = false;
-      egress_if->bwChanged = false;
-
-      egress_if->inEgressFile = false;
-
-      egress_if = egress_if->next;
-    }
-  }
+  readEgressFileClear();
 
   while ((length = getline(&line, &line_length, fp)) != -1) {
     struct sgw_egress_if * egress_if = NULL;
@@ -707,6 +712,11 @@ static bool readEgressFile(char * fileName) {
   memcpy(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp));
 
   reportedErrors = reportedErrorsLocal;
+
+  outerror: if (fd >= 0) {
+    close(fd);
+    fd = -1;
+  }
 
   /* clear absent egress interfaces and setup 'changed' status */
   {
