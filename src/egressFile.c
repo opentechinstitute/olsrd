@@ -79,7 +79,7 @@ static char * line = NULL;
 static size_t line_length = 256;
 
 /* forward declaration */
-static bool readEgressFile(char * fileName);
+static bool readEgressFile(const char * fileName);
 
 /*
  * Error Reporting
@@ -479,37 +479,33 @@ static void readEgressFileClear(void) {
  * @param fileName the filename
  * @return true to indicate changes (any egress_if->bwChanged is true)
  */
-static bool readEgressFile(char * fileName) {
+static bool readEgressFile(const char * fileName) {
   bool changed = false;
 
-  int fd = -1;
   FILE * fp = NULL;
   struct stat statBuf;
   unsigned int lineNumber = 0;
   ssize_t length = -1;
   bool reportedErrorsLocal = false;
+  const char * filepath = !fileName ? DEF_GW_EGRESS_FILE : fileName;
 
-  fd = open(!fileName ? DEF_GW_EGRESS_FILE : fileName, O_RDONLY);
-  if (fd < 0) {
-    /* could not access the file */
-    cachedStat.timeStamp = 0;
-    readEgressFileClear();
-    goto outerror;
+  if (cachedStat.timeStamp != 0) {
+    /* read the file before */
+
+    if (stat(filepath, &statBuf)) {
+      /* could not stat the file */
+      cachedStat.timeStamp = 0;
+      readEgressFileClear();
+      goto outerror;
+    }
+
+    if (!memcmp(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp))) {
+      /* file did not change since last read */
+      return false;
+    }
   }
 
-  if (fstat(fd, &statBuf)) {
-    /* could not stat the file */
-    cachedStat.timeStamp = 0;
-    readEgressFileClear();
-    goto outerror;
-  }
-
-  if (!memcmp(&cachedStat.timeStamp, &statBuf.st_mtime, sizeof(cachedStat.timeStamp))) {
-    /* file did not change since last read */
-    goto out;
-  }
-
-  fp = fdopen(fd, "r");
+  fp = fopen(filepath, "r");
   if (!fp) {
     /* could not open the file */
     cachedStat.timeStamp = 0;
@@ -713,10 +709,7 @@ static bool readEgressFile(char * fileName) {
 
   reportedErrors = reportedErrorsLocal;
 
-  outerror: if (fd >= 0) {
-    close(fd);
-    fd = -1;
-  }
+  outerror:
 
   /* clear absent egress interfaces and setup 'changed' status */
   {
@@ -736,11 +729,6 @@ static bool readEgressFile(char * fileName) {
 
       egress_if = egress_if->next;
     }
-  }
-
-  out: if (fd >= 0) {
-    close(fd);
-    fd = -1;
   }
 
   return changed;
