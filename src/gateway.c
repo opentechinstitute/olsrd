@@ -1481,6 +1481,7 @@ struct gateway_entry *olsr_get_inet_gateway(bool ipv6) {
  * parameters has changed
  */
 static bool determineBestEgressLink(enum sgw_multi_change_phase phase) {
+  bool changed = false;
   struct sgw_egress_if * bestEgress = olsr_cnf->smart_gw_egress_interfaces;
 
   if (phase == GW_MULTI_CHANGE_PHASE_SHUTDOWN) {
@@ -1506,8 +1507,21 @@ static bool determineBestEgressLink(enum sgw_multi_change_phase phase) {
   bestEgressLinkPrevious = bestEgressLink;
   bestEgressLink = bestEgress;
 
-  return ((bestEgressLinkPrevious != bestEgressLink) || //
-      (bestEgressLink && (bestEgressLink->upChanged || bestEgressLink->bwChanged)));
+  changed = (bestEgressLinkPrevious != bestEgressLink) || //
+      (bestEgressLink && (bestEgressLink->upChanged || bestEgressLink->bwChanged));
+
+  if (changed || MSGW_ROUTE_FORCED(phase)) {
+    if (!bestEgressLink || !bestEgressLink->upCurrent) {
+      olsr_cnf->smart_gw_uplink = 0;
+      olsr_cnf->smart_gw_downlink = 0;
+    } else {
+      olsr_cnf->smart_gw_uplink = bestEgressLink->bwCurrent.egressUk;
+      olsr_cnf->smart_gw_downlink = bestEgressLink->bwCurrent.egressDk;
+    }
+    refresh_smartgw_netmask();
+  }
+
+  return changed;
 }
 
 /**
@@ -1521,7 +1535,6 @@ static bool determineBestEgressLink(enum sgw_multi_change_phase phase) {
  * parameters has changed
  */
 static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
-  bool changed = false;
   struct gw_container_entry * gwContainer = (olsr_cnf->ip_version == AF_INET) ? current_ipv4_gw : current_ipv6_gw;
   struct gateway_entry * olsrGw = !gwContainer ? NULL : gwContainer->gw;
 
@@ -1549,23 +1562,7 @@ static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
     bestOverallLink.olsrTunnelIfIndex = !tunnel ? 0 : tunnel->if_index;
   }
 
-  changed = memcmp(&bestOverallLink, &bestOverallLinkPrevious, sizeof(bestOverallLink));
-
-  if (changed || MSGW_ROUTE_FORCED(phase)) {
-    if (!bestOverallLink.valid) {
-      olsr_cnf->smart_gw_uplink = 0;
-      olsr_cnf->smart_gw_downlink = 0;
-    } else if (!bestOverallLink.isOlsr) {
-      olsr_cnf->smart_gw_uplink = bestOverallLink.link.egress->bwCurrent.egressUk;
-      olsr_cnf->smart_gw_downlink = bestOverallLink.link.egress->bwCurrent.egressDk;
-    } else {
-      olsr_cnf->smart_gw_uplink = bestOverallLink.link.olsr->uplink;
-      olsr_cnf->smart_gw_downlink = bestOverallLink.link.olsr->downlink;
-    }
-    refresh_smartgw_netmask();
-  }
-
-  return changed;
+  return memcmp(&bestOverallLink, &bestOverallLinkPrevious, sizeof(bestOverallLink));
 }
 
 /**
