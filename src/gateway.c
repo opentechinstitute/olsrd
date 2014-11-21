@@ -1521,6 +1521,7 @@ static bool determineBestEgressLink(enum sgw_multi_change_phase phase) {
  * parameters has changed
  */
 static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
+  bool changed = false;
   struct gw_container_entry * gwContainer = (olsr_cnf->ip_version == AF_INET) ? current_ipv4_gw : current_ipv6_gw;
   struct gateway_entry * olsrGw = !gwContainer ? NULL : gwContainer->gw;
 
@@ -1548,7 +1549,20 @@ static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
     bestOverallLink.olsrTunnelIfIndex = !tunnel ? 0 : tunnel->if_index;
   }
 
-  return memcmp(&bestOverallLink, &bestOverallLinkPrevious, sizeof(bestOverallLink));
+  changed = memcmp(&bestOverallLink, &bestOverallLinkPrevious, sizeof(bestOverallLink));
+
+  if (changed) {
+    if (!bestOverallLink.isOlsr) {
+      olsr_cnf->smart_gw_uplink = bestOverallLink.link.egress->bwCurrent.egressUk;
+      olsr_cnf->smart_gw_downlink = bestOverallLink.link.egress->bwCurrent.egressDk;
+    } else {
+      olsr_cnf->smart_gw_uplink = bestOverallLink.link.olsr->uplink;
+      olsr_cnf->smart_gw_downlink = bestOverallLink.link.olsr->downlink;
+    }
+    refresh_smartgw_netmask();
+  }
+
+  return changed;
 }
 
 /**
