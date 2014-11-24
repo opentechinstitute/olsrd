@@ -1959,9 +1959,9 @@ static void printDate(FILE * f) {
  * @param phase the phase of the change (startup/runtime/shutdown)
  */
 static void writeProgramStatusFile(enum sgw_multi_change_phase phase) {
-             /*                     #  Orig Prefx Upl   Dwn PathC Type  Intfc Gw    Cost */
-  static const char * fmt_header = "%s%-16s %-33s %-8s %-8s %-10s %-16s %-16s %-16s %s\n";
-  static const char * fmt_values = "%s%-16s %-33s %-8u %-8u %-10u %-16s %-16s %-16s %llu\n";
+             /*                     # Orig  Prefx Upl  Dwn  PathC Type  Intfc Gw    Cost */
+  static const char * fmt_header = "%s%-16s %-33s %-9s %-9s %-10s %-16s %-16s %-16s %s\n";
+  static const char * fmt_values = "%s%-16s %-33s %-9u %-9u %-10u %-16s %-16s %-16s %llu\n";
 
   char * fileName = olsr_cnf->smart_gw_status_file;
   FILE * fp = NULL;
