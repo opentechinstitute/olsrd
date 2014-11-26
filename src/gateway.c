@@ -160,7 +160,7 @@ static uint32_t deserialize_gw_speed(uint8_t value) {
 
   if (value == UINT8_MAX) {
     /* maximum value: also return maximum value */
-    return 320000000;
+    return MAX_SMARTGW_SPEED;
   }
 
   speed = (value >> 3) + 1;
@@ -186,7 +186,7 @@ static uint8_t serialize_gw_speed(uint32_t speed) {
     return 0;
   }
 
-  if (speed > 320000000) {
+  if (speed >= MAX_SMARTGW_SPEED) {
     return UINT8_MAX;
   }
 
