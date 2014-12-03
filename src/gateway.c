@@ -1132,20 +1132,22 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
     if (new_gw_in_list) {
       new_gw_in_list = olsr_gw_list_update(&gw_list_ipv4, new_gw_in_list);
       assert(new_gw_in_list);
+
+      if (multi_gateway_mode() && new_gw_in_list->tunnel) {
+        /* the active gateway has changed its costs: re-evaluate egress routes */
+        doRoutesMultiGw(false, true, GW_MULTI_CHANGE_PHASE_RUNTIME);
+      }
     }
 
     new_gw_in_list = olsr_gw_list_find(&gw_list_ipv6, gw);
     if (new_gw_in_list) {
       new_gw_in_list = olsr_gw_list_update(&gw_list_ipv6, new_gw_in_list);
       assert(new_gw_in_list);
-    }
 
-    if (multi_gateway_mode() && //
-        ((!gw->ipv6 && current_ipv4_gw && current_ipv4_gw->gw == gw) || //
-         (gw->ipv6 && current_ipv6_gw && current_ipv6_gw->gw == gw)) //
-        ) {
-      /* the active gw has changed its costs: re-evaluate egress routes */
-      doRoutesMultiGw(false, true, GW_MULTI_CHANGE_PHASE_RUNTIME);
+      if (multi_gateway_mode() && new_gw_in_list->tunnel) {
+        /* the active gateway has changed its costs: re-evaluate egress routes */
+        doRoutesMultiGw(false, true, GW_MULTI_CHANGE_PHASE_RUNTIME);
+      }
     }
   }
 
