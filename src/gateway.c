@@ -1961,7 +1961,7 @@ static void printDate(FILE * f) {
 static void writeProgramStatusFile(enum sgw_multi_change_phase phase) {
   /*                                # Origi Prefx Upln Dwnl PathC Type Intfc Gtway Cost */
   static const char * fmt_header = "%s%-15s %-18s %-9s %-9s %-10s %-6s %-16s %-15s %s\n";
-  static const char * fmt_values = "%s%-15s %-18s %-9u %-9u %-10u %-6s %-16s %-15s %llu\n";
+  static const char * fmt_values = "%s%-15s %-18s %-9u %-9u %-10u %-6s %-16s %-15s %lld\n";
 
   char * fileName = olsr_cnf->smart_gw_status_file;
   FILE * fp = NULL;
