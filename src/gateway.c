@@ -26,7 +26,6 @@
 #include "egressFile.h"
 
 #include <assert.h>
-#include <net/if.h>
 #include <linux/rtnetlink.h>
 
 /*
@@ -44,15 +43,6 @@ static struct olsr_ip_prefix ipv4_slash_0_route;
 
 /* ipv4 prefixes 0.0.0.0/1 and 128.0.0.0/1 */
 static struct olsr_ip_prefix ipv4_slash_1_routes[2];
-
-/** structure that holds an interface name, mark and a pointer to the gateway that uses it */
-struct interfaceName {
-  char name[IFNAMSIZ]; /**< interface name */
-  uint8_t tableNr; /**< routing table number */
-  uint8_t ruleNr; /**< IP rule number */
-  uint8_t bypassRuleNr; /**< bypass IP rule number */
-  struct gateway_entry *gw; /**< gateway that uses this interface name */
-};
 
 /** the gateway tree */
 struct avl_tree gateway_tree;

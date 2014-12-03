@@ -14,6 +14,7 @@
 #include "olsr.h"
 #include "scheduler.h"
 #include "gateway_list.h"
+#include <net/if.h>
 
 /** used to signal to olsr_delete_gateway_entry to force deletion */
 #define FORCE_DELETE_GW_ENTRY 255
@@ -75,6 +76,17 @@ enum sgw_multi_change_phase {
   GW_MULTI_CHANGE_PHASE_RUNTIME = 1,
   GW_MULTI_CHANGE_PHASE_SHUTDOWN = 2
 };
+
+#ifdef __linux__
+/** structure that holds an interface name, mark and a pointer to the gateway that uses it */
+struct interfaceName {
+  char name[IFNAMSIZ]; /**< interface name */
+  uint8_t tableNr; /**< routing table number */
+  uint8_t ruleNr; /**< IP rule number */
+  uint8_t bypassRuleNr; /**< bypass IP rule number */
+  struct gateway_entry *gw; /**< gateway that uses this interface name */
+};
+#endif /* __linux__ */
 
 /**
  * static inline struct gateway_entry * node2gateway (struct avl_node *ptr)
