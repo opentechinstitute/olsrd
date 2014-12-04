@@ -121,6 +121,7 @@ uberclean:	clean clean_libs clean_gui
 	find . \( -name '*.[od]' -o -name '*~' \) -not -path "*/.hg*" -type f -print0 | xargs -0 rm -f
 	$(MAKECMDPREFIX)$(MAKECMD) -C $(SWITCHDIR) clean
 	$(MAKECMDPREFIX)$(MAKECMD) -C $(CFGDIR) clean
+	$(MAKECMDPREFIX)rm -f builddata.txt
 
 install: install_olsrd
 
