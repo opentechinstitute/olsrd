@@ -408,6 +408,15 @@ pud_install:
 pud_uninstall:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) uninstall
 
+pud_java: pud
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) java
+
+pud_java_install:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) java-install
+
+pud_java_uninstall:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) java-uninstall
+
 quagga:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/quagga
 
