@@ -1126,7 +1126,7 @@ ipc_print_interfaces(struct autobuf *abuf)
   const struct olsr_if *ifs;
   abuf_json_open_array(abuf, "interfaces");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
-    const struct interface *const rifs = ifs->interf;
+    const struct interface_olsr *const rifs = ifs->interf;
     abuf_json_open_array_entry(abuf);
     abuf_json_string(abuf, "name", ifs->name);
 

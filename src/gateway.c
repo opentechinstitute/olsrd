@@ -536,7 +536,7 @@ static void doEgressInterface(int if_index, enum olsr_ifchg_flag flag) {
  * @param ifh the interface (NULL when not an olsr interface)
  * @param flag interface change flags
  */
-static void smartgw_tunnel_monitor(int if_index, struct interface *ifh, enum olsr_ifchg_flag flag) {
+static void smartgw_tunnel_monitor(int if_index, struct interface_olsr *ifh, enum olsr_ifchg_flag flag) {
   if (!ifh && multi_gateway_mode()) {
     /* non-olsr interface in multi-sgw mode */
     doEgressInterface(if_index, flag);

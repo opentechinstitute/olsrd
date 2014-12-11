@@ -238,7 +238,7 @@ struct olsr_if {
   bool configured;
   bool host_emul;
   union olsr_ip_addr hemu_ip;
-  struct interface *interf;
+  struct interface_olsr *interf;
   struct if_config_options *cnf, *cnfi;
   struct olsr_if *next;
 };

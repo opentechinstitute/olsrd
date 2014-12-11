@@ -750,7 +750,7 @@ ipc_print_interface(struct autobuf *abuf)
   const struct olsr_if *ifs;
   abuf_puts(abuf, "Table: Interfaces\nName\tState\tMTU\tWLAN\tSrc-Adress\tMask\tDst-Adress\n");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
-    const struct interface *const rifs = ifs->interf;
+    const struct interface_olsr *const rifs = ifs->interf;
     abuf_appendf(abuf, "%s\t", ifs->name);
     if (!rifs) {
       abuf_puts(abuf, "DOWN\n");
