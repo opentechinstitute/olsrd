@@ -114,7 +114,7 @@ int rtnetlink_register_socket(int rtnl_mgrp)
 static void netlink_process_link(struct nlmsghdr *h)
 {
   struct ifinfomsg *ifi = (struct ifinfomsg *) NLMSG_DATA(h);
-  struct interface *iface;
+  struct interface_olsr *iface;
   struct olsr_if *oif;
   char namebuffer[IF_NAMESIZE];
 

@@ -448,7 +448,7 @@ static bool multiGwRulesSgwTunnels(bool add) {
  * @param flag interface change flags
  */
 static void smartgw_tunnel_monitor(int if_index __attribute__ ((unused)),
-    struct interface *ifh __attribute__ ((unused)), enum olsr_ifchg_flag flag __attribute__ ((unused))) {
+    struct interface_olsr *ifh __attribute__ ((unused)), enum olsr_ifchg_flag flag __attribute__ ((unused))) {
   return;
 }
 
