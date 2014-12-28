@@ -842,7 +842,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   ifp->mode = iface->cnf->mode;
 
   /* Set up buffer */
-  net_add_buffer(&ifs);
+  net_add_buffer(ifp);
 
   /*
    *Call possible ifchange functions registered by plugins
