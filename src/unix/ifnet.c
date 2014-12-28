@@ -667,9 +667,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 
   ifs.ttl_index = -32;          /* For the first 32 TC's, fish-eye is disabled */
 
-  /* Set up buffer */
-  net_add_buffer(&ifs);
-
   OLSR_PRINTF(1, "\tMTU - IPhdr: %d\n", ifs.int_mtu);
 
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
@@ -843,6 +840,9 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
 
   ifp->mode = iface->cnf->mode;
+
+  /* Set up buffer */
+  net_add_buffer(&ifs);
 
   /*
    *Call possible ifchange functions registered by plugins
