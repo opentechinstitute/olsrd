@@ -54,7 +54,7 @@ UninstPage uninstConfirm
 UninstPage instfiles
 
 Function .onInit
-        MessageBox MB_YESNO "This will install olsr.org pre-0.6.8 on your computer. Continue?" IDYES NoAbort
+        MessageBox MB_YESNO "This will install olsr.org pre-0.6.9 on your computer. Continue?" IDYES NoAbort
         Abort
 NoAbort:
 FunctionEnd
