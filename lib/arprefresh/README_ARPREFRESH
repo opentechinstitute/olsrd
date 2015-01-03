@@ -23,7 +23,7 @@ SAMPLE CONFIG
 
 add in /etc/olsrd/olsrd.conf:
 
-LoadPlugin "arprefresh.so.0.1"
+LoadPlugin "olsrd_arprefresh.so.0.1"
 {
 }
 
