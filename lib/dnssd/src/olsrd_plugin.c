@@ -112,9 +112,9 @@ static const struct olsrd_plugin_parameters plugin_parameters[] = {
   {.name = "P2pdTtl", .set_plugin_parameter = &SetP2pdTtl, .data = NULL },
   {.name = "UdpDestPort",.set_plugin_parameter = &AddUdpDestPort,.data = NULL},
   {.name = "UseHashFilter",.set_plugin_parameter = &SetP2pdUseHashFilter,.data = NULL},
-  {.name = "ServiceFileDir",.set_plugin_parameter = &SetupServiceList,.data = NULL},
-  {.name = "Domain",.set_plugin_parameter = &SetDomain,.data = NULL},
-  {.name = "ServiceUpdateInterval",.set_plugin_parameter = &set_plugin_int,.data=&ServiceUpdateInterval}
+  {.name = "ServiceUpdateInterval",.set_plugin_parameter = &set_plugin_int,.data=&ServiceUpdateInterval},
+  {.name = "CSMSocket",.set_plugin_parameter = &SetupServiceList,.data = NULL},
+  {.name = "Domain",.set_plugin_parameter = &SetDomain,.data = NULL}
 };
 
 /* -------------------------------------------------------------------------

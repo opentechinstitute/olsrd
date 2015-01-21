@@ -1,15 +1,15 @@
 
 OLSRD_PLUGIN =	true
 PLUGIN_NAME =	olsrd_dnssd
-PLUGIN_VER =	0.1.2
+PLUGIN_VER =	0.1.3
 
 TOPDIR = ../..
 include $(TOPDIR)/Makefile.inc
 
-LIBS +=	$(OS_LIB_PTHREAD) -lldns
+LIBS +=	$(OS_LIB_PTHREAD) -lldns -lcommotion-service-manager -lm
 
 # Must be specified along with -lpthread on linux
-CPPFLAGS += $(OS_CFLAG_PTHREAD)
+CPPFLAGS += $(OS_CFLAG_PTHREAD) -std=gnu99
 
 ifneq ($(OS),linux)
 

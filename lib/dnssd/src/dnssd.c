@@ -58,6 +58,7 @@
 #include <netinet/ip.h>         /* struct ip */
 #include <netinet/udp.h>        /* struct udphdr */
 #include <unistd.h>             /* close() */
+#include <math.h>		/* ceil() */
 
 #include <netinet/in.h>
 #include <netinet/ip6.h>
@@ -68,6 +69,8 @@
 #include <regex.h>
 
 #include <stdio.h>
+
+#include <commotion-service-manager.h>
 
 /* OLSRD includes */
 #include "plugin_util.h"        /* set_plugin_int */
@@ -89,13 +92,14 @@
                                    BMF_ENCAP_LEN etc. */
 #include "PacketHistory.h"
 #include "dllist.h"
+#include "base32.h"
 
 struct timer_entry *service_update_timer = NULL;
 struct timer_entry *service_query_timer = NULL;
 struct MdnsService *ServiceList    = NULL;
 char ServiceDomain[MAX_DOMAIN_LEN];
 size_t ServiceDomainLength;
-char *ServiceFileDir;
+char *CSMSocket;
 int ServiceUpdateInterval          = 300;
 
 int P2pdTtl                        = 0;
@@ -1208,7 +1212,7 @@ CloseP2pd(void)
   CloseNonOlsrNetworkInterfaces();
   olsr_stop_timer(service_update_timer);
   olsr_stop_timer(service_query_timer);
-  free(ServiceFileDir);
+  free(CSMSocket);
   DeleteAllServices();
 }
 
@@ -1490,9 +1494,9 @@ check_and_mark_recent_packet(unsigned char *data,
 
 /* -------------------------------------------------------------------------
  * Function   : SetupServiceList
- * Description: Validates PmParam 'ServiceFileDir' and populates list of
+ * Description: Validates PmParam 'CSMSocket' and populates list of
  *              local services
- * Input      : value - comes from PlParam 'ServiceFileDir'
+ * Input      : value - comes from PlParam 'CSMSocket'
  * Output     : none
  * Return     : 0 on success, -1 on error
  * Data Used  : none
@@ -1504,13 +1508,13 @@ int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set
   value_len = strlen(value);
   
   if (!value_len || value_len > MAX_FILE_LEN) {
-    OLSR_PRINTF(1, "%s: Invalid argument for \"ServiceFileDir\"", PLUGIN_NAME_SHORT);
+    OLSR_PRINTF(1, "%s: Invalid argument for \"CSMSocket\"", PLUGIN_NAME_SHORT);
     return -1;
   }
   
-  ServiceFileDir = malloc(sizeof(char)*(value_len + 1));
-  strncpy(ServiceFileDir, value, value_len);
-  ServiceFileDir[value_len] = '\0';
+  CSMSocket = malloc(sizeof(char)*(value_len + 1));
+  strncpy(CSMSocket, value, value_len);
+  CSMSocket[value_len] = '\0';
   
   // do initial ServiceList population
   UpdateServices(NULL);
@@ -1521,172 +1525,107 @@ int SetupServiceList(const char *value, void *data __attribute__ ((unused)), set
   return 0;
 }
 
+/* Copyright (C) 2012 Serval Project Inc. */
+static inline int hexvalue(char c)
+{
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  return -1;
+}
+
+/* Convert nbinary*2 ASCII hex characters [0-9A-Fa-f] to nbinary bytes of data.  Can be used to
+ *  perform the conversion in-place, eg, fromhex(buf, (char*)buf, n);  Returns -1 if a non-hex-digit
+ *  character is encountered, otherwise returns the number of binary bytes produced (= nbinary).
+ *  @author Andrew Bettison <andrew@servalproject.com>
+ *  Copyright (C) 2012 Serval Project Inc.
+ */
+static size_t fromhex(unsigned char *dstBinary, const char *srcHex, size_t nbinary)
+{
+  size_t count = 0;
+  while (count != nbinary) {
+    unsigned char high = hexvalue(*srcHex++);
+    if (high & 0xf0) return -1;
+    unsigned char low = hexvalue(*srcHex++);
+    if (low & 0xf0) return -1;
+    dstBinary[count++] = (high << 4) + low;
+  }
+  return count;
+}
+
+#define CHECK(A, M, ...) do { if(!(A)) { OLSR_PRINTF(1, "%s: " M, PLUGIN_NAME_SHORT, ##__VA_ARGS__); goto error; } } while (0)
+/**
+ * Derives the UUID of a service, as a base32 encoding of the service's key
+ * @param key hex-encoded service key
+ * @param key_len length of service key
+ * @param[out] buf character buffer in which to store UUID
+ * @param buf_size size of character buffer
+ * @return length of UUID on success, 0 on error
+ */
+static int get_uuid(char *key, size_t key_len, char *buf, size_t buf_size) {
+  int ret = 0;
+  int uuid_len = (int)ceil((key_len / 2) * 8.0 / 5.0);
+  uint8_t bin_key[FINGERPRINT_LEN / 2] = {0};
+  
+  CHECK(buf_size >= uuid_len + 1, "Insufficient buffer size");
+  
+  CHECK(fromhex(bin_key, key, FINGERPRINT_LEN / 2) == key_len / 2, "Unable to stow key");
+  
+  ret = base32_encode(bin_key, key_len / 2, (uint8_t*)buf, buf_size);
+  
+  CHECK(ret == uuid_len, "Failed to base32 encode UUID");
+  
+error:
+  return ret;
+}
+
 /* -------------------------------------------------------------------------
  * Function   : UpdateServices
- * Description: Fetches local Avahi service files with a TTL txt-record and
- *              the target domain, and adds them to a list of local services
+ * Description: Fetches list of local services from Commotion Service Manager
  * Input      : context (currently unused)
  * Output     : none
  * Return     : none
- * Data Used  : ServiceFileDir
+ * Data Used  : CSMSocket
  * ------------------------------------------------------------------------- */
 void UpdateServices(void *context __attribute__((unused))) {
-  char file_suffix[9], line[BUFFER_LENGTH + 1], *ttl_string, *service_name, *service_type, *dirpath, *fullpath, hostname[HOSTNAME_LEN + 1];
-  DIR *dp = NULL;
-  FILE *fp = NULL;
-  struct dirent *ep = NULL;
-  const char ttl_pattern[] = "^[[:space:]]*<txt-record>ttl=([[:digit:]]+)</txt-record>[[:space:]]*$";
-  int domain_pattern_size = 0;
-  char *domain_pattern = NULL;
-  const char name_pattern[] = "^[[:space:]]*<name( replace-wildcards=\"yes\")?>(.*)</name>[[:space:]]*$";
-  const char type_pattern[] = "^[[:space:]]*<type>(.*)</type>[[:space:]]*$";
-  regex_t ttl_regex, domain_regex, name_regex, type_regex;
-  const int n_matches = 3;
-  regmatch_t match[n_matches];
-  unsigned int found_domain, ttl, match_string_len;
-  size_t dname_len, service_name_len, service_type_len, service_file_dir_len;
-  int ret;
-  struct MdnsService *service = NULL;
+  void *services = NULL;
+  void *csm_config = csm_config_create();
   
-  dp = opendir(ServiceFileDir);
-  if (dp == NULL) {
-    OLSR_PRINTF(1, "%s: Unable to open directory given by \"ServiceFileDir\"", PLUGIN_NAME_SHORT);
-    return;
-  }
+  CHECK(csm_config,"Error generating CSM config");
   
-  // check for trailing backslash
-  service_file_dir_len = strlen(ServiceFileDir);
-  if (ServiceFileDir[service_file_dir_len - 1] == '/') {
-    dirpath = malloc(sizeof(char)*(service_file_dir_len + 1));
-    strncpy(dirpath,ServiceFileDir,service_file_dir_len);
-    dirpath[service_file_dir_len] = '\0';
-  } else {
-    dirpath = malloc(sizeof(char)*(service_file_dir_len + 2));
-    strncpy(dirpath,ServiceFileDir,service_file_dir_len);
-    dirpath[service_file_dir_len] = '/';
-    dirpath[service_file_dir_len + 1] = '\0';
-  }
-
-  domain_pattern_size = strlen("^[[:space:]]*<domain-name>") + 
-                   strlen(ServiceDomain) +
-		   strlen("</domain-name>[[:space:]]*$") + 1;
-  domain_pattern = (char*)calloc(domain_pattern_size, sizeof(char)); 
-
-  strcpy(domain_pattern, "^[[:space:]]*<domain-name>");
-  strcat(domain_pattern, ServiceDomain);
-  strcat(domain_pattern, "</domain-name>[[:space:]]*$");
-
-  if (regcomp(&ttl_regex, ttl_pattern, REG_NEWLINE | REG_EXTENDED) || 
-		regcomp(&domain_regex, domain_pattern, REG_NOSUB | REG_NEWLINE | REG_EXTENDED) ||
-		regcomp(&name_regex, name_pattern, REG_NEWLINE | REG_EXTENDED) || 
-     		regcomp(&type_regex, type_pattern, REG_NEWLINE | REG_EXTENDED)) {
-#ifdef INCLUDE_DEBUG_OUTPUT
-    OLSR_PRINTF(1, "%s: Unable to compile regex", PLUGIN_NAME_SHORT);
-#endif
-    return;
-  }
+  CHECK(csm_config_set_mgmt_sock(csm_config, CSMSocket) == CSM_OK,"Error setting CSM socket");
   
-  // set uptodate = 0 for all Services
-  for (service = ServiceList; service != NULL; service=service->hh.next)
-    service->uptodate = 0;
+  int slen = csm_services_fetch(&services, csm_config);
   
-  // iterate through files in ServiceFileDir and check against our regex objects
-  while ((ep = readdir(dp))) {
-    dname_len = strlen(ep->d_name);
-    if (dname_len > 8 && dname_len < MAX_DIR_LEN) {
-      strncpy(file_suffix, ep->d_name + dname_len - 8, 8);
-      file_suffix[8] = '\0';
-      if (!strcmp(file_suffix,".service")) {   // if ep->d_name ends in .service, open it
-        found_domain = 0;
-	ttl = 0;
-	service_name = NULL;
-	service_type = NULL;
-	fullpath = malloc(sizeof(char)*(strlen(dirpath) + dname_len + 1));
-	strcpy(fullpath,dirpath);
-	strcat(fullpath,ep->d_name);
-        fp = fopen(fullpath, "rt");
-	if (fp == NULL) {
-#ifdef INCLUDE_DEBUG_OUTPUT
-	  OLSR_PRINTF(1, "%s: Error opening file %s: %s\n", PLUGIN_NAME_SHORT, fullpath, strerror(errno));
-#endif
-	  return;
-	}
-	free(fullpath);
-        while (fgets(line, BUFFER_LENGTH, fp)) {
-	  if (!found_domain && !regexec(&domain_regex, line, 0, NULL, 0)) {  // check for target domain
-	    found_domain = 1;
-	  }
-	  else if (!ttl  && !regexec(&ttl_regex, line, n_matches, match, 0)) {  // check for u_int TTL value
-	    // parse match and store ttl
-	    if (match[1].rm_so != -1) {
-	      match_string_len = match[1].rm_eo - match[1].rm_so;
-	      ttl_string = malloc(sizeof(char)*(match_string_len + 1));
-	      strncpy(ttl_string, line + match[1].rm_so, match_string_len);
-	      ttl_string[match_string_len] = '\0';
-	      ttl = atoi(ttl_string);
-	      free(ttl_string);
-	      ttl = (ttl < 255 && ttl > 0) ? ttl : 0;
-	    }
-	  } else if (!service_name && !regexec(&name_regex, line, n_matches, match, 0)) {  // check for valid service name
-	    if (match[2].rm_so != -1) {
-	      service_name_len = match[2].rm_eo - match[2].rm_so;
-	      service_name = malloc(sizeof(char)*(service_name_len + 1));
-	      strncpy(service_name, line + match[2].rm_so, service_name_len);
-	      service_name[service_name_len] = '\0';
-	      if (match[1].rm_so != -1) {
-		// replace %h with hostname
-		ret = gethostname(hostname, HOSTNAME_LEN + 1);
-		if (ret == -1) {
-#ifdef INCLUDE_DEBUG_OUTPUT
-		  OLSR_PRINTF(1, "%s: Error fetching hostname\n", PLUGIN_NAME_SHORT);
-#endif
-		  return;
-		}
-		hostname[HOSTNAME_LEN] = '\0';
-		if ((service_name = ReplaceHostname(service_name, service_name_len, hostname, strlen(hostname))) == NULL) {
-		  OLSR_PRINTF(1, "%s: Error replacing hostname in servicename\n", PLUGIN_NAME_SHORT);
-		  return;
-		}
-		service_name_len = strlen(service_name);
-	      }
-	    }
-	  } else if (!service_type && !regexec(&type_regex, line, n_matches, match, 0)) {  // check for valid service type
-	    if (match[1].rm_so != -1) {
-	      service_type_len = match[1].rm_eo - match[1].rm_so;
-	      service_type = malloc(sizeof(char)*(service_type_len + 1));
-	      strncpy(service_type, line + match[1].rm_so, service_type_len);
-	      service_type[service_type_len] = '\0';
-	    }
-	  }
-	}
-        fclose(fp);
-	// If all the matches succeeded, add service to ServiceList (sets uptodate = 1)
-	if (service_name && service_type && found_domain && ttl) {
-	  OLSR_PRINTF(1, "%s: Adding local service: %s\n", PLUGIN_NAME_SHORT, ep->d_name);
-	  AddToServiceList(service_name, service_name_len, service_type, service_type_len, ep->d_name, dname_len, ttl);
-	}
-	if (service_name)
-	  free(service_name);
-	if (service_type)
-	  free(service_type);
-      }
+  CHECK(slen != CSM_ERROR, "Failed to get list of services");
+  
+  void *s = NULL;
+  while ((s = csm_services_get_next_service(services,s))) {
+    if (csm_service_is_local(s)) {
+      char uuid[UUID_LEN + 1] = {0};
+      void *f = csm_service_get_field_by_name(s, "key");
+      if (!f)
+	continue;
+      char *key = csm_field_get_string(f);
+      if (!key)
+	continue;
+      if (get_uuid(key,strlen(key),uuid,UUID_LEN + 1) != UUID_LEN)
+	continue;
+      if (!(f = csm_service_get_field_by_name(s, "ttl")))
+	continue;
+      long ttl;
+      if (csm_field_get_int(f,&ttl) != CSM_OK)
+	continue;
+      OLSR_PRINTF(1, "%s: Adding local service: %s\n", PLUGIN_NAME_SHORT, key);
+      AddToServiceList(uuid, ttl);
     }
   }
-  (void)closedir(dp);
   
-  if (ServiceList == NULL) {
-    OLSR_PRINTF(1, "%s: No valid service files found!\n", PLUGIN_NAME_SHORT);
-  } else {
-    // remove all services with uptodate == 0
-    RemoveStaleServices();
-  }
-  
-  regfree(&domain_regex);
-  regfree(&ttl_regex);
-  regfree(&name_regex);
-  regfree(&type_regex);
-  free(domain_pattern);
-  free(dirpath);
+error:
+  if (csm_config)
+    csm_config_free(csm_config);
+  if (services)
+    csm_services_free(services);
 }
 
 /* -------------------------------------------------------------------------
@@ -1790,40 +1729,30 @@ void AddToRrBuffer(struct RrListByTtl **buf, int ttl, ldns_rr *entry, int sectio
 /* -------------------------------------------------------------------------
  * Function   : AddToServiceList
  * Description: Add a local service to ServiceList
- * Input      : name - the name of the service
- *              name_len - length of service name
- *              type - the type of the service (i.e. _http._tcp)
- *              type_len - length of type string
- *              path - file name of service (i.e. example.service)
- *              path_len - length of path string
+ * Input      : uuid - the mDNS-advertised name of the service
  *              ttl - the service's TTL value (i.e. max number of hops away
  *                    the service should be advertised)
  * Output     : none
  * Return     : none
  * Data Used  : ServiceList
  * ------------------------------------------------------------------------- */
-void AddToServiceList(char *name, size_t name_len, char *type, size_t type_len, char *path, size_t path_len, int ttl) {
+void AddToServiceList(char *name, int ttl) {
   struct MdnsService *s = NULL;
   char *id = NULL;
   
-  if (name_len > MAX_FIELD_LEN || type_len > MAX_FIELD_LEN || path_len > MAX_FILE_LEN)
+  if (strlen(name) != UUID_LEN)
     return;
   
-  id = malloc(sizeof(char)*(name_len + type_len + 2));
-  strncpy(id,name,name_len);
-  id[name_len] = '.';
-  strncpy(id + name_len + 1,type,type_len);
-  id[name_len + 1 + type_len] = '\0';
+  id = calloc(UUID_LEN + 16 + 1,sizeof(char));
+  strncpy(id, name, UUID_LEN);
+  strcpy(id + UUID_LEN, "._commotion._tcp");
 
   HASH_FIND_STR(ServiceList, id, s);
   if (s==NULL) {  // if entry doesn't exist, add it
-    s = malloc(sizeof(struct MdnsService));
-    strcpy(s->id, id);
+    s = calloc(1,sizeof(struct MdnsService));
+    strncpy(s->id, id, UUID_LEN + 16 + 1);
     HASH_ADD_STR(ServiceList, id, s);
   }
-  strcpy(s->service_name, name);
-  strcpy(s->service_type, type);
-  strcpy(s->file_path, path);
   s->ttl = ttl;
   s->uptodate = 1;
   free(id);
@@ -1879,7 +1808,7 @@ void RemoveStaleServices(void) {
   struct MdnsService *s, *tmp;
   HASH_ITER(hh, ServiceList, s, tmp) {
     if (!s->uptodate) {
-      OLSR_PRINTF(1, "%s: Removing local service: %s\n", PLUGIN_NAME_SHORT, s->file_path);
+      OLSR_PRINTF(1, "%s: Removing local service: %s\n", PLUGIN_NAME_SHORT, s->id);
       DeleteService(s);
     }
   }

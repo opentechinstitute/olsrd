@@ -65,9 +65,11 @@
 #define PLUGIN_INTERFACE_VERSION  5
 #define IPHDR_FRAGMENT_MASK       0xC000
 
+#define FINGERPRINT_LEN           64
+#define UUID_LEN                  52      /* Length of UUID (which is base32 encoding of Serval ID) */
 #define MAX_FILE_LEN              72
 #define MAX_DIR_LEN               200
-#define MAX_FIELD_LEN              100
+#define MAX_FIELD_LEN             100
 #define MAX_DOMAIN_LEN            100
 #define BUFFER_LENGTH             1024
 #define IPV6_HEADER_LENGTH        40
@@ -102,10 +104,7 @@ struct RrListByTtl {
 };
 
 struct MdnsService {
-  char                           id[2 * MAX_FIELD_LEN + 1];
-  char                           service_name[MAX_FIELD_LEN + 1];
-  char                           service_type[MAX_FIELD_LEN + 1];
-  char                           file_path[MAX_FILE_LEN + 1];
+  char                           id[UUID_LEN + 16 + 1];    /* sizeof("._commotion._tcp") == 16 */
   int                            ttl;
   int                            uptodate;
   UT_hash_handle                 hh;
@@ -161,7 +160,7 @@ void UpdateServices(void *context);
 
 void AddToRrBuffer(struct RrListByTtl **buf, int ttl, ldns_rr *entry, int section);
 struct RrListByTtl *GetRrListByTtl(const struct RrListByTtl **buf, int ttl);
-void AddToServiceList(char *name, size_t name_len, char *type, size_t type_len, char *path, size_t path_len, int ttl);
+void AddToServiceList(char *name, int ttl);
 struct MdnsService *GetServiceById(char *id);
 void DeleteListByTtl(struct RrListByTtl **buf, int ttl);
 void DeleteList(struct RrListByTtl **buf, struct RrListByTtl *list);
