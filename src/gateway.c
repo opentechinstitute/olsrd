@@ -1550,7 +1550,11 @@ static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
     bestOverallLink.link.egress = bestEgressLink;
     bestOverallLink.olsrTunnelIfIndex = 0;
   } else {
-    struct olsr_iptunnel_entry * tunnel = !gwContainer ? NULL : gwContainer->tunnel;
+    struct olsr_iptunnel_entry * tunnel;
+
+    assert(!gwContainer);
+
+    tunnel = gwContainer->tunnel;
 
     bestOverallLink.valid = olsrGw;
     bestOverallLink.isOlsr = true;
