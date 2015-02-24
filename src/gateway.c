@@ -603,7 +603,7 @@ static void takeDownExpensiveGateways(struct gw_list * gw_list, bool ipv4, struc
    * exit immediately when takedown is disabled, there is no current gateway, or
    * when there is only a single gateway
    */
-  if ((olsr_cnf->smart_gw_takedown_percentage == 0) || (current_gw == NULL ) || (gw_list->count <= 1)) {
+  if ((olsr_cnf->smart_gw_takedown_percentage == 0) || !current_gw || (gw_list->count <= 1)) {
     return;
   }
 
