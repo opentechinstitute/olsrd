@@ -143,8 +143,6 @@ static uint32_t deserialize_gw_speed(uint8_t value) {
   uint32_t exp;
 
   if (!value) {
-    /* 0 and 1 alias onto 0 during serialisation. We take 0 here to mean 0 and
-     * not 1 (since a bandwidth of 1 is no bandwidth at all really) */
     return 0;
   }
 
@@ -166,6 +164,8 @@ static uint32_t deserialize_gw_speed(uint8_t value) {
  * Convert an uplink/downlink speed value into an encoded 1 byte transport
  * value (5 bits mantissa, 3 bits exponent)
  *
+ * A bandwidth of 1 will alias onto a bandwidth of 2.
+ *
  * @param speed the uplink/downlink speed value (in kbit/s)
  * @return value the encoded 1 byte transport value
  */
@@ -174,6 +174,10 @@ static uint8_t serialize_gw_speed(uint32_t speed) {
 
   if (speed == 0) {
     return 0;
+  }
+
+  if (speed == 1) {
+    speed++;
   }
 
   if (speed >= MAX_SMARTGW_SPEED) {
