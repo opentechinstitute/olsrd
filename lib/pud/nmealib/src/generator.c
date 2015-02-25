@@ -317,7 +317,7 @@ static int nmea_igen_static_init(nmeaGENERATOR *gen, nmeaINFO *info) {
 static int nmea_igen_rotate_loop(nmeaGENERATOR *gen __attribute__ ((unused)), nmeaINFO *info) {
 	int it;
 	int count = info->satinfo.inview;
-	double deg = 360 / (count ? count : 1);
+	double deg = 360.0 / (count ? count : 1);
 	double srt = (count ? (info->satinfo.sat[0].azimuth) : 0) + 5;
 
 	nmea_time_now(&info->utc, &info->present);
