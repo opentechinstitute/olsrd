@@ -62,6 +62,7 @@
 #include "mpr_selector_set.h"
 #include "gateway.h"
 #include "olsr_niit.h"
+#include "olsr_random.h"
 
 #ifdef __linux__
 #include <linux/types.h>
@@ -283,28 +284,6 @@ olsrmain_load_config(char *file) {
   return 0;
 }
 
-static void initRandom(void) {
-  unsigned int seed = (unsigned int)time(NULL);
-
-#ifndef _WIN32
-  int randomFile;
-
-  randomFile = open("/dev/urandom", O_RDONLY);
-  if (randomFile == -1) {
-    randomFile = open("/dev/random", O_RDONLY);
-  }
-
-  if (randomFile != -1) {
-    if (read(randomFile, &seed, sizeof(seed)) != sizeof(seed)) {
-      ; /* to fix an 'unused result' compiler warning */
-    }
-    close(randomFile);
-  }
-#endif /* _WIN32 */
-
-  srandom(seed);
-}
-
 /**
  * Main entrypoint
  */
@@ -372,7 +351,7 @@ int main(int argc, char *argv[]) {
   olsr_openlog("olsrd");
 
   /* setup random seed */
-  initRandom();
+  olsr_init_random();
 
   /* Init widely used statics */
   memset(&all_zero, 0, sizeof(union olsr_ip_addr));
