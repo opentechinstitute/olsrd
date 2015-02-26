@@ -57,6 +57,7 @@
 #include "lq_packet.h"
 #include "log.h"
 #include "link_set.h"
+#include "olsr_random.h"
 
 #include <assert.h>
 #include <signal.h>
@@ -799,7 +800,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   /*
    *Initialize sequencenumber as a random 16bit value
    */
-  ifp->olsr_seqnum = random() & 0xFFFF;
+  ifp->olsr_seqnum = olsr_random() & 0xFFFF;
 
   /*
    * Set main address if this is the only interface
