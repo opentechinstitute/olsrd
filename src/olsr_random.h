@@ -5,17 +5,19 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define OLSR_RANDOM_MAX INT32_MAX
 
 static inline long int olsr_random(void) {
+  int32_t value;
+  int randomFile;
+
 #ifdef _WIN32
   return random();
 #endif /* _WIN32 */
 
-  int32_t value;
-  int randomFile = open("/dev/urandom", O_RDONLY);
-
+  randomFile = open("/dev/urandom", O_RDONLY);
   if (randomFile == -1) {
     randomFile = open("/dev/random", O_RDONLY);
   }
