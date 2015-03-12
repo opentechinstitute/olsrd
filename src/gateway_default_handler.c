@@ -12,6 +12,7 @@
 #include "defs.h"
 #include "gateway.h"
 #include "lq_plugin.h"
+#include "whitelist.h"
 
 static uint32_t gw_def_nodecount;
 static uint32_t gw_def_stablecount;
@@ -74,6 +75,16 @@ static void gw_default_choose_gateway(void) {
   struct gateway_entry *gw;
   bool dual = false;
 
+  // Hard-coded whitelist of IP addresses with associated
+  // factors that improve their cost
+  whitelist_entry whitelist[] = {
+    {"10.230.0.106", 0.5},
+    {"10.31.2.45", 0.3}
+  };
+  // best cost value found so far
+  int64_t best = INT64_MAX;
+
+
   if (olsr_cnf->smart_gw_thresh) {
     /* determine the path cost thresholds */
 
@@ -102,9 +113,35 @@ static void gw_default_choose_gateway(void) {
       bool gw_eligible_v4 = gw->ipv4
           /* && (olsr_cnf->ip_version == AF_INET || olsr_cnf->use_niit) *//* contained in gw_def_choose_new_ipv4_gw */
           && (olsr_cnf->smart_gw_allow_nat || !gw->ipv4nat);
-      if (gw_eligible_v4 && gw_cost < (chosen_gw_ipv4 ? chosen_gw_ipv4->path_cost : INT64_MAX)
+
+      char* addr = inet_ntoa(gw->originator.v4);
+
+      float factor;
+
+      // check whether the current gateway is in the whitelist
+      // by going throught the whitelist and comparing with the current ip
+      int ok = 0;
+      int k;
+      for (k = 0; k < 2; k++) {
+        if (strcmp(whitelist[k].addr, addr) == 0) {
+          ok = 1;
+          factor = whitelist[k].factor;
+          break;
+        }
+      }
+      if (!ok) {
+        continue;
+      }
+
+      printf("addr: %s original cost: %ld\n", addr, gw_cost);
+      gw_cost = (int64_t) gw_cost * factor;
+      printf("addr: %s modified cost: %ld\n", addr, gw_cost);
+
+      if (gw_eligible_v4 && gw_cost < best
           && (!cost_ipv4_threshold_valid || (gw_cost < cost_ipv4_threshold))) {
         chosen_gw_ipv4 = gw;
+        best = gw_cost;
+        printf("chose!\n");
       }
     }
 
