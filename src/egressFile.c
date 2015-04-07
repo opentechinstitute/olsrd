@@ -66,7 +66,7 @@ static bool started = false;
 
 /** type to hold the cached stat result */
 typedef struct _CachedStat {
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)
   struct timespec timeStamp; /* Time of last modification (full resolution) */
 #else
   time_t timeStamp; /* Time of last modification (second resolution) */
@@ -506,7 +506,7 @@ static bool readEgressFile(const char * fileName) {
       goto outerror;
     }
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)
     mtim = &statBuf.st_mtim;
 #else
     mtim = &statBuf.st_mtime;
@@ -717,7 +717,7 @@ static bool readEgressFile(const char * fileName) {
   fclose(fp);
   fp = NULL;
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)
     mtim = &statBuf.st_mtim;
 #else
     mtim = &statBuf.st_mtime;
