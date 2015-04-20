@@ -693,7 +693,8 @@ static bool readEgressFile(const char * fileName) {
     if (networkSet) {
       /* assumes IPv4 */
       in_addr_t mask = (network.prefix_len == 0) ? 0 : (~0U << (32 - network.prefix_len));
-      network.prefix.v4.s_addr = htonl(ntohl(network.prefix.v4.s_addr) & mask);
+      uint32_t masked = ntohl(network.prefix.v4.s_addr) & mask;
+      network.prefix.v4.s_addr = htonl(masked);
     }
 
     if (!uplink || !downlink) {
