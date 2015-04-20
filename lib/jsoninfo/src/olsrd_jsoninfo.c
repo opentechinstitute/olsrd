@@ -1210,28 +1210,28 @@ static void send_info(unsigned int send_what, int the_socket) {
   if (send_what & SIW_ALL) {
     abuf_puts(&abuf, "{");
 
-    if ((send_what & SIW_LINKS) == SIW_LINKS)
+    if (send_what & SIW_LINKS)
       ipc_print_links(&abuf);
-    if ((send_what & SIW_NEIGHBORS) == SIW_NEIGHBORS)
+    if (send_what & SIW_NEIGHBORS)
       ipc_print_neighbors(&abuf);
-    if ((send_what & SIW_TOPOLOGY) == SIW_TOPOLOGY)
+    if (send_what & SIW_TOPOLOGY)
       ipc_print_topology(&abuf);
-    if ((send_what & SIW_HNA) == SIW_HNA)
+    if (send_what & SIW_HNA)
       ipc_print_hna(&abuf);
-    if ((send_what & SIW_MID) == SIW_MID)
+    if (send_what & SIW_MID)
       ipc_print_mid(&abuf);
-    if ((send_what & SIW_ROUTES) == SIW_ROUTES)
+    if (send_what & SIW_ROUTES)
       ipc_print_routes(&abuf);
-    if ((send_what & SIW_GATEWAYS) == SIW_GATEWAYS)
+    if (send_what & SIW_GATEWAYS)
       ipc_print_gateways(&abuf);
-    if ((send_what & SIW_INTERFACES) == SIW_INTERFACES)
+    if (send_what & SIW_INTERFACES)
       ipc_print_interfaces(&abuf);
-    if ((send_what & SIW_CONFIG) == SIW_CONFIG) {
+    if (send_what & SIW_CONFIG) {
       if (send_what != SIW_CONFIG)
         abuf_puts(&abuf, ",");
       ipc_print_config(&abuf);
     }
-    if ((send_what & SIW_PLUGINS) == SIW_PLUGINS)
+    if (send_what & SIW_PLUGINS)
       ipc_print_plugins(&abuf);
 
     /* output overarching meta data last so we can use abuf_json_* functions, they add a comma at the beginning */
