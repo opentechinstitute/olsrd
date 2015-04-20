@@ -279,7 +279,7 @@ static int abuf_json_sysdata(struct autobuf *abuf, const char* key, const char* 
   char buf[256];
   *buf = 0;
   ret = get_string_from_file(syspath, buf, 256);
-  if (*buf != 0)
+  if (*buf)
     abuf_json_string(abuf, key, buf);
   return ret;
 }
@@ -498,40 +498,40 @@ static void ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int
     if (0 < s) {
       requ[s] = 0;
       /* print out the requested tables */
-      if (0 != strstr(requ, "/olsrd.conf"))
+      if (strstr(requ, "/olsrd.conf"))
         send_what |= SIW_OLSRD_CONF;
-      else if (0 != strstr(requ, "/all"))
+      else if (strstr(requ, "/all"))
         send_what = SIW_ALL;
       else {
         // these are the two overarching categories
-        if (0 != strstr(requ, "/runtime"))
+        if (strstr(requ, "/runtime"))
           send_what |= SIW_RUNTIME_ALL;
-        if (0 != strstr(requ, "/startup"))
+        if (strstr(requ, "/startup"))
           send_what |= SIW_STARTUP_ALL;
         // these are the individual sections
-        if (0 != strstr(requ, "/neighbors"))
+        if (strstr(requ, "/neighbors"))
           send_what |= SIW_NEIGHBORS;
-        if (0 != strstr(requ, "/links"))
+        if (strstr(requ, "/links"))
           send_what |= SIW_LINKS;
-        if (0 != strstr(requ, "/routes"))
+        if (strstr(requ, "/routes"))
           send_what |= SIW_ROUTES;
-        if (0 != strstr(requ, "/hna"))
+        if (strstr(requ, "/hna"))
           send_what |= SIW_HNA;
-        if (0 != strstr(requ, "/mid"))
+        if (strstr(requ, "/mid"))
           send_what |= SIW_MID;
-        if (0 != strstr(requ, "/topology"))
+        if (strstr(requ, "/topology"))
           send_what |= SIW_TOPOLOGY;
-        if (0 != strstr(requ, "/gateways"))
+        if (strstr(requ, "/gateways"))
           send_what |= SIW_GATEWAYS;
-        if (0 != strstr(requ, "/interfaces"))
+        if (strstr(requ, "/interfaces"))
           send_what |= SIW_INTERFACES;
-        if (0 != strstr(requ, "/config"))
+        if (strstr(requ, "/config"))
           send_what |= SIW_CONFIG;
-        if (0 != strstr(requ, "/plugins"))
+        if (strstr(requ, "/plugins"))
           send_what |= SIW_PLUGINS;
       }
     }
-    if (send_what == 0)
+    if (!send_what)
       send_what = SIW_ALL;
   }
 
@@ -780,7 +780,7 @@ static void ipc_print_gateways(struct autobuf *abuf) {
         abuf_json_int(abuf, "hopCount", tc->hops);
         abuf_json_int(abuf, "uplinkSpeed", gw->uplink);
         abuf_json_int(abuf, "downlinkSpeed", gw->downlink);
-        if (gw->external_prefix.prefix_len == 0)
+        if (!gw->external_prefix.prefix_len)
           abuf_json_string(abuf, "externalPrefix", olsr_ip_prefix_to_string(&gw->external_prefix));
         abuf_json_close_array_entry(abuf);
       }OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
@@ -808,7 +808,7 @@ static void ipc_print_plugins(struct autobuf *abuf) {
         // test if a int/long and set as such in JSON
         value = atol(pparam->value);
         snprintf(valueTest, 255, "%li", value);
-        if (strcmp(valueTest, pparam->value) == 0)
+        if (!strcmp(valueTest, pparam->value))
           abuf_json_int(abuf, key, value);
         else
           abuf_json_string(abuf, key, pparam->value);
@@ -909,7 +909,7 @@ static void ipc_print_config(struct autobuf *abuf) {
   abuf_json_int(abuf, "tcRedundancy", olsr_cnf->tc_redundancy);
   abuf_json_int(abuf, "mprCoverage", olsr_cnf->mpr_coverage);
 
-  if (olsr_cnf->lq_level == 0) {
+  if (!olsr_cnf->lq_level) {
     abuf_json_boolean(abuf, "useHysteresis", olsr_cnf->use_hysteresis);
     if (olsr_cnf->use_hysteresis) {
       abuf_json_float(abuf, "hysteresisScaling", olsr_cnf->hysteresis_param.scaling);
@@ -1189,7 +1189,7 @@ static void jsoninfo_write_data(void *foo __attribute__ ((unused))) {
       }
     }
   }
-  if (outbuffer_count == 0) {
+  if (!outbuffer_count) {
     olsr_stop_timer(writetimer_entry);
   }
 }
@@ -1238,7 +1238,7 @@ static void send_info(unsigned int send_what, int the_socket) {
   if (send_what & SIW_ALL) {
     abuf_json_int(&abuf, "systemTime", time(NULL));
     abuf_json_int(&abuf, "timeSinceStartup", now_times);
-    if (*uuid != 0)
+    if (*uuid)
       abuf_json_string(&abuf, "uuid", uuid);
     abuf_puts(&abuf, "}\n");
   }
