@@ -65,6 +65,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <libgen.h>
+#include <assert.h>
 
 #ifdef __linux__
 #include <fcntl.h>
@@ -104,30 +105,8 @@ static int plugin_ipc_init(void);
 
 static int read_uuid_from_file(const char *file);
 
-static void abuf_json_open_object(struct autobuf *abuf, const char* header);
-static void abuf_json_close_object(struct autobuf *abuf);
-static void abuf_json_open_array(struct autobuf *abuf, const char* header);
-static void abuf_json_close_array(struct autobuf *abuf);
-static void abuf_json_open_array_entry(struct autobuf *abuf);
-static void abuf_json_close_array_entry(struct autobuf *abuf);
-static void abuf_json_boolean(struct autobuf *abuf, const char* key, int value);
-static void abuf_json_string(struct autobuf *abuf, const char* key, const char* value);
-static void abuf_json_int(struct autobuf *abuf, const char* key, long value);
-static void abuf_json_float(struct autobuf *abuf, const char* key, float value);
-
 static void send_info(unsigned int /*send_what*/, int /*socket*/);
 static void ipc_action(int, void *, unsigned int);
-static void ipc_print_neighbors(struct autobuf *);
-static void ipc_print_links(struct autobuf *);
-static void ipc_print_routes(struct autobuf *);
-static void ipc_print_topology(struct autobuf *);
-static void ipc_print_hna(struct autobuf *);
-static void ipc_print_mid(struct autobuf *);
-static void ipc_print_gateways(struct autobuf *);
-static void ipc_print_config(struct autobuf *);
-static void ipc_print_interfaces(struct autobuf *);
-static void ipc_print_plugins(struct autobuf *);
-static void ipc_print_olsrd_conf(struct autobuf *abuf);
 
 static size_t build_http_header(const char *status, const char *mime, uint32_t msgsize, char *buf, uint32_t bufsize);
 
@@ -183,78 +162,95 @@ static struct timer_entry *writetimer_entry;
 /* JSON does not allow commas dangling at the end of arrays, so we need to
  * count which entry number we're at in order to make sure we don't tack a
  * dangling comma on at the end */
-static int entrynumber[5] = { 0, 0, 0, 0, 0 };
+static int entrynumber[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 static int currentjsondepth = 0;
 
-static void abuf_json_open_object(struct autobuf *abuf, const char* header) {
-  abuf_appendf(abuf, "\"%s\": {", header);
-  entrynumber[currentjsondepth]++;
-  currentjsondepth++;
-  entrynumber[currentjsondepth] = 0;
+static void abuf_json_new_indent(struct autobuf *abuf) {
+  int i = currentjsondepth;
+
+  if (!i) {
+    return;
+  }
+
+  abuf_puts(abuf, "\n");
+  while (i-- > 0) {
+    abuf_puts(abuf, "  ");
+  }
 }
 
-static void abuf_json_close_object(struct autobuf *abuf) {
-  abuf_appendf(abuf, "\t}\n");
-  currentjsondepth--;
+static void abuf_json_mark_output(bool open, struct autobuf *abuf) {
+  if (open) {
+    assert(!currentjsondepth);
+    abuf_json_new_indent(abuf);
+    abuf_puts(abuf, "{");
+    currentjsondepth++;
+    entrynumber[currentjsondepth] = 0;
+  } else {
+    entrynumber[currentjsondepth] = 0;
+    currentjsondepth--;
+    assert(!currentjsondepth);
+    abuf_json_new_indent(abuf);
+    abuf_puts(abuf, "\n}");
+  }
 }
 
-static void abuf_json_open_array(struct autobuf *abuf, const char* header) {
-  if (entrynumber[currentjsondepth])
-    abuf_appendf(abuf, ",\n\t");
-  abuf_appendf(abuf, "\"%s\": [\n", header);
-  entrynumber[currentjsondepth]++;
-  currentjsondepth++;
-  entrynumber[currentjsondepth] = 0;
+static void abuf_json_mark_object(bool open, bool array, struct autobuf *abuf, const char* header) {
+  if (open) {
+    if (entrynumber[currentjsondepth]) {
+      abuf_appendf(abuf, ",");
+    }
+    abuf_json_new_indent(abuf);
+    if (header) {
+      abuf_appendf(abuf, "\"%s\": %s", header, array ? "[" : "{");
+    } else {
+      abuf_appendf(abuf, "%s", array ? "[" : "{");
+    }
+    entrynumber[currentjsondepth]++;
+    currentjsondepth++;
+    entrynumber[currentjsondepth] = 0;
+  } else {
+    entrynumber[currentjsondepth] = 0;
+    currentjsondepth--;
+    abuf_json_new_indent(abuf);
+    abuf_appendf(abuf, "%s", array ? "]" : "}");
+  }
 }
 
-static void abuf_json_close_array(struct autobuf *abuf) {
-  abuf_appendf(abuf, "]\n");
-  entrynumber[currentjsondepth] = 0;
-  currentjsondepth--;
-}
-
-static void abuf_json_open_array_entry(struct autobuf *abuf) {
-  if (entrynumber[currentjsondepth])
-    abuf_appendf(abuf, ",\n{");
-  else
-    abuf_appendf(abuf, "{");
-  entrynumber[currentjsondepth]++;
-  currentjsondepth++;
-  entrynumber[currentjsondepth] = 0;
-}
-
-static void abuf_json_close_array_entry(struct autobuf *abuf) {
-  abuf_appendf(abuf, "}");
-  entrynumber[currentjsondepth] = 0;
-  currentjsondepth--;
+static void abuf_json_mark_array_entry(bool open, struct autobuf *abuf) {
+  abuf_json_mark_object(open, false, abuf, NULL);
 }
 
 static void abuf_json_insert_comma(struct autobuf *abuf) {
   if (entrynumber[currentjsondepth])
-    abuf_appendf(abuf, ",\n");
-  else
-    abuf_appendf(abuf, "\n");
-  entrynumber[currentjsondepth]++;
+    abuf_appendf(abuf, ",");
 }
 
 static void abuf_json_boolean(struct autobuf *abuf, const char* key, int value) {
   abuf_json_insert_comma(abuf);
-  abuf_appendf(abuf, "\t\"%s\": %s", key, value ? "true" : "false");
+  abuf_json_new_indent(abuf);
+  abuf_appendf(abuf, "\"%s\": %s", key, value ? "true" : "false");
+  entrynumber[currentjsondepth]++;
 }
 
 static void abuf_json_string(struct autobuf *abuf, const char* key, const char* value) {
   abuf_json_insert_comma(abuf);
-  abuf_appendf(abuf, "\t\"%s\": \"%s\"", key, value);
+  abuf_json_new_indent(abuf);
+  abuf_appendf(abuf, "\"%s\": \"%s\"", key, value);
+  entrynumber[currentjsondepth]++;
 }
 
 static void abuf_json_int(struct autobuf *abuf, const char* key, long value) {
   abuf_json_insert_comma(abuf);
-  abuf_appendf(abuf, "\t\"%s\": %li", key, value);
+  abuf_json_new_indent(abuf);
+  abuf_appendf(abuf, "\"%s\": %li", key, value);
+  entrynumber[currentjsondepth]++;
 }
 
 static void abuf_json_float(struct autobuf *abuf, const char* key, float value) {
   abuf_json_insert_comma(abuf);
-  abuf_appendf(abuf, "\t\"%s\": %.03f", key, (double) value);
+  abuf_json_new_indent(abuf);
+  abuf_appendf(abuf, "\"%s\": %.03f", key, (double) value);
+  entrynumber[currentjsondepth]++;
 }
 
 /* Linux specific functions for getting system info */
@@ -544,12 +540,12 @@ static void ipc_print_neighbors(struct autobuf *abuf) {
   struct neighbor_2_list_entry *list_2;
   int thop_cnt;
 
-  abuf_json_open_array(abuf, "neighbors");
+  abuf_json_mark_object(true, true, abuf, "neighbors");
 
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh)
       {
-        abuf_json_open_array_entry(abuf);
+        abuf_json_mark_array_entry(true, abuf);
         abuf_json_string(abuf, "ipv4Address", olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr));
         abuf_json_boolean(abuf, "symmetric", (neigh->status == SYM));
         abuf_json_boolean(abuf, "multiPointRelay", neigh->is_mpr);
@@ -569,9 +565,9 @@ static void ipc_print_neighbors(struct autobuf *abuf) {
         }
         abuf_appendf(abuf, "]");
         abuf_json_int(abuf, "twoHopNeighborCount", thop_cnt);
-        abuf_json_close_array_entry(abuf);
+        abuf_json_mark_array_entry(false, abuf);
       }OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 }
 
 static void ipc_print_links(struct autobuf *abuf) {
@@ -580,13 +576,14 @@ static void ipc_print_links(struct autobuf *abuf) {
 
   struct link_entry *my_link = NULL;
 
-  abuf_json_open_array(abuf, "links");
+  abuf_json_mark_object(true, true, abuf, "links");
+
   OLSR_FOR_ALL_LINK_ENTRIES(my_link)
       {
         const char* lqs;
         int diff = (unsigned int) (my_link->link_timer->timer_clock - now_times);
 
-        abuf_json_open_array_entry(abuf);
+        abuf_json_mark_array_entry(true, abuf);
         abuf_json_string(abuf, "localIP", olsr_ip_to_string(&buf1, &my_link->local_iface_addr));
         abuf_json_string(abuf, "remoteIP", olsr_ip_to_string(&buf2, &my_link->neighbor_iface_addr));
         abuf_json_int(abuf, "validityTime", diff);
@@ -597,21 +594,21 @@ static void ipc_print_links(struct autobuf *abuf) {
           abuf_json_int(abuf, "linkCost", LINK_COST_BROKEN);
         else
           abuf_json_int(abuf, "linkCost", my_link->linkcost);
-        abuf_json_close_array_entry(abuf);
+        abuf_json_mark_array_entry(false, abuf);
       }OLSR_FOR_ALL_LINK_ENTRIES_END(my_link);
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 }
 
 static void ipc_print_routes(struct autobuf *abuf) {
   struct ipaddr_str buf1, buf2;
   struct rt_entry *rt;
 
-  abuf_json_open_array(abuf, "routes");
+  abuf_json_mark_object(true, true, abuf, "routes");
 
   /* Walk the route table */
   OLSR_FOR_ALL_RT_ENTRIES(rt)
       {
-        abuf_json_open_array_entry(abuf);
+        abuf_json_mark_array_entry(true, abuf);
         abuf_json_string(abuf, "destination", olsr_ip_to_string(&buf1, &rt->rt_dst.prefix));
         abuf_json_int(abuf, "genmask", rt->rt_dst.prefix_len);
         abuf_json_string(abuf, "gateway", olsr_ip_to_string(&buf2, &rt->rt_best->rtp_nexthop.gateway));
@@ -621,16 +618,16 @@ static void ipc_print_routes(struct autobuf *abuf) {
         else
           abuf_json_int(abuf, "rtpMetricCost", rt->rt_best->rtp_metric.cost);
         abuf_json_string(abuf, "networkInterface", if_ifwithindex_name(rt->rt_best->rtp_nexthop.iif_index));
-        abuf_json_close_array_entry(abuf);
+        abuf_json_mark_array_entry(false, abuf);
       }OLSR_FOR_ALL_RT_ENTRIES_END(rt);
 
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 }
 
 static void ipc_print_topology(struct autobuf *abuf) {
   struct tc_entry *tc;
 
-  abuf_json_open_array(abuf, "topology");
+  abuf_json_mark_object(true, true, abuf, "topology");
 
   /* Topology */
   OLSR_FOR_ALL_TC_ENTRIES(tc)
@@ -644,7 +641,7 @@ static void ipc_print_topology(struct autobuf *abuf) {
                 uint32_t vt = tc->validity_timer != NULL ? (tc->validity_timer->timer_clock - now_times) : 0;
                 int diff = (int) (vt);
                 const char* lqs;
-                abuf_json_open_array_entry(abuf);
+                abuf_json_mark_array_entry(true, abuf);
                 abuf_json_string(abuf, "destinationIP", olsr_ip_to_string(&dstbuf, &tc_edge->T_dest_addr));
                 abuf_json_string(abuf, "lastHopIP", olsr_ip_to_string(&addrbuf, &tc->addr));
                 lqs = get_tc_edge_entry_text(tc_edge, '\t', &lqbuffer1);
@@ -655,12 +652,12 @@ static void ipc_print_topology(struct autobuf *abuf) {
                 else
                   abuf_json_int(abuf, "tcEdgeCost", tc_edge->cost);
                 abuf_json_int(abuf, "validityTime", diff);
-                abuf_json_close_array_entry(abuf);
+                abuf_json_mark_array_entry(false, abuf);
               }
             }OLSR_FOR_ALL_TC_EDGE_ENTRIES_END(tc, tc_edge);
       }OLSR_FOR_ALL_TC_ENTRIES_END(tc);
 
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 }
 
 static void ipc_print_hna(struct autobuf *abuf) {
@@ -668,7 +665,7 @@ static void ipc_print_hna(struct autobuf *abuf) {
   struct hna_net *tmp_net;
   struct ipaddr_str buf, mainaddrbuf;
 
-  abuf_json_open_array(abuf, "hna");
+  abuf_json_mark_object(true, true, abuf, "hna");
 
   OLSR_FOR_ALL_HNA_ENTRIES(tmp_hna)
         {
@@ -677,16 +674,16 @@ static void ipc_print_hna(struct autobuf *abuf) {
           for (tmp_net = tmp_hna->networks.next; tmp_net != &tmp_hna->networks; tmp_net = tmp_net->next) {
             uint32_t vt = tmp_net->hna_net_timer != NULL ? (tmp_net->hna_net_timer->timer_clock - now_times) : 0;
             int diff = (int) (vt);
-            abuf_json_open_array_entry(abuf);
+            abuf_json_mark_array_entry(true, abuf);
             abuf_json_string(abuf, "destination", olsr_ip_to_string(&buf, &tmp_net->hna_prefix.prefix)), abuf_json_int(abuf, "genmask",
                 tmp_net->hna_prefix.prefix_len);
             abuf_json_string(abuf, "gateway", olsr_ip_to_string(&mainaddrbuf, &tmp_hna->A_gateway_addr));
             abuf_json_int(abuf, "validityTime", diff);
-            abuf_json_close_array_entry(abuf);
+            abuf_json_mark_array_entry(false, abuf);
           }
         }OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);
 
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 }
 
 static void ipc_print_mid(struct autobuf *abuf) {
@@ -694,7 +691,7 @@ static void ipc_print_mid(struct autobuf *abuf) {
   struct mid_entry *entry;
   struct mid_address *alias;
 
-  abuf_json_open_array(abuf, "mid");
+  abuf_json_mark_object(true, true, abuf, "mid");
 
   /* MID */
   for (idx = 0; idx < HASHSIZE; idx++) {
@@ -702,28 +699,28 @@ static void ipc_print_mid(struct autobuf *abuf) {
 
     while (entry != &mid_set[idx]) {
       struct ipaddr_str buf, buf2;
-      abuf_json_open_array_entry(abuf);
+      abuf_json_mark_array_entry(true, abuf);
       abuf_json_string(abuf, "ipAddress", olsr_ip_to_string(&buf, &entry->main_addr));
 
-      abuf_json_open_array(abuf, "aliases");
+      abuf_json_mark_object(true, true, abuf, "aliases");
       alias = entry->aliases;
       while (alias) {
         uint32_t vt = alias->vtime - now_times;
         int diff = (int) (vt);
 
-        abuf_json_open_array_entry(abuf);
+        abuf_json_mark_array_entry(true, abuf);
         abuf_json_string(abuf, "ipAddress", olsr_ip_to_string(&buf2, &alias->alias));
         abuf_json_int(abuf, "validityTime", diff);
-        abuf_json_close_array_entry(abuf);
+        abuf_json_mark_array_entry(false, abuf);
 
         alias = alias->next_alias;
       }
-      abuf_json_close_array(abuf); // aliases
-      abuf_json_close_array_entry(abuf);
+      abuf_json_mark_object(false, true, abuf, NULL); // aliases
+      abuf_json_mark_array_entry(false, abuf);
       entry = entry->next;
     }
   }
-  abuf_json_close_array(abuf); // mid
+  abuf_json_mark_object(false, true, abuf, NULL); // mid
 }
 
 static void ipc_print_gateways(struct autobuf *abuf) {
@@ -734,7 +731,7 @@ static void ipc_print_gateways(struct autobuf *abuf) {
   struct ipaddr_str buf;
   struct gateway_entry *gw;
 
-  abuf_json_open_array(abuf, "gateways");
+  abuf_json_mark_object(true, true, abuf, "gateways");
   OLSR_FOR_ALL_GATEWAY_ENTRIES(gw)
       {
         const char *v4 = "", *v6 = "";
@@ -758,7 +755,7 @@ static void ipc_print_gateways(struct autobuf *abuf) {
           v6 = "u";
         }
 
-        abuf_json_open_array_entry(abuf);
+        abuf_json_mark_array_entry(true, abuf);
         if (gw->ipv4) {
           ipType = "ipv4";
           abuf_json_string(abuf, "ipv4Status", v4);
@@ -782,19 +779,19 @@ static void ipc_print_gateways(struct autobuf *abuf) {
         abuf_json_int(abuf, "downlinkSpeed", gw->downlink);
         if (!gw->external_prefix.prefix_len)
           abuf_json_string(abuf, "externalPrefix", olsr_ip_prefix_to_string(&gw->external_prefix));
-        abuf_json_close_array_entry(abuf);
+        abuf_json_mark_array_entry(false, abuf);
       }OLSR_FOR_ALL_GATEWAY_ENTRIES_END(gw)
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 #endif /* __linux__ */
 }
 
 static void ipc_print_plugins(struct autobuf *abuf) {
   struct plugin_entry *pentry;
   struct plugin_param *pparam;
-  abuf_json_open_array(abuf, "plugins");
+  abuf_json_mark_object(true, true, abuf, "plugins");
   if (olsr_cnf->plugins)
     for (pentry = olsr_cnf->plugins; pentry; pentry = pentry->next) {
-      abuf_json_open_array_entry(abuf);
+      abuf_json_mark_array_entry(true, abuf);
       abuf_json_string(abuf, "plugin", pentry->name);
       for (pparam = pentry->params; pparam; pparam = pparam->next) {
         int i, keylen = strlen(pparam->key);
@@ -813,9 +810,9 @@ static void ipc_print_plugins(struct autobuf *abuf) {
         else
           abuf_json_string(abuf, key, pparam->value);
       }
-      abuf_json_close_array_entry(abuf);
+      abuf_json_mark_array_entry(false, abuf);
     }
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 }
 
 static void ipc_print_config(struct autobuf *abuf) {
@@ -825,7 +822,7 @@ static void ipc_print_config(struct autobuf *abuf) {
   struct olsr_lq_mult *mult;
   char ipv6_buf[INET6_ADDRSTRLEN]; /* buffer for IPv6 inet_htop */
 
-  abuf_json_open_object(abuf, "config");
+  abuf_json_mark_object(true, false, abuf, "config");
 
   abuf_json_int(abuf, "olsrPort", olsr_cnf->olsrport);
   abuf_json_int(abuf, "debugLevel", olsr_cnf->debug_level);
@@ -871,36 +868,36 @@ static void ipc_print_config(struct autobuf *abuf) {
   abuf_json_float(abuf, "defaultHnaValidityTime", olsr_cnf->interface_defaults->hna_params.validity_time);
   abuf_json_boolean(abuf, "defaultAutoDetectChanges", olsr_cnf->interface_defaults->autodetect_chg);
 
-  abuf_json_open_array(abuf, "defaultLinkQualityMultipliers");
+  abuf_json_mark_object(true, true, abuf, "defaultLinkQualityMultipliers");
   for (mult = olsr_cnf->interface_defaults->lq_mult; mult != NULL ; mult = mult->next) {
-    abuf_json_open_array_entry(abuf);
+    abuf_json_mark_array_entry(true, abuf);
     abuf_json_string(abuf, "route", inet_ntop(olsr_cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)));
     abuf_json_float(abuf, "multiplier", mult->value / 65535.0);
-    abuf_json_close_array_entry(abuf);
+    abuf_json_mark_array_entry(false, abuf);
   }
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 
-  abuf_json_open_array(abuf, "hna");
+  abuf_json_mark_object(true, true, abuf, "hna");
   for (hna = olsr_cnf->hna_entries; hna != NULL ; hna = hna->next) {
-    abuf_json_open_array_entry(abuf);
+    abuf_json_mark_array_entry(true, abuf);
     abuf_json_string(abuf, "destination", olsr_ip_to_string(&buf, &hna->net.prefix));
     abuf_json_int(abuf, "genmask", hna->net.prefix_len);
     abuf_json_string(abuf, "gateway", olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-    abuf_json_close_array_entry(abuf);
+    abuf_json_mark_array_entry(false, abuf);
   }
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 
   abuf_json_int(abuf, "totalIpcConnectionsAllowed", olsr_cnf->ipc_connections);
-  abuf_json_open_array(abuf, "ipcAllowedAddresses");
+  abuf_json_mark_object(true, true, abuf, "ipcAllowedAddresses");
   if (olsr_cnf->ipc_connections) {
     for (ipcn = olsr_cnf->ipc_nets; ipcn != NULL ; ipcn = ipcn->next) {
-      abuf_json_open_array_entry(abuf);
+      abuf_json_mark_array_entry(true, abuf);
       abuf_json_string(abuf, "ipAddress", olsr_ip_to_string(&mainaddrbuf, &ipcn->net.prefix));
       abuf_json_int(abuf, "netmask", ipcn->net.prefix_len);
-      abuf_json_close_array_entry(abuf);
+      abuf_json_mark_array_entry(false, abuf);
     }
   }
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 
   // keep all time in ms, so convert these two, which are in seconds
   abuf_json_int(abuf, "pollRate", olsr_cnf->pollrate * 1000);
@@ -1020,7 +1017,7 @@ static void ipc_print_config(struct autobuf *abuf) {
 
   abuf_json_int(abuf, "startTime", start_time.tv_sec);
 
-  abuf_json_close_object(abuf);
+  abuf_json_mark_object(false, false, abuf, NULL);
 }
 
 static void ipc_print_interfaces(struct autobuf *abuf) {
@@ -1031,20 +1028,20 @@ static void ipc_print_interfaces(struct autobuf *abuf) {
   char ipv6_buf[INET6_ADDRSTRLEN]; /* buffer for IPv6 inet_htop */
   struct olsr_lq_mult *mult;
   const struct olsr_if *ifs;
-  abuf_json_open_array(abuf, "interfaces");
+  abuf_json_mark_object(true, true, abuf, "interfaces");
   for (ifs = olsr_cnf->interfaces; ifs != NULL ; ifs = ifs->next) {
     const struct interface_olsr * const rifs = ifs->interf;
-    abuf_json_open_array_entry(abuf);
+    abuf_json_mark_array_entry(true, abuf);
     abuf_json_string(abuf, "name", ifs->name);
 
-    abuf_json_open_array(abuf, "linkQualityMultipliers");
+    abuf_json_mark_object(true, true, abuf, "linkQualityMultipliers");
     for (mult = ifs->cnf->lq_mult; mult != NULL ; mult = mult->next) {
-      abuf_json_open_array_entry(abuf);
+      abuf_json_mark_array_entry(true, abuf);
       abuf_json_string(abuf, "route", inet_ntop(olsr_cnf->ip_version, &mult->addr, ipv6_buf, sizeof(ipv6_buf)));
       abuf_json_float(abuf, "multiplier", mult->value / 65535.0);
-      abuf_json_close_array_entry(abuf);
+      abuf_json_mark_array_entry(false, abuf);
     }
-    abuf_json_close_array(abuf);
+    abuf_json_mark_object(false, true, abuf, NULL);
 
     if (!rifs) {
       abuf_json_string(abuf, "state", "down");
@@ -1134,9 +1131,9 @@ static void ipc_print_interfaces(struct autobuf *abuf) {
     abuf_json_sys_class_net(abuf, "wirelessRetries", ifs->name, "wireless/retries");
     abuf_json_sys_class_net(abuf, "wirelessStatus", ifs->name, "wireless/status");
 #endif /* __linux__ */
-    abuf_json_close_array_entry(abuf);
+    abuf_json_mark_array_entry(false, abuf);
   }
-  abuf_json_close_array(abuf);
+  abuf_json_mark_object(false, true, abuf, NULL);
 }
 
 static void ipc_print_olsrd_conf(struct autobuf *abuf) {
@@ -1208,7 +1205,7 @@ static void send_info(unsigned int send_what, int the_socket) {
 
   // only add if outputing JSON
   if (send_what & SIW_ALL) {
-    abuf_puts(&abuf, "{");
+    abuf_json_mark_output(true, &abuf);
 
     if (send_what & SIW_LINKS)
       ipc_print_links(&abuf);
@@ -1226,11 +1223,8 @@ static void send_info(unsigned int send_what, int the_socket) {
       ipc_print_gateways(&abuf);
     if (send_what & SIW_INTERFACES)
       ipc_print_interfaces(&abuf);
-    if (send_what & SIW_CONFIG) {
-      if (send_what != SIW_CONFIG)
-        abuf_puts(&abuf, ",");
+    if (send_what & SIW_CONFIG)
       ipc_print_config(&abuf);
-    }
     if (send_what & SIW_PLUGINS)
       ipc_print_plugins(&abuf);
 
@@ -1240,9 +1234,10 @@ static void send_info(unsigned int send_what, int the_socket) {
       abuf_json_int(&abuf, "timeSinceStartup", now_times);
       if (*uuid)
         abuf_json_string(&abuf, "uuid", uuid);
-
-      abuf_puts(&abuf, "}\n");
     }
+
+    abuf_json_mark_output(false, &abuf);
+    abuf_puts(&abuf, "\n");
   } else if (send_what & SIW_OLSRD_CONF) {
     /* this outputs the olsrd.conf text directly, not JSON */
     ipc_print_olsrd_conf(&abuf);
