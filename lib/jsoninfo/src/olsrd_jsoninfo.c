@@ -138,7 +138,7 @@ static size_t build_http_header(const char *status, const char *mime, uint32_t m
 #define SIW_STARTUP_ALL 0x0F00
 
 /* this is everything in JSON format */
-#define SIW_ALL 0x0FFF
+#define SIW_ALL (SIW_RUNTIME_ALL | SIW_STARTUP_ALL)
 
 /* this data is not JSON format but olsrd.conf format */
 #define SIW_OLSRD_CONF 0x1000
@@ -491,6 +491,7 @@ static void ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int
       while (recv(ipc_connection, (void *) &dummy, sizeof(dummy), 0) == sizeof(dummy))
         ;
     }
+
     if (0 < s) {
       requ[s] = 0;
       /* print out the requested tables */
@@ -504,6 +505,7 @@ static void ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int
           send_what |= SIW_RUNTIME_ALL;
         if (strstr(requ, "/startup"))
           send_what |= SIW_STARTUP_ALL;
+
         // these are the individual sections
         if (strstr(requ, "/neighbors"))
           send_what |= SIW_NEIGHBORS;
@@ -1212,18 +1214,18 @@ static void send_info(unsigned int send_what, int the_socket) {
     if (*uuid)
       abuf_json_string(&abuf, "uuid", uuid);
 
-    if (send_what & SIW_LINKS)
-      ipc_print_links(&abuf);
     if (send_what & SIW_NEIGHBORS)
       ipc_print_neighbors(&abuf);
-    if (send_what & SIW_TOPOLOGY)
-      ipc_print_topology(&abuf);
+    if (send_what & SIW_LINKS)
+      ipc_print_links(&abuf);
+    if (send_what & SIW_ROUTES)
+      ipc_print_routes(&abuf);
     if (send_what & SIW_HNA)
       ipc_print_hna(&abuf);
     if (send_what & SIW_MID)
       ipc_print_mid(&abuf);
-    if (send_what & SIW_ROUTES)
-      ipc_print_routes(&abuf);
+    if (send_what & SIW_TOPOLOGY)
+      ipc_print_topology(&abuf);
     if (send_what & SIW_GATEWAYS)
       ipc_print_gateways(&abuf);
     if (send_what & SIW_INTERFACES)
