@@ -1207,6 +1207,11 @@ static void send_info(unsigned int send_what, int the_socket) {
   if (send_what & SIW_ALL) {
     abuf_json_mark_output(true, &abuf);
 
+    abuf_json_int(&abuf, "systemTime", time(NULL));
+    abuf_json_int(&abuf, "timeSinceStartup", now_times);
+    if (*uuid)
+      abuf_json_string(&abuf, "uuid", uuid);
+
     if (send_what & SIW_LINKS)
       ipc_print_links(&abuf);
     if (send_what & SIW_NEIGHBORS)
@@ -1227,14 +1232,6 @@ static void send_info(unsigned int send_what, int the_socket) {
       ipc_print_config(&abuf);
     if (send_what & SIW_PLUGINS)
       ipc_print_plugins(&abuf);
-
-    /* output overarching meta data last so we can use abuf_json_* functions, they add a comma at the beginning */
-    if (send_what & SIW_ALL) {
-      abuf_json_int(&abuf, "systemTime", time(NULL));
-      abuf_json_int(&abuf, "timeSinceStartup", now_times);
-      if (*uuid)
-        abuf_json_string(&abuf, "uuid", uuid);
-    }
 
     abuf_json_mark_output(false, &abuf);
     abuf_puts(&abuf, "\n");
