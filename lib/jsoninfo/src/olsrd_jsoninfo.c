@@ -130,18 +130,21 @@ static size_t build_http_header(const char *status, const char *mime, uint32_t m
 #define SIW_TOPOLOGY 0x0020
 #define SIW_GATEWAYS 0x0040
 #define SIW_INTERFACES 0x0080
-#define SIW_RUNTIME_ALL 0x00FF
+#define SIW_2HOP 0x0100
+#define SIW_SGW 0x0200
+#define SIW_RUNTIME_ALL (SIW_NEIGHBORS | SIW_LINKS | SIW_ROUTES | SIW_HNA | SIW_MID | SIW_TOPOLOGY | SIW_GATEWAYS | SIW_INTERFACES | SIW_2HOP | SIW_SGW)
 
 /* these only change at olsrd startup */
-#define SIW_CONFIG 0x0100
-#define SIW_PLUGINS 0x0200
-#define SIW_STARTUP_ALL 0x0F00
+#define SIW_VERSION 0x0400
+#define SIW_CONFIG 0x0800
+#define SIW_PLUGINS 0x1000
+#define SIW_STARTUP_ALL (SIW_VERSION | SIW_CONFIG | SIW_PLUGINS)
 
 /* this is everything in JSON format */
 #define SIW_ALL (SIW_RUNTIME_ALL | SIW_STARTUP_ALL)
 
 /* this data is not JSON format but olsrd.conf format */
-#define SIW_OLSRD_CONF 0x1000
+#define SIW_OLSRD_CONF 0x2000
 
 #define MAX_CLIENTS 3
 
@@ -523,6 +526,14 @@ static void ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int
           send_what |= SIW_GATEWAYS;
         if (strstr(requ, "/interfaces"))
           send_what |= SIW_INTERFACES;
+        if (strstr(requ, "/2hop"))
+          send_what |= SIW_2HOP;
+        if (strstr(requ, "/sgw"))
+          send_what |= SIW_SGW;
+
+        // specials
+        if (strstr(requ, "/version"))
+          send_what |= SIW_VERSION;
         if (strstr(requ, "/config"))
           send_what |= SIW_CONFIG;
         if (strstr(requ, "/plugins"))
@@ -536,37 +547,44 @@ static void ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int
   send_info(send_what, ipc_connection);
 }
 
-static void ipc_print_neighbors(struct autobuf *abuf) {
+static void ipc_print_neighbors(struct autobuf *abuf, bool list_2hop) {
   struct ipaddr_str buf1;
   struct neighbor_entry *neigh;
   struct neighbor_2_list_entry *list_2;
   int thop_cnt;
 
-  abuf_json_mark_object(true, true, abuf, "neighbors");
+  if (!list_2hop)
+    abuf_json_mark_object(true, true, abuf, "neighbors");
+  else
+    abuf_json_mark_object(true, true, abuf, "2hop");
 
   /* Neighbors */
   OLSR_FOR_ALL_NBR_ENTRIES(neigh)
       {
         abuf_json_mark_array_entry(true, abuf);
+
         abuf_json_string(abuf, "ipAddress", olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr));
         abuf_json_boolean(abuf, "symmetric", (neigh->status == SYM));
         abuf_json_boolean(abuf, "multiPointRelay", neigh->is_mpr);
         abuf_json_boolean(abuf, "multiPointRelaySelector", olsr_lookup_mprs_set(&neigh->neighbor_main_addr) != NULL);
         abuf_json_int(abuf, "willingness", neigh->willingness);
-        abuf_appendf(abuf, ",\n");
-
         thop_cnt = 0;
-        if (neigh->neighbor_2_list.next) {
-          abuf_appendf(abuf, "\t\"twoHopNeighbors\": [");
+
+        if (!list_2hop) {
           for (list_2 = neigh->neighbor_2_list.next; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next) {
-            if (thop_cnt)
-              abuf_appendf(abuf, ", ");
-            abuf_appendf(abuf, "\"%s\"", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
             thop_cnt++;
           }
+          abuf_json_int(abuf, "twoHopNeighborCount", thop_cnt);
+        } else {
+          abuf_json_mark_object(true, true, abuf, "twoHopNeighbors");
+          for (list_2 = neigh->neighbor_2_list.next; list_2 != &neigh->neighbor_2_list; list_2 = list_2->next) {
+            abuf_json_mark_array_entry(true, abuf);
+            abuf_json_string(abuf, "ipAddress", olsr_ip_to_string(&buf1, &list_2->neighbor_2->neighbor_2_addr));
+            abuf_json_mark_array_entry(false, abuf);
+          }
+          abuf_json_mark_object(false, true, abuf, false);
         }
-        abuf_appendf(abuf, "]");
-        abuf_json_int(abuf, "twoHopNeighborCount", thop_cnt);
+
         abuf_json_mark_array_entry(false, abuf);
       }OLSR_FOR_ALL_NBR_ENTRIES_END(neigh);
   abuf_json_mark_object(false, true, abuf, NULL);
@@ -815,6 +833,114 @@ static void ipc_print_plugins(struct autobuf *abuf) {
       abuf_json_mark_array_entry(false, abuf);
     }
   abuf_json_mark_object(false, true, abuf, NULL);
+}
+
+#ifdef __linux__
+
+/** interface names for smart gateway tunnel interfaces, IPv4 */
+extern struct interfaceName * sgwTunnel4InterfaceNames;
+
+/** interface names for smart gateway tunnel interfaces, IPv6 */
+extern struct interfaceName * sgwTunnel6InterfaceNames;
+
+/**
+ * Construct the sgw table for a given ip version
+ *
+ * @param abuf the string buffer
+ * @param ipv6 true for IPv6, false for IPv4
+ * @param fmtv the format for printing
+ */
+static void sgw_ipvx(struct autobuf *abuf, bool ipv6) {
+  struct gateway_entry * current_gw = olsr_get_inet_gateway(ipv6);
+  struct interfaceName * sgwTunnelInterfaceNames = !ipv6 ? sgwTunnel4InterfaceNames : sgwTunnel6InterfaceNames;
+  int i;
+
+  abuf_json_mark_array_entry(true, abuf);
+
+  abuf_json_mark_object(true, true, abuf, ipv6 ? "ipv6" : "ipv4");
+
+  for (i = 0; i < olsr_cnf->smart_gw_use_count; i++) {
+    bool selected;
+    struct ipaddr_str originatorStr;
+    const char * originator;
+    struct ipaddr_str prefixIpStr;
+    const char * prefixIPStr;
+    union olsr_ip_addr netmask = { { 0 } };
+    struct ipaddr_str prefixMaskStr;
+    const char * prefixMASKStr;
+    struct interfaceName * node = &sgwTunnelInterfaceNames[i];
+    struct ipaddr_str tunnelGwStr;
+    const char * tunnelGw;
+
+    struct gateway_entry * gw = node->gw;
+    struct tc_entry* tc;
+
+    if (!gw) {
+      continue;
+    }
+
+    tc = olsr_lookup_tc_entry(&gw->originator);
+    if (!tc) {
+      continue;
+    }
+
+    selected = current_gw && (current_gw == gw);
+    originator = olsr_ip_to_string(&originatorStr, &gw->originator);
+    prefixIPStr = olsr_ip_to_string(&prefixIpStr, &gw->external_prefix.prefix);
+
+    prefix_to_netmask((uint8_t *) &netmask, !ipv6 ? sizeof(netmask.v4) : sizeof(netmask.v6), gw->external_prefix.prefix_len);
+    prefixMASKStr = olsr_ip_to_string(&prefixMaskStr, &netmask);
+
+    tunnelGw = olsr_ip_to_string(&tunnelGwStr, &gw->originator);
+
+    abuf_json_mark_array_entry(true, abuf);
+    {
+      char prefix[strlen(prefixIPStr) + 1 + strlen(prefixMASKStr) + 1];
+      snprintf(prefix, sizeof(prefix), "%s/%s", prefixIPStr, prefixMASKStr);
+
+      abuf_json_boolean(abuf, "selected", selected);
+      abuf_json_string(abuf, "originator", originator);
+      abuf_json_string(abuf, "prefix", prefix);
+      abuf_json_int(abuf, "uplink", gw->uplink);
+      abuf_json_int(abuf, "downlink", gw->downlink);
+      abuf_json_int(abuf, "pathcost", tc->path_cost);
+      abuf_json_boolean(abuf, "IPv4", gw->ipv4);
+      abuf_json_boolean(abuf, "IPv4-NAT", gw->ipv4nat);
+      abuf_json_boolean(abuf, "IPv6", gw->ipv6);
+      abuf_json_string(abuf, "tunnel", node->name);
+      abuf_json_string(abuf, "destination", tunnelGw);
+      abuf_json_int(abuf, "cost", gw->path_cost);
+    }
+    abuf_json_mark_array_entry(false, abuf);
+  }
+
+  abuf_json_mark_object(false, true, abuf, NULL);
+
+  abuf_json_mark_array_entry(false, abuf);
+}
+#endif /* __linux__ */
+
+static void ipc_print_sgw(struct autobuf *abuf) {
+#ifndef __linux__
+  abuf_json_string(abuf, "error", "Gateway mode is only supported in Linux");
+#else
+  abuf_json_mark_object(true, true, abuf, "sgw");
+
+  sgw_ipvx(abuf, false);
+  sgw_ipvx(abuf, true);
+
+  abuf_json_mark_object(false, true, abuf, NULL);
+#endif /* __linux__ */
+}
+
+static void ipc_print_version(struct autobuf *abuf) {
+  abuf_json_mark_object(true, false, abuf, "version");
+
+  abuf_json_string(abuf, "version", olsrd_version);
+  abuf_json_string(abuf, "date", build_date);
+  abuf_json_string(abuf, "host", build_host);
+
+  abuf_json_mark_object(false, false, abuf, NULL);
 }
 
 static void ipc_print_config(struct autobuf *abuf) {
@@ -1215,7 +1341,7 @@ static void send_info(unsigned int send_what, int the_socket) {
       abuf_json_string(&abuf, "uuid", uuid);
 
     if (send_what & SIW_NEIGHBORS)
-      ipc_print_neighbors(&abuf);
+      ipc_print_neighbors(&abuf, false);
     if (send_what & SIW_LINKS)
       ipc_print_links(&abuf);
     if (send_what & SIW_ROUTES)
@@ -1230,6 +1356,13 @@ static void send_info(unsigned int send_what, int the_socket) {
       ipc_print_gateways(&abuf);
     if (send_what & SIW_INTERFACES)
       ipc_print_interfaces(&abuf);
+    if (send_what & SIW_2HOP)
+      ipc_print_neighbors(&abuf, true);
+    if (send_what & SIW_SGW)
+      ipc_print_sgw(&abuf);
+
+    if (send_what & SIW_VERSION)
+      ipc_print_version(&abuf);
     if (send_what & SIW_CONFIG)
       ipc_print_config(&abuf);
     if (send_what & SIW_PLUGINS)
