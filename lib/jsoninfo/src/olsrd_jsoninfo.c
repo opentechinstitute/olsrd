@@ -548,7 +548,7 @@ static void ipc_print_neighbors(struct autobuf *abuf) {
   OLSR_FOR_ALL_NBR_ENTRIES(neigh)
       {
         abuf_json_mark_array_entry(true, abuf);
-        abuf_json_string(abuf, "ipv4Address", olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr));
+        abuf_json_string(abuf, "ipAddress", olsr_ip_to_string(&buf1, &neigh->neighbor_main_addr));
         abuf_json_boolean(abuf, "symmetric", (neigh->status == SYM));
         abuf_json_boolean(abuf, "multiPointRelay", neigh->is_mpr);
         abuf_json_boolean(abuf, "multiPointRelaySelector", olsr_lookup_mprs_set(&neigh->neighbor_main_addr) != NULL);
