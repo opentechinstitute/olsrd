@@ -1021,11 +1021,13 @@ serialize_hna4(struct interface_olsr *ifp)
   m = (union olsr_message *)msg_buffer;
 
   /* Fill header */
-  m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
-  m->v4.hopcnt = 0;
-  m->v4.ttl = MAX_TTL;
   m->v4.olsr_msgtype = HNA_MESSAGE;
   m->v4.olsr_vtime = ifp->valtimes.hna;
+  // olsr_msgsize
+  m->v4.originator = olsr_cnf->main_addr.v4.s_addr;
+  m->v4.ttl = MAX_TTL;
+  m->v4.hopcnt = 0;
+  // seqno
 
   pair = m->v4.message.hna.hna_net;
 
@@ -1037,8 +1039,8 @@ serialize_hna4(struct interface_olsr *ifp)
 #ifdef DEBUG
         OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif /* DEBUG */
-        m->v4.seqno = htons(get_msg_seqno());
         m->v4.olsr_msgsize = htons(curr_size);
+        m->v4.seqno = htons(get_msg_seqno());
         net_outbuffer_push(ifp, msg_buffer, curr_size);
         curr_size = OLSR_HNA_IPV4_HDRSIZE;
         pair = m->v4.message.hna.hna_net;
@@ -1064,8 +1066,8 @@ serialize_hna4(struct interface_olsr *ifp)
     curr_size += (2 * olsr_cnf->ipsize);
   }
 
-  m->v4.seqno = htons(get_msg_seqno());
   m->v4.olsr_msgsize = htons(curr_size);
+  m->v4.seqno = htons(get_msg_seqno());
 
   net_outbuffer_push(ifp, msg_buffer, curr_size);
 
@@ -1116,11 +1118,13 @@ serialize_hna6(struct interface_olsr *ifp)
   m = (union olsr_message *)msg_buffer;
 
   /* Fill header */
-  m->v6.originator = olsr_cnf->main_addr.v6;
-  m->v6.hopcnt = 0;
-  m->v6.ttl = MAX_TTL;
   m->v6.olsr_msgtype = HNA_MESSAGE;
   m->v6.olsr_vtime = ifp->valtimes.hna;
+  // olsr_msgsize
+  m->v6.originator = olsr_cnf->main_addr.v6;
+  m->v6.ttl = MAX_TTL;
+  m->v6.hopcnt = 0;
+  // seqno
 
   pair6 = m->v6.message.hna.hna_net;
 
@@ -1131,8 +1135,8 @@ serialize_hna6(struct interface_olsr *ifp)
 #ifdef DEBUG
         OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
 #endif /* DEBUG */
-        m->v6.seqno = htons(get_msg_seqno());
         m->v6.olsr_msgsize = htons(curr_size);
+        m->v6.seqno = htons(get_msg_seqno());
         net_outbuffer_push(ifp, msg_buffer, curr_size);
         curr_size = OLSR_HNA_IPV6_HDRSIZE;
         pair6 = m->v6.message.hna.hna_net;
@@ -1163,7 +1167,6 @@ serialize_hna6(struct interface_olsr *ifp)
 
   net_outbuffer_push(ifp, msg_buffer, curr_size);
   return false;
-
 }
 
 /*
