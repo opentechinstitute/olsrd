@@ -971,6 +971,43 @@ serialize_mid6(struct interface_olsr *ifp)
   return true;
 }
 
+static void appendHNAEntry(struct interface_olsr *ifp, struct ip_prefix_list *h, uint16_t * remainsize, uint16_t * curr_size,
+    union olsr_message *m, struct hnapair **pair) {
+  union olsr_ip_addr ip_addr;
+
+  if ((*curr_size + (2 * olsr_cnf->ipsize)) > *remainsize) {
+    /* Only add HNA message if it contains data */
+    if (*curr_size > OLSR_HNA_IPV4_HDRSIZE) {
+#ifdef DEBUG
+      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", *curr_size, *remainsize);
+#endif /* DEBUG */
+      m->v4.olsr_msgsize = htons(*curr_size);
+      m->v4.seqno = htons(get_msg_seqno());
+      net_outbuffer_push(ifp, msg_buffer, *curr_size);
+      *curr_size = OLSR_HNA_IPV4_HDRSIZE;
+      *pair = m->v4.message.hna.hna_net;
+    }
+    net_output(ifp);
+    *remainsize = net_outbuffer_bytes_left(ifp);
+    check_buffspace(*curr_size + (2 * olsr_cnf->ipsize), *remainsize, "HNA2");
+  }
+#ifdef DEBUG
+  OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
+#endif /* DEBUG */
+
+  olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
+#ifdef __linux__
+  if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&h->net)) {
+    /* this is the default route, overwrite it with the smart gateway */
+    olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len);
+  }
+#endif /* __linux__ */
+  (*pair)->addr = h->net.prefix.v4.s_addr;
+  (*pair)->netmask = ip_addr.v4.s_addr;
+  *pair = &(*pair)[1];
+  *curr_size += (2 * olsr_cnf->ipsize);
+}
+
 /**
  *IP version 4
  *
@@ -1032,38 +1069,7 @@ serialize_hna4(struct interface_olsr *ifp)
   pair = m->v4.message.hna.hna_net;
 
   for (; h != NULL; h = h->next) {
-    union olsr_ip_addr ip_addr;
-    if ((curr_size + (2 * olsr_cnf->ipsize)) > remainsize) {
-      /* Only add HNA message if it contains data */
-      if (curr_size > OLSR_HNA_IPV4_HDRSIZE) {
-#ifdef DEBUG
-        OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
-#endif /* DEBUG */
-        m->v4.olsr_msgsize = htons(curr_size);
-        m->v4.seqno = htons(get_msg_seqno());
-        net_outbuffer_push(ifp, msg_buffer, curr_size);
-        curr_size = OLSR_HNA_IPV4_HDRSIZE;
-        pair = m->v4.message.hna.hna_net;
-      }
-      net_output(ifp);
-      remainsize = net_outbuffer_bytes_left(ifp);
-      check_buffspace(curr_size + (2 * olsr_cnf->ipsize), remainsize, "HNA2");
-    }
-#ifdef DEBUG
-    OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
-#endif /* DEBUG */
-
-    olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
-#ifdef __linux__
-    if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&h->net)) {
-      /* this is the default route, overwrite it with the smart gateway */
-      olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len);
-    }
-#endif /* __linux__ */
-    pair->addr = h->net.prefix.v4.s_addr;
-    pair->netmask = ip_addr.v4.s_addr;
-    pair++;
-    curr_size += (2 * olsr_cnf->ipsize);
+    appendHNAEntry(ifp, h, &remainsize, &curr_size, m, &pair);
   }
 
   m->v4.olsr_msgsize = htons(curr_size);
@@ -1073,6 +1079,43 @@ serialize_hna4(struct interface_olsr *ifp)
 
   //printf("Sending HNA (%d bytes)...\n", outputsize);
   return false;
+}
+
+static void appendHNA6Entry(struct interface_olsr *ifp, struct ip_prefix_list *h, uint16_t * remainsize, uint16_t * curr_size,
+    union olsr_message *m, struct hnapair6 **pair) {
+  union olsr_ip_addr ip_addr;
+
+  if ((*curr_size + (2 * olsr_cnf->ipsize)) > *remainsize) {
+    /* Only add HNA message if it contains data */
+    if (*curr_size > OLSR_HNA_IPV6_HDRSIZE) {
+#ifdef DEBUG
+      OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", *curr_size, *remainsize);
+#endif /* DEBUG */
+      m->v6.olsr_msgsize = htons(*curr_size);
+      m->v6.seqno = htons(get_msg_seqno());
+      net_outbuffer_push(ifp, msg_buffer, *curr_size);
+      *curr_size = OLSR_HNA_IPV6_HDRSIZE;
+      *pair = m->v6.message.hna.hna_net;
+    }
+    net_output(ifp);
+    *remainsize = net_outbuffer_bytes_left(ifp);
+    check_buffspace(*curr_size + (2 * olsr_cnf->ipsize), *remainsize, "HNA2");
+  }
+#ifdef DEBUG
+  OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
+#endif /* DEBUG */
+
+  olsr_prefix_to_netmask(&ip_addr, h->net.prefix_len);
+#ifdef __linux__
+  if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&h->net)) {
+    /* this is the default gateway, so overwrite it with the smart one */
+    olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len);
+  }
+#endif /* __linux__ */
+  (*pair)->addr = h->net.prefix.v6;
+  (*pair)->netmask = ip_addr.v6;
+  *pair = &(*pair)[1];
+  *curr_size += (2 * olsr_cnf->ipsize);
 }
 
 /**
@@ -1088,7 +1131,6 @@ serialize_hna6(struct interface_olsr *ifp)
   /* preserve existing data in output buffer */
   union olsr_message *m;
   struct hnapair6 *pair6;
-  union olsr_ip_addr tmp_netmask;
   struct ip_prefix_list *h = olsr_cnf->hna_entries;
 
   /* No hna nets */
@@ -1128,38 +1170,8 @@ serialize_hna6(struct interface_olsr *ifp)
 
   pair6 = m->v6.message.hna.hna_net;
 
-  while (h) {
-    if ((curr_size + (2 * olsr_cnf->ipsize)) > remainsize) {
-      /* Only add HNA message if it contains data */
-      if (curr_size > OLSR_HNA_IPV6_HDRSIZE) {
-#ifdef DEBUG
-        OLSR_PRINTF(BMSG_DBGLVL, "Sending partial(size: %d, buff left:%d)\n", curr_size, remainsize);
-#endif /* DEBUG */
-        m->v6.olsr_msgsize = htons(curr_size);
-        m->v6.seqno = htons(get_msg_seqno());
-        net_outbuffer_push(ifp, msg_buffer, curr_size);
-        curr_size = OLSR_HNA_IPV6_HDRSIZE;
-        pair6 = m->v6.message.hna.hna_net;
-      }
-      net_output(ifp);
-      remainsize = net_outbuffer_bytes_left(ifp);
-      check_buffspace(curr_size + (2 * olsr_cnf->ipsize), remainsize, "HNA2");
-    }
-#ifdef DEBUG
-    OLSR_PRINTF(BMSG_DBGLVL, "\tNet: %s\n", olsr_ip_prefix_to_string(&h->net));
-#endif /* DEBUG */
-    olsr_prefix_to_netmask(&tmp_netmask, h->net.prefix_len);
-#ifdef __linux__
-    if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&h->net)) {
-      /* this is the default gateway, so overwrite it with the smart one */
-      olsr_modifiy_inetgw_netmask(&tmp_netmask, h->net.prefix_len);
-    }
-#endif /* __linux__ */
-    pair6->addr = h->net.prefix.v6;
-    pair6->netmask = tmp_netmask.v6;
-    pair6++;
-    curr_size += (2 * olsr_cnf->ipsize);
-    h = h->next;
+  for (; h != NULL; h = h->next) {
+    appendHNA6Entry(ifp, h, &remainsize, &curr_size, m, &pair6);
   }
 
   m->v6.olsr_msgsize = htons(curr_size);
