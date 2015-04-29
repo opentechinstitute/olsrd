@@ -113,12 +113,12 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
     "    # packet forwarding on switched ethernet interfaces\n"
     "    # valid Modes are \"mesh\" and \"ether\"\n"
     "    # (default is \"%s\")\n"
-    "    \n", OLSR_IF_MODE[DEF_IF_MODE]);
+    "\n", OLSR_IF_MODE[DEF_IF_MODE]);
   if_appendf(out, comments, "    %sMode \"%s\"\n",
       cnfi->mode == DEF_IF_MODE ? "# " : "",
       OLSR_IF_MODE[cnfi->mode]);
   if (comments) abuf_puts(out,
-    "    \n"
+    "\n"
     "    # IPv4 broadcast address for outgoing OLSR packets.\n"
     "    # One useful example would be 255.255.255.255\n"
     "    # The second useful value would be to\n"
@@ -126,43 +126,43 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
     "    # another name of this parameter is \"IPv4Multicast\"\n"
     "    # (default is 0.0.0.0, which triggers the usage of the\n"
     "    # interface broadcast IP)\n"
-    "    \n");
+    "\n");
   if_appendf(out, comments, "    %sIp4Broadcast      %s\n",
       cnfi->ipv4_multicast.v4.s_addr == 0 ? "# " : "",
       inet_ntop(AF_INET, &cnfi->ipv4_multicast, ipbuf.buf, sizeof(ipbuf)));
   if (comments) abuf_appendf(out,
-    "    \n"
+    "\n"
     "    # IPv6 multicast address\n"
     "    # (default is %s, the manet-router linklocal multicast)\n"
-    "    \n", inet_ntop(AF_INET6, &ipv6_def_multicast, ipbuf.buf, sizeof(ipbuf)));
+    "\n", inet_ntop(AF_INET6, &ipv6_def_multicast, ipbuf.buf, sizeof(ipbuf)));
   if_appendf(out, comments, "    %sIPv6Multicast %s\n",
       memcmp(&cnfi->ipv6_multicast, &ipv6_def_multicast, sizeof(ipv6_def_multicast)) == 0 ? "# " : "",
       inet_ntop(AF_INET6, &cnfi->ipv6_multicast, ipbuf.buf, sizeof(ipbuf)));
   if (comments) abuf_puts(out,
-    "    \n"
+    "\n"
     "    # IPv4 src address for outgoing OLSR packages\n"
     "    # (default is 0.0.0.0, which triggers usage of the interface IP)\n"
-    "    \n");
+    "\n");
   if_appendf(out, comments, "    %sIPv4Src %s\n",
       cnfi->ipv4_src.v4.s_addr == 0 ? "# " : "",
       inet_ntop(AF_INET, &cnfi->ipv4_src, ipbuf.buf, sizeof(ipbuf)));
   if (comments) abuf_puts(out,
-    "    \n"
+    "\n"
     "    # IPv6 src prefix. OLSRd will choose one of the interface IPs\n"
     "    # which matches the prefix of this parameter.\n"
     "    # (default is 0::/0, which triggers the usage\n"
     "    # of a not-linklocal interface IP)\n"
-    "    \n");
+    "\n");
   if_appendf(out, comments, "    %sIPv6Src %s\n",
       cnfi->ipv6_src.prefix_len == 0 ? "# " : "",
       inet_ntop(AF_INET6, &cnfi->ipv6_src, ipbuf.buf, sizeof(ipbuf)));
   if (comments) abuf_appendf(out,
-    "    \n"
+    "\n"
     "    # Emission intervals in seconds.\n"
     "    # If not defined, Freifunk network defaults are used.\n"
     "    # (defaults: Hello = %.1f/%.1f,  TC  = %.1f/%.1f,\n"
     "    #            MID   = %.1f/%.1f, HNA = %.1f/%.1f)\n"
-    "    \n",
+    "\n",
     (double)HELLO_INTERVAL, (double)NEIGHB_HOLD_TIME,
     (double)TC_INTERVAL,    (double)TOP_HOLD_TIME,
     (double)MID_INTERVAL,   (double)MID_HOLD_TIME,
@@ -193,7 +193,7 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
       cnfi->hna_params.validity_time == HNA_HOLD_TIME ? "# " : "",
       (double)cnfi->hna_params.validity_time);
   if (comments) abuf_puts(out,
-    "    \n"
+    "\n"
     "    # When multiple links exist between hosts\n"
     "    # the weight of interface is used to determine\n"
     "    # the link to use. Normally the weight is\n"
@@ -209,7 +209,7 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
       !cnfi->weight.fixed ? "# " : "",
       cnfi->weight.value);
   if (comments) abuf_puts(out,
-    "    \n"
+    "\n"
     "    # If a certain route should be preferred\n"
     "    # or ignored by the mesh, the Link Quality\n"
     "    # value of a node can be multiplied with a factor\n"
@@ -221,7 +221,7 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
     "    # Note:\n"
     "    # Link quality multiplier is used only when\n"
     "    # LinkQualityLevel is greater than 0.\n"
-    "    \n");
+    "\n");
   mult = cnfi->lq_mult;
 
   if (mult == NULL) {
@@ -325,7 +325,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   }
   abuf_appendf(out,
     "\n"
-    "# Polling rate for OLSR sockets in seconds (float). \n"
+    "# Polling rate for OLSR sockets in seconds (float).\n"
     "# (default is %.2f)\n"
     "\n", (double)DEF_POLLRATE);
   abuf_appendf(out, "%sPollrate  %.2f\n",
@@ -351,9 +351,9 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_appendf(out,
     "\n"
     "# FIBMetric controls the metric value of the host-routes OLSRd sets.\n"
-    "# - \"flat\" means that the metric value is always 2(or as configured \n"
-    "#   with FIBMetricDefault). This is the preferred value because it \n"
-    "#   helps the linux kernel routing to clean up older routes\n"
+    "# - \"flat\" means that the metric value is always 2 (or as configured\n"
+    "#   with FIBMetricDefault). This is the preferred value because it helps\n"
+    "#   the linux kernel routing to clean up older routes\n"
     "# - \"correct\" use the hopcount as the metric value.\n"
     "# - \"approx\" use the hopcount as the metric value too, but does only update the\n"
     "#   hopcount if the nexthop changes too\n"
@@ -396,7 +396,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# 1 gets remapped by olsrd to 0 UNSPECIFIED (1 is reserved for ICMP redirects)\n"
     "# 2 KERNEL routes (not very wise to use)\n"
     "# 3 BOOT (should in fact not be used by routing daemons)\n"
-    "# 4 STATIC \n"
+    "# 4 STATIC\n"
     "# 8 .. 15 various routing daemons (gated, zebra, bird, & co)\n"
     "# (default is %u which gets replaced by an OS-specific default value\n"
     "# under linux 3 (BOOT) (for backward compatibility)\n"
@@ -498,9 +498,11 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     abuf_appendf(out, "%sRtTableDefaultOlsrPriority %u\n",
         cnf->rt_table_defaultolsr_pri == (DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER) ? "# " : "",
         cnf->rt_table_defaultolsr_pri);
+
     abuf_appendf(out, "%sRtTableTunnelPriority      %u\n",
         cnf->rt_table_tunnel_pri == (DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER) ? "# " : "",
         cnf->rt_table_tunnel_pri);
+
     abuf_appendf(out, "%sRtTableDefaultPriority     %u\n",
         cnf->rt_table_default_pri == (DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER + DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER) ? "# " : "",
         cnf->rt_table_default_pri);
@@ -682,7 +684,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# gateway is switched to the other gateway. The unit is percentage.\n"
     "# (default is %u)\n"
     "\n", DEF_GW_THRESH);
-  abuf_appendf(out, "%sSmartGatewayThreshold  %d\n",
+  abuf_appendf(out, "%sSmartGatewayThreshold %d\n",
       cnf->smart_gw_thresh == DEF_GW_THRESH ? "# " : "",
       cnf->smart_gw_thresh);
   abuf_appendf(out,
@@ -691,7 +693,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# See README-Olsr-Extensions for a description of smart gateways.\n"
     "# (default is %lu)\n"
     "\n", (long unsigned int)DEF_GW_WEIGHT_EXITLINK_UP);
-  abuf_appendf(out, "%sSmartGatewayWeightExitLinkUp  %d\n",
+  abuf_appendf(out, "%sSmartGatewayWeightExitLinkUp %d\n",
       cnf->smart_gw_weight_exitlink_up == DEF_GW_WEIGHT_EXITLINK_UP ? "# " : "",
       cnf->smart_gw_weight_exitlink_up);
   abuf_appendf(out,
@@ -700,7 +702,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# See README-Olsr-Extensions for a description of smart gateways.\n"
     "# (default is %lu)\n"
     "\n", (long unsigned int)DEF_GW_WEIGHT_EXITLINK_DOWN);
-  abuf_appendf(out, "%sSmartGatewayWeightExitLinkDown  %d\n",
+  abuf_appendf(out, "%sSmartGatewayWeightExitLinkDown %d\n",
       cnf->smart_gw_weight_exitlink_down == DEF_GW_WEIGHT_EXITLINK_DOWN ? "# " : "",
       cnf->smart_gw_weight_exitlink_down);
   abuf_appendf(out,
@@ -709,7 +711,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# See README-Olsr-Extensions for a description of smart gateways.\n"
     "# (default is %u)\n"
     "\n", DEF_GW_WEIGHT_ETX);
-  abuf_appendf(out, "%sSmartGatewayWeightEtx  %d\n",
+  abuf_appendf(out, "%sSmartGatewayWeightEtx %d\n",
       cnf->smart_gw_weight_etx == DEF_GW_WEIGHT_ETX ? "# " : "",
       cnf->smart_gw_weight_etx);
   abuf_appendf(out,
@@ -718,7 +720,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# See README-Olsr-Extensions for a description of smart gateways.\n"
     "# (default is %u)\n"
     "\n", DEF_GW_DIVIDER_ETX);
-  abuf_appendf(out, "%sSmartGatewayDividerEtx  %d\n",
+  abuf_appendf(out, "%sSmartGatewayDividerEtx %d\n",
       cnf->smart_gw_divider_etx == DEF_GW_DIVIDER_ETX ? "# " : "",
       cnf->smart_gw_divider_etx);
   abuf_appendf(out,
@@ -753,7 +755,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "\n"
     "# Specifies the EXTERNAL ipv6 prefix of the uplink. A prefix\n"
     "# length of more than 64 is not allowed.\n"
-    "# (default is 0::/0\n"
+    "# (default is 0::/0)\n"
     "\n");
   abuf_appendf(out, "%sSmartGatewayPrefix %s\n",
       cnf->smart_gw_prefix.prefix_len == 0 ? "# " : "",
@@ -765,7 +767,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "##############################\n"
     "\n"
     "# For testing purposes it may be nice to use another port for olsrd\n"
-    "# for using another port than the IANA assigned one \n"
+    "# for using another port than the IANA assigned one\n"
     "# for a production network, there should be a good reason!!\n"
     "# valid values are integers greater than 1, please be careful with\n"
     "# using reserved port numbers\n"
@@ -834,7 +836,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_appendf(out, "%sHystThrHigh  %.2f\n",
       cnf->hysteresis_param.thr_high == (float)HYST_THRESHOLD_HIGH ? "# " : "",
       (double)cnf->hysteresis_param.thr_high);
-  abuf_appendf(out, "%sHystThrLow  %.2f\n",
+  abuf_appendf(out, "%sHystThrLow   %.2f\n",
       cnf->hysteresis_param.thr_low == (float)HYST_THRESHOLD_LOW ? "# " : "",
       (double)cnf->hysteresis_param.thr_low);
   abuf_appendf(out,
@@ -866,7 +868,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "### OLSR protocol extensions ###\n"
     "################################\n"
     "\n"
-    "# Link quality level switch between hopcount and \n"
+    "# Link quality level switch between hopcount and\n"
     "# cost-based (mostly ETX) routing. Because of\n"
     "# a design problem in the 0.5.x dijkstra algorithm this\n"
     "# value should not be set to 1.\n"
@@ -914,11 +916,11 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   abuf_appendf(out,
     "\n"
     "#\n"
-    "# NatThreshold \n"
+    "# NatThreshold\n"
     "#\n"
     "# (currently this is only in the freifunk firmware)\n"
     "# If the NAT-Endpoint (the preferred 0/0 HNA emitting node)\n"
-    "# is to be changed, the ETX value of the current 0/0 is \n"
+    "# is to be changed, the ETX value of the current 0/0 is\n"
     "# multiplied with the NatThreshold value before being\n"
     "# compared to the new one.\n"
     "# The parameter can be a value between 0.1 and 1.0, but\n"
@@ -939,18 +941,18 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "\n"
     "IpcConnect\n"
     "{\n"
-    "    # Determines how many simultaneously\n"
-    "    # IPC connections that will be allowed\n"
-    "    # Setting this to 0 disables IPC\n"
+    "     # Determines how many simultaneously\n"
+    "     # IPC connections that will be allowed\n"
+    "     # Setting this to 0 disables IPC\n"
     "\n");
-  abuf_appendf(out, "  %sMaxConnections  %d\n",
+  abuf_appendf(out, "     %sMaxConnections  %d\n",
       cnf->ipc_connections == DEF_IPC_CONNECTIONS ? "# " : "",
       cnf->ipc_connections);
   abuf_puts(out,
     "\n"
-    "    # By default only 127.0.0.1 is allowed\n"
-    "    # to connect. Here allowed hosts and networks can\n"
-    "    # be added\n"
+    "     # By default only 127.0.0.1 is allowed\n"
+    "     # to connect. Here allowed hosts and networks can\n"
+    "     # be added\n"
     "\n");
 
   while (ipc_nets) {
@@ -970,7 +972,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# Olsrd plugins to load\n"
     "# This must be the absolute path to the file\n"
     "# or the loader will use the following scheme:\n"
-    "# - Try the paths in the LD_LIBRARY_PATH \n"
+    "# - Try the paths in the LD_LIBRARY_PATH\n"
     "#   environment variable.\n"
     "# - The list of libraries cached in /etc/ld.so.cache\n"
     "# - /lib, followed by /usr/lib\n"
@@ -980,7 +982,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     abuf_appendf(out, "LoadPlugin \"%s\" {\n", plugins->name);
     pl_param = plugins->params;
     while (pl_param) {
-      abuf_appendf(out, "    PlParam \"%s\"\t\"%s\"\n", pl_param->key, pl_param->value);
+      abuf_appendf(out, "    PlParam \"%s\" \"%s\"\n", pl_param->key, pl_param->value);
       pl_param = pl_param->next;
     }
     abuf_puts(out, "}\n"
