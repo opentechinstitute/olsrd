@@ -103,7 +103,7 @@ if_appendf(struct autobuf *autobuf, bool comments, const char *fmt, ...)
   return rv;
 }
 
-static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options *cnfi, bool comments) {
+static void olsrd_write_if_autobuf(struct autobuf *out, struct olsrd_config *cnf, struct if_config_options *cnfi, bool comments) {
   struct ipaddr_str ipbuf;
   struct olsr_lq_mult *mult;
 
@@ -153,9 +153,14 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
     "    # (default is 0::/0, which triggers the usage\n"
     "    # of a not-linklocal interface IP)\n"
     "\n");
-  if_appendf(out, comments, "    %sIPv6Src %s\n",
+  {
+    int saved = cnf->ip_version;
+    cnf->ip_version = AF_INET6;
+    if_appendf(out, comments, "    %sIPv6Src %s\n",
       cnfi->ipv6_src.prefix_len == 0 ? "# " : "",
-      inet_ntop(AF_INET6, &cnfi->ipv6_src, ipbuf.buf, sizeof(ipbuf)));
+          olsr_ip_prefix_to_string(&cnfi->ipv6_src));
+    cnf->ip_version = saved;
+  }
   if (comments) abuf_appendf(out,
     "\n"
     "    # Emission intervals in seconds.\n"
@@ -1005,7 +1010,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# interfaces.\n"
     "\n"
     "InterfaceDefaults\n");
-  olsrd_write_if_autobuf(out, cnf->interface_defaults, false);
+  olsrd_write_if_autobuf(out, cnf, cnf->interface_defaults, false);
   abuf_puts(out,
     "\n"
     "######################################\n"
@@ -1017,7 +1022,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   first = true;
   while (interf) {
     abuf_appendf(out, "Interface \"%s\"\n", interf->name);
-    olsrd_write_if_autobuf(out, interf->cnf, first);
+    olsrd_write_if_autobuf(out, cnf, interf->cnf, first);
 
     first = false;
     interf = interf->next;
