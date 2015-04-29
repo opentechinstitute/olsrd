@@ -225,7 +225,13 @@ static void olsrd_write_if_autobuf(struct autobuf *out, struct if_config_options
   mult = cnfi->lq_mult;
 
   if (mult == NULL) {
-    if (comments) abuf_puts(out, "    # LinkQualityMult 192.168.0.1 0.5\n");
+    if (comments) {
+      abuf_puts(out, "    # example 1: reduce LQ to 192.168.0.1 by half\n");
+      abuf_puts(out, "    # LinkQualityMult 192.168.0.1 0.5\n");
+      abuf_puts(out, "\n");
+      abuf_puts(out, "    # example 2: reduce LQ to all nodes on this interface by 20%\n");
+      abuf_puts(out, "    # LinkQualityMult default 0.8\n");
+    }
   } else {
     while (mult != NULL) {
       if_appendf(out, comments, "    LinkQualityMult    %s %0.2f\n",
