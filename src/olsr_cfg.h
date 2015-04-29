@@ -271,6 +271,7 @@ struct plugin_entry {
  */
 
 struct olsrd_config {
+  char * configuration_file;
   uint16_t olsrport;
   int debug_level;
   bool no_fork;
@@ -418,7 +419,7 @@ extern "C" {
 
   struct if_config_options *get_default_if_config(void);
 
-  struct olsrd_config *olsrd_get_default_cnf(void);
+  struct olsrd_config *olsrd_get_default_cnf(char * configuration_file);
 
 #if defined _WIN32
   void win32_stdio_hack(unsigned int);

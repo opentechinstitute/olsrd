@@ -108,12 +108,12 @@ struct olsrd_config *olsr_cnf;         /* The global configuration */
 int
 main(int argc, char *argv[])
 {
-  if (argc == 1) {
-    fprintf(stderr, "Usage: olsrd_cfgparser [filename] -print\n\n");
+  if (argc < 2) {
+    fprintf(stderr, "Usage: olsrd_cfgparser filename [-print]\n\n");
     exit(EXIT_FAILURE);
   }
 
-  olsr_cnf = olsrd_get_default_cnf();
+  olsr_cnf = olsrd_get_default_cnf(strdup(argv[1]));
 
   if (olsrd_parse_cnf(argv[1]) == 0) {
     if ((argc > 2) && (!strcmp(argv[2], "-print"))) {
@@ -900,27 +900,31 @@ olsrd_free_cnf(struct olsrd_config *cnf)
     free(ped);
   }
 
+  free(cnf->configuration_file);
+  free(cnf->lock_file);
+
   return;
 }
 
 struct olsrd_config *
-olsrd_get_default_cnf(void)
+olsrd_get_default_cnf(char * configuration_file)
 {
-  struct olsrd_config *c = malloc(sizeof(struct olsrd_config));
+    struct olsrd_config *c = malloc(sizeof(struct olsrd_config));
   if (c == NULL) {
     fprintf(stderr, "Out of memory %s\n", __func__);
     return NULL;
   }
 
-  set_default_cnf(c);
+  set_default_cnf(c, configuration_file);
   return c;
 }
 
 void
-set_default_cnf(struct olsrd_config *cnf)
+set_default_cnf(struct olsrd_config *cnf, char * configuration_file)
 {
   memset(cnf, 0, sizeof(*cnf));
 
+  cnf->configuration_file = configuration_file;
   cnf->debug_level = DEF_DEBUGLVL;
   cnf->no_fork = false;
   cnf->pidfile = NULL;
@@ -969,6 +973,7 @@ set_default_cnf(struct olsrd_config *cnf)
   cnf->exit_value = EXIT_SUCCESS;
   cnf->max_tc_vtime = 0.0;
   cnf->ioctl_s = 0;
+  cnf->lock_file = olsrd_get_default_lockfile(cnf);
   cnf->use_niit = DEF_USE_NIIT;
   cnf->niit4to6_if_index = 0;
   cnf->niit6to4_if_index = 0;
@@ -1326,6 +1331,23 @@ ip_prefix_list_find(struct ip_prefix_list *list, const union olsr_ip_addr *net, 
     }
   }
   return NULL;
+}
+
+/**
+ * @param cnf the olsrd configuration
+ * @param ip_version the ip version
+ * @return a malloc-ed string for the default lock file name
+ */
+char * olsrd_get_default_lockfile(struct olsrd_config *cnf) {
+  char buf[FILENAME_MAX];
+  int ipv = (cnf->ip_version == AF_INET) ? 4 : 6;
+#ifdef _WIN32
+  snprintf(buf, sizeof(buf), "%s-ipv%d.lock", cnf->configuration_file ? cnf->configuration_file : "olsrd" , ipv);
+#else
+  snprintf(buf, sizeof(buf), "/var/run/olsrd-ipv%d.lock", ipv);
+#endif
+
+  return strdup(buf);
 }
 
 /*

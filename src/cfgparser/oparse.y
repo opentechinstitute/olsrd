@@ -1292,6 +1292,7 @@ amin_tc_vtime: TOK_MIN_TC_VTIME TOK_FLOAT
 alock_file: TOK_LOCK_FILE TOK_STRING
 {
   PARSER_DEBUG_PRINTF("Lock file %s\n", $2->string);
+  if (olsr_cnf->lock_file) free(olsr_cnf->lock_file);
   olsr_cnf->lock_file = $2->string;
   free($2);
 }

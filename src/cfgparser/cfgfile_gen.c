@@ -314,11 +314,15 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# The lockfile is used to prevent multiple OLSR instances running at the same\n"
     "# time.\n"
     "# (Linux/BSD default is \"/var/run/olsrd-ipv(4/6).lock\")\n"
-    "# (Win32     default is \"configfile-ipv(4/6).lock\")\n"
+    "# (Win32     default is \"[configfile]-ipv(4/6).lock\")\n"
     "\n");
-  abuf_appendf(out, "%sLockFile \"%s\"\n",
-      cnf->lock_file == NULL ? "# " : "",
-      cnf->lock_file ? cnf->lock_file : "lockfile");
+  {
+    char * lockfile_default = olsrd_get_default_lockfile(cnf);
+    abuf_appendf(out, "%sLockFile \"%s\"\n",
+        !strcmp(cnf->lock_file, lockfile_default) ? "# " : "",
+        cnf->lock_file);
+    free(lockfile_default);
+  }
   abuf_appendf(out,
     "\n"
     "# Polling rate for OLSR sockets in seconds (float). \n"

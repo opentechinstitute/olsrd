@@ -377,7 +377,7 @@ int main(int argc, char *argv[]) {
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
 #endif /* _WIN32 */
 
-  olsr_cnf = olsrd_get_default_cnf();
+  olsr_cnf = olsrd_get_default_cnf(strdup(conf_file_name));
   for (i=1; i < argc-1;) {
     if (strcmp(argv[i], "-f") == 0) {
       loadedConfig = true;
@@ -385,6 +385,7 @@ int main(int argc, char *argv[]) {
       if (olsrmain_load_config(argv[i+1]) < 0) {
         exit(EXIT_FAILURE);
       }
+      strscpy(conf_file_name, argv[i+1], sizeof(conf_file_name));
 
       if (i+2 < argc) {
         memmove(&argv[i], &argv[i+2], sizeof(*argv) * (argc-i-1));
@@ -405,7 +406,7 @@ int main(int argc, char *argv[]) {
 
   if (!loadedConfig) {
     olsrd_free_cnf(olsr_cnf);
-    olsr_cnf = olsrd_get_default_cnf();
+    olsr_cnf = olsrd_get_default_cnf(strdup(conf_file_name));
   }
 
   default_ifcnf = get_default_if_config();
