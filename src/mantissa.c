@@ -175,6 +175,16 @@ me_to_reltime(const uint8_t me)
   return ((16 + a) * 1000) >> (8 - b);
 }
 
+static olsr_reltime minimum_interval = UINT32_MAX;
+
+olsr_reltime reltime_minimum_interval(void) {
+  if (minimum_interval == UINT32_MAX) {
+    minimum_interval = me_to_reltime(reltime_to_me(0));
+  }
+
+  return minimum_interval;
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 2
