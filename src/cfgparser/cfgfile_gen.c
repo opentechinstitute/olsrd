@@ -469,25 +469,55 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     DEF_SGW_RT_TABLE_NR, DEF_SGW_RT_TABLE_DEFAULT_NR, DEF_SGW_RT_TABLE_TUNNEL_NR,
     DEF_RT_TABLE_NR, DEF_RT_TABLE_DEFAULT_NR, DEF_RT_TABLE_TUNNEL_NR);
   if (!cnf->smart_gw_active) {
-    abuf_appendf(out, "%sRtTable        %u\n",
-        cnf->rt_table == DEF_RT_TABLE_NR ? "# " : "",
-        cnf->rt_table);
-    abuf_appendf(out, "%sRtTableDefault %u\n",
-        cnf->rt_table_default == DEF_RT_TABLE_DEFAULT_NR ? "# " : "",
-        cnf->rt_table_default);
-    abuf_appendf(out, "%sRtTableTunnel  %u\n",
-        cnf->rt_table_tunnel == DEF_RT_TABLE_TUNNEL_NR ? "# " : "",
-        cnf->rt_table_tunnel);
+    if (cnf->rt_table == DEF_RT_TABLE_NR)
+      abuf_appendf(out, "%sRtTable        %s\n",
+          "# ",
+          "auto");
+    else
+      abuf_appendf(out, "%sRtTable        %u\n",
+          "",
+          cnf->rt_table);
+    if (cnf->rt_table_default == DEF_RT_TABLE_DEFAULT_NR)
+      abuf_appendf(out, "%sRtTableDefault %s\n",
+          "# ",
+          "auto");
+    else
+      abuf_appendf(out, "%sRtTableDefault %u\n",
+          "",
+          cnf->rt_table_default);
+    if (cnf->rt_table_tunnel == DEF_RT_TABLE_TUNNEL_NR)
+      abuf_appendf(out, "%sRtTableTunnel  %s\n",
+          "# ",
+          "auto");
+    else
+      abuf_appendf(out, "%sRtTableTunnel  %u\n",
+          "",
+          cnf->rt_table_tunnel);
   } else {
-    abuf_appendf(out, "%sRtTable        %u\n",
-        cnf->rt_table == DEF_SGW_RT_TABLE_NR ? "# " : "",
-        cnf->rt_table);
-    abuf_appendf(out, "%sRtTableDefault %u\n",
-        cnf->rt_table_default == DEF_SGW_RT_TABLE_DEFAULT_NR ? "# " : "",
-        cnf->rt_table_default);
-    abuf_appendf(out, "%sRtTableTunnel  %u\n",
-        cnf->rt_table_tunnel == DEF_SGW_RT_TABLE_TUNNEL_NR ? "# " : "",
-        cnf->rt_table_tunnel);
+    if (cnf->rt_table == DEF_SGW_RT_TABLE_NR)
+      abuf_appendf(out, "%sRtTable        %s\n",
+          "# ",
+          "auto");
+    else
+      abuf_appendf(out, "%sRtTable        %u\n",
+          "",
+          cnf->rt_table);
+    if (cnf->rt_table_default == DEF_SGW_RT_TABLE_DEFAULT_NR)
+      abuf_appendf(out, "%sRtTableDefault %s\n",
+          "# ",
+          "auto");
+    else
+      abuf_appendf(out, "%sRtTableDefault %u\n",
+          "",
+          cnf->rt_table_default);
+    if (cnf->rt_table_tunnel == DEF_SGW_RT_TABLE_TUNNEL_NR)
+      abuf_appendf(out, "%sRtTableTunnel  %s\n",
+          "# ",
+          "auto");
+    else
+      abuf_appendf(out, "%sRtTableTunnel  %u\n",
+          "",
+          cnf->rt_table_tunnel);
   }
   abuf_appendf(out,
     "\n"
