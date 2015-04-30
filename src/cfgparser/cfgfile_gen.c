@@ -109,6 +109,35 @@ if_appendf(struct autobuf *autobuf, bool comments, const char *fmt, ...)
   return rv;
 }
 
+static void olsrd_write_hna_autobuf(int ip_version, struct ip_prefix_list *hna, struct autobuf *out, struct olsrd_config *cnf) {
+  struct ip_prefix_list *hna1 = (cnf->ip_version == ip_version) ? hna : NULL;
+
+  abuf_appendf(out, "Hna%u\n"
+    "{\n",
+    ip_version == AF_INET ? 4 : 6);
+
+  if (!hna1) {
+    if (ip_version == AF_INET)
+      abuf_puts(out,
+          "# Internet gateway\n"
+          "# 0.0.0.0   0.0.0.0\n"
+          "# specific small networks reachable through this node\n"
+          "# 15.15.0.0 255.255.255.0\n");
+    else
+      abuf_puts(out,
+          "# Internet gateway\n"
+          "#   0::                     0\n"
+          "# specific small networks reachable through this node\n"
+          "#   fec0:2200:106:0:0:0:0:0 48\n");
+  } else
+    while (hna1) {
+      struct ipaddr_str strbuf;
+      abuf_appendf(out, "    %s\n", olsr_ip_prefix_to_string(&hna1->net));
+      hna1 = hna1->next;
+    }
+  abuf_appendf(out, "}\n");
+}
+
 static void olsrd_write_if_autobuf(struct autobuf *out, struct olsrd_config *cnf, struct if_config_options *cnfi, bool comments) {
   struct ipaddr_str ipbuf;
   struct olsr_lq_mult *mult;
@@ -825,16 +854,9 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# Syntax for HNA4 is \"network-address    network-mask\"\n"
     "# Syntax for HNA6 is \"network-address    prefix-length\"\n"
     "# (default is no HNA)\n");
-  abuf_appendf(out, "Hna%u\n"
-    "{\n",
-    cnf->ip_version == AF_INET ? 4 : 6);
-  while (hna) {
-    struct ipaddr_str strbuf;
-    abuf_appendf(out, "    %s\n", olsr_ip_prefix_to_string(&hna->net));
-    hna = hna->next;
-  }
+  olsrd_write_hna_autobuf(AF_INET, hna, out, cnf);
+  olsrd_write_hna_autobuf(AF_INET6, hna, out, cnf);
   abuf_appendf(out,
-    "}\n"
     "\n"
     "# Hysteresis for link sensing (only for hopcount metric)\n"
     "# Hysteresis adds more robustness to the link sensing\n"
