@@ -559,15 +559,18 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
         cnf->rt_table_default_pri == (DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER + DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER) ? "# " : "",
         cnf->rt_table_default_pri);
   }
-  abuf_appendf(out,
-    "\n"
-    "# Activates (in IPv6 mode) the automatic use of NIIT\n"
-    "# (see README-Olsr-Extensions)\n"
-    "# (default is \"%s\")\n"
-    "\n", DEF_USE_NIIT ? "yes" : "no");
-  abuf_appendf(out, "%sUseNiit %s\n",
-      cnf->use_niit == DEF_USE_NIIT ? "# " : "",
-      cnf->use_niit ? "yes" : "no");
+  {
+    bool expected = cnf->ip_version == AF_INET ? false : DEF_USE_NIIT;
+    abuf_appendf(out,
+      "\n"
+      "# Activates (in IPv6 mode) the automatic use of NIIT\n"
+      "# (see README-Olsr-Extensions)\n"
+      "# (default is \"%s\" in IPv4 mode, \"%s\" in IPv6 mode)\n"
+      "\n", expected ? "yes" : "no", DEF_USE_NIIT ? "yes" : "no");
+    abuf_appendf(out, "%sUseNiit %s\n",
+        cnf->use_niit == expected ? "# " : "",
+        cnf->use_niit ? "yes" : "no");
+  }
   abuf_appendf(out,
     "\n"
     "# Activates the smartgateway ipip tunnel feature.\n"
