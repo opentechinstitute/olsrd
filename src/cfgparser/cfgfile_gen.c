@@ -977,15 +977,20 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "     # to connect. Here allowed hosts and networks can\n"
     "     # be added\n"
     "\n");
-
-  while (ipc_nets) {
-    if (ipc_nets->net.prefix_len == olsr_cnf->maxplen) {
-      abuf_appendf(out, "    Host %s\n", olsr_ip_to_string(&ipbuf, &ipc_nets->net.prefix));
-    } else {
-      abuf_appendf(out, "    Net  %s\n", olsr_ip_prefix_to_string(&ipc_nets->net));
+  if (!ipc_nets)
+    abuf_puts(out,
+      "     # Host            127.0.0.1\n"
+      "     # Host            10.0.0.5\n"
+      "     # Net             192.168.1.0 255.255.255.0\n");
+  else
+    while (ipc_nets) {
+      if (ipc_nets->net.prefix_len == olsr_cnf->maxplen) {
+        abuf_appendf(out, "    Host %s\n", olsr_ip_to_string(&ipbuf, &ipc_nets->net.prefix));
+      } else {
+        abuf_appendf(out, "    Net  %s\n", olsr_ip_prefix_to_string(&ipc_nets->net));
+      }
+      ipc_nets = ipc_nets->next;
     }
-    ipc_nets = ipc_nets->next;
-  }
   abuf_puts(out,
     "}\n"
     "\n"
