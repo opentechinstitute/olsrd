@@ -631,10 +631,13 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
       !cnf->smart_gw_egress_interfaces ? "# " : "");
   {
     struct sgw_egress_if * sgwegressif = olsr_cnf->smart_gw_egress_interfaces;
-    while (sgwegressif) {
-      abuf_appendf(out, " \"%s\"", sgwegressif->name);
-      sgwegressif = sgwegressif->next;
-    }
+    if (!sgwegressif)
+      abuf_puts(out, " \"\"");
+    else
+      while (sgwegressif) {
+        abuf_appendf(out, " \"%s\"", sgwegressif->name);
+        sgwegressif = sgwegressif->next;
+      }
     abuf_puts(out, "\n");
   }
   abuf_appendf(out,
