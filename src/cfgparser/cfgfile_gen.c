@@ -665,8 +665,8 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
   }
   abuf_appendf(out,
     "\n"
-    "# SmartGatewayEgressFilePeriod determines the period (in milliseconds) on which\n"
-    "# the SmartGatewayEgressFile is checked for changes and processed if changed.\n"
+    "# Determines the period (in milliseconds) on which the SmartGatewayEgressFile\n"
+    "# is checked for changes and processed if changed.\n"
     "# (default is %u)\n"
     "\n", DEF_GW_EGRESS_FILE_PERIOD);
   abuf_appendf(out, "%sSmartGatewayEgressFilePeriod %u\n",
