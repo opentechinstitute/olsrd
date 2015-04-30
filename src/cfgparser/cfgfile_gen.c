@@ -999,6 +999,10 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "#   environment variable.\n"
     "# - The list of libraries cached in /etc/ld.so.cache\n"
     "# - /lib, followed by /usr/lib\n"
+    "#\n"
+    "\n"
+    "# Check whether a plugin is available for your operating system.\n"
+    "# Each plugin should have a README file in it's lib subfolder.\n"
     "\n");
 
   while (plugins) {
@@ -1028,8 +1032,10 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "######################################\n"
     "### OLSRd Interfaces configuration ###\n"
     "######################################\n"
-    "# multiple interfaces can be specified for a single configuration block\n"
-    "# multiple configuration blocks can be specified\n"
+    "# Multiple interfaces can be specified for a single configuration block, format:\n"
+    "#   Interface \"<OLSRd-Interface1>\" \"<OLSRd-Interface2>\"\n"
+    "#\n"
+    "# Multiple configuration blocks can be specified.\n"
     "\n");
   first = true;
   while (interf) {
