@@ -834,8 +834,14 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# change during the uptime of olsrd.\n"
     "# (default is 0.0.0.0, which triggers usage of the IP of the first interface)\n"
     "\n");
-  abuf_appendf(out, "MainIp %s\n",
-      olsr_ip_to_string(&ipbuf, &cnf->main_addr));
+  {
+    union olsr_ip_addr main_addr;
+    memset(&main_addr, 0, sizeof(main_addr));
+
+    abuf_appendf(out, "%sMainIp %s\n",
+        !memcmp(&main_addr, &cnf->main_addr, (cnf->ip_version == AF_INET) ? sizeof(main_addr.v4) : sizeof(main_addr.v6)) ? "# " : "",
+        olsr_ip_to_string(&ipbuf, &cnf->main_addr));
+  }
   abuf_appendf(out,
     "\n"
     "# The fixed willingness to use (0-7)\n"
