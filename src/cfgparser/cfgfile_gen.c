@@ -807,11 +807,17 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "\n"
     "# Specifies the EXTERNAL ipv6 prefix of the uplink. A prefix\n"
     "# length of more than 64 is not allowed.\n"
+    "# Only relevant when running in IPv6 mode.\n"
     "# (default is 0::/0)\n"
     "\n");
-  abuf_appendf(out, "%sSmartGatewayPrefix %s\n",
-      cnf->smart_gw_prefix.prefix_len == 0 ? "# " : "",
-      olsr_ip_prefix_to_string(&cnf->smart_gw_prefix));
+  {
+    int saved = cnf->ip_version;
+    cnf->ip_version = AF_INET6;
+    abuf_appendf(out, "%sSmartGatewayPrefix %s\n",
+        cnf->smart_gw_prefix.prefix_len == 0 ? "# " : "",
+        olsr_ip_prefix_to_string(&cnf->smart_gw_prefix));
+    cnf->ip_version = saved;
+  }
   abuf_appendf(out,
     "\n"
     "##############################\n"
