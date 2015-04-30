@@ -660,7 +660,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "\n", DEF_GW_EGRESS_FILE);
   {
     bool def = !cnf->smart_gw_egress_file || !strcmp(cnf->smart_gw_egress_file, DEF_GW_EGRESS_FILE);
-    abuf_appendf(out, "%sSmartGatewayEgressFile %s\n",
+    abuf_appendf(out, "%sSmartGatewayEgressFile \"%s\"\n",
       def ? "# " : "", def ? DEF_GW_EGRESS_FILE : cnf->smart_gw_egress_file);
   }
   abuf_appendf(out,
