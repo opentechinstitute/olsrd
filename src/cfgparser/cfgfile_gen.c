@@ -53,6 +53,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#ifdef __linux__
+#include <linux/rtnetlink.h>
+#else
+#define RTPROT_BOOT 3
+#endif
+
 int olsrd_write_cnf(struct olsrd_config *cnf, const char *fname) {
   FILE *fd;
   struct autobuf abuf;
@@ -409,12 +415,18 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# 3 BOOT (should in fact not be used by routing daemons)\n"
     "# 4 STATIC\n"
     "# 8 .. 15 various routing daemons (gated, zebra, bird, & co)\n"
-    "# (default is %u which gets replaced by an OS-specific default value\n"
-    "# under linux 3 (BOOT) (for backward compatibility)\n"
-    "\n", DEF_RTPROTO);
-  abuf_appendf(out, "%sRtProto %u\n",
-      cnf->rt_proto == DEF_RTPROTO ? "# " : "",
-      cnf->rt_proto);
+    "# (default is %u which gets replaced by an OS-specific default value;\n"
+    "# %u (BOOT) under linux (for backward compatibility)\n"
+    "\n", DEF_RTPROTO, RTPROT_BOOT);
+  {
+    int expected = DEF_RTPROTO;
+#ifdef __linux__
+    expected = RTPROT_BOOT;
+#endif
+    abuf_appendf(out, "%sRtProto %u\n",
+        cnf->rt_proto == expected ? "# " : "",
+        cnf->rt_proto == expected ? DEF_RTPROTO : cnf->rt_proto);
+  }
   abuf_appendf(out,
     "\n"
     "# Specifies the routing Table olsr uses\n"
