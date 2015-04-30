@@ -619,7 +619,7 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "\n");
   abuf_appendf(out, "%sSmartGatewayPolicyRoutingScript %s\n",
       !cnf->smart_gw_policyrouting_script ? "# " : "",
-      !cnf->smart_gw_policyrouting_script ? "" : cnf->smart_gw_policyrouting_script);
+      !cnf->smart_gw_policyrouting_script ? "\"\"" : cnf->smart_gw_policyrouting_script);
   abuf_puts(out,
     "\n"
     "# Determines the egress interfaces that are part of the multi-gateway setup and\n"
