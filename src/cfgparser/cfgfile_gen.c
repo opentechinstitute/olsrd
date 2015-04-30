@@ -528,55 +528,96 @@ void olsrd_write_cnf_autobuf(struct autobuf *out, struct olsrd_config *cnf) {
     "# RtTablePriority less than RtTableDefaultOlsrPriority\n"
     "# less than RtTableTunnelPriority less than RtTableDefaultPriority\n"
     "# There are two special parameters, \"auto\" (choose fitting to SmartGW\n"
-    "# mode) and \"none\" (do not set policy rule)\n"
-    "# (with    smartgw: default is %d/%u/%u/%u)\n"
-    "# (without smartgw: default is %d/%d   /%d   /%d   )\n"
-    "\n",
-    DEF_SGW_RT_TABLE_PRI,
+    "# mode) and \"none\" (do not set policy rule)\n");
+
+  abuf_puts(out, "# (with    smartgw: default is ");
+  if (cnf->rt_table_pri > 0)
+    abuf_appendf(out,
+      "%5d/",
+      DEF_SGW_RT_TABLE_PRI);
+  else
+    abuf_appendf(out,
+      "%5s/",
+      "none");
+  abuf_appendf(out,
+    "%-5u/%-5u/%-5u)\n",
     DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER,
     DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER,
-    DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER + DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER,
-    DEF_RT_TABLE_PRI,
-    DEF_RT_TABLE_DEFAULTOLSR_PRI,
-    DEF_RT_TABLE_TUNNEL_PRI,
-    DEF_RT_TABLE_DEFAULT_PRI);
+    DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER + DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER + DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER);
+
+  abuf_puts(out, "# (without smartgw: default is ");
+  if (cnf->rt_table_pri == DEF_RT_AUTO || cnf->rt_table_pri == DEF_RT_TABLE_PRI)
+    abuf_appendf(out,
+      "%5s/",
+      "auto");
+  else
+    abuf_appendf(out,
+      "%5d/",
+      DEF_RT_TABLE_PRI);
+  if (cnf->rt_table_defaultolsr_pri == DEF_RT_AUTO || cnf->rt_table_defaultolsr_pri == DEF_RT_TABLE_DEFAULTOLSR_PRI)
+    abuf_appendf(out,
+      "%-5s/",
+      "auto");
+  else
+    abuf_appendf(out,
+      "%-5d/",
+      DEF_RT_TABLE_DEFAULTOLSR_PRI);
+  if (cnf->rt_table_tunnel_pri == DEF_RT_AUTO || cnf->rt_table_tunnel_pri == DEF_RT_TABLE_TUNNEL_PRI)
+    abuf_appendf(out,
+      "%-5s/",
+      "auto");
+  else
+    abuf_appendf(out,
+      "%-5d/",
+      DEF_RT_TABLE_TUNNEL_PRI);
+  if (cnf->rt_table_default_pri == DEF_RT_AUTO || cnf->rt_table_default_pri == DEF_RT_TABLE_DEFAULT_PRI)
+    abuf_appendf(out,
+      "%-5s",
+      "auto");
+  else
+    abuf_appendf(out,
+      "%-5d",
+      DEF_RT_TABLE_DEFAULT_PRI);
+  abuf_puts(out, ")\n");
+
+  abuf_puts(out, "\n");
+
   if (!cnf->smart_gw_active) {
-    if (cnf->rt_table_pri == DEF_RT_TABLE_PRI) {
-      abuf_appendf(out, "# RtTablePriority            %d\n",
+    if (cnf->rt_table_pri == DEF_RT_AUTO || cnf->rt_table_pri == DEF_RT_TABLE_PRI)
+      abuf_appendf(out, "# RtTablePriority            %s\n",
+          "auto");
+    else
+      abuf_appendf(out, "RtTablePriority              %u\n",
           cnf->rt_table_pri);
-    } else {
-      abuf_appendf(out, "RtTablePriority            %u\n",
-          cnf->rt_table_pri);
-    }
-    if (cnf->rt_table_defaultolsr_pri == DEF_RT_TABLE_DEFAULTOLSR_PRI) {
-      abuf_appendf(out, "# RtTableDefaultOlsrPriority %d\n",
+
+    if (cnf->rt_table_defaultolsr_pri == DEF_RT_AUTO || cnf->rt_table_defaultolsr_pri == DEF_RT_TABLE_DEFAULTOLSR_PRI)
+      abuf_appendf(out, "# RtTableDefaultOlsrPriority %s\n",
+          "auto");
+    else
+      abuf_appendf(out, "RtTableDefaultOlsrPriority   %u\n",
           cnf->rt_table_defaultolsr_pri);
-    } else {
-      abuf_appendf(out, "RtTableDefaultOlsrPriority %u\n",
-          cnf->rt_table_defaultolsr_pri);
-    }
-    if (cnf->rt_table_tunnel_pri == DEF_RT_TABLE_TUNNEL_PRI) {
-      abuf_appendf(out, "# RtTableTunnelPriority      %d\n",
+
+    if (cnf->rt_table_tunnel_pri == DEF_RT_AUTO || cnf->rt_table_tunnel_pri == DEF_RT_TABLE_TUNNEL_PRI)
+      abuf_appendf(out, "# RtTableTunnelPriority      %s\n",
+          "auto");
+    else
+      abuf_appendf(out, "RtTableTunnelPriority        %u\n",
           cnf->rt_table_tunnel_pri);
-    } else {
-      abuf_appendf(out, "RtTableTunnelPriority      %u\n",
-          cnf->rt_table_tunnel_pri);
-    }
-    if (cnf->rt_table_default_pri == DEF_RT_TABLE_DEFAULT_PRI) {
-      abuf_appendf(out, "# RtTableDefaultPriority     %d\n",
+
+    if (cnf->rt_table_default_pri == DEF_RT_AUTO || cnf->rt_table_default_pri == DEF_RT_TABLE_DEFAULT_PRI)
+      abuf_appendf(out, "# RtTableDefaultPriority     %s\n",
+          "auto");
+    else
+      abuf_appendf(out, "RtTableDefaultPriority       %u\n",
           cnf->rt_table_default_pri);
-    } else {
-      abuf_appendf(out, "RtTableDefaultPriority     %u\n",
-          cnf->rt_table_default_pri);
-    }
   } else {
-    if (cnf->rt_table_pri == DEF_SGW_RT_TABLE_PRI) {
-      abuf_appendf(out, "# RtTablePriority            %d\n",
+    if (cnf->rt_table_pri > 0)
+      abuf_appendf(out, "RtTablePriority              %u\n",
           cnf->rt_table_pri);
-    } else {
-      abuf_appendf(out, "RtTablePriority            %u\n",
-          cnf->rt_table_pri);
-    }
+    else
+      abuf_appendf(out, "# RtTablePriority            %s\n",
+          "none");
+
     abuf_appendf(out, "%sRtTableDefaultOlsrPriority %u\n",
         cnf->rt_table_defaultolsr_pri == (DEF_SGW_RT_TABLE_PRI_BASE + DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER) ? "# " : "",
         cnf->rt_table_defaultolsr_pri);
