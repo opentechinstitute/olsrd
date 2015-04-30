@@ -1,0 +1,15 @@
+UseNiit                        no
+LinkQualityLevel               0
+LinkQualityFishEye             0
+
+Interface "wlan0"
+{
+}
+
+LoadPlugin "olsrd_httpinfo.so.0.1"
+{
+}
+
+LoadPlugin "olsrd_jsoninfo.so.0.0"
+{
+}
