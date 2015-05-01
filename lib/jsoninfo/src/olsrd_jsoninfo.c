@@ -1185,10 +1185,10 @@ static void ipc_print_interfaces(struct autobuf *abuf) {
       abuf_json_int(abuf, "olsrInterfaceMetric", rifs->int_metric);
       abuf_json_int(abuf, "olsrMTU", rifs->int_mtu);
       abuf_json_int(abuf, "helloEmissionInterval", rifs->hello_etime);
-      abuf_json_int(abuf, "helloValidityTime", rifs->valtimes.hello);
-      abuf_json_int(abuf, "tcValidityTime", rifs->valtimes.tc);
-      abuf_json_int(abuf, "midValidityTime", rifs->valtimes.mid);
-      abuf_json_int(abuf, "hnaValidityTime", rifs->valtimes.hna);
+      abuf_json_int(abuf, "helloValidityTime", me_to_reltime(rifs->valtimes.hello));
+      abuf_json_int(abuf, "tcValidityTime", me_to_reltime(rifs->valtimes.tc));
+      abuf_json_int(abuf, "midValidityTime", me_to_reltime(rifs->valtimes.mid));
+      abuf_json_int(abuf, "hnaValidityTime", me_to_reltime(rifs->valtimes.hna));
       abuf_json_boolean(abuf, "wireless", rifs->is_wireless);
 
 #ifdef __linux__
