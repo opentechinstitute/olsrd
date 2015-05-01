@@ -100,6 +100,7 @@ struct vtimes {
   uint8_t tc;
   uint8_t mid;
   uint8_t hna;
+  uint32_t hna_reltime;
 };
 
 /* Output buffer structure. This should actually be in net_olsr.h but we have circular references then.

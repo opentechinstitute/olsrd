@@ -496,6 +496,7 @@ add_hemu_if(struct olsr_if *iface)
   ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.hna_reltime = me_to_reltime(ifp->valtimes.hna);
 
   ifp->mode = iface->cnf->mode;
 
@@ -839,6 +840,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.hna_reltime = me_to_reltime(ifp->valtimes.hna);
 
   ifp->mode = iface->cnf->mode;
 
