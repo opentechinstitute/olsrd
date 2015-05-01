@@ -53,6 +53,9 @@ static struct olsr_cookie_info *gateway_entry_mem_cookie = NULL;
 /** gateway container cookie */
 static struct olsr_cookie_info *gw_container_entry_mem_cookie = NULL;
 
+/** the gateway netmask for the HNA with zero bandwidth */
+static uint8_t smart_gateway_netmask_zero[sizeof(union olsr_ip_addr)];
+
 /** the gateway netmask for the HNA */
 static uint8_t smart_gateway_netmask[sizeof(union olsr_ip_addr)];
 
@@ -982,12 +985,16 @@ void olsr_print_gateway_entries(void) {
  *
  * @param mask pointer to netmask of the HNA
  * @param prefixlen of the HNA
+ * @param zero true to use zero bandwidth
  */
-void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen) {
+void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen, bool zero) {
   uint8_t *ptr = hna_mask_to_hna_pointer(mask, prefixlen);
 
   /* copy the current settings for uplink/downlink into the mask */
-  memcpy(ptr, &smart_gateway_netmask, sizeof(smart_gateway_netmask) - prefixlen / 8);
+  memcpy( //
+      ptr, //
+      zero ? &smart_gateway_netmask_zero : &smart_gateway_netmask, //
+      (zero ? sizeof(smart_gateway_netmask_zero) : sizeof(smart_gateway_netmask)) - prefixlen / 8);
   if (olsr_cnf->has_ipv4_gateway) {
     ptr[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV4;
 
@@ -1027,6 +1034,13 @@ void refresh_smartgw_netmask(void) {
       ip[GW_HNA_FLAGS] |= GW_HNA_FLAG_IPV6PREFIX;
       ip[GW_HNA_V6PREFIXLEN] = olsr_cnf->smart_gw_prefix.prefix_len;
       memcpy(&ip[GW_HNA_V6PREFIX], &olsr_cnf->smart_gw_prefix.prefix, 8);
+    }
+
+    {
+      uint8_t *ipz = (uint8_t *) &smart_gateway_netmask_zero;
+      memcpy(ipz, ip, sizeof(smart_gateway_netmask_zero));
+      ipz[GW_HNA_DOWNLINK] = serialize_gw_speed(0);
+      ipz[GW_HNA_UPLINK] = serialize_gw_speed(0);
     }
   }
 }

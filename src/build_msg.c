@@ -972,7 +972,11 @@ serialize_mid6(struct interface_olsr *ifp)
 }
 
 static void appendHNAEntry(struct interface_olsr *ifp, struct ip_prefix_list *h, uint16_t * remainsize, uint16_t * curr_size,
-    union olsr_message *m, struct hnapair **pair) {
+    union olsr_message *m, struct hnapair **pair, bool zero
+#ifndef __linux__
+__attribute__((unused))
+#endif
+  ) {
   union olsr_ip_addr ip_addr;
 
   if ((*curr_size + (2 * olsr_cnf->ipsize)) > *remainsize) {
@@ -999,7 +1003,7 @@ static void appendHNAEntry(struct interface_olsr *ifp, struct ip_prefix_list *h,
 #ifdef __linux__
   if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&h->net)) {
     /* this is the default route, overwrite it with the smart gateway */
-    olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len);
+    olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len, zero);
   }
 #endif /* __linux__ */
   (*pair)->addr = h->net.prefix.v4.s_addr;
@@ -1069,7 +1073,7 @@ serialize_hna4(struct interface_olsr *ifp)
   pair = m->v4.message.hna.hna_net;
 
   for (; h != NULL; h = h->next) {
-    appendHNAEntry(ifp, h, &remainsize, &curr_size, m, &pair);
+    appendHNAEntry(ifp, h, &remainsize, &curr_size, m, &pair, false);
   }
 
   m->v4.olsr_msgsize = htons(curr_size);
@@ -1082,7 +1086,11 @@ serialize_hna4(struct interface_olsr *ifp)
 }
 
 static void appendHNA6Entry(struct interface_olsr *ifp, struct ip_prefix_list *h, uint16_t * remainsize, uint16_t * curr_size,
-    union olsr_message *m, struct hnapair6 **pair) {
+    union olsr_message *m, struct hnapair6 **pair, bool zero
+#ifndef __linux__
+__attribute__((unused))
+#endif
+  ) {
   union olsr_ip_addr ip_addr;
 
   if ((*curr_size + (2 * olsr_cnf->ipsize)) > *remainsize) {
@@ -1109,7 +1117,7 @@ static void appendHNA6Entry(struct interface_olsr *ifp, struct ip_prefix_list *h
 #ifdef __linux__
   if (olsr_cnf->smart_gw_active && is_prefix_inetgw(&h->net)) {
     /* this is the default gateway, so overwrite it with the smart one */
-    olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len);
+    olsr_modifiy_inetgw_netmask(&ip_addr, h->net.prefix_len, zero);
   }
 #endif /* __linux__ */
   (*pair)->addr = h->net.prefix.v6;
@@ -1171,7 +1179,7 @@ serialize_hna6(struct interface_olsr *ifp)
   pair6 = m->v6.message.hna.hna_net;
 
   for (; h != NULL; h = h->next) {
-    appendHNA6Entry(ifp, h, &remainsize, &curr_size, m, &pair6);
+    appendHNA6Entry(ifp, h, &remainsize, &curr_size, m, &pair6, false);
   }
 
   m->v6.olsr_msgsize = htons(curr_size);

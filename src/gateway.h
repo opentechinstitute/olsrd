@@ -185,7 +185,7 @@ void olsr_print_gateway_entries(void);
  * Tx Path Interface
  */
 
-void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen);
+void olsr_modifiy_inetgw_netmask(union olsr_ip_addr *mask, int prefixlen, bool zero);
 
 /*
  * Interface to adjust uplink/downlink speed
