@@ -1110,14 +1110,14 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
 
   /* keep new HNA seqno */
   gw->seqno = seqno;
+  gw->uplink = 0;
+  gw->downlink = 0;
+  gw->path_cost = INT64_MAX;
 
   ptr = hna_mask_to_hna_pointer(mask, prefixlen);
   if ((ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_LINKSPEED) != 0) {
     gw->uplink = deserialize_gw_speed(ptr[GW_HNA_UPLINK]);
     gw->downlink = deserialize_gw_speed(ptr[GW_HNA_DOWNLINK]);
-  } else {
-    gw->uplink = 0;
-    gw->downlink = 0;
   }
 
   gw->ipv4 = (ptr[GW_HNA_FLAGS] & GW_HNA_FLAG_IPV4) != 0;
@@ -1138,6 +1138,11 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
         memcpy(&gw->external_prefix.prefix, &ptr[GW_HNA_V6PREFIX], 8);
       }
     }
+  }
+
+  if (!gw->uplink || !gw->downlink) {
+    olsr_delete_gateway_tree_entry(gw, FORCE_DELETE_GW_ENTRY, true);
+    return;
   }
 
   if (!gw->expire_timer) {
