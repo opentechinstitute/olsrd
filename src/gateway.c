@@ -1566,7 +1566,7 @@ static bool determineBestOverallLink(enum sgw_multi_change_phase phase) {
   } else {
     struct olsr_iptunnel_entry * tunnel;
 
-    assert(!gwContainer);
+    assert(gwContainer);
 
     tunnel = gwContainer->tunnel;
 
