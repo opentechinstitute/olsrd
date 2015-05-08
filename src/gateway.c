@@ -553,6 +553,20 @@ static void smartgw_tunnel_monitor(int if_index, struct interface_olsr *ifh, enu
 }
 
 /**
+ * Timer callback to expire a gateway entry
+ *
+ * @param ptr a pointer to the smart gateway HNA to expire (struct gateway_entry*)
+ */
+static void expire_gateway_handler(void *ptr) {
+  struct gateway_entry *gw = ptr;
+
+  assert(gw);
+
+  /* remove gateway entry */
+  olsr_delete_gateway_entry(&gw->originator, gw->external_prefix.prefix_len, false);
+}
+
+/**
  * Timer callback to remove and cleanup a gateway entry
  *
  * @param ptr
@@ -1074,8 +1088,9 @@ bool olsr_is_smart_gateway(struct olsr_ip_prefix *prefix, union olsr_ip_addr *ma
  * @param mask netmask of the HNA
  * @param prefixlen of the HNA
  * @param seqno the sequence number of the HNA
+ * @param vtime the validity time of the HNA
  */
-void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno) {
+void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_addr *mask, int prefixlen, uint16_t seqno, olsr_reltime vtime) {
   struct gw_container_entry * new_gw_in_list;
   uint8_t *ptr;
   int64_t prev_path_cost = 0;
@@ -1122,6 +1137,14 @@ void olsr_update_gateway_entry(union olsr_ip_addr *originator, union olsr_ip_add
         memcpy(&gw->external_prefix.prefix, &ptr[GW_HNA_V6PREFIX], 8);
       }
     }
+  }
+
+  if (!gw->expire_timer) {
+    /* start expire timer */
+    olsr_set_timer(&gw->expire_timer, vtime, 0, false, expire_gateway_handler, gw, NULL);
+  } else {
+    /* restart expire timer */
+    olsr_change_timer(gw->expire_timer, vtime, 0, false);
   }
 
   /* stop cleanup timer if necessary */
@@ -1191,6 +1214,12 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
 
   if (!gw) {
     return;
+  }
+
+  if (gw->expire_timer) {
+    /* stop expire timer */
+    olsr_stop_timer(gw->expire_timer);
+    gw->expire_timer = NULL;
   }
 
   if (immediate && gw->cleanup_timer) {
