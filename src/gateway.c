@@ -110,6 +110,7 @@ static struct BestOverallLink bestOverallLink;
  */
 
 static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t prefixlen, bool immediate);
+static void writeProgramStatusFile(enum sgw_multi_change_phase phase);
 
 /*
  * Helper Functions
@@ -1245,6 +1246,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
     }
 
     if (prefixlen == FORCE_DELETE_GW_ENTRY || !(gw->ipv4 || gw->ipv6)) {
+      bool write_status = false;
       struct gw_container_entry * gw_in_list;
 
       /* prevent this gateway from being chosen as the new gateway */
@@ -1277,6 +1279,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
         gw_in_list->gw = NULL;
         gw_in_list = olsr_gw_list_remove(&gw_list_ipv4, gw_in_list);
         olsr_cookie_free(gw_container_entry_mem_cookie, gw_in_list);
+        write_status = true;
       }
 
       gw_in_list = olsr_gw_list_find(&gw_list_ipv6, gw);
@@ -1299,6 +1302,7 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
         gw_in_list->gw = NULL;
         gw_in_list = olsr_gw_list_remove(&gw_list_ipv6, gw_in_list);
         olsr_cookie_free(gw_container_entry_mem_cookie, gw_in_list);
+        write_status = true;
       }
 
       if (!immediate) {
@@ -1314,6 +1318,9 @@ static void olsr_delete_gateway_tree_entry(struct gateway_entry * gw, uint8_t pr
         gw_handler->choose(!current_ipv4_gw, !current_ipv6_gw);
       }
 
+      if (multi_gateway_mode() && write_status) {
+        writeProgramStatusFile(GW_MULTI_CHANGE_PHASE_RUNTIME);
+      }
     } else if (change) {
       assert(gw_handler);
       gw_handler->update(gw);
