@@ -986,6 +986,13 @@ __attribute__((unused))
   bool is_def_route = is_prefix_inetgw(&h->net);
 #endif
 
+#ifdef __linux__
+  if (!zero && olsr_cnf->smart_gw_active && is_def_route && smartgw_is_zero_bandwidth(olsr_cnf)) {
+    /* this is the default route, with zero bandwidth, do not append it */
+    return;
+  }
+#endif /* __linux__ */
+
   if ((*curr_size + (2 * olsr_cnf->ipsize)) > *remainsize) {
     /* Only add HNA message if it contains data */
     if (*curr_size > OLSR_HNA_IPV4_HDRSIZE) {
@@ -1140,6 +1147,13 @@ __attribute__((unused))
 #ifdef __linux__
   bool is_def_route = is_prefix_inetgw(&h->net);
 #endif
+
+#ifdef __linux__
+  if (!zero && olsr_cnf->smart_gw_active && is_def_route && smartgw_is_zero_bandwidth(olsr_cnf)) {
+    /* this is the default route, with zero bandwidth, do not append it */
+    return;
+  }
+#endif /* __linux__ */
 
   if ((*curr_size + (2 * olsr_cnf->ipsize)) > *remainsize) {
     /* Only add HNA message if it contains data */
