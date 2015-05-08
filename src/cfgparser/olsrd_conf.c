@@ -46,6 +46,7 @@
 #include "net_olsr.h"
 #include "olsr.h"
 #include "egressTypes.h"
+#include "gateway.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -999,9 +1000,9 @@ set_default_cnf(struct olsrd_config *cnf, char * configuration_file)
   cnf->smart_gw_weight_etx = DEF_GW_WEIGHT_ETX;
   cnf->smart_gw_divider_etx = DEF_GW_DIVIDER_ETX;
   cnf->smart_gw_type = DEF_GW_TYPE;
-  cnf->smart_gw_uplink = DEF_UPLINK_SPEED;
+  smartgw_set_uplink(cnf, DEF_UPLINK_SPEED);
   cnf->smart_gw_uplink_nat = DEF_GW_UPLINK_NAT;
-  cnf->smart_gw_downlink = DEF_DOWNLINK_SPEED;
+  smartgw_set_downlink(cnf, DEF_DOWNLINK_SPEED);
 
   cnf->use_src_ip_routes = DEF_USE_SRCIP_ROUTES;
   cnf->set_ip_forward = true;

@@ -333,6 +333,7 @@ struct olsrd_config {
   uint32_t smart_gw_divider_etx;
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;
+  bool smart_gateway_bandwidth_zero;
   struct olsr_ip_prefix smart_gw_prefix;
 
   /* Main address of this node */
@@ -428,6 +429,28 @@ extern "C" {
 
   void win32_olsrd_free(void *ptr);
 #endif /* defined _WIN32 */
+
+  /*
+   * Smart-Gateway uplink/downlink accessors
+   */
+
+  static inline void set_smart_gateway_bandwidth_zero(struct olsrd_config *cnf) {
+    cnf->smart_gateway_bandwidth_zero = !cnf->smart_gw_uplink || !cnf->smart_gw_downlink;
+  }
+
+  static inline void smartgw_set_uplink(struct olsrd_config *cnf, uint32_t uplink) {
+    cnf->smart_gw_uplink = uplink;
+    set_smart_gateway_bandwidth_zero(cnf);
+  }
+
+  static inline void smartgw_set_downlink(struct olsrd_config *cnf, uint32_t downlink) {
+    cnf->smart_gw_downlink = downlink;
+    set_smart_gateway_bandwidth_zero(cnf);
+  }
+
+  static inline bool smartgw_is_zero_bandwidth(struct olsrd_config *cnf) {
+    return cnf->smart_gateway_bandwidth_zero;
+  }
 
 #if defined __cplusplus
 }

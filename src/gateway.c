@@ -1558,11 +1558,11 @@ static bool determineBestEgressLink(enum sgw_multi_change_phase phase) {
 
   if (changed || MSGW_ROUTE_FORCED(phase)) {
     if (!bestEgressLink || !bestEgressLink->upCurrent) {
-      olsr_cnf->smart_gw_uplink = 0;
-      olsr_cnf->smart_gw_downlink = 0;
+      smartgw_set_uplink(olsr_cnf, 0);
+      smartgw_set_downlink(olsr_cnf, 0);
     } else {
-      olsr_cnf->smart_gw_uplink = bestEgressLink->bwCurrent.egressUk;
-      olsr_cnf->smart_gw_downlink = bestEgressLink->bwCurrent.egressDk;
+      smartgw_set_uplink(olsr_cnf, bestEgressLink->bwCurrent.egressUk);
+      smartgw_set_downlink(olsr_cnf, bestEgressLink->bwCurrent.egressDk);
     }
     refresh_smartgw_netmask();
   }
