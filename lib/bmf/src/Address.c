@@ -142,7 +142,7 @@ int IsOlsrOrBmfPacket(unsigned char* ipPacket)
 
   /* Go into the UDP header and check port number */
   udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((ipPacket + ipHeaderLen));
-#ifdef __GLIBC__
+#if defined(__GLIBC__) or defined(__BIONIC__)
   destPort = ntohs(udpHeader->dest);
 #else
   destPort = ntohs(udpHeader->uh_dport);

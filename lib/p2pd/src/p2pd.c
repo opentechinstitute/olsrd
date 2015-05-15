@@ -204,7 +204,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
           udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData +
                                        GetIpHeaderLength(encapsulationUdpData)));
           destAddr.v4.s_addr = ipHeader->ip_dst.s_addr;
-#ifdef __GLIBC__
+#if defined(__GLIBC__) or defined(__BIONIC__)
           destPort = htons(udpHeader->dest);
 #else
           destPort = htons(udpHeader->uh_dport);
@@ -227,7 +227,7 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
         if (ip6Header->ip6_nxt == SOL_UDP && !IsIpv6Fragment(ip6Header)) {
           udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
           memcpy(&destAddr.v6, &ip6Header->ip6_dst, sizeof(struct in6_addr));
-#ifdef __GLIBC__
+#if defined(__GLIBC__) or defined(__BIONIC__)
           destPort = htons(udpHeader->dest);
 #else
           destPort = htons(udpHeader->uh_dport);
@@ -703,7 +703,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 
     udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData +
                                   GetIpHeaderLength(encapsulationUdpData)));
-#ifdef __GLIBC__
+#if defined(__GLIBC__) or defined(__BIONIC__)
     destPort = ntohs(udpHeader->dest);
 #else
     destPort = ntohs(udpHeader->uh_dport);
@@ -751,7 +751,7 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
       return;
 
     udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
-#ifdef __GLIBC__
+#if defined(__GLIBC__) or defined(__BIONIC__)
     destPort = ntohs(udpHeader->dest);
 #else
     destPort = ntohs(udpHeader->uh_dport);
