@@ -50,6 +50,7 @@
 #include <assert.h> /* assert() */
 #include <net/if.h> /* socket(), ifreq, if_indextoname(), if_nametoindex() */
 #include <netinet/in.h> /* htons() */
+#include <netinet/udp.h> /* struct udphdr */
 #include <linux/if_ether.h> /* ETH_P_IP */
 #include <linux/if_packet.h> /* packet_mreq, PACKET_MR_PROMISC, PACKET_ADD_MEMBERSHIP */
 #include <linux/if_tun.h> /* IFF_TAP */
@@ -1893,7 +1894,11 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
 
       /* RFC 1624, Eq. 3: HC' = ~(~HC - m + m') */
 
+#ifdef __UCLIBC__
       check = ntohs(udph->check);
+#else
+      check = ntohs(udph->uh_sum);
+#endif
 
       check = ~ (~ check - ((origDaddr >> 16) & 0xFFFF) + ((newDaddr >> 16) & 0xFFFF));
       check = ~ (~ check - (origDaddr & 0xFFFF) + (newDaddr & 0xFFFF));
@@ -1901,7 +1906,11 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
       /* Add carry */
       check = check + (check >> 16);
 
+#ifdef __UCLIBC__
       udph->check = htons(check);
+#else
+      udph->uh_sum = htons(check);
+#endif
      } /* if */
   } /* if */
 } /* CheckAndUpdateLocalBroadcast */
