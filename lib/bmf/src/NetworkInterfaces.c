@@ -1894,7 +1894,7 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
 
       /* RFC 1624, Eq. 3: HC' = ~(~HC - m + m') */
 
-#ifdef __UCLIBC__
+#ifdef __GLIBC__
       check = ntohs(udph->check);
 #else
       check = ntohs(udph->uh_sum);
@@ -1906,7 +1906,7 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
       /* Add carry */
       check = check + (check >> 16);
 
-#ifdef __UCLIBC__
+#ifdef __GLIBC__
       udph->check = htons(check);
 #else
       udph->uh_sum = htons(check);

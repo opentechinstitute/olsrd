@@ -462,7 +462,7 @@ BmfPacketCaptured(
       return;                   /* for */
     }
     udpHeader = (struct udphdr *)ARM_NOWARN_ALIGN(encapsulationUdpData + GetIpHeaderLength(encapsulationUdpData));
-#ifdef __UCLIBC__
+#ifdef __GLIBC__
     destPort = ntohs(udpHeader->dest);
 #else
     destPort = ntohs(udpHeader->uh_dport);
@@ -502,7 +502,7 @@ BmfPacketCaptured(
       return;                   /* for */
     }
     udpHeader = (struct udphdr *)ARM_NOWARN_ALIGN(encapsulationUdpData + 40);
-#ifdef __UCLIBC__
+#ifdef __GLIBC__
     destPort = ntohs(udpHeader->dest);
 #else
     destPort = ntohs(udpHeader->uh_dport);
