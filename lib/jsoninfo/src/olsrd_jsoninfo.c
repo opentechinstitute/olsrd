@@ -851,71 +851,70 @@ extern struct interfaceName * sgwTunnel6InterfaceNames;
  * @param fmtv the format for printing
  */
 static void sgw_ipvx(struct autobuf *abuf, bool ipv6) {
-  struct gateway_entry * current_gw = olsr_get_inet_gateway(ipv6);
-  struct interfaceName * sgwTunnelInterfaceNames = !ipv6 ? sgwTunnel4InterfaceNames : sgwTunnel6InterfaceNames;
-  int i;
-
   abuf_json_mark_array_entry(true, abuf);
-
   abuf_json_mark_object(true, true, abuf, ipv6 ? "ipv6" : "ipv4");
 
-  for (i = 0; i < olsr_cnf->smart_gw_use_count; i++) {
-    bool selected;
-    struct ipaddr_str originatorStr;
-    const char * originator;
-    struct ipaddr_str prefixIpStr;
-    const char * prefixIPStr;
-    union olsr_ip_addr netmask = { { 0 } };
-    struct ipaddr_str prefixMaskStr;
-    const char * prefixMASKStr;
-    struct interfaceName * node = &sgwTunnelInterfaceNames[i];
-    struct ipaddr_str tunnelGwStr;
-    const char * tunnelGw;
+  if (olsr_cnf->smart_gw_active) {
+    struct gateway_entry * current_gw = olsr_get_inet_gateway(ipv6);
+    struct interfaceName * sgwTunnelInterfaceNames = !ipv6 ? sgwTunnel4InterfaceNames : sgwTunnel6InterfaceNames;
+    int i;
+    for (i = 0; i < olsr_cnf->smart_gw_use_count; i++) {
+      bool selected;
+      struct ipaddr_str originatorStr;
+      const char * originator;
+      struct ipaddr_str prefixIpStr;
+      const char * prefixIPStr;
+      union olsr_ip_addr netmask = { { 0 } };
+      struct ipaddr_str prefixMaskStr;
+      const char * prefixMASKStr;
+      struct interfaceName * node = &sgwTunnelInterfaceNames[i];
+      struct ipaddr_str tunnelGwStr;
+      const char * tunnelGw;
 
-    struct gateway_entry * gw = node->gw;
-    struct tc_entry* tc;
+      struct gateway_entry * gw = node->gw;
+      struct tc_entry* tc;
 
-    if (!gw) {
-      continue;
+      if (!gw) {
+        continue;
+      }
+
+      tc = olsr_lookup_tc_entry(&gw->originator);
+      if (!tc) {
+        continue;
+      }
+
+      selected = current_gw && (current_gw == gw);
+      originator = olsr_ip_to_string(&originatorStr, &gw->originator);
+      prefixIPStr = olsr_ip_to_string(&prefixIpStr, &gw->external_prefix.prefix);
+
+      prefix_to_netmask((uint8_t *) &netmask, !ipv6 ? sizeof(netmask.v4) : sizeof(netmask.v6), gw->external_prefix.prefix_len);
+      prefixMASKStr = olsr_ip_to_string(&prefixMaskStr, &netmask);
+
+      tunnelGw = olsr_ip_to_string(&tunnelGwStr, &gw->originator);
+
+      abuf_json_mark_array_entry(true, abuf);
+      {
+        char prefix[strlen(prefixIPStr) + 1 + strlen(prefixMASKStr) + 1];
+        snprintf(prefix, sizeof(prefix), "%s/%s", prefixIPStr, prefixMASKStr);
+
+        abuf_json_boolean(abuf, "selected", selected);
+        abuf_json_string(abuf, "originator", originator);
+        abuf_json_string(abuf, "prefix", prefix);
+        abuf_json_int(abuf, "uplink", gw->uplink);
+        abuf_json_int(abuf, "downlink", gw->downlink);
+        abuf_json_int(abuf, "pathcost", tc->path_cost);
+        abuf_json_boolean(abuf, "IPv4", gw->ipv4);
+        abuf_json_boolean(abuf, "IPv4-NAT", gw->ipv4nat);
+        abuf_json_boolean(abuf, "IPv6", gw->ipv6);
+        abuf_json_string(abuf, "tunnel", node->name);
+        abuf_json_string(abuf, "destination", tunnelGw);
+        abuf_json_int(abuf, "cost", gw->path_cost);
+      }
+      abuf_json_mark_array_entry(false, abuf);
     }
-
-    tc = olsr_lookup_tc_entry(&gw->originator);
-    if (!tc) {
-      continue;
-    }
-
-    selected = current_gw && (current_gw == gw);
-    originator = olsr_ip_to_string(&originatorStr, &gw->originator);
-    prefixIPStr = olsr_ip_to_string(&prefixIpStr, &gw->external_prefix.prefix);
-
-    prefix_to_netmask((uint8_t *) &netmask, !ipv6 ? sizeof(netmask.v4) : sizeof(netmask.v6), gw->external_prefix.prefix_len);
-    prefixMASKStr = olsr_ip_to_string(&prefixMaskStr, &netmask);
-
-    tunnelGw = olsr_ip_to_string(&tunnelGwStr, &gw->originator);
-
-    abuf_json_mark_array_entry(true, abuf);
-    {
-      char prefix[strlen(prefixIPStr) + 1 + strlen(prefixMASKStr) + 1];
-      snprintf(prefix, sizeof(prefix), "%s/%s", prefixIPStr, prefixMASKStr);
-
-      abuf_json_boolean(abuf, "selected", selected);
-      abuf_json_string(abuf, "originator", originator);
-      abuf_json_string(abuf, "prefix", prefix);
-      abuf_json_int(abuf, "uplink", gw->uplink);
-      abuf_json_int(abuf, "downlink", gw->downlink);
-      abuf_json_int(abuf, "pathcost", tc->path_cost);
-      abuf_json_boolean(abuf, "IPv4", gw->ipv4);
-      abuf_json_boolean(abuf, "IPv4-NAT", gw->ipv4nat);
-      abuf_json_boolean(abuf, "IPv6", gw->ipv6);
-      abuf_json_string(abuf, "tunnel", node->name);
-      abuf_json_string(abuf, "destination", tunnelGw);
-      abuf_json_int(abuf, "cost", gw->path_cost);
-    }
-    abuf_json_mark_array_entry(false, abuf);
   }
 
   abuf_json_mark_object(false, true, abuf, NULL);
-
   abuf_json_mark_array_entry(false, abuf);
 }
 #endif /* __linux__ */
