@@ -1,3 +1,14 @@
+0.9.0.1 -------------------------------------------------------------------
+
+Ferry Huberts (3):
+      neighbors: signal link changes when deleting a neighbor
+      jsoninfo: do not output smart-gateway info when not enabled.
+      txtinfo: jsoninfo: do not output smart-gateway info when not enabled.
+
+Henning Rogge (2):
+      Update version after release of v0.9.0
+      Release v0.9.0.1
+
 0.9.0 -------------------------------------------------------------------
 
 Daniel Golle (4):
