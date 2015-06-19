@@ -974,7 +974,7 @@ set_default_cnf(struct olsrd_config *cnf, char * configuration_file)
   cnf->exit_value = EXIT_SUCCESS;
   cnf->max_tc_vtime = 0.0;
   cnf->ioctl_s = 0;
-  cnf->lock_file = olsrd_get_default_lockfile(cnf);
+  cnf->lock_file = NULL; /* derived config */
   cnf->use_niit = DEF_USE_NIIT;
   cnf->niit4to6_if_index = 0;
   cnf->niit6to4_if_index = 0;
@@ -1332,6 +1332,12 @@ ip_prefix_list_find(struct ip_prefix_list *list, const union olsr_ip_addr *net, 
     }
   }
   return NULL;
+}
+
+void set_derived_cnf(struct olsrd_config * cnf) {
+  if (!cnf->lock_file) {
+    cnf->lock_file = olsrd_get_default_lockfile(cnf);
+  }
 }
 
 /**

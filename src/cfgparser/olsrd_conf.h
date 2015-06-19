@@ -61,6 +61,8 @@ struct conf_token {
 
 void set_default_cnf(struct olsrd_config *, char * configuration_file);
 
+void set_derived_cnf(struct olsrd_config * olsr_cnf);
+
 char * olsrd_get_default_lockfile(struct olsrd_config *cnf);
 
 #endif /* _OLSRD_CONF_H */

@@ -45,6 +45,7 @@
 #include <assert.h>
 #include <fcntl.h>
 
+#include "cfgparser/olsrd_conf.h"
 #include "ipcalc.h"
 #include "defs.h"
 #include "builddata.h"
@@ -439,6 +440,12 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Bad configuration!\n");
     olsr_exit(__func__, EXIT_FAILURE);
   }
+
+  /*
+   * Setup derived configuration
+   */
+
+  set_derived_cnf(olsr_cnf);
 
   /*
    * Establish file lock to prevent multiple instances
