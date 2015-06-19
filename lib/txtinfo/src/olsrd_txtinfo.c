@@ -558,7 +558,7 @@ static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const c
       struct ipaddr_str tunnelGwStr;
       const char * tunnelGw;
 
-      struct gateway_entry * gw = node->gw;
+      struct gateway_entry * gw = node ? node->gw : NULL;
       struct tc_entry* tc;
 
       if (!gw) {
