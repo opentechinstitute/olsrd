@@ -57,6 +57,7 @@
 #include "lq_packet.h"
 #include "log.h"
 #include "link_set.h"
+#include "olsr_random.h"
 
 #include <assert.h>
 #include <signal.h>
@@ -96,7 +97,7 @@ set_flag(char *ifname, short flag __attribute__ ((unused)))
 
   //printf("Setting flags for if \"%s\"\n", ifr.ifr_name);
 
-  if (!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING))) {
+  if (!(ifr.ifr_flags & IFF_UP)) {
     /* Add UP */
     ifr.ifr_flags |= (IFF_UP | IFF_RUNNING);
     /* Set flags + UP */
@@ -154,7 +155,7 @@ check_interface_updates(void *foo __attribute__ ((unused)))
 int
 chk_if_changed(struct olsr_if *iface)
 {
-  struct interface *ifp;
+  struct interface_olsr *ifp;
   struct ifreq ifr;
   struct sockaddr_in6 tmp_saddr6;
   int if_changes;
@@ -190,7 +191,7 @@ chk_if_changed(struct olsr_if *iface)
    * First check if the interface is set DOWN
    */
 
-  if ((ifp->int_flags & IFF_UP) == 0 || (ifp->int_flags & IFF_RUNNING) == 0) {
+  if ((ifp->int_flags & IFF_UP) == 0) {
     OLSR_PRINTF(1, "\tInterface %s not up and running - removing it...\n", iface->name);
     goto remove_interface;
   }
@@ -368,7 +369,7 @@ remove_interface:
 int
 add_hemu_if(struct olsr_if *iface)
 {
-  struct interface *ifp;
+  struct interface_olsr *ifp;
   union olsr_ip_addr null_addr;
   uint32_t addr[4];
   struct ipaddr_str buf;
@@ -377,9 +378,9 @@ add_hemu_if(struct olsr_if *iface)
   if (!iface->host_emul)
     return -1;
 
-  ifp = olsr_malloc(sizeof(struct interface), "Interface update 2");
+  ifp = olsr_malloc(sizeof(struct interface_olsr), "Interface update 2");
 
-  memset(ifp, 0, sizeof(struct interface));
+  memset(ifp, 0, sizeof(struct interface_olsr));
 
   /* initialize backpointer */
   ifp->olsr_if = iface;
@@ -495,6 +496,7 @@ add_hemu_if(struct olsr_if *iface)
   ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.hna_reltime = me_to_reltime(ifp->valtimes.hna);
 
   ifp->mode = iface->cnf->mode;
 
@@ -526,7 +528,7 @@ if_basename(const char *name)
 int
 chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 {
-  struct interface ifs, *ifp;
+  struct interface_olsr ifs, *ifp;
   struct ifreq ifr;
   union olsr_ip_addr null_addr;
   size_t name_size;
@@ -539,7 +541,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
     return -1;
 
   memset(&ifr, 0, sizeof(struct ifreq));
-  memset(&ifs, 0, sizeof(struct interface));
+  memset(&ifs, 0, sizeof(struct interface_olsr));
   strscpy(ifr.ifr_name, iface->name, sizeof(ifr.ifr_name));
 
   OLSR_PRINTF(debuglvl, "Checking %s:\n", ifr.ifr_name);
@@ -552,7 +554,7 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 
   ifs.int_flags = ifr.ifr_flags;
 
-  if ( ( (ifs.int_flags & IFF_UP) == 0) || ( (ifs.int_flags & IFF_RUNNING) == 0) ) {
+  if ( (ifs.int_flags & IFF_UP) == 0) {
     OLSR_PRINTF(debuglvl, "\tInterface not up & running - skipping it...\n");
     return 0;
   }
@@ -667,9 +669,6 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
 
   ifs.ttl_index = -32;          /* For the first 32 TC's, fish-eye is disabled */
 
-  /* Set up buffer */
-  net_add_buffer(&ifs);
-
   OLSR_PRINTF(1, "\tMTU - IPhdr: %d\n", ifs.int_mtu);
 
   olsr_syslog(OLSR_LOG_INFO, "Adding interface %s\n", iface->name);
@@ -748,13 +747,13 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
     join_mcast(&ifs, ifs.send_socket);
   }
 
-  ifp = olsr_malloc(sizeof(struct interface), "Interface update 2");
+  ifp = olsr_malloc(sizeof(struct interface_olsr), "Interface update 2");
 
   iface->configured = 1;
   iface->interf = ifp;
 
   /* XXX bad code */
-  memcpy(ifp, &ifs, sizeof(struct interface));
+  memcpy(ifp, &ifs, sizeof(struct interface_olsr));
 
   /* initialize backpointer */
   ifp->olsr_if = iface;
@@ -790,17 +789,19 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
     }
   } else {
     /* IP version 6 */
+#ifdef IPV6_TCLASS
     if (setsockopt(ifp->send_socket, IPPROTO_IPV6, IPV6_TCLASS, (char *)&tos_bits, sizeof(tos_bits)) < 0) {
       perror("setsockopt(IPV6_TCLASS)");
       olsr_syslog(OLSR_LOG_ERR, "setsockopt(IPV6_TCLASS) error %m");
     }
+#endif
   }
 #endif /* __linux__ */
 
   /*
    *Initialize sequencenumber as a random 16bit value
    */
-  ifp->olsr_seqnum = random() & 0xFFFF;
+  ifp->olsr_seqnum = olsr_random() & 0xFFFF;
 
   /*
    * Set main address if this is the only interface
@@ -839,8 +840,12 @@ chk_if_up(struct olsr_if *iface, int debuglvl __attribute__ ((unused)))
   ifp->valtimes.tc = reltime_to_me(iface->cnf->tc_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.mid = reltime_to_me(iface->cnf->mid_params.validity_time * MSEC_PER_SEC);
   ifp->valtimes.hna = reltime_to_me(iface->cnf->hna_params.validity_time * MSEC_PER_SEC);
+  ifp->valtimes.hna_reltime = me_to_reltime(ifp->valtimes.hna);
 
   ifp->mode = iface->cnf->mode;
+
+  /* Set up buffer */
+  net_add_buffer(ifp);
 
   /*
    *Call possible ifchange functions registered by plugins

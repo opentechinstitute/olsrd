@@ -38,12 +38,14 @@
  *
  */
 
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/stat.h>
 #include <assert.h>
 #include <fcntl.h>
 
+#include "cfgparser/olsrd_conf.h"
 #include "ipcalc.h"
 #include "defs.h"
 #include "builddata.h"
@@ -61,6 +63,7 @@
 #include "mpr_selector_set.h"
 #include "gateway.h"
 #include "olsr_niit.h"
+#include "olsr_random.h"
 
 #ifdef __linux__
 #include <linux/types.h>
@@ -282,28 +285,6 @@ olsrmain_load_config(char *file) {
   return 0;
 }
 
-static void initRandom(void) {
-  unsigned int seed = (unsigned int)time(NULL);
-
-#ifndef _WIN32
-  int randomFile;
-
-  randomFile = open("/dev/urandom", O_RDONLY);
-  if (randomFile == -1) {
-    randomFile = open("/dev/random", O_RDONLY);
-  }
-
-  if (randomFile != -1) {
-    if (read(randomFile, &seed, sizeof(seed)) != sizeof(seed)) {
-      ; /* to fix an 'unused result' compiler warning */
-    }
-    close(randomFile);
-  }
-#endif /* _WIN32 */
-
-  srandom(seed);
-}
-
 /**
  * Main entrypoint
  */
@@ -316,7 +297,7 @@ int main(int argc, char *argv[]) {
   int i;
 
 #ifdef __linux__
-  struct interface *ifn;
+  struct interface_olsr *ifn;
 #endif /* __linux__ */
 
 #ifdef _WIN32
@@ -336,7 +317,7 @@ int main(int argc, char *argv[]) {
       olsrd_version, build_date, build_host);
 
   if (argc == 2) {
-    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "/?") == 0) {
+    if ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "/?") == 0)) {
       print_usage(false);
       exit(0);
     }
@@ -371,7 +352,7 @@ int main(int argc, char *argv[]) {
   olsr_openlog("olsrd");
 
   /* setup random seed */
-  initRandom();
+  olsr_init_random();
 
   /* Init widely used statics */
   memset(&all_zero, 0, sizeof(union olsr_ip_addr));
@@ -397,7 +378,7 @@ int main(int argc, char *argv[]) {
   strscpy(conf_file_name, OLSRD_GLOBAL_CONF_FILE, sizeof(conf_file_name));
 #endif /* _WIN32 */
 
-  olsr_cnf = olsrd_get_default_cnf();
+  olsr_cnf = olsrd_get_default_cnf(strdup(conf_file_name));
   for (i=1; i < argc-1;) {
     if (strcmp(argv[i], "-f") == 0) {
       loadedConfig = true;
@@ -405,6 +386,7 @@ int main(int argc, char *argv[]) {
       if (olsrmain_load_config(argv[i+1]) < 0) {
         exit(EXIT_FAILURE);
       }
+      strscpy(conf_file_name, argv[i+1], sizeof(conf_file_name));
 
       if (i+2 < argc) {
         memmove(&argv[i], &argv[i+2], sizeof(*argv) * (argc-i-1));
@@ -425,7 +407,7 @@ int main(int argc, char *argv[]) {
 
   if (!loadedConfig) {
     olsrd_free_cnf(olsr_cnf);
-    olsr_cnf = olsrd_get_default_cnf();
+    olsr_cnf = olsrd_get_default_cnf(strdup(conf_file_name));
   }
 
   default_ifcnf = get_default_if_config();
@@ -458,6 +440,12 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Bad configuration!\n");
     olsr_exit(__func__, EXIT_FAILURE);
   }
+
+  /*
+   * Setup derived configuration
+   */
+
+  set_derived_cnf(olsr_cnf);
 
   /*
    * Establish file lock to prevent multiple instances
@@ -769,7 +757,7 @@ void olsr_reconfigure(int signo __attribute__ ((unused))) {
 #endif /* _WIN32 */
 
 static void olsr_shutdown_messages(void) {
-  struct interface *ifn;
+  struct interface_olsr *ifn;
 
   /* send TC reset */
   for (ifn = ifnet; ifn; ifn = ifn->int_next) {
@@ -804,7 +792,7 @@ static void olsr_shutdown(int signo __attribute__ ((unused)))
 #ifndef _WIN32
   int errNr = errno;
 #endif
-  struct interface *ifn;
+  struct interface_olsr *ifn;
   int exit_value;
 
   OLSR_PRINTF(1, "Received signal %d - shutting down\n", (int)signo);
@@ -1022,7 +1010,7 @@ static int olsr_process_arguments(int argc, char *argv[],
       NEXT_ARG;
       CHECK_ARGC;
 
-      if (inet_aton(*argv, &in) == 0) {
+      if (inet_pton(AF_INET, *argv, &in) == 0) {
         printf("Invalid broadcast address! %s\nSkipping it!\n", *argv);
         continue;
       }

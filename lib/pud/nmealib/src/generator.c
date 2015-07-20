@@ -1,9 +1,6 @@
 /*
  * This file is part of nmealib.
  *
- * Copyright (c) 2008 Timur Sinitsyn
- * Copyright (c) 2011 Ferry Huberts
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -24,23 +21,11 @@
 #include <nmea/gmath.h>
 #include <nmea/generate.h>
 
+#include "random.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
-/**
- * Generate a random number in the range [min, max]
- *
- * @param min the minimum
- * @param max the maximum
- * @return a random number
- */
-static double nmea_random(const double min, const double max) {
-	static double rand_max = RAND_MAX;
-	double rand_val = rand();
-	double bounds = max - min;
-	return min + (rand_val * bounds) / rand_max;
-}
 
 /**
  * Initialise the generator
@@ -55,6 +40,8 @@ int nmea_gen_init(nmeaGENERATOR *gen, nmeaINFO *info) {
 	int present = info->present;
 	int smask = info->smask;
 	nmeaGENERATOR *igen = gen;
+
+	nmea_init_random();
 
 	nmea_zero_INFO(info);
 	info->present = present;
@@ -320,7 +307,7 @@ static int nmea_igen_static_init(nmeaGENERATOR *gen, nmeaINFO *info) {
 static int nmea_igen_rotate_loop(nmeaGENERATOR *gen __attribute__ ((unused)), nmeaINFO *info) {
 	int it;
 	int count = info->satinfo.inview;
-	double deg = 360 / (count ? count : 1);
+	double deg = 360.0 / (count ? count : 1);
 	double srt = (count ? (info->satinfo.sat[0].azimuth) : 0) + 5;
 
 	nmea_time_now(&info->utc, &info->present);

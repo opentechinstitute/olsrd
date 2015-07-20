@@ -39,14 +39,14 @@
 # Please also write a new version to:
 # gui/win32/Main/Frontend.rc (line 71, around "CAPTION [...]")
 # gui/win32/Inst/installer.nsi (line 57, around "MessageBox MB_YESNO [...]")
-VERS =		pre-0.6.6.2
+VERS =		0.9.0.2
 
-TOPDIR = .
+TOPDIR = $(shell pwd)
 INSTALLOVERWRITE ?=
 include Makefile.inc
 
 # pass generated variables to save time
-MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)" VERBOSE="$(VERBOSE)"
+MAKECMD = $(MAKE) OS="$(OS)" WARNINGS="$(WARNINGS)" VERBOSE="$(VERBOSE)" SANITIZE_ADDRESS="$(SANITIZE_ADDRESS)"
 
 LIBS +=		$(OS_LIB_DYNLOAD)
 ifeq ($(OS), win32)
@@ -71,7 +71,16 @@ endif
 .PHONY: default_target switch
 default_target: $(EXENAME)
 
-$(EXENAME):	$(OBJS) src/builddata.o
+ANDROIDREGEX=
+ifeq ($(OS),android)
+# On Android Google forgot to include regex engine code for Froyo version (but also there was
+# no support in older versions for it) so we have here this missing code.
+# http://groups.google.com/group/android-ndk/browse_thread/thread/5ea6f0650f0e3fc
+CFLAGS += -D__POSIX_VISIBLE
+ANDROIDREGEX=$(REGEX_LIB)
+endif
+
+$(EXENAME):	$(OBJS) $(ANDROIDREGEX) src/builddata.o
 ifeq ($(VERBOSE),0)
 		@echo "[LD] $@"
 endif
@@ -84,16 +93,15 @@ switch:
 	$(MAKECMDPREFIX)$(MAKECMD) -C $(SWITCHDIR)
 
 # generate it always
-.PHONY: src/builddata.c
-src/builddata.c:
-	$(MAKECMDPREFIX)$(RM) "$@"
-	$(MAKECMDPREFIX)echo "#include \"defs.h\"" >> "$@" 
-	$(MAKECMDPREFIX)echo "const char olsrd_version[] = \"olsr.org -  $(VERS)`./make/hash_source.sh`\";"  >> "$@"
-	$(MAKECMDPREFIX)date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
-	$(MAKECMDPREFIX)echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
+.PHONY: builddata.txt
+builddata.txt:
+	$(MAKECMDPREFIX)./make/hash_source.sh "$@" "$(VERS)" "$(VERBOSE)"
 
+# only overwrite it when it doesn't exists or when it has changed
+src/builddata.c: builddata.txt
+	$(MAKECMDPREFIX)if [ ! -f "$@" ] || [ -n "$$(diff "$<" "$@")" ]; then cp -p "$<" "$@"; fi
 
-.PHONY: help libs clean_libs libs_clean clean distclean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all gui clean_gui 
+.PHONY: help libs clean_libs libs_clean clean distclean uberclean install_libs uninstall_libs libs_install libs_uninstall install_bin uninstall_bin install_olsrd uninstall_olsrd install uninstall build_all install_all uninstall_all clean_all gui clean_gui cfgparser_install cfgparser_clean
 
 clean:
 	-rm -f $(OBJS) $(SRCS:%.c=%.d) $(EXENAME) $(EXENAME).exe src/builddata.c $(TMPFILES)
@@ -122,10 +130,17 @@ uberclean:	clean clean_libs clean_gui
 	find . \( -name '*.[od]' -o -name '*~' \) -not -path "*/.hg*" -type f -print0 | xargs -0 rm -f
 	$(MAKECMDPREFIX)$(MAKECMD) -C $(SWITCHDIR) clean
 	$(MAKECMDPREFIX)$(MAKECMD) -C $(CFGDIR) clean
+	$(MAKECMDPREFIX)rm -f builddata.txt
 
 install: install_olsrd
 
 uninstall: uninstall_olsrd
+
+cfgparser_install: cfgparser
+		$(MAKECMDPREFIX)$(MAKECMD) -C $(CFGDIR) install
+
+cfgparser_clean:
+		$(MAKECMDPREFIX)$(MAKECMD) -C $(CFGDIR) clean
 
 install_bin:
 		mkdir -p $(SBINDIR)
@@ -142,7 +157,7 @@ endif
 
 uninstall_bin:
 		rm -f $(SBINDIR)/$(EXENAME)
-		rmdir -p --ignore-fail-on-non-empty $(SBINDIR)
+		rmdir -p $(SBINDIR) || true
 
 install_olsrd:	install_bin
 		@echo ========= C O N F I G U R A T I O N - F I L E ============
@@ -171,16 +186,23 @@ ifneq ($(MANDIR),)
 		mkdir -p $(MANDIR)/man5/
 		cp files/olsrd.conf.5.gz $(MANDIR)/man5/$(CFGNAME).5.gz
 endif
+ifneq ($(RCDIR),)
+		cp $(RCFILE) $(RCDIR)/olsrd
+endif
 
 uninstall_olsrd:	uninstall_bin
 ifneq ($(MANDIR),)
 		rm -f $(MANDIR)/man5/$(CFGNAME).5.gz
-		rmdir -p --ignore-fail-on-non-empty $(MANDIR)/man5/
+		rmdir -p $(MANDIR)/man5/ || true
 		rm -f $(MANDIR)/man8/$(EXENAME).8.gz
-		rmdir -p --ignore-fail-on-non-empty $(MANDIR)/man8/
+		rmdir -p $(MANDIR)/man8/ || true
 endif
 		rm -f $(CFGFILE) $(CFGFILE).new
-		rmdir -p --ignore-fail-on-non-empty $(ETCDIR)
+		rmdir -p $(ETCDIR) || true
+ifneq ($(RCDIR),)
+		rm -f $(RCDIR)/olsrd
+		rmdir -p $(RCDIR) || true
+endif
 
 tags:
 		$(TAGCMD) -o $(TAGFILE) $(TAG_SRCS)
@@ -229,7 +251,7 @@ co_libs_install install_co_libs:
 
 libs_uninstall uninstall_libs:
 		$(MAKECMDPREFIX)set -e;for dir in $(SUBDIRS);do $(MAKECMD) -C lib/$$dir LIBDIR=$(LIBDIR) uninstall;done
-		rmdir -p --ignore-fail-on-non-empty $(LIBDIR)
+		rmdir -p $(LIBDIR) || true
 
 #
 # DOCUMENTATION
@@ -353,14 +375,6 @@ mdns_install:
 mdns_uninstall:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdns DESTDIR=$(DESTDIR) uninstall
 
-#
-# no targets for mini: it's an example plugin
-#
-
-# nameserver uses regex, which was only recently added to Android.  On
-# Android, $(REGEX_OBJS) will have all of the files needed, on all
-# other platforms, it'll be empty and therefore ignored.
-
 mdp:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp
 
@@ -372,6 +386,10 @@ mdp_install:
 
 mdp_uninstall:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/mdp DESTDIR=$(DESTDIR) uninstall
+
+#
+# no targets for mini: it's an example plugin
+#
 
 nameservice:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/nameservice clean
@@ -421,6 +439,15 @@ pud_install:
 
 pud_uninstall:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) uninstall
+
+pud_java: pud
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) java
+
+pud_java_install:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) java-install
+
+pud_java_uninstall:
+		$(MAKECMDPREFIX)$(MAKECMD) -C lib/pud DESTDIR=$(DESTDIR) java-uninstall
 
 quagga:
 		$(MAKECMDPREFIX)$(MAKECMD) -C lib/quagga

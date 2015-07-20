@@ -68,6 +68,7 @@
 #define DEF_IPC_CONNECTIONS  0
 #define DEF_USE_HYST         false
 #define DEF_FIB_METRIC       FIBM_FLAT
+#define DEF_FIB_METRIC_DEFAULT            2
 #define DEF_LQ_LEVEL         2
 #define DEF_LQ_ALGORITHM     "etx_ff"
 #define DEF_LQ_FISH          1
@@ -78,14 +79,36 @@
 #define DEF_RTPROTO          0 /* 0 means OS-specific default */
 #define DEF_RT_NONE          -1
 #define DEF_RT_AUTO          0
+
+#define DEF_RT_TABLE_NR                   254
+#define DEF_RT_TABLE_DEFAULT_NR           254
+#define DEF_RT_TABLE_TUNNEL_NR            254
+
+#define DEF_SGW_RT_TABLE_NR               254
+#define DEF_SGW_RT_TABLE_DEFAULT_NR       223
+#define DEF_SGW_RT_TABLE_TUNNEL_NR        224
+
+#define DEF_RT_TABLE_PRI                  DEF_RT_NONE
+#define DEF_RT_TABLE_DEFAULTOLSR_PRI      DEF_RT_NONE
+#define DEF_RT_TABLE_TUNNEL_PRI           DEF_RT_NONE
+#define DEF_RT_TABLE_DEFAULT_PRI          DEF_RT_NONE
+
+#define DEF_SGW_RT_TABLE_PRI                    DEF_RT_NONE
+#define DEF_SGW_RT_TABLE_PRI_BASE               32766
+#define DEF_SGW_RT_TABLE_DEFAULTOLSR_PRI_ADDER  10
+#define DEF_SGW_RT_TABLE_TUNNEL_PRI_ADDER       10
+#define DEF_SGW_RT_TABLE_DEFAULT_PRI_ADDER      10
+
 #define DEF_MIN_TC_VTIME     0.0
 #define DEF_USE_NIIT         true
 #define DEF_SMART_GW         false
 #define DEF_SMART_GW_ALWAYS_REMOVE_SERVER_TUNNEL  false
 #define DEF_GW_USE_COUNT     1
 #define DEF_GW_TAKEDOWN_PERCENTAGE 25
-#define DEF_GW_MARK_OFFSET_EGRESS   91
-#define DEF_GW_MARK_OFFSET_TUNNELS 101
+#define DEF_GW_EGRESS_FILE    "/var/run/olsrd-sgw-egress.conf"
+#define DEF_GW_EGRESS_FILE_PERIOD 5000
+#define DEF_GW_OFFSET_TABLES 90
+#define DEF_GW_OFFSET_RULES  0
 #define DEF_GW_PERIOD        10*1000
 #define DEF_GW_STABLE_COUNT  6
 #define DEF_GW_ALLOW_NAT     true
@@ -129,6 +152,8 @@
 
 #define MIN_SMARTGW_USE_COUNT_MIN  1
 #define MAX_SMARTGW_USE_COUNT_MAX  64
+
+#define MIN_SMARTGW_EGRESS_FILE_PERIOD 1000
 
 #define MAX_SMARTGW_EGRESS_INTERFACE_COUNT_MAX 32
 
@@ -213,7 +238,7 @@ struct olsr_if {
   bool configured;
   bool host_emul;
   union olsr_ip_addr hemu_ip;
-  struct interface *interf;
+  struct interface_olsr *interf;
   struct if_config_options *cnf, *cnfi;
   struct olsr_if *next;
 };
@@ -241,17 +266,12 @@ struct plugin_entry {
   struct plugin_entry *next;
 };
 
-struct sgw_egress_if {
-  char *name;
-  uint8_t mark;
-  struct sgw_egress_if *next;
-};
-
 /*
  * The config struct
  */
 
 struct olsrd_config {
+  char * configuration_file;
   uint16_t olsrport;
   int debug_level;
   bool no_fork;
@@ -269,6 +289,7 @@ struct olsrd_config {
   int ipc_connections;
   bool use_hysteresis;
   olsr_fib_metric_options fib_metric;
+  int fib_metric_default;
   struct hyst_param hysteresis_param;
   struct plugin_entry *plugins;
   struct ip_prefix_list *hna_entries;
@@ -298,17 +319,21 @@ struct olsrd_config {
   char *smart_gw_policyrouting_script;
   struct sgw_egress_if * smart_gw_egress_interfaces;
   uint8_t smart_gw_egress_interfaces_count;
-  uint8_t smart_gw_mark_offset_egress;
-  uint8_t smart_gw_mark_offset_tunnels;
+  char *smart_gw_egress_file;
+  uint32_t smart_gw_egress_file_period;
+  char *smart_gw_status_file;
+  uint32_t smart_gw_offset_tables;
+  uint32_t smart_gw_offset_rules;
   uint32_t smart_gw_period;
   uint8_t smart_gw_stablecount;
   uint8_t smart_gw_thresh;
   uint8_t smart_gw_weight_exitlink_up;
   uint8_t smart_gw_weight_exitlink_down;
   uint8_t smart_gw_weight_etx;
-  uint8_t smart_gw_divider_etx;
+  uint32_t smart_gw_divider_etx;
   enum smart_gw_uplinktype smart_gw_type;
   uint32_t smart_gw_uplink, smart_gw_downlink;
+  bool smart_gateway_bandwidth_zero;
   struct olsr_ip_prefix smart_gw_prefix;
 
   /* Main address of this node */
@@ -357,6 +382,20 @@ extern "C" {
  * List functions
  */
 
+  /**
+   * Count the number of olsr interfaces
+   *
+   * @return the number of olsr interfaces
+   */
+  static inline unsigned int getNrOfOlsrInterfaces(struct olsrd_config * cfg) {
+    struct olsr_if * ifn;
+    unsigned int i = 0;
+
+      for (ifn = cfg->interfaces; ifn; ifn = ifn->next, i++) {}
+      return i;
+  }
+
+
   void ip_prefix_list_add(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
 
   int ip_prefix_list_remove(struct ip_prefix_list **, const union olsr_ip_addr *, uint8_t);
@@ -381,7 +420,7 @@ extern "C" {
 
   struct if_config_options *get_default_if_config(void);
 
-  struct olsrd_config *olsrd_get_default_cnf(void);
+  struct olsrd_config *olsrd_get_default_cnf(char * configuration_file);
 
 #if defined _WIN32
   void win32_stdio_hack(unsigned int);
@@ -390,6 +429,28 @@ extern "C" {
 
   void win32_olsrd_free(void *ptr);
 #endif /* defined _WIN32 */
+
+  /*
+   * Smart-Gateway uplink/downlink accessors
+   */
+
+  static inline void set_smart_gateway_bandwidth_zero(struct olsrd_config *cnf) {
+    cnf->smart_gateway_bandwidth_zero = !cnf->smart_gw_uplink || !cnf->smart_gw_downlink;
+  }
+
+  static inline void smartgw_set_uplink(struct olsrd_config *cnf, uint32_t uplink) {
+    cnf->smart_gw_uplink = uplink;
+    set_smart_gateway_bandwidth_zero(cnf);
+  }
+
+  static inline void smartgw_set_downlink(struct olsrd_config *cnf, uint32_t downlink) {
+    cnf->smart_gw_downlink = downlink;
+    set_smart_gateway_bandwidth_zero(cnf);
+  }
+
+  static inline bool smartgw_is_zero_bandwidth(struct olsrd_config *cnf) {
+    return cnf->smart_gateway_bandwidth_zero;
+  }
 
 #if defined __cplusplus
 }

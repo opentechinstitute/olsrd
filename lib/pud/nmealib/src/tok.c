@@ -1,9 +1,6 @@
 /*
  * This file is part of nmealib.
  *
- * Copyright (c) 2008 Timur Sinitsyn
- * Copyright (c) 2011 Ferry Huberts
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -175,7 +172,7 @@ int nmea_scanf(const char *s, int len, const char *format, ...) {
 			if (isdigit(*format))
 				break;
 			{
-				tok_type = NMEA_TOKS_TYPE;
+				/* No need to do 'tok_type = NMEA_TOKS_TYPE' since we'll do a fall-through */
 				if (format > beg_fmt)
 					width = nmea_atoi(beg_fmt, (int) (format - beg_fmt), 10);
 			}

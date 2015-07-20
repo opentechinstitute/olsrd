@@ -116,6 +116,8 @@ static void ipc_print_config(struct autobuf *);
 
 static void ipc_print_interface(struct autobuf *);
 
+static void ipc_print_sgw(struct autobuf *);
+
 #define TXT_IPC_BUFSIZE 256
 
 #define SIW_NEIGH 0x0001
@@ -129,6 +131,7 @@ static void ipc_print_interface(struct autobuf *);
 #define SIW_CONFIG 0x0100
 #define SIW_2HOP 0x0200
 #define SIW_VERSION 0x0400
+#define SIW_SGW 0x0800
 
 /* ALL = neigh link route hna mid topo */
 #define SIW_ALL 0x003F
@@ -195,6 +198,14 @@ plugin_ipc_init(void)
       return 0;
     }
 #endif /* (defined __FreeBSD__ || defined __FreeBSD_kernel__) && defined SO_NOSIGPIPE */
+#if defined linux && defined IPV6_V6ONLY
+    if (txtinfo_ipv6_only && olsr_cnf->ip_version == AF_INET6) {
+      if (setsockopt(ipc_socket, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&yes, sizeof(yes)) < 0) {
+        perror("IPV6_V6ONLY failed");
+        return 0;
+      }
+    }
+#endif /* defined linux && defined IPV6_V6ONLY */
     /* Bind the socket */
 
     /* complete the socket structure */
@@ -273,7 +284,7 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
       addr[0] = '\0';
     if (!ip4equal(&pin.in4.sin_addr, &txtinfo_accept_ip.v4) && txtinfo_accept_ip.v4.s_addr != INADDR_ANY) {
 #ifdef TXTINFO_ALLOW_LOCALHOST
-      if (pin.in4.sin_addr.s_addr != INADDR_LOOPBACK) {
+      if (ntohl(pin.in4.sin_addr.s_addr) != INADDR_LOOPBACK) {
 #endif /* TXTINFO_ALLOW_LOCALHOST */
         olsr_printf(1, "(TXTINFO) From host(%s) not allowed!\n", addr);
         close(ipc_connection);
@@ -301,8 +312,15 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
   FD_ZERO(&rfds);
   FD_SET((unsigned int)ipc_connection, &rfds);  /* Win32 needs the cast here */
   if (0 <= select(ipc_connection + 1, &rfds, NULL, NULL, &tv)) {
-    char requ[128];
-    ssize_t s = recv(ipc_connection, (void *)&requ, sizeof(requ), 0);   /* Win32 needs the cast here */
+    char requ[1024];
+    ssize_t s = recv(ipc_connection, (void *)&requ, sizeof(requ)-1, 0);   /* Win32 needs the cast here */
+
+    if (s == sizeof(requ)-1) {
+      /* input was much too long, just skip the rest */
+      char dummy[1024];
+
+      while (recv(ipc_connection, (void *)&dummy, sizeof(dummy), 0) == sizeof(dummy));
+    }
     if (0 < s) {
       requ[s] = 0;
       /* To print out neighbours only on the Freifunk Status
@@ -327,8 +345,10 @@ ipc_action(int fd, void *data __attribute__ ((unused)), unsigned int flags __att
         if (0 != strstr(requ, "/int")) send_what |= SIW_INTERFACE;
         if (0 != strstr(requ, "/2ho")) send_what |= SIW_2HOP;
         if (0 != strstr(requ, "/ver")) send_what |= SIW_VERSION;
+        if (0 != strstr(requ, "/sgw")) send_what |= SIW_SGW;
       }
     }
+
     if ( send_what == 0 ) send_what = SIW_ALL;
   }
 
@@ -473,16 +493,9 @@ ipc_print_hna(struct autobuf *abuf)
 #endif /* ACTIVATE_VTIME_TXTINFO */
 
   /* Announced HNA entries */
-  if (olsr_cnf->ip_version == AF_INET) {
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
-                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-    }
-  } else {
-    for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
-      abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
-                olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
-    }
+  for (hna = olsr_cnf->hna_entries; hna != NULL; hna = hna->next) {
+    abuf_appendf(abuf, "%s/%d\t%s\n", olsr_ip_to_string(&buf, &hna->net.prefix), hna->net.prefix_len,
+              olsr_ip_to_string(&mainaddrbuf, &olsr_cnf->main_addr));
   }
 
   /* HNA entries */
@@ -505,6 +518,112 @@ ipc_print_hna(struct autobuf *abuf)
   OLSR_FOR_ALL_HNA_ENTRIES_END(tmp_hna);
 
   abuf_puts(abuf, "\n");
+}
+
+
+#ifdef __linux__
+
+/** interface names for smart gateway tunnel interfaces, IPv4 */
+extern struct interfaceName * sgwTunnel4InterfaceNames;
+
+/** interface names for smart gateway tunnel interfaces, IPv6 */
+extern struct interfaceName * sgwTunnel6InterfaceNames;
+
+
+/**
+ * Construct the sgw table for a given ip version
+ *
+ * @param abuf the string buffer
+ * @param ipv6 true for IPv6, false for IPv4
+ * @param fmtv the format for printing
+ */
+static void sgw_ipvx(struct autobuf *abuf, bool ipv6, const char * fmth, const char * fmtv) {
+  abuf_appendf(abuf, "# Table: Smart Gateway IPv%s\n", ipv6 ? "6" : "4");
+  abuf_appendf(abuf, fmth, "#", "Originator", "Prefix", "Uplink", "Downlink", "PathCost", "IPv4", "IPv4-NAT", "IPv6", "Tunnel-Name", "Destination", "Cost");
+
+  if (olsr_cnf->smart_gw_active) {
+    struct gateway_entry * current_gw = olsr_get_inet_gateway(ipv6);
+    struct interfaceName * sgwTunnelInterfaceNames = !ipv6 ? sgwTunnel4InterfaceNames : sgwTunnel6InterfaceNames;
+    int i = 0;
+    for (i = 0; i < olsr_cnf->smart_gw_use_count; i++) {
+      bool selected;
+      struct ipaddr_str originatorStr;
+      const char * originator;
+      struct ipaddr_str prefixIpStr;
+      const char * prefixIPStr;
+      union olsr_ip_addr netmask = { { 0 } };
+      struct ipaddr_str prefixMaskStr;
+      const char * prefixMASKStr;
+      struct interfaceName * node = &sgwTunnelInterfaceNames[i];
+      struct ipaddr_str tunnelGwStr;
+      const char * tunnelGw;
+
+      struct gateway_entry * gw = node ? node->gw : NULL;
+      struct tc_entry* tc;
+
+      if (!gw) {
+        continue;
+      }
+
+      tc = olsr_lookup_tc_entry(&gw->originator);
+      if (!tc) {
+        continue;
+      }
+
+      selected = current_gw && (current_gw == gw);
+      originator = olsr_ip_to_string(&originatorStr, &gw->originator);
+      prefixIPStr = olsr_ip_to_string(&prefixIpStr, &gw->external_prefix.prefix);
+
+      prefix_to_netmask((uint8_t *) &netmask, !ipv6 ? sizeof(netmask.v4) : sizeof(netmask.v6), gw->external_prefix.prefix_len);
+      prefixMASKStr = olsr_ip_to_string(&prefixMaskStr, &netmask);
+
+      tunnelGw = olsr_ip_to_string(&tunnelGwStr, &gw->originator);
+
+      {
+        char prefix[strlen(prefixIPStr) + 1 + strlen(prefixMASKStr) + 1];
+        snprintf(prefix, sizeof(prefix), "%s/%s", prefixIPStr, prefixMASKStr);
+
+        abuf_appendf(abuf, fmtv, //
+            selected ? "*" : " ", // selected
+            originator, // Originator
+            prefix, // Prefix IP / Prefix Mask
+            gw->uplink, // Uplink
+            gw->downlink, // Downlink
+            tc->path_cost, // PathCost
+            gw->ipv4 ? "Y" : "N", // IPv4
+            gw->ipv4nat ? "Y" : "N", // IPv4-NAT
+            gw->ipv6 ? "Y" : "N", // IPv6
+            node->name, // Tunnel-Name
+            tunnelGw, // Destination
+            gw->path_cost // Cost
+            );
+      }
+    }
+  }
+}
+#endif /* __linux__ */
+
+static void
+ipc_print_sgw(struct autobuf *abuf)
+{
+#ifndef __linux__
+  abuf_puts(abuf, "Gateway mode is only supported in linux\n");
+#else
+
+  static const char * fmth4 = "%s%-15s %-31s %-9s %-9s %-10s %-4s %-8s %-4s %-15s %-15s %s\n";
+  static const char * fmtv4 = "%s%-15s %-31s %-9u %-9u %-10u %-4s %-8s %-4s %-15s %-15s %lld\n";
+#if 0
+  static const char * fmth6 = "%s%-45s %-91s %-9s %-9s %-10s %-4s %-8s %-4s %-15s %-45s %s\n";
+  static const char * fmtv6 = "%s%-45s %-91s %-9u %-9u %-10u %-4s %-8s %-4s %-15s %-45s %lld\n";
+#endif
+
+  sgw_ipvx(abuf, false, fmth4, fmtv4);
+  abuf_puts(abuf, "\n");
+#if 0
+  sgw_ipvx(abuf, true, fmth6, fmtv6);
+  abuf_puts(abuf, "\n");
+#endif
+#endif /* __linux__ */
 }
 
 static void
@@ -632,7 +751,7 @@ ipc_print_interface(struct autobuf *abuf)
   const struct olsr_if *ifs;
   abuf_puts(abuf, "Table: Interfaces\nName\tState\tMTU\tWLAN\tSrc-Adress\tMask\tDst-Adress\n");
   for (ifs = olsr_cnf->interfaces; ifs != NULL; ifs = ifs->next) {
-    const struct interface *const rifs = ifs->interf;
+    const struct interface_olsr *const rifs = ifs->interf;
     abuf_appendf(abuf, "%s\t", ifs->name);
     if (!rifs) {
       abuf_puts(abuf, "DOWN\n");
@@ -729,6 +848,8 @@ send_info(unsigned int send_what, int the_socket)
   if ((send_what & SIW_TOPO) == SIW_TOPO) ipc_print_topology(&abuf);
   /* hna */
   if ((send_what & SIW_HNA) == SIW_HNA) ipc_print_hna(&abuf);
+  /* sgw */
+  if ((send_what & SIW_SGW) == SIW_SGW) ipc_print_sgw(&abuf);
   /* mid */
   if ((send_what & SIW_MID) == SIW_MID) ipc_print_mid(&abuf);
   /* routes */

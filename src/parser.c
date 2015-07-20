@@ -261,7 +261,7 @@ olsr_packetparser_remove_function(packetparser_function * function)
  */
 
 void
-parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip_addr *from_addr)
+parse_packet(struct olsr *olsr, int size, struct interface_olsr *in_if, union olsr_ip_addr *from_addr)
 {
   union olsr_message *m = (union olsr_message *)olsr->olsr_msg;
   uint32_t count;
@@ -300,13 +300,8 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
    * Hysteresis update - for every OLSR package
    */
   if (olsr_cnf->use_hysteresis) {
-    if (olsr_cnf->ip_version == AF_INET) {
-      /* IPv4 */
-      update_hysteresis_incoming(from_addr, in_if, olsr->olsr_seqno);
-    } else {
-      /* IPv6 */
-      update_hysteresis_incoming(from_addr, in_if, olsr->olsr_seqno);
-    }
+    /* IPv4 & IPv6 */
+    update_hysteresis_incoming(from_addr, in_if, olsr->olsr_seqno);
   }
 
   for (; count > 0; m = (union olsr_message *)((char *)m + (msgsize))) {
@@ -419,7 +414,7 @@ parse_packet(struct olsr *olsr, int size, struct interface *in_if, union olsr_ip
 void
 olsr_input(int fd, void *data __attribute__ ((unused)), unsigned int flags __attribute__ ((unused)))
 {
-  struct interface *olsr_in_if;
+  struct interface_olsr *olsr_in_if;
   union olsr_ip_addr from_addr;
   struct preprocessor_function_entry *entry;
   char *packet;
@@ -518,7 +513,7 @@ olsr_input_hostemu(int fd, void *data __attribute__ ((unused)), unsigned int fla
   /* sockaddr_in6 is bigger than sockaddr !!!! */
   struct sockaddr_storage from;
   socklen_t fromlen;
-  struct interface *olsr_in_if;
+  struct interface_olsr *olsr_in_if;
   union olsr_ip_addr from_addr;
   uint16_t pcklen;
   struct preprocessor_function_entry *entry;

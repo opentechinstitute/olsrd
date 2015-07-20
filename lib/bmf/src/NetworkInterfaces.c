@@ -50,6 +50,7 @@
 #include <assert.h> /* assert() */
 #include <net/if.h> /* socket(), ifreq, if_indextoname(), if_nametoindex() */
 #include <netinet/in.h> /* htons() */
+#include <netinet/udp.h> /* struct udphdr */
 #include <linux/if_ether.h> /* ETH_P_IP */
 #include <linux/if_packet.h> /* packet_mreq, PACKET_MR_PROMISC, PACKET_ADD_MEMBERSHIP */
 #include <linux/if_tun.h> /* IFF_TAP */
@@ -657,7 +658,7 @@ void FindNeighbors(
         }
         else
         {
-          struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
+          struct interface_olsr * bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
 
           OLSR_PRINTF(
             9,
@@ -854,7 +855,7 @@ void FindNeighbors(
         else
         {
 #ifndef NODEBUG
-          struct interface* bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
+          struct interface_olsr * bestIntf = if_ifwithaddr(&bestLinkToNeighbor->local_iface_addr);
           struct lqtextbuffer lqbuffer;
 #endif /* NODEBUG */
           OLSR_PRINTF(
@@ -1368,7 +1369,7 @@ static int CreateLocalEtherTunTap(void)
  * ------------------------------------------------------------------------- */
 static int CreateInterface(
   const char* ifName,
-  struct interface* olsrIntf)
+  struct interface_olsr * olsrIntf)
 {
   int capturingSkfd = -1;
   int encapsulatingSkfd = -1;
@@ -1562,7 +1563,7 @@ static int CreateInterface(
  * Return     : fail (-1) or success (0)
  * Data Used  : none
  * ------------------------------------------------------------------------- */
-int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
+int CreateBmfNetworkInterfaces(struct interface_olsr * skipThisIntf)
 {
   int skfd;
   struct ifconf ifc;
@@ -1612,7 +1613,7 @@ int CreateBmfNetworkInterfaces(struct interface* skipThisIntf)
   ifr = ifc.ifc_req;
   for (n = ifc.ifc_len / sizeof(struct ifreq); --n >= 0; ifr++)
   {
-    struct interface* olsrIntf;
+    struct interface_olsr * olsrIntf;
     union olsr_ip_addr ipAddr;
 
     /* Skip the BMF network interface itself */
@@ -1893,7 +1894,11 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
 
       /* RFC 1624, Eq. 3: HC' = ~(~HC - m + m') */
 
+#if defined(__GLIBC__) || defined(__BIONIC__)
       check = ntohs(udph->check);
+#else
+      check = ntohs(udph->uh_sum);
+#endif
 
       check = ~ (~ check - ((origDaddr >> 16) & 0xFFFF) + ((newDaddr >> 16) & 0xFFFF));
       check = ~ (~ check - (origDaddr & 0xFFFF) + (newDaddr & 0xFFFF));
@@ -1901,7 +1906,11 @@ void CheckAndUpdateLocalBroadcast(unsigned char* ipPacket, union olsr_ip_addr* b
       /* Add carry */
       check = check + (check >> 16);
 
+#if defined(__GLIBC__) || defined(__BIONIC__)
       udph->check = htons(check);
+#else
+      udph->uh_sum = htons(check);
+#endif
      } /* if */
   } /* if */
 } /* CheckAndUpdateLocalBroadcast */

@@ -1,3 +1,575 @@
+0.9.0.2 -------------------------------------------------------------------
+
+Ferry Huberts (4):
+      conf: lock_file is derived config.
+      jsoninfo: fix a crash when there are no gateways
+      txtinfo: fix a crash when there are no gateways
+      release: fix release script
+
+Henning Rogge (2):
+      Update version after release of v0.9.0.1
+      Release v0.9.0.2
+
+0.9.0.2 -------------------------------------------------------------------
+
+Ferry Huberts (4):
+      conf: lock_file is derived config.
+      jsoninfo: fix a crash when there are no gateways
+      txtinfo: fix a crash when there are no gateways
+      release: fix release script
+
+Henning Rogge (2):
+      Update version after release of v0.9.0.1
+      Release v0.9.0.2
+
+0.9.0.1 -------------------------------------------------------------------
+
+Ferry Huberts (3):
+      neighbors: signal link changes when deleting a neighbor
+      jsoninfo: do not output smart-gateway info when not enabled.
+      txtinfo: jsoninfo: do not output smart-gateway info when not enabled.
+
+Henning Rogge (2):
+      Update version after release of v0.9.0
+      Release v0.9.0.1
+
+0.9.0 -------------------------------------------------------------------
+
+Daniel Golle (4):
+      plugins: fix build with musl
+      plugins: fix build on some glibc systems
+      plugins: use previous definition of struct udphdr on Android
+      plugins: fix precompiled syntax
+
+Ferry Huberts (98):
+      build: uberclean must also remove builddata.txt
+      build: add some pud targets
+      Rename 'struct interface' to 'struct interface_olsr'
+      Merge branch 'release-0.6.8'
+      pud: wireformat-java: improve java detection
+      pud: wireformat-java: improve java detection
+      sgw: ensure a bandwidth of 1 does not alias onto 0 when serialising
+      sgw: minor improvement
+      sgw: gwContainer can't be null here
+      dyn_gw: fix a Coverity warning
+      pud: nmealib: fix a Coverity warning
+      pud: nmealib: fix a Coverity warning
+      httpinfo: fix a Coverity warning
+      parser: fix a Coverity warning
+      quagga: minor readability fixes
+      olsr_random: introduce better random functions
+      main: replace random() by our own function
+      unix: replace random() by our own function
+      bsd: replace random() by our own function
+      win32: replace random() by our own function
+      pud: nmealib: replace random() by our own function
+      secure: replace random() by our own function
+      contrib: fix the build
+      contrib: replace random() by our own function
+      olsr_switch: replace random() by our own function
+      olsr_random: need to include time.h
+      pud: nmealib: align nmea_random to olsrd _random
+      pud: nmealib: doc: disable generation of the PDF; pdflatex somehow fails
+      pud: nmealib: doc: upgrade doxygen configuration file
+      sgw: egress file: use full time resolution on Linux
+      sgw: egress: Android is not Linux
+      jsoninfo: formatting
+      jsoninfo: some comparison simplifications
+      jsoninfo: clearer distinction between JSON and non-JSON blocks
+      jsoninfo: more comparison simplifications
+      jsoninfo: refactor outputting JSON
+      sgw: fix a shadowing warning
+      jsoninfo: formatting fixup
+      jsoninfo: systemTime and timeSinceStartup can be first
+      jsoninfo: minor fixup
+      jsoninfo: the IP address for a neighbour can also be an IPv6 address
+      jsoninfo: add version, 2hop and sgw. now in sync with txtinfo
+      arprefresh: update the readme
+      dyngw: update the readme
+      dyngw_plain: update the readme
+      httpinfo: update the readme
+      jsoninfo: update the readme
+      secure: update the readme
+      txtinfo: update the readme
+      pud: move the config sample into the readme
+      ipcalc: fix a double slash for IPv6 in olsr_ip_prefix_to_string
+      cfg: make sure lockfile has a default as specified in the cfg file
+      cfgfile_gen: whitespace and typo fixes
+      cfgfile_gen: better LinkQualityMult examples
+      cfgfile_gen: make sure to print IPv6Src as an IPv6 prefix
+      cfgfile_gen: fix default for RtProto
+      cfgfile_gen: add some comments to the generated configuration file
+      cfgfile_gen: print comments when the are no ipc_nets
+      cfgfile_gen: improve printing of HNAs
+      cfgfile_gen: improve printing of MainIp
+      cfgfile_gen: improve printing of SmartGatewayPrefix
+      cfgfile_gen: improve printing of SmartGatewayEgressFile
+      cfgfile_gen: update comments file SmartGatewayEgressFilePeriod
+      cfgfile_gen: improve printing of SmartGatewayEgressInterfaces
+      cfgfile_gen: improve printing of SmartGatewayPolicyRoutingScript
+      cfgfile_gen: improve printing of UseNiit
+      cfgfile_gen: improve printing of routing tables
+      cfgfile_gen: improve printing of routing table priorities
+      files: remove olsrd.conf.default.lq-fisheye
+      files: minor improvements to the FunkFeuer configuration files
+      files: minor improvements to the commotion configuration file
+      files: rename the generated configuration files
+      files: add configurations files corresponding to generated (txt) files
+      files: add a README, explaining generation of effective config files
+      files: remove lq and rfc effective config files
+      files: add a script to generate an effective configuration file
+      files: update the default effective configuration file to current state
+      mantissa: fix a typo in a comment
+      mantissa: add a function to query the minimum interval
+      sgw: fill HNA header in the same order as the fields in the packet
+      sgw: extract appending a sgw HNA into its own function
+      sgw: olsr_modifiy_inetgw_netmask can choose between normal and zero bw
+      jsoninfo: validity times are in 'me' format, convert them to msec first
+      sgw: fix a typo in an assert
+      sgw: sgw HNAs are not considered normal HNAs during processing
+      sgw: implement HNA expiry
+      sgw: update the status file when a sgw HNA is removed (multi-sgw mode
+         only)
+      ifnet: also store the HNA validity time in msec
+      sgw: do not write uplink/downlink speed directly
+      sgw: immediately remove sgw HNAs with zero bandwidth
+      sgw: send sgw HNAs with zero bandwidth after local gw has gone away
+      sgw: do not send zero bandwidth sgw HNAs by default
+      pud: doc: update the documentation
+      release: stricter matching of release tags
+      autobuf: fix warning in Windows release builds
+      Merge branch 'release-0.6.7'
+      Merge branch 'release-0.6.8'
+      Branch v0.9.0
+
+Henning Rogge (7):
+      Update version after release of v0.6.8
+      Update version after release of v0.6.8
+      tc: properly initialise the path_costs field in a new tc
+      tc: properly initialise the path_costs field in a new tc
+      keep pushing data through dotdraw plugin
+      Restrict maxmimum message size (not packet size) to IPv6 minimal MTU.
+      Release v0.9.0
+
+Sebastian Kürten (2):
+      Added simple hard-coded whitelist
+      Revert "Added simple hard-coded whitelist"
+
+Teco Boot (1):
+      arprefresh: README adjusted for plugin name
+
+0.6.8 -------------------------------------------------------------------
+
+Ferry Huberts (81):
+      linux: increase the netlink buffer size
+      linux: fix using tables >= 256
+      linux: fix type of af_family
+      linux: do not try to set routes with negative metric
+      linux: add 'flags' parameter to olsr_new_netlink_route function
+      linux: add 'scope' parameter to olsr_new_netlink_route function
+      linux: make it possible to add/remove blackhole routes
+      linux: export the olsr_new_netlink_route function
+      Update version after branch of v0.6.7
+      android: use the machine specific NDK instead of always the 32bit variant
+      Merge branch 'linux-routes.v1'
+      android: fix build on 32 bit platform (see 0295e11)
+      linux: olsr_if_isup: fix return code in error path
+      conf parser: fix a warning
+      Merge branch 'release-0.6.7'
+      linux: fix a typo
+      sgw: move add/remove of ifchange handler to better place
+      sgw: export multi_gateway_mode method
+      sgw: make sure gw->ipv6 is always set for a new gateway
+      sgw: cost calculation can now directly account for interface up/down
+         status
+      config parser: minor improvement for SmartGatewayEgressInterfaces
+      pud: fix strto* result checking for out-of-range situations
+      sgwdynspeed: fix strto* result checking for out-of-range situations
+      Merge branch 'release-0.6.7'
+      Merge branch 'release-0.6.7'
+      release: fix up the CHANGELOG
+      Merge branch 'release-0.6.7'
+      sgw: fix deserialize_gw_speed
+      txtinfo: fix formatting in ipc_print_sgw
+      sgw: move 'struct sgw_egress_if' type into a separate include file
+      sgw: store table & rule numbers in the sgw_egress_if structure
+      sgw: add egress file reader settings
+      sgw: add egress file reader
+      sgw: track the interface index of an egress interface
+      sgw: track the up status of an egress interface
+      sgw: use the smartgw_tunnel_monitor to track up/down of egress interfaces
+      sgw: introduce function to process multi-sgw changes
+      sgw: determine best exit link in doRoutesMultiGw
+      sgw: determine best overall link in doRoutesMultiGw
+      sgw: add SmartGatewayStatusFile setting
+      sgw: add the smart gateway status file writer
+      sgw: add reportNewGateway function
+      sgw: program best overall link routes
+      sgw: program best egress link route
+      sgw: program egress link routes
+      sgwdynspeed: only allow the plugin in single-sgw mode
+      sgw: fix default path costs for egress interfaces
+      sgw: initialise the egress interfaces earlier
+      sgw: lazily determine the sgw costs weights
+      sgw: show all sgw tunnels in the output file instead of only the active
+         one
+      sgw: reset cached egress file timestamp on file access errors
+      sgw: do not prematurely exit doRoutesMultiGw
+      Merge branch 'msgw'
+      sgw: do not make the egress types available only on linux
+      sgw: initialise the egress best routes differently
+      sgw: remove an unused variable
+      sgw: unshadow a variable
+      sgw: change the cached timestamp
+      build: make TOPDIR an absolute path
+      sgw: android has no getline(), implement it
+      android: bump the NDK compiler version
+      android: fixup regex makefile
+      sgw: fix android build
+      pud: duplicate android regex trick from nameservice
+      sgw: always clear egress settings when this egress file is not readable
+      Revert "sgw: always clear egress settings when this egress file is not
+         readable"
+      sgw: always clear egress settings when this egress file is not readable
+      sgw: refresh the advertised speed when the best overall link changes
+      sgw: when there is no best overall link advertise 0 bandwidth
+      sgw: only advertise egress speeds
+      sgw: refactor egress file change detection
+      sgw: uplink and downlink fields can be 9 chars wide in the output file
+      sgw: tune the status file for IPv4, making it a bit more compact
+      sgw: use MAX_SMARTGW_SPEED instead of hard-coding it
+      sgw: fix cost calculation for advertised speeds greater or equal than MAX
+      sgw: the costs are signed numbers
+      sgw: react to path cost changes on all active gateways
+      txtinfo: fix output of /sgw command
+      build: uberclean must also remove builddata.txt
+      build: add some pud targets
+      Rename 'struct interface' to 'struct interface_olsr'
+
+Henning Rogge (6):
+      Update version after release of v0.6.7.1
+      Only use IPV6_TCLASS and IPV6_V6ONLY when defined
+      Merge branch 'master' of git://olsr.org/olsrd
+      Prevent memory leak when setting up new interface
+      Fix bug of former commit
+      Release v0.6.8
+
+Nico Geyso (1):
+      dyn gw plugin - add PingCmd parameter
+
+0.6.7.1 -------------------------------------------------------------------
+
+Ferry Huberts (6):
+      android: use the machine specific NDK instead of always the 32bit variant
+      android: fix build on 32 bit platform (see 0295e11)
+      plugins: add a comment to clarify strange behaviour
+      txtinfo: duplicate code in branch
+      txtinfo: ensure null termination of string buffer
+      jsoninfo: fix indentation
+
+Henning Rogge (2):
+      Update version after release of v0.6.7
+      Release v0.6.7.1
+
+Nico Geyso (2):
+      jsoninfo: set_plugin_boolean stores into an int
+      txtinfo: set_plugin_boolean stores into an int
+
+0.6.7 -------------------------------------------------------------------
+
+Note: In this release the configuration files have been moved from /etc into
+      /etc/olsrd.
+
+Note: In this release the pud plugin was upgraded to version 2.0.0.
+      This is because of a breaking change in its wire format. If you have
+      deployed the pud plugin on your mesh then you should update all nodes
+      to the new pud plugin at the same time since there is no interoperability
+      between the old version and the new version.
+
+Alessio Caiazza (4):
+      Hotfix for very long http headers also for jsoninfo
+      Hotfix for very long http headers also for jsoninfo
+      jsoninfo: HTTP headers with CORS (if requested)
+      jsoninfo: HTTP headers with CORS (if requested)
+
+Bernhard Marker (2):
+      added json plugin to openwrt build Makefile
+      json openwrt Makefile update
+
+Charlie Root (1):
+      Small fixes to allow compilation with OpenBSD
+
+David Dahlberg (4):
+      Adjusted OpenBSD installation paths
+      An rc.d file for OpenBSD
+      Remove linux-isms from Makefile
+      Install openbsd/olsrd.rcd to /etc/rc.d/olsrd.
+
+Ferry Huberts (170):
+      release: use olsrd-version prefix for files in the tarballs
+      Update version after branch of v0.6.6
+      Remove mercurial ignore file; we use git
+      build: ignore builddata.c when hashing sources
+      Remove mercurial ignore file; we use git
+      build: ignore builddata.c when hashing sources
+      Revert "Update version after release of v0.6.5.3"
+      Merge branch 'release-0.6.5'
+      Merge branch 'release-0.6.6'
+      release: fix the list of generated files
+      release: update some comments
+      release: refactor the checkVersionIncrementing function
+      release: do not update the version on master when it's already higher
+      release: only report that master changed when it was actually changed
+      release: fix the list of generated files
+      release: update some comments
+      release: refactor the checkVersionIncrementing function
+      release: do not update the version on master when it's already higher
+      release: only report that master changed when it was actually changed
+      release: checkVersionIncrementing: optionally allow equal versions
+      release: also check against the Makefile version when branching
+      release: checkVersionIncrementing: optionally allow equal versions
+      release: also check against the Makefile version when branching
+      Merge branch 'release-0.6.4'
+      Merge branch 'release-0.6.5'
+      Merge branch 'release-0.6.6'
+      txtinfo: prevent buffer overflow
+      Merge branch 'release-0.6.6'
+      pud: wireformat-java: Makefile: also clean up the generated headers
+      pud: wireformat: java: rename Git-SHA1 manifest header to Git-SHA
+      pud: wireformat: java: also add a Git-Descriptor manifest header
+      pud: nmealib: _nmea_parse_time not parsing hsec when given "hhmmss" format
+      pud: nmealib: _nmea_parse_time not parsing hsec when given "hhmmss" format
+      quagga: add some parentheses
+      httpinfo: add smart gateway information tab
+      txtinfo: add sgw command
+      cfgfile: don't hard-code defaults in texts
+      txtinfo: mention the /sgw command in the README
+      Makefile: add cfgparser_install and cfgparser_clean targets
+      linux: add -rdynamic to linker options for debug builds
+      linux: fix 'add -rdynamic to linker options for debug builds'
+      build: really _ignore_ builddata.c when hashing sources
+      build: only print the md5 hash in hash_source.sh
+      Makefile: fix builddata when building from tarball
+      build: really _ignore_ builddata.c when hashing sources
+      build: only print the md5 hash in hash_source.sh
+      Makefile: fix builddata when building from tarball
+      build: only re-generate src/builddata.c when needed
+      cfgfile: no more magic numbers for RtTable* defaults
+      sgw: move cost calculation into it own unit
+      sgw: minor comment fixup
+      make: fixup bashisms in hash_source.sh
+      Move the configuration files into /etc/olsrd/
+      pud: install configuration files under ETCDIR
+      sgwdynspeed: install configuration files under ETCDIR
+      build: hash_source.sh: specify the mktemp template
+      pud: fix readIPAddress function
+      pud: fix readIPAddress function
+      httpinfo: center the header row of the smart gateway tables
+      Merge branch 'release-0.6.5'
+      Merge branch 'release-0.6.6'
+      Fix #34: Description of "timeout" parameter in "nameservice" plugin...
+      pud: remove getNodeId, rename getNodeIdWithLength to getNodeId
+      pud: firm up setupNodeIdBinaryAndValidate
+      pud: merge nodeIdType and nodeId parameters into nodeId parameter
+      pud: remove some strlen's in nettools
+      pud: remove a strlen in the DNS name handling of the wire format.
+      pud: make wireformat constants unsigned
+      pud: clarify the URN number
+      pud: add MIP OID nodeId type
+      pud: add an assert to silence a Coverity false positive
+      pud: specify conversion base in readULL
+      pud: don't copy memory we're not allowed to access
+      pud: specify where to store the result in
+         intSetupNodeIdBinaryDoubleLongLong
+      pud: fix intSetupNodeIdBinaryDoubleLongLong for short values
+      pud: add UUID nodeId type
+      httpinfo: rename a function
+      pud: make sure to only use accessor functions in the 'present' nmea field
+      httpinfo: also show the present field on the nmea info
+      Merge branch 'release-0.6.6'
+      pud: fix java detection in the wireformat java bindings (again)
+      pud: fix java detection in the wireformat java bindings (again)
+      Merge branch 'release-0.6.5'
+      Merge branch 'release-0.6.6'
+      pud: do the same fix as in the previous commit, now for i386
+      pud: do the same fix as in the previous commit, now for i386
+      Merge branch 'release-0.6.5'
+      Merge branch 'release-0.6.6'
+      Make sure to save/restore errno in signal handlers
+      Make sure to save/restore errno in signal handlers
+      Merge branch 'release-0.6.5'
+      Merge branch 'release-0.6.6'
+      main: olsr_create_lock_file: fix return value check on 'open' call
+      main: add some extra braces
+      main: olsr_create_lock_file: fix return value check on 'open' call
+      pud: use the nmea present field in the wireformat
+      pud: fix readIPAddress function
+      pud: fix readIPAddress function
+      Merge branch 'release-0.6.5'
+      Merge branch 'release-0.6.6'
+      tok: improve the nmea_calc_crc function a bit
+      tok: improve the nmea_calc_crc function a bit
+      neighbor table: fix crash in olsr_print_neighbor_table on MinGW
+      neighbor table: fix crash in olsr_print_neighbor_table on MinGW
+      win32: accomodate old and new mingw setups
+      mingw: fix Ubuntu 13.10 / Debian Wheezy mingw mess
+      p2pd: add UseTTLDecrement configuration setting
+      httpinfo: also show the path costs in the SmartGateway table
+      txtinfo: also show the path costs in the SmartGateway table
+      gw: make SmartGatewayDividerEtx a 32 bit number
+      doc: add a gnuplot file to show the smart gateway cost calculation
+      Fix some eclipse warnings
+      p2pd: recompute the IPv4 header checksum after adjusting the TTL
+      sgwdynspeed: ignore unknown options
+      sgw: adjust policy routing script a bit
+      sgw: rename a variable in parsing of sgw_egress_if
+      sgw: preserve order of declared SmartGatewayEgressInterfaces
+      sgwdynspeed: avoid spamming the log with 'unknown option' messages
+      sgw: fix the policy routing script
+      sgwdynspeed: allow string values and empty values in the speed file
+      sgwdynspeed: fgets includes EOLs in the read string, strip them off
+      sgwdynspeed: do not go outside of the string when stripping EOLs
+      sgwdynspeed: rename 2 variables
+      sgwdynspeed: ignore everything we don't understand when reading the file
+      sgwdynspeed: make the EOL stripping much faster
+      sgwdynspeed: remove some dead code
+      gw: remove commands in comments concerning the policy routing script
+      gw: fix the 'ip' delete argument in the policy routing script
+      gw: simplify overlap checking code
+      gw: Add endif comments
+      gw: fix gateway takedown calculation
+      gw: fix a typo
+      gw: move path_cost into the gateway struct, ensure it's always up-to-date
+      gw: add SmartGatewayMarkOffsetServerTunnel configuration parameter
+      gw: fix null pointer dereferences in cost calculation
+      gw: fix a minor copy/paste typo
+      gw: when a node advertises maximum bandwidth then only consider path costs
+      README-Olsr-Extensions: Fix some typos
+      pud: update  nmealib samples Makefile
+      sgw: rework policy rules setup
+      sgwdynspeed: rename a function parameter to avoid a compiler warning
+      common: add an extra check in autobuf_enlarge to avoid a compiler warning
+      pud: update nmealib to 2.0.0
+      pud: nmealib: Fix a typo in Tobias's surname
+      txtinfo: make the sgw output better machine parseable
+      pud: nmealib: include latest fixes
+      pud: nmealib: fix isInvalidNMEACharacter function
+      p2pd: fix recomputeIPv4HeaderChecksum function
+      Revert "Use strscpy instead of strcpy"
+      pud: nmealib: fix return value of nmea_parser_init
+      pud: disable distribution of position updates over OLSR when olsrTtl is 0
+      Fix strange coding in the 'long headers' fix
+      Fix strange coding in the 'long headers' fix
+      httpinfo: the position timestamp month is zero based
+      Merge tag 'v0.6.5.6'
+      Merge tag 'v0.6.6.2'
+      Revert "Fix for win32 compiling with i686-w64-mingw32-gcc on ubuntu"
+      pud: nmealib: NMEA String Length Override Support
+      Fix a signed/unsigned warning
+      gw: change the costs type to signed 64bits
+      build: gui: do not overwrite the LDFLAGS but append to it
+      build: add address santizer, compile with SANITIZE_ADDRESS=1
+      p2pd: fir compile warning, initialise ipHeader
+      gui: fix 'warning: multiple common of ...' warnings
+      conf: ensure the egress interface names have a valid length
+      README: improve the smart gateway text a bit
+      sgw: multi-sgw mode is only supported on IPv4
+      CHANGELOG: add a note about the configuration files
+      Merge remote-tracking branch 'olsr/openbsd'
+      Branch v0.6.7
+
+Hans-Christoph Steiner (3):
+      purge ancient debian/ folder, people should use the current files
+      add instructions for building Debian package from canonical sources
+      clarify instructions for http:// downloading of debian/ folder
+
+Henning Rogge (32):
+      Fix multicast join for IPv6
+      Release v0.6.5.3
+      Update version after release of v0.6.5.3
+      Update version after release of v0.6.5.3
+      Release v0.6.5.4
+      Update version after release of v0.6.5.4
+      Fix segfault in cfgparser standalone executable
+      Fix build break for MinGW compilation on Fedora 19.
+      Fix build break for MinGW compilation on Fedora 19.
+      Release v0.6.5.5
+      Update version after release of v0.6.5.5
+      Ignore IFF_RUNNING when checking if an interface is up or down.
+      use inet_pton instead of inet_aton
+      win32: do not add -Wcast-qual to compiler warning flags
+      Fix processing error for fragmented hellos
+      Fix some spelling mistakes
+      Merge branch 'master' of http://olsr.org/git/olsrd
+      Fix processing error for fragmented hellos
+      Fix some spelling mistakes
+      Try to delete and retry for BSD ipv4 too
+      Use strscpy instead of strcpy
+      Smooth LQ calculation if link suddenly breaks.
+      Clean before compile when using Openwrt olsrd-stable-git makefile
+      Fix copypaste error
+      Hotfix for very long http headers
+      Fix stupid mistake, don't know why gcc didn't complained locally
+      Hotfix for much too long http headers
+      Release v0.6.5.6
+      Make link debug output source a bit more readable
+      Add LQ/NLQ/ETX to neighbor table debug output
+      Add boolean ipv6only parameter to txtinfo and jsoninfo
+      Release v0.6.7
+
+Manuel Munz (1):
+      Fix jsoninfo again after a regression which was introduced with
+
+Markus Kittenberger (1):
+      fix: TXTINFO_ALLOW_LOCALHOST - add missing ntohl()
+
+Patrick Grimm (2):
+      jsoninfo: only listen on IPv6 when running under IPv6
+      txtinfo: only listen on IPv6 when running under IPv6
+
+Ronald in 't Velt (2):
+      Fix setsockopt for setting Traffic Class in IPv6
+      Fix setsockopt for setting Traffic Class in IPv6
+
+Saverio Proto (2):
+      txtinfo: update README file
+      Missing patch of header files for "Add boolean ipv6only parameter to
+         txtinfo and jsoninfo"
+
+Scott Kidder (2):
+      jsoninfo: ensure output is wrapped in curly braces.
+      jsoninfo: ensure output is wrapped in curly braces.
+
+Teco Boot (2):
+      Added LINUX_NL80211 readme file
+      Support for FIB metric configuration, other than 2
+
+Yury Popov (1):
+      Fix for win32 compiling with i686-w64-mingw32-gcc on ubuntu
+
+0.6.6.2 -------------------------------------------------------------------
+
+Alessio Caiazza (2):
+      Hotfix for very long http headers also for jsoninfo
+      jsoninfo: HTTP headers with CORS (if requested)
+
+Ferry Huberts (8):
+      pud: fix java detection in the wireformat java bindings (again)
+      pud: do the same fix as in the previous commit, now for i386
+      Make sure to save/restore errno in signal handlers
+      main: olsr_create_lock_file: fix return value check on 'open' call
+      pud: fix readIPAddress function
+      tok: improve the nmea_calc_crc function a bit
+      neighbor table: fix crash in olsr_print_neighbor_table on MinGW
+      Fix strange coding in the 'long headers' fix
+
+Henning Rogge (5):
+      Update version after release of v0.6.6.1
+      Fix processing error for fragmented hellos
+      Fix some spelling mistakes
+      Hotfix for much too long http headers
+      Release v0.6.6.2
+
 0.6.6.1 -------------------------------------------------------------------
 
 Henning Rogge (2):
@@ -202,6 +774,80 @@ Vasilis Tsiligiannis (1):
 
 equinox (1):
       quagga plugin routes additional
+
+0.6.5.6 -------------------------------------------------------------------
+
+Alessio Caiazza (2):
+      Hotfix for very long http headers also for jsoninfo
+      jsoninfo: HTTP headers with CORS (if requested)
+
+Ferry Huberts (8):
+      pud: fix java detection in the wireformat java bindings (again)
+      pud: do the same fix as in the previous commit, now for i386
+      Make sure to save/restore errno in signal handlers
+      main: olsr_create_lock_file: fix return value check on 'open' call
+      pud: fix readIPAddress function
+      tok: improve the nmea_calc_crc function a bit
+      neighbor table: fix crash in olsr_print_neighbor_table on MinGW
+      Fix strange coding in the 'long headers' fix
+
+Henning Rogge (5):
+      Update version after release of v0.6.5.5
+      Fix processing error for fragmented hellos
+      Fix some spelling mistakes
+      Hotfix for much too long http headers
+      Release v0.6.5.6
+
+0.6.5.5 -------------------------------------------------------------------
+
+Ferry Huberts (4):
+      build: really _ignore_ builddata.c when hashing sources
+      build: only print the md5 hash in hash_source.sh
+      Makefile: fix builddata when building from tarball
+      pud: fix readIPAddress function
+
+Henning Rogge (3):
+      Update version after release of v0.6.5.4
+      Fix build break for MinGW compilation on Fedora 19.
+      Release v0.6.5.5
+
+Scott Kidder (1):
+      jsoninfo: ensure output is wrapped in curly braces.
+
+0.6.5.4 -------------------------------------------------------------------
+
+Ferry Huberts (11):
+      Remove mercurial ignore file; we use git
+      build: ignore builddata.c when hashing sources
+      release: fix the list of generated files
+      release: update some comments
+      release: refactor the checkVersionIncrementing function
+      release: do not update the version on master when it's already higher
+      release: only report that master changed when it was actually changed
+      release: checkVersionIncrementing: optionally allow equal versions
+      release: also check against the Makefile version when branching
+      txtinfo: prevent buffer overflow
+      pud: nmealib: _nmea_parse_time not parsing hsec when given "hhmmss" format
+
+Henning Rogge (2):
+      Update version after release of v0.6.5.3
+      Release v0.6.5.4
+
+0.6.5.3 -------------------------------------------------------------------
+
+Ferry Huberts (5):
+      pud: detect the java include directory
+      pud: better detection of java jdk
+      gateway: work around kernel IPIP module initialisation bug
+      main: use /dev/urandom by default
+      pud: set local loopback for multicast tx
+
+Henning Rogge (2):
+      Update version after release of v0.6.5.2
+      Release v0.6.5.3
+
+Ronald in 't Velt (1):
+      Fix setsockopt for setting Traffic Class in IPv6
 
 0.6.5.2 -------------------------------------------------------------------
 

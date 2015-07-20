@@ -85,6 +85,7 @@
 
 int P2pdTtl                        = 0;
 int P2pdUseHash                    = 0;  /* Switch off hash filter by default */
+int P2pdUseTtlDecrement            = 0;  /* No TTL decrement by default */
 int P2pdDuplicateTimeout           = P2PD_VALID_TIME;
 
 /* List of UDP destination address and port information */
@@ -203,7 +204,11 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
           udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData +
                                        GetIpHeaderLength(encapsulationUdpData)));
           destAddr.v4.s_addr = ipHeader->ip_dst.s_addr;
+#if defined(__GLIBC__) || defined(__BIONIC__)
           destPort = htons(udpHeader->dest);
+#else
+          destPort = htons(udpHeader->uh_dport);
+#endif
           isInList = InUdpDestPortList(AF_INET, &destAddr, destPort);
 #ifdef INCLUDE_DEBUG_OUTPUT
           if (!isInList) {
@@ -222,7 +227,11 @@ PacketReceivedFromOLSR(unsigned char *encapsulationUdpData, int len)
         if (ip6Header->ip6_nxt == SOL_UDP && !IsIpv6Fragment(ip6Header)) {
           udpHeader = (struct udphdr*) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
           memcpy(&destAddr.v6, &ip6Header->ip6_dst, sizeof(struct in6_addr));
+#if defined(__GLIBC__) || defined(__BIONIC__)
           destPort = htons(udpHeader->dest);
+#else
+          destPort = htons(udpHeader->uh_dport);
+#endif
           isInList = InUdpDestPortList(AF_INET6, &destAddr, destPort);
 #ifdef INCLUDE_DEBUG_OUTPUT
           if (!isInList) {
@@ -408,7 +417,7 @@ p2pd_is_duplicate_message(union olsr_message *msg)
  * ------------------------------------------------------------------------- */
 bool
 olsr_parser(union olsr_message *m,
-            struct interface *in_if __attribute__ ((unused)),
+            struct interface_olsr *in_if __attribute__ ((unused)),
             union olsr_ip_addr *ipaddr __attribute__ ((unused)))
 {
   union olsr_ip_addr originator;
@@ -459,7 +468,7 @@ olsr_p2pd_gen(unsigned char *packet, int len)
   char buffer[10240];
   int aligned_size;
   union olsr_message *message = (union olsr_message *)buffer;
-  struct interface *ifn;
+  struct interface_olsr *ifn;
 
   aligned_size=len;
 
@@ -603,6 +612,46 @@ InUdpDestPortList(int ip_version, union olsr_ip_addr *addr, uint16_t port)
   return false;
 }
 
+/*
+ * Function for checksum calculation.
+ * From the RFC, the checksum algorithm is:
+ *   "The checksum field is the 16 bit one's complement of the one's
+ *   complement sum of all 16 bit words in the header. For purposes of
+ *   computing the checksum, the value of the checksum field is zero."
+ *
+ * For example, consider Hex 4500003044224000800600008c7c19acae241e2b (20 bytes IP header):
+ * - Step 1) 4500 + 0030 + 4422 + 4000 + 8006 + 0000 + 8c7c + 19ac + ae24 + 1e2b = 0002`BBCF (16-bit sum)
+ * - Step 2) 0002 + BBCF = BBD1 = 1011101111010001 (1's complement 16-bit sum)
+ * - Step 3) ~BBD1 = 0100010000101110 = 442E (1's complement of 1's complement 16-bit sum)
+ */
+static void recomputeIPv4HeaderChecksum(struct ip *header) {
+  uint32_t sum;
+  uint32_t nwords;
+  u_short *headerWords;
+
+  if (!header) {
+    return;
+  }
+
+  header->ip_sum = 0;
+  nwords = header->ip_hl << 1;
+  headerWords = (u_short *) header;
+
+  /* step 1 */
+  for (sum = 0; nwords > 0; nwords--) {
+    sum += ntohs(*headerWords);
+    headerWords++;
+  }
+
+  /* step 2 */
+  sum = (sum >> 16) + (sum & 0xffff);
+
+  /* step 3 */
+  sum = ~sum & 0xffff;
+
+  header->ip_sum = htons((u_short)sum);
+}
+
 /* -------------------------------------------------------------------------
  * Function   : P2pdPacketCaptured
  * Description: Handle a captured IP packet
@@ -619,9 +668,11 @@ static void
 P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 {
   union olsr_ip_addr dst;      /* Destination IP address in captured packet */
-  struct ip *ipHeader;         /* The IP header inside the captured IP packet */
+  struct ip *ipHeader = NULL;  /* The IP header inside the captured IP packet */
   struct ip6_hdr *ipHeader6;   /* The IP header inside the captured IP packet */
   struct udphdr *udpHeader;
+  uint8_t * ttl = NULL;
+  int recomputeChecksum = 0;
   u_int16_t destPort;
 
   if ((encapsulationUdpData[0] & 0xf0) == 0x40) {       //IPV4
@@ -652,7 +703,11 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 
     udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData +
                                   GetIpHeaderLength(encapsulationUdpData)));
+#if defined(__GLIBC__) || defined(__BIONIC__)
     destPort = ntohs(udpHeader->dest);
+#else
+    destPort = ntohs(udpHeader->uh_dport);
+#endif
 
     if (!InUdpDestPortList(AF_INET, &dst, destPort)) {
 #ifdef INCLUDE_DEBUG_OUTPUT
@@ -662,6 +717,9 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 #endif /* INCLUDE_DEBUG_OUTPUT */
        return;
     }
+
+    ttl = &ipHeader->ip_ttl;
+    recomputeChecksum = 1;
   }                            //END IPV4
   else if ((encapsulationUdpData[0] & 0xf0) == 0x60) {  //IPv6
 
@@ -693,7 +751,11 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
       return;
 
     udpHeader = (struct udphdr *) ARM_NOWARN_ALIGN((encapsulationUdpData + 40));
+#if defined(__GLIBC__) || defined(__BIONIC__)
     destPort = ntohs(udpHeader->dest);
+#else
+    destPort = ntohs(udpHeader->uh_dport);
+#endif
 
     if (!InUdpDestPortList(AF_INET6, &dst, destPort)) {
 #ifdef INCLUDE_DEBUG_OUTPUT
@@ -703,9 +765,27 @@ P2pdPacketCaptured(unsigned char *encapsulationUdpData, int nBytes)
 #endif /* INCLUDE_DEBUG_OUTPUT */
       return;
     }
+
+    ttl = &ipHeader6->ip6_ctlun.ip6_un1.ip6_un1_hlim;
+    recomputeChecksum = 0;
   }                             //END IPV6
   else {
     return;                     //Is not IP packet
+  }
+
+  if (P2pdUseTtlDecrement) {
+    assert(ttl);
+    if (!*ttl) {
+      return;
+    }
+    *ttl -= 1;
+    if (!*ttl) {
+      return;
+    }
+
+    if (recomputeChecksum) {
+      recomputeIPv4HeaderChecksum(ipHeader);
+    }
   }
 
   // send the packet to OLSR forward mechanism
@@ -790,7 +870,7 @@ DoP2pd(int skfd,
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 int
-InitP2pd(struct interface *skipThisIntf)
+InitP2pd(struct interface_olsr *skipThisIntf)
 {
   if (P2pdUseHash) {
     // Initialize hash table for hash based duplicate IP packet check
@@ -858,6 +938,27 @@ SetP2pdUseHashFilter(const char *value,
   assert(value != NULL);
   P2pdUseHash = atoi(value);
   
+  return 0;
+}
+
+/* -------------------------------------------------------------------------
+ * Function   : SetP2pdUseTtlDecrement
+ * Description: Set the TTL decrement lag for this plug-in
+ * Input      : value - parameter value to evaluate
+ *              data  - data associated with this parameter (unused in this app)
+ *              addon - additional parameter data
+ * Output     : none
+ * Return     : Always 0
+ * Data Used  : P2pdUseTtlDecrement
+ * ------------------------------------------------------------------------- */
+int
+SetP2pdUseTtlDecrement(const char *value,
+                     void *data __attribute__ ((unused)),
+                     set_plugin_parameter_addon addon __attribute__ ((unused)))
+{
+  assert(value != NULL);
+  P2pdUseTtlDecrement = atoi(value);
+
   return 0;
 }
 

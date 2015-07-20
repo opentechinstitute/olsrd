@@ -362,7 +362,7 @@ olsr_print_hna_set(void)
  */
 
 bool
-olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
+olsr_input_hna(union olsr_message *m, struct interface_olsr *in_if __attribute__ ((unused)), union olsr_ip_addr *from_addr)
 {
 
   uint8_t olsr_msgtype;
@@ -434,7 +434,7 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
     union olsr_ip_addr mask;
 
     struct ip_prefix_list *entry;
-    struct interface *ifs;
+    struct interface_olsr *ifs;
     bool stop = false;
 
     pkt_get_ipaddress(&curr, &prefix.prefix);
@@ -443,7 +443,8 @@ olsr_input_hna(union olsr_message *m, struct interface *in_if __attribute__ ((un
 
 #ifdef __linux__
     if (olsr_cnf->smart_gw_active && olsr_is_smart_gateway(&prefix, &mask)) {
-      olsr_update_gateway_entry(&originator, &mask, prefix.prefix_len, msg_seq_number);
+      olsr_update_gateway_entry(&originator, &mask, prefix.prefix_len, msg_seq_number, vtime);
+      continue;
     }
 #endif /* __linux__ */
 

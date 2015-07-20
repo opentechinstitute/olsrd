@@ -63,7 +63,7 @@ bool readBool(const char * parameterName, const char * str, bool * dst) {
 	errno = 0;
 	value = strtoul(str, &endPtr, 10);
 
-	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0'))) {
+	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0')) || (errno == ERANGE)) {
 		/* invalid conversion */
 		pudError(false, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
 		retVal = false;
@@ -109,7 +109,7 @@ bool readUC(const char * parameterName, const char * str, unsigned char * dst) {
 	errno = 0;
 	value = strtoul(str, &endPtr, 10);
 
-	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0'))) {
+	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0')) || (errno == ERANGE)) {
 		/* invalid conversion */
 		pudError(false, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
 		return false;
@@ -150,7 +150,7 @@ bool readUS(const char * parameterName, const char * str, unsigned short * dst) 
 	errno = 0;
 	value = strtoul(str, &endPtr, 10);
 
-	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0'))) {
+	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0')) || (errno == ERANGE)) {
 		/* invalid conversion */
 		pudError(false, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
 		return false;
@@ -175,25 +175,28 @@ bool readUS(const char * parameterName, const char * str, unsigned short * dst) 
  @param dst
  A pointer to the location where to store the number upon successful conversion
  Not touched when errors are reported.
+ @param base
+ The base of the number conversion: 10 for decimal, 16 for hexadecimal
 
  @return
  - true on success
  - false otherwise
  */
-bool readULL(const char * parameterName, const char * str, unsigned long long * dst) {
+bool readULL(const char * parameterName, const char * str, unsigned long long * dst, int base) {
 	char * endPtr = NULL;
 	unsigned long long value;
 
 	assert(parameterName != NULL);
 	assert(str != NULL);
 	assert(dst != NULL);
+	assert(base > 1);
 
 	errno = 0;
-	value = strtoull(str, &endPtr, 10);
+	value = strtoull(str, &endPtr, base);
 
-	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0'))) {
+	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0')) || (errno == ERANGE)) {
 		/* invalid conversion */
-		pudError(false, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
+		pudError(false, "Value of parameter %s (%s) could not be converted to a number (base %d)", parameterName, str, base);
 		return false;
 	}
 
@@ -227,7 +230,7 @@ bool readULL(const char * parameterName, const char * str, unsigned long long * 
 	errno = 0;
 	value = strtod(str, &endPtr);
 
-	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0'))) {
+	if (!((endPtr != str) && (*str != '\0') && (*endPtr == '\0')) || (errno == ERANGE)) {
 		/* invalid conversion */
 		pudError(false, "Value of parameter %s (%s) could not be converted to a number", parameterName, str);
 		return false;
