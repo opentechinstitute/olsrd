@@ -227,7 +227,7 @@ CreateCaptureSocket(const char *ifName)
 //FOR MDNS IS ALWAYS CALLED WITH NULL AS SECOND ARG
 
 static int
-CreateInterface(const char *ifName, struct in_addr *addr, struct interface *olsrIntf)
+CreateInterface(const char *ifName, struct in_addr *addr, struct interface_olsr *olsrIntf)
 {
   int capturingSkfd = -1;
   int encapsulatingSkfd = -1;
@@ -361,7 +361,7 @@ CreateInterface(const char *ifName, struct in_addr *addr, struct interface *olsr
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 int
-CreateNonOlsrNetworkInterfaces(struct interface *skipThisIntf)
+CreateNonOlsrNetworkInterfaces(struct interface_olsr *skipThisIntf)
 {
   int skfd;
   struct ifconf ifc;
@@ -406,7 +406,7 @@ CreateNonOlsrNetworkInterfaces(struct interface *skipThisIntf)
   /* For each item in the interface configuration list... */
   ifr = ifc.ifc_req;
   for (n = ifc.ifc_len / sizeof(struct ifreq); --n >= 0; ifr++) {
-    struct interface *olsrIntf;
+    struct interface_olsr *olsrIntf;
     union olsr_ip_addr ipAddr;
 
     /* Skip the BMF network interface itself */

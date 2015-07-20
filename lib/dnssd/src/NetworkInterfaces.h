@@ -74,7 +74,7 @@ struct DnssdInterface {
 
   /* OLSRs idea of this network interface. NULL if this interface is not
    * OLSR-enabled. */
-  struct interface *olsrIntf;
+  struct interface_olsr *olsrIntf;
 
   /* IP address of this network interface */
   union olsr_ip_addr intAddr;
@@ -127,7 +127,7 @@ struct TBestNeighbors {
   struct link_entry *links[MAX_UNICAST_NEIGHBORS];
 };
 
-int CreateNonOlsrNetworkInterfaces(struct interface *skipThisIntf);
+int CreateNonOlsrNetworkInterfaces(struct interface_olsr *skipThisIntf);
 void CloseNonOlsrNetworkInterfaces(void);
 int AddNonOlsrIf(const char *ifName, void *data, set_plugin_parameter_addon addon);
 int IsNonOlsrIf(const char *ifName);
