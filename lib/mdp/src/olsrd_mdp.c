@@ -127,18 +127,18 @@ unsigned char *servald_key;
 int servald_key_len;
 
 /* Event function to register with the sceduler */
-static int send_challenge(struct interface *olsr_if, const union olsr_ip_addr *);
-static int send_cres(struct interface *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t, struct stamp *);
-static int send_rres(struct interface *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t);
-static int parse_challenge(struct interface *olsr_if, char *);
-static int parse_cres(struct interface *olsr_if, char *);
+static int send_challenge(struct interface_olsr *olsr_if, const union olsr_ip_addr *);
+static int send_cres(struct interface_olsr *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t, struct stamp *);
+static int send_rres(struct interface_olsr *olsr_if, union olsr_ip_addr *, union olsr_ip_addr *, uint32_t);
+static int parse_challenge(struct interface_olsr *olsr_if, char *);
+static int parse_cres(struct interface_olsr *olsr_if, char *);
 static int parse_rres(char *);
-static int check_auth(struct interface *olsr_if, char *, int *);
-static int add_signature(struct interface *, uint8_t *, int *);
-static int validate_packet(struct interface *olsr_if, const char *, int *);
-static char *secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr, int *length);
+static int check_auth(struct interface_olsr *olsr_if, char *, int *);
+static int add_signature(struct interface_olsr *, uint8_t *, int *);
+static int validate_packet(struct interface_olsr *olsr_if, const char *, int *);
+static char *secure_preprocessor(char *packet, struct interface_olsr *olsr_if, union olsr_ip_addr *from_addr, int *length);
 static void timeout_timestamps(void *);
-static int check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *, TIME_TYPE);
+static int check_timestamp(struct interface_olsr *olsr_if, const union olsr_ip_addr *, TIME_TYPE);
 static struct stamp *lookup_timestamp_entry(const union olsr_ip_addr *);
 static int read_key_from_servald(co_obj_t *, const char *, const char *);
 
@@ -216,7 +216,7 @@ mdp_plugin_init(void)
 {
   int i;
   co_obj_t *co_conn = NULL;
-  struct interface *ifn = NULL;
+  struct interface_olsr *ifn = NULL;
 
   /* Initialize the timestamp database */
   for (i = 0; i < HASHSIZE; i++) {
@@ -273,7 +273,7 @@ mdp_plugin_exit(void)
 }
 
 static char *
-secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr *from_addr, int *length)
+secure_preprocessor(char *packet, struct interface_olsr *olsr_if, union olsr_ip_addr *from_addr, int *length)
 {
   struct olsr *olsr = (struct olsr *)packet;
   struct ipaddr_str buf;
@@ -307,7 +307,7 @@ secure_preprocessor(char *packet, struct interface *olsr_if, union olsr_ip_addr 
  *
  */
 static int
-check_auth(struct interface *olsr_if, char *pck, int *size __attribute__ ((unused)))
+check_auth(struct interface_olsr *olsr_if, char *pck, int *size __attribute__ ((unused)))
 {
 
   olsr_printf(3, "[MDP] Checking packet for challenge response message...\n");
@@ -341,7 +341,7 @@ check_auth(struct interface *olsr_if, char *pck, int *size __attribute__ ((unuse
  * increase the size
  */
 int
-add_signature(struct interface *olsr_if, uint8_t * pck, int *size)
+add_signature(struct interface_olsr *olsr_if, uint8_t * pck, int *size)
 {
   struct s_olsrmsg *msg;
   olsr_printf(2, "[MDP] Adding signature for packet size %d\n", *size);
@@ -400,7 +400,7 @@ add_signature(struct interface *olsr_if, uint8_t * pck, int *size)
 }
 
 static int
-validate_packet(struct interface *olsr_if, const char *pck, int *size)
+validate_packet(struct interface_olsr *olsr_if, const char *pck, int *size)
 {
   int packetsize;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -487,7 +487,7 @@ one_checksum_SHA:
 }
 
 int
-check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *originator, TIME_TYPE tstamp)
+check_timestamp(struct interface_olsr *olsr_if, const union olsr_ip_addr *originator, TIME_TYPE tstamp)
 {
   struct stamp *entry;
   int diff;
@@ -537,7 +537,7 @@ check_timestamp(struct interface *olsr_if, const union olsr_ip_addr *originator,
  */
 
 int
-send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
+send_challenge(struct interface_olsr *olsr_if, const union olsr_ip_addr *new_host)
 {
   struct challengemsg cmsg;
   struct stamp *entry;
@@ -618,7 +618,7 @@ send_challenge(struct interface *olsr_if, const union olsr_ip_addr *new_host)
 }
 
 int
-parse_cres(struct interface *olsr_if, char *in_msg)
+parse_cres(struct interface_olsr *olsr_if, char *in_msg)
 {
   struct c_respmsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -821,7 +821,7 @@ parse_rres(char *in_msg)
 }
 
 int
-parse_challenge(struct interface *olsr_if, char *in_msg)
+parse_challenge(struct interface_olsr *olsr_if, char *in_msg)
 {
   struct challengemsg *msg;
   uint8_t sha1_hash[SIGNATURE_SIZE];
@@ -910,7 +910,7 @@ parse_challenge(struct interface *olsr_if, char *in_msg)
  *
  */
 int
-send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in, struct stamp *entry)
+send_cres(struct interface_olsr *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in, struct stamp *entry)
 {
   struct c_respmsg crmsg;
   uint32_t challenge;
@@ -997,7 +997,7 @@ send_cres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr 
  *
  */
 static int
-send_rres(struct interface *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in)
+send_rres(struct interface_olsr *olsr_if, union olsr_ip_addr *to, union olsr_ip_addr *from, uint32_t chal_in)
 {
   struct r_respmsg rrmsg;
   struct ipaddr_str buf;
