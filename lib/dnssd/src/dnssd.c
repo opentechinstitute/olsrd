@@ -394,7 +394,7 @@ p2pd_is_duplicate_message(union olsr_message *msg)
  * ------------------------------------------------------------------------- */
 bool
 olsr_parser(union olsr_message *m,
-            struct interface *in_if __attribute__ ((unused)),
+            struct interface_olsr *in_if __attribute__ ((unused)),
             union olsr_ip_addr *ipaddr __attribute__ ((unused)))
 {
   union olsr_ip_addr originator;
@@ -445,7 +445,7 @@ olsr_p2pd_gen(unsigned char *packet, int len, int ttl)
   char buffer[10240] = {'\0',};
   int aligned_size, pkt_ttl;
   union olsr_message *message = (union olsr_message *)buffer;
-  struct interface *ifn = NULL;
+  struct interface_olsr *ifn = NULL;
 
   aligned_size=len;
 
@@ -1177,7 +1177,7 @@ SetSignalHandler(void *context __attribute__((unused))) {
  * Data Used  : none
  * ------------------------------------------------------------------------- */
 int
-InitP2pd(struct interface *skipThisIntf)
+InitP2pd(struct interface_olsr *skipThisIntf)
 {
   if (P2pdUseHash) {
     // Initialize hash table for hash based duplicate IP packet check
